@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Unbought is a consent-based, currency-free mutual aid society built on Ubuntu. Free labor, at-cost goods, free education, and community land trusts.">
+  <meta name="theme-color" content="#1E3A8A">
+  <title>Unbought — Free Labor. Free Education. Free Land.</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+
+  <!-- Accessible skip link: visible on keyboard focus -->
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- Global screen-reader announcements -->
+  <div id="live-region" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Visible toast; hidden from AT so the live region is the single announcement -->
+  <div id="toast" class="toast" aria-hidden="true" hidden></div>
+
+  <!-- Reusable line-icon sprite (no external icon dependency) -->
+  <svg class="svg-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="icon-hammer" viewBox="0 0 24 24"><path d="m14 7 3-3 3 3-3 3m-3-3-8 8m3-3 5 5M4 20l4-4"/></symbol>
+    <symbol id="icon-heart" viewBox="0 0 24 24"><path d="M20.8 5.6a5.5 5.5 0 0 0-7.8 0L12 6.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 22l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></symbol>
+    <symbol id="icon-leaf" viewBox="0 0 24 24"><path d="M20 4C10 4 4 9 4 17c0 1 .2 2 .5 3C13 20 20 14 20 4Z"/><path d="M4.5 19.5C7 14 11 10.5 16 9"/></symbol>
+    <symbol id="icon-music" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></symbol>
+    <symbol id="icon-scale" viewBox="0 0 24 24"><path d="M12 3v18M5 6h14M5 6 2 14h6L5 6Zm14 0-3 8h6l-3-8ZM8 21h8"/></symbol>
+    <symbol id="icon-basket" viewBox="0 0 24 24"><path d="M3 9h18l-2 11H5L3 9Zm4 0 3-6m7 6-3-6M8 13v3m4-3v3m4-3v3"/></symbol>
+    <symbol id="icon-house" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10M9 20v-6h6v6"/></symbol>
+    <symbol id="icon-book" viewBox="0 0 24 24"><path d="M3 5a3 3 0 0 1 3-2h6v18H6a3 3 0 0 1-3-3V5Zm18 0a3 3 0 0 0-3-2h-6v18h6a3 3 0 0 0 3-3V5Z"/></symbol>
+    <symbol id="icon-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6m2 4a5 5 0 0 1 3 4.6V21"/></symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="icon-seed" viewBox="0 0 24 24"><path d="M12 21v-8m0 0C12 8 16 5 21 5c0 5-3 8-9 8Zm0 0C12 9 9 6 4 6c0 4 3 7 8 7Z"/></symbol>
+    <symbol id="icon-hands" viewBox="0 0 24 24"><path d="M7 13 3 9l3-3 4 4m7 3 4-4-3-3-4 4"/><path d="M7 13c0 4 2 6 5 6s5-2 5-6"/></symbol>
+    <symbol id="icon-spark" viewBox="0 0 24 24"><path d="M12 2c.7 5.3 4 8.6 9 9-5 1.4-8.3 4.7-9 10-.7-5.3-4-8.6-9-10 5-.4 8.3-3.7 9-9Z"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 8.8 8 11 4.6-2.2 8-6 8-11V5l-8-3Z"/><path d="m8.5 11.5 2.5 2.5 4.5-5"/></symbol>
+    <symbol id="icon-chat" viewBox="0 0 24 24"><path d="M4 4h16v12H8l-4 4V4Z"/><path d="M8 9h8m-8 3h5"/></symbol>
+    <symbol id="icon-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="icon-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9a7 7 0 0 1 11.6-2L20 12M4 12l2.3 5a7 7 0 0 0 11.6-2"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7m4 4v6m4-6v6"/></symbol>
+  </svg>
+
+  <!-- ============================================================
+       HEADER
+       ============================================================ -->
+  <header class="site-header" id="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#top" aria-label="Unbought — back to the top">
+        <img src="assets/logo.png" alt="Unbought Emblem" width="48" height="48">
+        <span class="brand-text">
+          <span class="brand-name">Unbought</span>
+          <span class="brand-tagline">Free Labor. Free Education. Free Land.</span>
+        </span>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+        <span class="sr-only">Open navigation menu</span>
+        <svg class="icon nav-toggle-icon-open" aria-hidden="true" focusable="false"><use href="#icon-menu"></use></svg>
+        <svg class="icon nav-toggle-icon-close" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+      </button>
+
+      <nav class="primary-nav" id="primary-nav" aria-label="Primary">
+        <ul class="nav-list">
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="#pledge">The Pledge</a></li>
+          <li><a href="#tracks">Join &amp; Tracks</a></li>
+          <li><a href="#services">Services &amp; Goods</a></li>
+          <li><a href="#academy">Unbought Academy</a></li>
+          <li><a href="#land">Land Trust</a></li>
+          <li><a href="donate.html">Donate</a></li>
+          <li><a class="nav-cta" href="#pledge">Take the Pledge</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ============================================================
+         HERO
+         ============================================================ -->
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> A consent-based, currency-free mutual aid society</p>
+          <h1 id="hero-title">You Don’t Need <span class="mark">Money</span> to Survive. You Need <span class="mark mark--blue">Community.</span></h1>
+          <p class="hero-lede">Unbought is where neighbors offer paid-level labor for free, share goods at exact receipt cost, teach and learn without tuition, and build community land trusts together. No fees. No gatekeeping. No price on human worth.</p>
+
+          <div class="hero-actions">
+            <a class="button button--primary" href="#pledge">Take the Unbought Pledge <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+            <a class="button button--outline" href="#how-it-works">Explore How It Works</a>
+          </div>
+
+          <ul class="hero-assurances" aria-label="Our commitments">
+            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Free labor</li>
+            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Goods at cost</li>
+            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Free education</li>
+            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Land in trust</li>
+          </ul>
+        </div>
+
+        <div class="hero-art" aria-label="Unbought emblem and guiding principles">
+          <div class="hero-art-orbit hero-art-orbit--one" aria-hidden="true"></div>
+          <div class="hero-art-orbit hero-art-orbit--two" aria-hidden="true"></div>
+          <div class="hero-seal">
+            <img src="assets/logo.png" alt="" width="170" height="170" aria-hidden="true">
+            <p class="hero-seal-kicker">The Unbought seal</p>
+            <p class="hero-seal-quote">“I am because <em>we are.</em>”</p>
+          </div>
+          <div class="hero-art-footer">
+            <div>
+              <span class="hero-fact-number">0</span>
+              <span class="hero-fact-label">currency required</span>
+            </div>
+            <div>
+              <span class="hero-fact-number">4</span>
+              <span class="hero-fact-label">pillars of shared life</span>
+            </div>
+            <div>
+              <span class="hero-fact-number">1</span>
+              <span class="hero-fact-label">rule: consent</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="values-strip" aria-label="The four pillars in brief">
+          <div class="value-item">
+            <span class="value-icon value-icon--blue"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-hammer"></use></svg></span>
+            <div><strong>Free labor</strong><span>Paid-level skill, freely given</span></div>
+          </div>
+          <div class="value-item">
+            <span class="value-icon value-icon--amber"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-basket"></use></svg></span>
+            <div><strong>At-cost goods</strong><span>Receipt price. Zero markup.</span></div>
+          </div>
+          <div class="value-item">
+            <span class="value-icon value-icon--red"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-book"></use></svg></span>
+            <div><strong>Free education</strong><span>Mentorship without tuition</span></div>
+          </div>
+          <div class="value-item">
+            <span class="value-icon value-icon--blue"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-house"></use></svg></span>
+            <div><strong>Community land</strong><span>Held for people, not profit</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         VISION & ORIGIN STORY
+         ============================================================ -->
+    <section class="section vision" id="vision" aria-labelledby="vision-title">
+      <div class="container vision-grid">
+        <div class="vision-copy">
+          <p class="eyebrow">Why we exist</p>
+          <h2 id="vision-title">We are opting out of the marketplace—not out of each other.</h2>
+          <p class="lead">Unbought is a neighbor-built society where survival does not require a price tag. We practice the economy we actually need: one where labor is a gift, goods circulate at cost, education is a commons, and land is held in trust for the people who live on it.</p>
+          <p>We are not anti-work. We are anti-extraction. We believe paid-level skill should be shared without a paywall, that materials should never carry hidden profit, and that every person—working or not—deserves care, belonging, and a place to call home.</p>
+
+          <div class="ubuntu-callout">
+            <svg class="ubuntu-mark" aria-hidden="true" focusable="false"><use href="#icon-people"></use></svg>
+            <div>
+              <p class="ubuntu-label">Ubuntu</p>
+              <p class="ubuntu-word">“I am because we are.”</p>
+              <p>Every person has inherent worth, whether or not they can work, produce, or pay. Care is not a reward for productivity. It is the ground we stand on.</p>
+            </div>
+          </div>
+        </div>
+
+        <aside class="origin-card" aria-labelledby="origin-title">
+          <div class="origin-top">
+            <span class="origin-year">1972</span>
+            <span class="badge badge--amber">Origin story</span>
+          </div>
+          <h3 id="origin-title">Why “Unbought”?</h3>
+          <blockquote>
+            <p>“I am unbought and unbossed.”</p>
+            <footer>— Shirley Chisholm, <cite>U.S. House of Representatives, 1972</cite></footer>
+          </blockquote>
+          <p>Shirley Chisholm’s rallying cry was a refusal: no donor, no boss, no price could own her voice. We carry that spirit into everyday life. Our labor, our learning, our homes, and our care should remain outside the reach of currency and corruption.</p>
+          <p class="origin-postscript">Unbought is not a brand to buy into. It is a practice to build.</p>
+          <a class="text-link" href="#pledge">Read the five commitments <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         FOUR PILLARS
+         ============================================================ -->
+    <section class="section section--tint pillars-section" id="how-it-works" aria-labelledby="pillars-title">
+      <div class="container">
+        <div class="section-head section-head--split">
+          <div>
+            <p class="eyebrow">How it works</p>
+            <h2 id="pillars-title">Four pillars. One shared life.</h2>
+          </div>
+          <p class="section-head-aside">These are not charity programs. They are the infrastructure of a community that chooses to meet needs directly, with consent and without a cash register.</p>
+        </div>
+
+        <div class="pillar-grid">
+          <article class="pillar-card" aria-labelledby="pillar-1-title">
+            <div class="pillar-top">
+              <span class="pillar-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-hammer"></use></svg></span>
+              <div class="pillar-meta">
+                <span class="badge badge--green">Active launch</span>
+                <span class="pillar-number" aria-hidden="true">01</span>
+              </div>
+            </div>
+            <h3 id="pillar-1-title">Free Labor &amp; At-Cost Services</h3>
+            <p>Neighbors offer the same quality of work they would be paid for—repairs, care, tutoring, design, legal literacy, and more—without charging for their time. When materials are needed, you pay the exact receipt price. No markup, no hidden fee.</p>
+            <ul class="pillar-list">
+              <li>Paid-level skill, freely given</li>
+              <li>Materials at cost, receipt shown</li>
+              <li>Scope and consent agreed up front</li>
+            </ul>
+            <a class="text-link" href="#services">Browse services &amp; goods <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+          </article>
+
+          <article class="pillar-card" aria-labelledby="pillar-2-title">
+            <div class="pillar-top">
+              <span class="pillar-icon pillar-icon--amber"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-basket"></use></svg></span>
+              <div class="pillar-meta">
+                <span class="badge badge--green">Active launch</span>
+                <span class="pillar-number" aria-hidden="true">02</span>
+              </div>
+            </div>
+            <h3 id="pillar-2-title">Free Goods &amp; Production</h3>
+            <p>Tools, food, clothing, furniture, seeds, and handmade goods move freely through the community. Shared workshops and tool libraries help neighbors repair, grow, and make what they need—turning scarcity thinking into collective abundance.</p>
+            <ul class="pillar-list">
+              <li>Free physical goods, no swap required</li>
+              <li>Tool libraries and shared workshops</li>
+              <li>Community production, not private scarcity</li>
+            </ul>
+            <a class="text-link" href="#services">Find free goods <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+          </article>
+
+          <article class="pillar-card" aria-labelledby="pillar-3-title">
+            <div class="pillar-top">
+              <span class="pillar-icon pillar-icon--red"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-book"></use></svg></span>
+              <div class="pillar-meta">
+                <span class="badge badge--green">Active launch</span>
+                <span class="pillar-number" aria-hidden="true">03</span>
+              </div>
+            </div>
+            <h3 id="pillar-3-title">Unbought Academy (Free Mentorship)</h3>
+            <p>Professionals and tradespeople teach apprentices online or in local guilds. Learning happens through real community projects, and completed work earns Peer-Verified Skill Badges—portable recognition without tuition, debt, or institutional gatekeeping.</p>
+            <ul class="pillar-list">
+              <li>One-to-one and guild mentorship</li>
+              <li>Learn by building real community projects</li>
+              <li>Peer-verified badges, no tuition</li>
+            </ul>
+            <a class="text-link" href="#academy">Explore the Academy <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+          </article>
+
+          <article class="pillar-card pillar-card--featured" aria-labelledby="pillar-4-title">
+            <div class="pillar-top">
+              <span class="pillar-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-house"></use></svg></span>
+              <span class="badge badge--amber">Phase 2: Waitlist &amp; Land Donations Open</span>
+            </div>
+            <h3 id="pillar-4-title">Community Land Trusts &amp; Housing</h3>
+            <p>We are building toward land and homes held permanently outside the speculative market. Community land trusts keep housing affordable across generations, with residents and neighbors sharing governance—not absentee landlords.</p>
+            <ul class="pillar-list">
+              <li>Land held for community use, not resale profit</li>
+              <li>Resident voice in stewardship decisions</li>
+              <li>Waitlist and land-donation conversations open</li>
+            </ul>
+            <a class="text-link" href="#land">Visit the Land Trust hub <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PLEDGE: VIDEO, WRITTEN COMMITMENTS, SIGNATURE
+         ============================================================ -->
+    <section class="section pledge-section" id="pledge" aria-labelledby="pledge-title">
+      <div class="container">
+        <div class="section-head section-head--split">
+          <div>
+            <p class="eyebrow">The Unbought Pledge</p>
+            <h2 id="pledge-title">A pledge you can hear, read, and sign.</h2>
+          </div>
+          <p class="section-head-aside">Watch the short film, read the five commitments in full, then add your chosen name. Your signature stays in this browser—not on a server, not for sale.</p>
+        </div>
+
+        <div class="pledge-grid">
+          <div class="media-column">
+            <div class="video-frame">
+              <video class="pledge-video" controls preload="metadata" poster="assets/pledge-poster.png" width="1280" height="720">
+                <source src="assets/unbought-pledge.mp4" type="video/mp4">
+                <track kind="captions" src="assets/unbought-pledge.vtt" srclang="en" label="English Subtitles" default>
+                Your browser does not support the video element. The full written pledge appears beside this film.
+              </video>
+            </div>
+            <div class="video-caption">
+              <span class="badge badge--soft">Placeholder reel</span>
+              <p>The pledge film is a placeholder in this prototype. The complete commitments are written beside it, and captions are enabled by default.</p>
+            </div>
+          </div>
+
+          <div class="commitments-card">
+            <div class="commitments-head">
+              <p class="eyebrow">Five core commitments</p>
+              <h3>What signing means</h3>
+            </div>
+            <ol class="commitments">
+              <li>
+                <span class="commitment-number" aria-hidden="true">1</span>
+                <div>
+                  <h4>I Reject Currency as a Measure of Human Worth</h4>
+                  <p>A person’s value is inherent, not earned through labor or wealth. Whether a neighbor is able-bodied or paralyzed, rich in skills or in need of food and shelter, they deserve dignity, safety, and care. I practice Ubuntu—“I am because we are”—knowing my well-being is bound to my community’s.</p>
+                </div>
+              </li>
+              <li>
+                <span class="commitment-number" aria-hidden="true">2</span>
+                <div>
+                  <h4>I Will Give Freely Without Keeping Score</h4>
+                  <p>I enter this space to build mutual self-reliance, not to extract profit. I will not keep a ledger of owed favors or hoard what the community can share.</p>
+                  <ul class="commitment-cases">
+                    <li><strong>If I can work or create:</strong> I offer real, practical skills, labor, or mentorship freely, with no expectation of direct repayment.</li>
+                    <li><strong>If I provide goods or materials:</strong> I offer them free or strictly at cost—the exact receipt price—with no markup or profit.</li>
+                    <li><strong>If I cannot work</strong> due to age, disability, illness, or capacity: I accept care without shame, knowing my presence and humanity are enough.</li>
+                  </ul>
+                </div>
+              </li>
+              <li>
+                <span class="commitment-number" aria-hidden="true">3</span>
+                <div>
+                  <h4>I Honor Consent and Personal Boundaries</h4>
+                  <p>This is a free, non-hierarchical society built on voluntary cooperation, not coercion. I respect bodily autonomy, time, energy, and boundaries. “No” is a complete sentence, and every exchange of labor, housing, or mentorship requires clear, ongoing mutual consent.</p>
+                </div>
+              </li>
+              <li>
+                <span class="commitment-number" aria-hidden="true">4</span>
+                <div>
+                  <h4>I Commit to Lifelong Learning and Collective Empowerment</h4>
+                  <p>Education is a birthright, not a commodity. If I hold knowledge or a trade, I share it openly. If I am learning, I approach mentorship with humility and dedication so I can pass those skills forward and help free my community from dependence on the market.</p>
+                </div>
+              </li>
+              <li>
+                <span class="commitment-number" aria-hidden="true">5</span>
+                <div>
+                  <h4>I Stand Against Exploitation and Gatekeeping</h4>
+                  <p>I will not use Unbought’s free labor, free goods, or land-trust resources to fuel outside businesses, hoard wealth, or exploit others. I hold myself and fellow members accountable through restorative dialogue, transparency, and shared social responsibility.</p>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="signature-card" id="signature-card">
+          <div class="signature-copy">
+            <p class="eyebrow">Digital signature</p>
+            <h3>Add your chosen name.</h3>
+            <p>Use whatever name you want to be called here. No legal name, ID, payment, or email is required. Signing records your agreement in this browser only.</p>
+            <ul class="signature-notes">
+              <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Stored locally, never transmitted</li>
+              <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-people"></use></svg> Chosen name and general location only</li>
+              <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg> Withdraw at any time</li>
+            </ul>
+
+            <div class="signed-banner" id="signed-banner" hidden>
+              <span class="signed-icon" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span>
+              <div class="signed-copy">
+                <p class="signed-kicker">Pledge signed</p>
+                <p class="signed-name" id="signed-name"></p>
+                <p class="signed-date" id="signed-date"></p>
+              </div>
+              <button class="button button--ghost-light button--small" id="withdraw-pledge" type="button">Withdraw</button>
+            </div>
+          </div>
+
+          <form class="pledge-form" id="pledge-form" aria-labelledby="pledge-form-title">
+            <h4 class="sr-only" id="pledge-form-title">Sign the Unbought Pledge</h4>
+            <p class="signature-declaration">“I have read this pledge and choose, of my own free will, to step outside the transactional mindset. I pledge my solidarity, my honesty, and my care to this community.”</p>
+            <div class="field field--on-blue field--check">
+              <label class="checkbox">
+                <input type="checkbox" id="pledge-agreement" name="agreement" required>
+                <span>I agree to the five commitments above and to practice consent, non-extraction, and unconditional care.</span>
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" id="pledge-free-atcost" name="freeAtCost" required>
+                <span>I agree to uphold the Unbought Pledge and operate on a strictly free or at-cost basis.</span>
+              </label>
+            </div>
+
+            <div class="form-row">
+              <div class="field field--on-blue">
+                <label for="pledge-name">Chosen name <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="pledge-name" name="chosenName" autocomplete="nickname" maxlength="60" required placeholder="What should we call you?">
+              </div>
+              <div class="field field--on-blue">
+                <label for="pledge-location">Location <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="pledge-location" name="location" autocomplete="address-level2" maxlength="80" required placeholder="City, neighborhood, or “online”">
+              </div>
+            </div>
+
+            <div class="field field--on-blue">
+              <label for="pledge-note">What does Ubuntu mean to you? <span class="optional">(optional)</span></label>
+              <textarea id="pledge-note" name="note" rows="3" maxlength="240" placeholder="A sentence you want to carry into the community."></textarea>
+            </div>
+
+            <p class="form-error" id="pledge-error" role="alert" hidden></p>
+
+            <div class="form-actions form-actions--stack">
+              <button class="button button--amber" type="submit">Sign the Pledge <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></button>
+              <p class="form-hint">Your signature is a personal commitment, not a legal contract.</p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         MEMBERSHIP TRACKS
+         ============================================================ -->
+    <section class="section tracks-section" id="tracks" aria-labelledby="tracks-title">
+      <div class="container">
+        <div class="section-head section-head--split">
+          <div>
+            <p class="eyebrow">Join &amp; tracks</p>
+            <h2 id="tracks-title">Four ways to belong.</h2>
+          </div>
+          <p class="section-head-aside">Capacity is not rank. Whether you can give fifty hours or need a quiet check-in, there is a place for you here. Sign the pledge when you are ready, then choose the track that fits this season of your life.</p>
+        </div>
+
+        <div class="status-strip" id="track-pledge-status" role="status">
+          <span class="status-dot" aria-hidden="true"></span>
+          <p id="track-pledge-message">You can explore the tracks below. Sign the pledge to make your choice official.</p>
+          <a class="text-link text-link--compact" href="#pledge">Go to the pledge</a>
+        </div>
+
+        <p class="track-access-note">Track differences are about access and capacity, not rank. Observers read and explore. Contributors and Care Circle members may request. Apprentices learn through real projects and agree on access with a mentor.</p>
+
+        <fieldset class="track-fieldset">
+          <legend class="sr-only">Choose your membership track</legend>
+          <div class="track-grid">
+            <label class="track-choice">
+              <input type="radio" name="membership-track" value="contributor">
+              <span class="track-body">
+                <span class="track-top">
+                  <span class="track-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-hammer"></use></svg></span>
+                  <span class="track-check" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span>
+                </span>
+                <span class="track-name">Active Contributor</span>
+                <span class="track-desc">Offer a real paid-level skill, trade, or care task and pledge hours each month.</span>
+                <span class="track-access"><strong>Access:</strong> request labor, goods, and start a housing conversation.</span>
+                <span class="track-best">Best for: people with time and a craft to share</span>
+              </span>
+            </label>
+
+            <label class="track-choice">
+              <input type="radio" name="membership-track" value="apprentice">
+              <span class="track-body">
+                <span class="track-top">
+                  <span class="track-icon track-icon--amber"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-book"></use></svg></span>
+                  <span class="track-check" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span>
+                </span>
+                <span class="track-name">Apprentice <span class="track-subname">(Skill-Builder)</span></span>
+                <span class="track-desc">Learn a trade through Unbought Academy mentorship, then give it back to the community.</span>
+                <span class="track-access"><strong>Access:</strong> learning and community projects; request access is agreed with a mentor.</span>
+                <span class="track-best">Best for: curious learners ready to practice</span>
+              </span>
+            </label>
+
+            <label class="track-choice">
+              <input type="radio" name="membership-track" value="care">
+              <span class="track-body">
+                <span class="track-top">
+                  <span class="track-icon track-icon--red"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-heart"></use></svg></span>
+                  <span class="track-check" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span>
+                </span>
+                <span class="track-name">Care Circle Member</span>
+                <span class="track-desc">Receive support without proving productivity, and request a peer Welcome &amp; Care Circle chat.</span>
+                <span class="track-access"><strong>Access:</strong> unconditional care and goods, with no labor obligation.</span>
+                <span class="track-best">Best for: people unable to work due to age, disability, illness, or capacity</span>
+              </span>
+            </label>
+
+            <label class="track-choice">
+              <input type="radio" name="membership-track" value="observer">
+              <span class="track-body">
+                <span class="track-top">
+                  <span class="track-icon track-icon--slate"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-eye"></use></svg></span>
+                  <span class="track-check" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span>
+                </span>
+                <span class="track-name">Observer</span>
+                <span class="track-desc">Read and explore the philosophy before actively requesting or offering services.</span>
+                <span class="track-access"><strong>Access:</strong> read and explore only—no requests for labor, goods, or housing.</span>
+                <span class="track-best">Best for: listening, learning, and taking your time</span>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- Rendered by app.js based on the selected radio -->
+        <div class="track-panel" id="track-panel">
+          <div class="track-empty">
+            <span class="track-empty-icon" aria-hidden="true"><svg class="icon"><use href="#icon-people"></use></svg></span>
+            <h3>Choose a track above to see what comes next.</h3>
+            <p>Nothing is locked in. You can change tracks whenever your capacity changes.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SERVICES & GOODS DIRECTORY
+         ============================================================ -->
+    <section class="section section--tint directory-section" id="services" aria-labelledby="services-title">
+      <div class="container">
+        <div class="section-head section-head--split">
+          <div>
+            <p class="eyebrow">Services &amp; goods</p>
+            <h2 id="services-title">The commons, in plain sight.</h2>
+          </div>
+          <p class="section-head-aside">Every listing is an offer, not an advertisement. Filter by the Five Pillars of Society or by exchange type, then request a connection with mutual consent.</p>
+        </div>
+
+        <div class="filter-bar" aria-labelledby="filter-title">
+          <div class="filter-head">
+            <h3 id="filter-title">Filter the directory</h3>
+            <button class="text-button text-button--muted" id="clear-filters" type="button">Reset filters</button>
+          </div>
+          <div class="filter-grid">
+            <div class="field">
+              <label for="pillar-filter">Five Pillars of Society</label>
+              <select id="pillar-filter" name="pillarFilter">
+                <option value="all">All pillars &amp; goods</option>
+                <optgroup label="The Five Pillars of Society">
+                  <option value="building">Building, Repair &amp; Infrastructure</option>
+                  <option value="health">Health, Wellness &amp; Care</option>
+                  <option value="daily">Daily Life &amp; Sustenance</option>
+                  <option value="arts">Arts, Culture &amp; Education</option>
+                  <option value="civic">Civic, Legal &amp; Digital Support</option>
+                </optgroup>
+                <optgroup label="Physical Goods">
+                  <option value="goods">Free Physical Goods &amp; Production</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="field">
+              <label for="exchange-filter">Exchange Type</label>
+              <select id="exchange-filter" name="exchangeFilter">
+                <option value="all">All Offers</option>
+                <option value="free">100% Free Labor / Item</option>
+                <option value="atcost">Free Labor + At-Cost Materials</option>
+              </select>
+            </div>
+            <div class="filter-note">
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg>
+              <p>At-cost means the exact receipt price. No markup. Ever.</p>
+            </div>
+          </div>
+          <p class="results-status" id="results-status" role="status" aria-live="polite" aria-atomic="true">Showing all offerings.</p>
+        </div>
+
+        <div class="directory-guardrails" role="note" aria-labelledby="guardrails-title">
+          <div class="directory-guardrails-head">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg>
+            <h3 id="guardrails-title">Safety &amp; scope guardrails</h3>
+          </div>
+          <ul>
+            <li>Medical, dental, mental-health, and legal offers must state whether they are <strong>General Peer Education</strong> or a <strong>Licensed Clinical/Legal Service</strong> delivered by someone with active state licensure.</li>
+            <li>We never collect or store medical records or diagnoses. Peer support is not emergency care: call <strong>911</strong> for an emergency or <strong>988</strong> for the Suicide &amp; Crisis Lifeline.</li>
+            <li>Every exchange starts with a clear scope and ongoing mutual consent. Consent can be withdrawn at any time.</li>
+          </ul>
+        </div>
+
+        <noscript>
+          <p class="noscript-message">The live directory, filters, pledge, and forms need JavaScript. You are seeing the static page content only.</p>
+        </noscript>
+
+        <div class="listing-grid" id="listings-grid" aria-label="Community service and goods listings">
+          <p class="listing-loading">Loading community offerings…</p>
+        </div>
+
+        <!-- Post form -->
+        <section class="post-card" aria-labelledby="post-title">
+          <div class="post-copy">
+            <p class="eyebrow">Add to the commons</p>
+            <h3 id="post-title">Post a Free Service or Good</h3>
+            <p>Offer a skill, a repair, a class, a care task, or a physical item. Keep the exchange honest: free labor and materials at exact cost only.</p>
+            <div class="post-principle">
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-spark"></use></svg>
+              <p>Listings are saved in this browser for the demo. In a live community, a peer host would review them with you before publishing.</p>
+            </div>
+          </div>
+
+          <form class="post-form" id="post-form">
+            <div class="form-grid">
+              <div class="field field--wide">
+                <label for="post-title-input">Listing title <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="post-title-input" name="title" maxlength="80" required placeholder="e.g., Free bike tune-ups this Saturday">
+              </div>
+              <div class="field">
+                <label for="post-pillar">Pillar <span class="required-mark" aria-hidden="true">*</span></label>
+                <select id="post-pillar" name="pillar" required>
+                  <option value="">Choose a pillar</option>
+                  <option value="building">Building, Repair &amp; Infrastructure</option>
+                  <option value="health">Health, Wellness &amp; Care</option>
+                  <option value="daily">Daily Life &amp; Sustenance</option>
+                  <option value="arts">Arts, Culture &amp; Education</option>
+                  <option value="civic">Civic, Legal &amp; Digital Support</option>
+                  <option value="goods">Free Physical Goods &amp; Production</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="post-exchange">Exchange type <span class="required-mark" aria-hidden="true">*</span></label>
+                <select id="post-exchange" name="exchange" required>
+                  <option value="">Choose an exchange type</option>
+                  <option value="free">100% Free Labor / Item</option>
+                  <option value="atcost">Free Labor + At-Cost Materials</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="post-scope">Regulated-service label</label>
+                <select id="post-scope" name="scope">
+                  <option value="">Not a regulated service</option>
+                  <option value="peer">General Peer Education</option>
+                  <option value="licensed">Licensed Clinical/Legal Service (active license)</option>
+                </select>
+                <p class="field-hint">Required honesty check for medical, dental, mental-health, and legal offers.</p>
+              </div>
+              <div class="field">
+                <label for="post-provider">Your chosen name <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="post-provider" name="provider" maxlength="60" required placeholder="How should neighbors know you?">
+              </div>
+              <div class="field">
+                <label for="post-location">Location <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="post-location" name="location" maxlength="80" required placeholder="Neighborhood, venue, or “online”">
+              </div>
+              <div class="field field--wide">
+                <label for="post-description">Description <span class="required-mark" aria-hidden="true">*</span></label>
+                <textarea id="post-description" name="description" rows="4" maxlength="400" required placeholder="What are you offering? Include what you can safely do, what is at cost, and how you will agree on scope."></textarea>
+                <p class="field-hint" id="post-description-hint">Up to 400 characters. Be clear about scope and consent.</p>
+              </div>
+            </div>
+
+            <div class="field field--check">
+              <label class="checkbox">
+                <input type="checkbox" name="postAgreement" required>
+                <span>I confirm this offer charges nothing for labor, and any materials are at exact receipt cost with zero markup.</span>
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" name="postScopeAgreement" required>
+                <span>I will not present unlicensed work as licensed advice. Regulated offers are labeled honestly, and I will offer only general peer education unless I hold an active license.</span>
+              </label>
+            </div>
+
+            <div class="post-actions">
+              <button class="button button--primary" type="submit">Publish listing <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-plus"></use></svg></button>
+              <p class="form-hint" id="post-status" role="status">No account needed. Stored only on this device.</p>
+            </div>
+          </form>
+        </section>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         UNBOUGHT ACADEMY
+         ============================================================ -->
+    <section class="section section--blue academy-section" id="academy" aria-labelledby="academy-title">
+      <div class="container">
+        <div class="section-head section-head--split section-head--light">
+          <div>
+            <p class="eyebrow eyebrow--light">Unbought Academy</p>
+            <h2 id="academy-title">Learn from a neighbor. Build for the commons.</h2>
+          </div>
+          <p class="section-head-aside">Professionals and tradespeople teach apprentices online or through local guilds. No tuition, no debt, no gatekeeping—just real skills practiced on real community projects.</p>
+        </div>
+
+        <div class="academy-layout">
+          <div class="academy-explainer">
+            <div class="academy-quote">
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-hands"></use></svg>
+              <p>“The best way to learn a trade is beside someone who trusts you with the work.”</p>
+            </div>
+            <p>An apprentice joins a guild, learns safety and craft, and contributes to a project the community actually needs—a ramp, a garden bed, a nonprofit website, a repair café. At the end, peers who saw the work verify the skill.</p>
+
+            <ol class="badge-path" aria-label="How Peer-Verified Skill Badges work">
+              <li>
+                <span class="badge-step">1</span>
+                <div><strong>Learn</strong><span>Mentor-led practice, online or local</span></div>
+              </li>
+              <li>
+                <span class="badge-step">2</span>
+                <div><strong>Build</strong><span>Complete a real community project</span></div>
+              </li>
+              <li>
+                <span class="badge-step">3</span>
+                <div><strong>Reflect</strong><span>Review scope, safety, and consent</span></div>
+              </li>
+              <li>
+                <span class="badge-step">4</span>
+                <div><strong>Verify</strong><span>Two peers sign off on the skill</span></div>
+              </li>
+            </ol>
+
+            <div class="academy-note">
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg>
+              <p>Badges are community-verified, not accredited credentials. Regulated work remains within the mentor’s scope of practice and local law.</p>
+            </div>
+            <div class="academy-note">
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-clock"></use></svg>
+              <p><strong>Mentoring counts.</strong> Teaching and mentoring hours fulfill an Active Contributor’s monthly service pledge—direct tasks and skill-sharing carry the same weight.</p>
+            </div>
+            <div class="academy-note">
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-book"></use></svg>
+              <p><strong>Open curriculum.</strong> Peer-verified projects build toward an open-source curriculum library, so learning stays free, credible, and available to the next neighbor.</p>
+            </div>
+          </div>
+
+          <div class="mentor-list">
+            <article class="mentor-card">
+              <div class="mentor-head">
+                <span class="mentor-avatar" aria-hidden="true">MB</span>
+                <div><h3>Safe Home Repair</h3><p>with Marcus Bell · Northside guild</p></div>
+              </div>
+              <p>Brakes, basic carpentry, weather sealing, and the judgment to know when a job needs a licensed specialist. Apprentices work on neighbor homes and the repair café.</p>
+              <dl class="mentor-meta">
+                <div><dt>Format</dt><dd>Hands-on, local</dd></div>
+                <div><dt>Rhythm</dt><dd>Two Saturdays a month</dd></div>
+                <div><dt>Badge</dt><dd>Home Repair I</dd></div>
+              </dl>
+              <button class="button button--ghost-light button--small" type="button" data-apprentice="Safe home repair">Ask to apprentice <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></button>
+            </article>
+
+            <article class="mentor-card">
+              <div class="mentor-head">
+                <span class="mentor-avatar mentor-avatar--amber" aria-hidden="true">DR</span>
+                <div><h3>Community Web Studio</h3><p>with Devin Reyes · Online + library</p></div>
+              </div>
+              <p>Semantic HTML, modern CSS, vanilla JavaScript, and accessibility. Apprentices ship a real site for a neighborhood group and test it with keyboard and screen-reader users.</p>
+              <dl class="mentor-meta">
+                <div><dt>Format</dt><dd>Online + local co-working</dd></div>
+                <div><dt>Rhythm</dt><dd>Weekly studio hours</dd></div>
+                <div><dt>Badge</dt><dd>Accessible Front-End I</dd></div>
+              </dl>
+              <button class="button button--ghost-light button--small" type="button" data-apprentice="Community web development">Ask to apprentice <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></button>
+            </article>
+
+            <article class="mentor-card">
+              <div class="mentor-head">
+                <span class="mentor-avatar mentor-avatar--red" aria-hidden="true">RJ</span>
+                <div><h3>Soil-to-Table Growing</h3><p>with Rosa Jiménez · Maple Street plots</p></div>
+              </div>
+              <p>Compost, seed starting, seasonal planting, and harvest sharing. Apprentices help steward a neighborhood plot and learn to grow food without a private-market budget.</p>
+              <dl class="mentor-meta">
+                <div><dt>Format</dt><dd>Local garden guild</dd></div>
+                <div><dt>Rhythm</dt><dd>Spring–fall, flexible</dd></div>
+                <div><dt>Badge</dt><dd>Seasonal Growing I</dd></div>
+              </dl>
+              <button class="button button--ghost-light button--small" type="button" data-apprentice="Organic gardening">Ask to apprentice <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></button>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         CARE CIRCLE GOVERNANCE
+         ============================================================ -->
+    <section class="section care-section" id="care-circle" aria-labelledby="care-title">
+      <div class="container">
+        <div class="section-head section-head--split">
+          <div>
+            <p class="eyebrow">Care Circle governance</p>
+            <h2 id="care-title">Care is governed by consent, not suspicion.</h2>
+          </div>
+          <p class="section-head-aside">A preview of how peer care circles make decisions. No medical diagnosis is requested or stored. No one is scored for productivity. Safety and dignity move together.</p>
+        </div>
+
+        <div class="tabs" id="care-tabs">
+          <div class="tab-list" role="tablist" aria-label="Care Circle governance process">
+            <button class="tab-button is-active" id="tab-reflect" type="button" role="tab" aria-selected="true" aria-controls="panel-reflect" tabindex="0">Reciprocal reflection</button>
+            <button class="tab-button" id="tab-review" type="button" role="tab" aria-selected="false" aria-controls="panel-review" tabindex="-1">Blind two-reviewer check</button>
+            <button class="tab-button" id="tab-pause" type="button" role="tab" aria-selected="false" aria-controls="panel-pause" tabindex="-1">90-day reflection pause</button>
+          </div>
+
+          <div class="tab-panel" id="panel-reflect" role="tabpanel" aria-labelledby="tab-reflect" tabindex="0">
+            <div class="tab-intro">
+              <div>
+                <p class="eyebrow">Step one</p>
+                <h3>Ubuntu reciprocal reflection</h3>
+                <p>Every care connection begins with questions asked in both directions. The person offering support reflects too—care is a relationship, not a transaction.</p>
+              </div>
+              <span class="badge badge--soft">No diagnosis requested</span>
+            </div>
+            <blockquote class="reciprocal-opening">
+              <p>“This isn’t a job interview or an interrogation. In a capitalist system, we are trained to prove our worth through productivity and hide our needs out of shame. Today, we are practicing Ubuntu—the truth that my well-being is tied to yours. I’m going to ask you a few questions, and I’ll share my own answers too, so we start as equals.”</p>
+            </blockquote>
+            <div class="question-grid">
+              <article class="question-card">
+                <span class="question-number" aria-hidden="true">01</span>
+                <h4>What would support feel like this season?</h4>
+                <p>Practical help, company, quiet, a ride, a meal—or simply being believed. The answer belongs to the person receiving care.</p>
+              </article>
+              <article class="question-card">
+                <span class="question-number" aria-hidden="true">02</span>
+                <h4>Normalizing need</h4>
+                <p>Think of a time when you couldn’t do something on your own and someone stepped in to help. How did it feel to receive that help, and what was hard about accepting it?</p>
+              </article>
+              <article class="question-card">
+                <span class="question-number" aria-hidden="true">03</span>
+                <h4>Redefining human worth</h4>
+                <p>If you were completely unable to work, produce, or do favors for anyone for the next year, what do you believe your value to a community would still be?</p>
+              </article>
+              <article class="question-card">
+                <span class="question-number" aria-hidden="true">04</span>
+                <h4>Honest capacity</h4>
+                <p>In a world where nobody is forcing you to clock in, what kind of contribution actually feels energizing and sustainable right now—and what drains you or harms your health?</p>
+              </article>
+              <article class="question-card">
+                <span class="question-number" aria-hidden="true">05</span>
+                <h4>Solidarity without scorekeeping</h4>
+                <p>In Unbought, some members build houses or fix cars while others are chronically ill, elderly, or in crisis and cannot work. How do you feel about giving your time knowing you might never get a direct favor back from that specific person?</p>
+              </article>
+              <article class="question-card">
+                <span class="question-number" aria-hidden="true">06</span>
+                <h4>Consent &amp; boundaries</h4>
+                <p>Imagine a neighbor asks for help with a project, and halfway through you realize you don’t have the time, tools, or energy to finish. How would you communicate that boundary with care?</p>
+              </article>
+              <article class="question-card">
+                <span class="question-number" aria-hidden="true">07</span>
+                <h4>Restorative accountability</h4>
+                <p>If you felt another member was acting out of an “every person for themselves” mindset, how would you want the community to approach them—and how would you want to be approached if it were you?</p>
+              </article>
+            </div>
+          </div>
+
+          <div class="tab-panel" id="panel-review" role="tabpanel" aria-labelledby="tab-review" tabindex="0" hidden>
+            <div class="tab-intro">
+              <div>
+                <p class="eyebrow">Step two</p>
+                <h3>Blind two-reviewer anti-bias check</h3>
+                <p>When a care request needs a circle decision, identifying details are removed. Two reviewers assess the same criteria independently before they compare notes.</p>
+              </div>
+              <span class="badge badge--amber">Two-reviewer rule</span>
+            </div>
+            <div class="table-wrap">
+              <table class="review-table">
+                <caption>Independent review rubric used before a care request is matched</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Review criterion</th>
+                    <th scope="col">Reviewer A</th>
+                    <th scope="col">Reviewer B</th>
+                    <th scope="col">Shared agreement</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">Consent is clear and ongoing</th>
+                    <td><span class="table-check"><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg><span class="sr-only">Met</span></span></td>
+                    <td><span class="table-check"><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg><span class="sr-only">Met</span></span></td>
+                    <td><span class="badge badge--green">Both agree</span></td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Request is within scope of practice</th>
+                    <td><span class="table-check"><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg><span class="sr-only">Met</span></span></td>
+                    <td><span class="table-check"><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg><span class="sr-only">Met</span></span></td>
+                    <td><span class="badge badge--green">Both agree</span></td>
+                  </tr>
+                  <tr>
+                    <th scope="row">No extractive or coercive intent</th>
+                    <td><span class="table-check"><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg><span class="sr-only">Met</span></span></td>
+                    <td><span class="table-check"><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg><span class="sr-only">Met</span></span></td>
+                    <td><span class="badge badge--green">Both agree</span></td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Accommodations and access needs considered</th>
+                    <td><span class="table-check"><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg><span class="sr-only">Met</span></span></td>
+                    <td><span class="table-check table-check--pause"><svg class="icon" aria-hidden="true"><use href="#icon-clock"></use></svg><span class="sr-only">Needs more conversation</span></span></td>
+                    <td><span class="badge badge--soft">Discuss, do not deny</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="review-notes">
+              <p><strong>Identifiers removed:</strong> names, addresses, diagnoses, immigration status, and income are not shared with reviewers.</p>
+              <p><strong>No algorithm decides:</strong> reviewers must both agree to proceed. When they disagree, the circle returns to the person with a question—not a rejection.</p>
+            </div>
+          </div>
+
+          <div class="tab-panel" id="panel-pause" role="tabpanel" aria-labelledby="tab-pause" tabindex="0" hidden>
+            <div class="tab-intro">
+              <div>
+                <p class="eyebrow">Step three</p>
+                <h3>The 90-day reflection pause</h3>
+                <p>If a request shows signs of extractive or capitalistic intent—selling free care, recruiting unpaid labor for a private venture, or using aid as leverage—the circle pauses rather than punishes.</p>
+              </div>
+              <span class="badge badge--amber">Not a permanent record</span>
+            </div>
+            <ol class="pause-timeline">
+              <li>
+                <span class="pause-dot" aria-hidden="true">1</span>
+                <div><h4>A concern is raised</h4><p>Any participant can ask for a pause without needing to prove bad intent. The request is paused immediately.</p></div>
+              </li>
+              <li>
+                <span class="pause-dot" aria-hidden="true">2</span>
+                <div><h4>Support and clarity are offered</h4><p>The person receives a plain-language explanation, a chance to respond, and access to an advocate if they want one.</p></div>
+              </li>
+              <li>
+                <span class="pause-dot" aria-hidden="true">3</span>
+                <div><h4>Ninety days of reflection</h4><p>No public ledger, no permanent ban. The person is invited to reflect on power, consent, and the difference between need and extraction.</p></div>
+              </li>
+              <li>
+                <span class="pause-dot" aria-hidden="true">4</span>
+                <div><h4>Return with mutual agreement</h4><p>After 90 days, the circle reconvenes. The request may resume with new boundaries, a different form of support, or a respectful no.</p></div>
+              </li>
+            </ol>
+            <div class="pause-callout">
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-hands"></use></svg>
+              <p><strong>Ubuntu does not mean endless access.</strong> It means we stay in relationship while we protect the community. A boundary can be an act of care.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         HOUSING & LAND TRUST
+         ============================================================ -->
+    <section class="section land-section" id="land" aria-labelledby="land-title">
+      <div class="container">
+        <div class="land-hero">
+          <div class="land-copy">
+            <p class="eyebrow"><span class="badge badge--amber">Phase 2</span> Housing &amp; land trust</p>
+            <h2 id="land-title">Land should belong to the people who tend it.</h2>
+            <p class="lead">We are organizing toward community land trusts: land held permanently for shared use, homes kept affordable across generations, and decisions made by the people who live there—not by distant owners seeking a return.</p>
+            <div class="land-actions">
+              <button class="button button--primary" type="button" data-inquiry="waitlist">Join the housing waitlist</button>
+              <button class="button button--outline" type="button" data-inquiry="land">Offer land or a building</button>
+            </div>
+            <p class="land-status" id="land-inquiry-status" role="status"></p>
+            <p class="land-disclaimer"><strong>Legal status:</strong> “Unbought Community Trust” is a working name for a structure still in formation. We are seeking pro-bono cooperative legal support or a fiscal sponsor before accepting property deeds. No deed is accepted until the trust structure, stewardship agreement, and resident governance are in place. Nothing here is an offer of housing, credit, or a financial product, and the trust is not yet a registered land trust or a tax-deductible charity.</p>
+          </div>
+
+          <div class="land-art" aria-hidden="true">
+            <svg viewBox="0 0 520 420" role="presentation" focusable="false">
+              <circle cx="390" cy="105" r="58" fill="#D99B26" opacity=".9"/>
+              <path d="M0 330c80-30 150-30 230 0s170 30 290-6v96H0Z" fill="#1E3A8A"/>
+              <path d="M0 348c100-24 180-20 260 4s160 18 260-4v72H0Z" fill="#162C68" opacity=".65"/>
+              <g fill="none" stroke="#FAF9F6" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M86 292v-86l64-46 64 46v86"/>
+                <path d="M112 292v-52h76v52"/>
+                <path d="M126 240h18v20h-18zM160 240h18v20h-18z"/>
+                <path d="M280 292v-64l48-34 48 34v64"/>
+                <path d="M304 292v-36h48v36"/>
+                <path d="M60 292h420"/>
+              </g>
+              <g fill="#B44332">
+                <circle cx="150" cy="334" r="8"/><circle cx="172" cy="334" r="8"/><circle cx="194" cy="334" r="8"/>
+              </g>
+              <g fill="#FAF9F6" opacity=".65">
+                <circle cx="330" cy="76" r="3"/><circle cx="358" cy="56" r="3"/><circle cx="414" cy="44" r="3"/><circle cx="448" cy="82" r="3"/>
+              </g>
+            </svg>
+            <p class="land-art-caption">Homes in trust. Power shared.</p>
+          </div>
+        </div>
+
+        <div class="land-grid">
+          <article class="land-card">
+            <span class="land-card-icon land-card-icon--blue"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-house"></use></svg></span>
+            <h3>For future residents</h3>
+            <p>Tell us what a safe, accessible home would make possible for you. The inquiry asks about household size and access needs—not credit scores or productivity.</p>
+            <button class="text-link" type="button" data-inquiry="waitlist">Start a waitlist inquiry <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></button>
+          </article>
+          <article class="land-card">
+            <span class="land-card-icon land-card-icon--amber"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-seed"></use></svg></span>
+            <h3>For landholders</h3>
+            <p>Explore donation, a long-term community lease, or a below-market sale with the land circle. No pressure, no hidden agenda—just a conversation about stewardship.</p>
+            <button class="text-link" type="button" data-inquiry="land">Talk about land <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></button>
+          </article>
+          <article class="land-card">
+            <span class="land-card-icon land-card-icon--red"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-people"></use></svg></span>
+            <h3>Governance by neighbors</h3>
+            <p>Residents and community members hold the majority voice in trust decisions. Affordability is protected by a resale formula, not left to the speculative market.</p>
+            <button class="text-link" type="button" data-inquiry="question">Ask the land circle <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></button>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         ACCESSIBILITY STATEMENT
+         ============================================================ -->
+    <section class="section accessibility-section" id="accessibility" aria-labelledby="accessibility-title">
+      <div class="container accessibility-grid">
+        <div class="accessibility-copy">
+          <p class="eyebrow">Accessibility statement</p>
+          <h2 id="accessibility-title">A commons that leaves people out is not a commons.</h2>
+          <p class="lead">Unbought intends to meet WCAG 2.2 AA across this site. Keyboard access, visible focus, sufficient contrast, captions, reduced-motion support, and plain-language structure are part of the build—not an afterthought.</p>
+          <p>This prototype uses semantic HTML, native dialogs, ARIA live announcements, and no third-party tracking or ad code. Accessibility is a practice, not a one-time audit: the community will keep testing with disabled neighbors and publish what changes.</p>
+        </div>
+        <div class="accessibility-card">
+          <h3>Known prototype limits</h3>
+          <ul>
+            <li>The pledge film is a placeholder with English captions; a fully described and translated production is still to come.</li>
+            <li>No live support inbox, assisted sign-up line, or moderation queue exists yet.</li>
+            <li>Listings, signatures, and inquiries are stored only in this browser, so there is no shared service or account recovery.</li>
+          </ul>
+          <h3>Reporting a barrier</h3>
+          <p>Before launch, Unbought will publish a named accessibility steward and a direct reporting channel. This prototype has no outbound support inbox, so the commitment is documented here rather than implied.</p>
+          <p class="accessibility-note">If a page, form, or interaction blocks you, that is a defect to fix—not a failure on your part.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         CLOSING CALL TO ACTION
+         ============================================================ -->
+    <section class="section closing-cta" id="take-action" aria-labelledby="cta-title">
+      <div class="container closing-cta-inner">
+        <div class="closing-cta-copy">
+          <p class="eyebrow eyebrow--light">The invitation</p>
+          <h2 id="cta-title">Ready to Take Your Power Back?</h2>
+          <p>No bosses. No gatekeeping. No currency. Watch or read the Unbought Pledge, meet our Welcome &amp; Care Circle, and start building a world based on mutual care.</p>
+          <div class="closing-cta-actions">
+            <a class="button button--amber" href="#pledge">Watch &amp; Sign the Unbought Pledge <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+            <a class="button button--outline" href="#care-circle">Meet the Care Circle</a>
+            <a class="button button--outline" href="donate.html">Donate to the Trust</a>
+          </div>
+        </div>
+        <aside class="closing-cta-card" aria-labelledby="cta-fund-title">
+          <span class="badge badge--amber">Trust in formation</span>
+          <h3 id="cta-fund-title">Where donations go</h3>
+          <ol class="cta-fund-list">
+            <li><span class="cta-fund-number" aria-hidden="true">1</span><div><strong>Legal &amp; trust formation</strong><p>Cooperative counsel, fiscal sponsorship, and the agreements that protect the commons.</p></div></li>
+            <li><span class="cta-fund-number" aria-hidden="true">2</span><div><strong>Real estate &amp; land</strong><p>Due diligence, stewardship planning, and land held for community use.</p></div></li>
+            <li><span class="cta-fund-number" aria-hidden="true">3</span><div><strong>Website &amp; operations</strong><p>Hosting, insurance, accounting, and the unglamorous costs of staying alive.</p></div></li>
+            <li><span class="cta-fund-number" aria-hidden="true">4</span><div><strong>Free Goods Fund</strong><p>Any excess buys products neighbors can acquire from the free goods section.</p></div></li>
+          </ol>
+          <a class="text-link" href="donate.html">See the full fund priority <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+        </aside>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="site-footer" id="footer">
+    <div class="container footer-main">
+      <div class="footer-brand">
+        <a class="brand brand--footer" href="#top" aria-label="Unbought — back to the top">
+          <img src="assets/logo.png" alt="Unbought Emblem" width="56" height="56">
+          <span class="brand-text">
+            <span class="brand-name">Unbought</span>
+            <span class="brand-tagline">Built on Ubuntu &amp; Consent.</span>
+          </span>
+        </a>
+        <p class="footer-tagline">Free Labor. Free Education. Free Land.<br>Built on Ubuntu &amp; Consent.</p>
+        <p class="footer-mission">A consent-based, currency-free mutual aid society. Every person has inherent worth, whether or not they can work.</p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Footer">
+        <div>
+          <h2>Explore</h2>
+          <ul>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#pledge">The Pledge</a></li>
+            <li><a href="#services">Services &amp; Goods</a></li>
+            <li><a href="#services">Free Goods</a></li>
+            <li><a href="donate.html">Donate</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Participate</h2>
+          <ul>
+            <li><a href="#tracks">Join &amp; Tracks</a></li>
+            <li><a href="#academy">Unbought Academy</a></li>
+            <li><a href="#care-circle">Care Circle</a></li>
+            <li><a href="#land">Land Trust</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Transparency</h2>
+          <ul>
+            <li><a href="#pledge">Five commitments</a></li>
+            <li><a href="#care-circle">Anti-bias review</a></li>
+            <li><a href="#land">Phase 2 status</a></li>
+            <li><a href="donate.html">Donations &amp; trust</a></li>
+            <li><a href="#accessibility">Accessibility Statement</a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+
+    <div class="container footer-utility">
+      <div class="footer-utility-copy">
+        <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
+        <p>Your pledge, track, listings, inquiries, and donation intents stay in this browser.</p>
+      </div>
+      <button class="button button--ghost-light button--small" id="reset-demo" type="button">
+        <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>
+        Demo Reset / Clear Local Data
+      </button>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>© <span id="copyright-year">2026</span> Unbought. A community practice, not a product.</p>
+      <a class="footer-top-link" href="#top">Back to top <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       DIALOGS
+       ============================================================ -->
+
+  <!-- Mutual consent request dialog -->
+  <dialog class="dialog" id="consent-dialog" aria-labelledby="consent-title" aria-describedby="consent-description">
+    <div class="dialog-shell">
+      <div class="dialog-top">
+        <p class="eyebrow">Mutual consent</p>
+        <button class="icon-button" type="button" data-dialog-close aria-label="Close the consent dialog">
+          <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+        </button>
+      </div>
+      <div class="dialog-content">
+        <h2 id="consent-title">Request with mutual consent</h2>
+        <p id="consent-description">A request starts a conversation. It does not create an employment relationship, a payment obligation, or a guarantee of service.</p>
+
+        <div class="request-summary" id="request-summary">
+          <p class="request-summary-label">Your request</p>
+          <p class="request-summary-title" id="request-summary-title"></p>
+          <p class="request-summary-meta" id="request-summary-meta"></p>
+        </div>
+
+        <form id="consent-form">
+          <fieldset class="dialog-fieldset">
+            <legend>Before we connect</legend>
+            <label class="checkbox">
+              <input type="checkbox" name="voluntary" required>
+              <span>I understand this is a voluntary peer exchange with no payment, employment relationship, or guarantee.</span>
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" name="scope" required>
+              <span>I will agree on scope, time, and boundaries—and I understand regulated services are peer education or support, not licensed professional advice.</span>
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" name="contactConsent" required>
+              <span>I consent to sharing my chosen name and general location with this provider for the purpose of this request.</span>
+            </label>
+          </fieldset>
+
+          <div class="field">
+            <label for="consent-note">Context for the provider <span class="optional">(optional)</span></label>
+            <textarea id="consent-note" name="note" rows="3" maxlength="280" placeholder="What do you need, and what would make this exchange feel safe and respectful?"></textarea>
+          </div>
+
+          <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> This prototype stores your request in this browser only. Nothing is sent to a provider.</p>
+
+          <div class="dialog-actions">
+            <button class="button button--ghost" type="button" data-dialog-close>Not now</button>
+            <button class="button button--primary" type="submit">Confirm request</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Land & housing inquiry dialog -->
+  <dialog class="dialog" id="inquiry-dialog" aria-labelledby="inquiry-title" aria-describedby="inquiry-description">
+    <div class="dialog-shell">
+      <div class="dialog-top">
+        <p class="eyebrow">Land &amp; housing</p>
+        <button class="icon-button" type="button" data-dialog-close aria-label="Close the land inquiry dialog">
+          <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+        </button>
+      </div>
+      <div class="dialog-content">
+        <h2 id="inquiry-title">Join the housing waitlist</h2>
+        <p id="inquiry-description">This is an early planning conversation, not an application for housing or credit. Share only what you are comfortable sharing.</p>
+
+        <form id="inquiry-form">
+          <div class="field">
+            <label for="inquiry-type">What brings you here? <span class="required-mark" aria-hidden="true">*</span></label>
+            <select id="inquiry-type" name="inquiryType" required>
+              <option value="waitlist">Join the housing waitlist</option>
+              <option value="land">Offer land or a building</option>
+              <option value="question">Ask a question</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="inquiry-name">Chosen name <span class="required-mark" aria-hidden="true">*</span></label>
+              <input type="text" id="inquiry-name" name="name" maxlength="60" autocomplete="name" required>
+            </div>
+            <div class="field">
+              <label for="inquiry-contact">Contact <span class="required-mark" aria-hidden="true">*</span></label>
+              <input type="text" id="inquiry-contact" name="contact" maxlength="120" autocomplete="email" required placeholder="Email or phone">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="inquiry-location">General location <span class="required-mark" aria-hidden="true">*</span></label>
+            <input type="text" id="inquiry-location" name="location" maxlength="80" required placeholder="City, neighborhood, or region">
+          </div>
+
+          <fieldset class="inquiry-fields" id="waitlist-fields">
+            <legend>About your household</legend>
+            <div class="form-row">
+              <div class="field">
+                <label for="inquiry-household">Household size</label>
+                <select id="inquiry-household" name="household">
+                  <option value="">Prefer not to say</option>
+                  <option value="1">1 person</option>
+                  <option value="2">2 people</option>
+                  <option value="3-4">3–4 people</option>
+                  <option value="5+">5 or more people</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="inquiry-access">Access needs <span class="optional">(optional)</span></label>
+                <input type="text" id="inquiry-access" name="access" maxlength="120" placeholder="Mobility, sensory, or other needs">
+              </div>
+            </div>
+            <p class="field-hint">No diagnosis, income, credit score, or immigration status is requested.</p>
+          </fieldset>
+
+          <fieldset class="inquiry-fields" id="land-fields" hidden>
+            <legend>About the land or building</legend>
+            <div class="form-row">
+              <div class="field">
+                <label for="inquiry-property">Property type</label>
+                <select id="inquiry-property" name="propertyType">
+                  <option value="">Not sure yet</option>
+                  <option value="land">Open land</option>
+                  <option value="house">House or duplex</option>
+                  <option value="building">Multi-unit or commercial building</option>
+                  <option value="other">Something else</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="inquiry-tenure">Possible arrangement</label>
+                <select id="inquiry-tenure" name="tenure">
+                  <option value="">Still exploring</option>
+                  <option value="donation">Donation</option>
+                  <option value="lease">Long-term community lease</option>
+                  <option value="sale">Below-market sale</option>
+                  <option value="other">Something else</option>
+                </select>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label for="inquiry-note" id="inquiry-note-label">What would you like us to know? <span class="optional">(optional)</span></label>
+            <textarea id="inquiry-note" name="note" rows="3" maxlength="400" placeholder="Share as much or as little as feels right."></textarea>
+          </div>
+
+          <div class="field field--check">
+            <label class="checkbox">
+              <input type="checkbox" id="inquiry-agreement" name="agreement" required>
+              <span id="inquiry-agreement-label">I understand this is a planning-stage waitlist, not an offer of housing or credit.</span>
+            </label>
+          </div>
+
+          <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> In this prototype, your inquiry is stored in this browser only. Nothing is transmitted.</p>
+
+          <div class="dialog-actions">
+            <button class="button button--ghost" type="button" data-dialog-close>Cancel</button>
+            <button class="button button--primary" type="submit">Save inquiry</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Generic accessible confirmation dialog -->
+  <dialog class="dialog dialog--small" id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+    <div class="dialog-shell">
+      <div class="dialog-top">
+        <p class="eyebrow">Please confirm</p>
+        <button class="icon-button" type="button" data-confirm-close aria-label="Close the confirmation dialog">
+          <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+        </button>
+      </div>
+      <div class="dialog-content">
+        <h2 id="confirm-title">Are you sure?</h2>
+        <p id="confirm-message"></p>
+        <div class="dialog-actions">
+          <button class="button button--ghost" type="button" id="confirm-cancel">Keep things as they are</button>
+          <button class="button button--danger" type="button" id="confirm-accept">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+</body>
+</html>

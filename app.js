@@ -1,0 +1,1850 @@
+/* ==========================================================================
+   UNBOUGHT — app.js
+   Vanilla JavaScript for the Unbought community prototype.
+
+   Everything is stored in one versioned localStorage key. No network calls,
+   no analytics, no third-party code. All user-generated text is inserted with
+   textContent / value assignments rather than HTML strings, so a saved listing
+   can never inject markup into the page.
+
+   Contents:
+     01. Data & constants
+     02. State, storage & small helpers
+     03. Services & goods directory
+     04. Posting a listing
+     05. Pledge & digital signature
+     06. Membership tracks
+     07. Tabs, navigation & page polish
+     08. Dialogs, land inquiries & reset
+     09. Initialization
+   ========================================================================== */
+(() => {
+  'use strict';
+
+  /* ------------------------------------------------------------------------
+     01. Data & constants
+     ------------------------------------------------------------------------ */
+  const STORAGE_KEY = 'unbought:v1';
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
+  const PILLARS = Object.freeze({
+    building: {
+      label: 'Building, Repair & Infrastructure',
+      short: 'Building & Repair'
+    },
+    health: {
+      label: 'Health, Wellness & Care',
+      short: 'Health & Care'
+    },
+    daily: {
+      label: 'Daily Life & Sustenance',
+      short: 'Daily Life'
+    },
+    arts: {
+      label: 'Arts, Culture & Education',
+      short: 'Arts & Education'
+    },
+    civic: {
+      label: 'Civic, Legal & Digital Support',
+      short: 'Civic & Digital'
+    },
+    goods: {
+      label: 'Free Physical Goods & Production',
+      short: 'Free Goods'
+    }
+  });
+
+  const EXCHANGES = Object.freeze({
+    free: {
+      label: '100% Free Labor / Item',
+      short: '100% Free'
+    },
+    atcost: {
+      label: 'Free Labor + At-Cost Materials',
+      short: 'Labor free · materials at cost'
+    }
+  });
+
+  const SCOPE_LABELS = Object.freeze({
+    peer: 'General Peer Education',
+    licensed: 'Licensed Clinical/Legal Service'
+  });
+
+  const TRACKS = Object.freeze({
+    contributor: 'Active Contributor',
+    apprentice: 'Apprentice (Skill-Builder)',
+    care: 'Care Circle Member',
+    observer: 'Observer'
+  });
+
+  /* Six realistic seed listings. User-created listings are prepended at runtime. */
+  const SEED_LISTINGS = Object.freeze([
+    {
+      id: 'seed-dance',
+      pillar: 'arts',
+      exchange: 'free',
+      title: 'Community Dance & Movement Workshops',
+      provider: 'Amara Okafor',
+      location: 'Eastside Community Hall + online',
+      description: 'A joyful, all-bodies movement circle for people who danced once, never danced, or just want to move without being watched. No experience, no mirrors, no performance pressure. Paid-level facilitation, offered freely.',
+      details: [
+        { label: 'Where', value: 'Eastside Community Hall + online' },
+        { label: 'Rhythm', value: '2nd & 4th Saturday · 90 min' },
+        { label: 'Access', value: 'Chairs · scent-free room · captions' }
+      ],
+      note: 'All ages and bodies welcome.'
+    },
+    {
+      id: 'seed-web',
+      pillar: 'civic',
+      exchange: 'free',
+      title: 'Web Coding & Graphic Design Studio Hours',
+      provider: 'Devin Reyes',
+      location: 'Remote + Tuesday library drop-in',
+      description: 'Two-hour studio for neighbors, small nonprofits, and co-ops. Bring a website, a flyer, an accessibility question, or just curiosity. We work on semantic HTML, CSS, vanilla JavaScript, and print design together—no hourly invoice.',
+      details: [
+        { label: 'Format', value: 'Remote + Tuesday library drop-in' },
+        { label: 'Good for', value: 'Neighbors & small community groups' },
+        { label: 'Bring', value: 'A project or a question' }
+      ],
+      note: 'Accessibility reviewed with every build.'
+    },
+    {
+      id: 'seed-brakes',
+      pillar: 'building',
+      exchange: 'atcost',
+      title: 'Auto Brake Repair — Parts at Exact Cost',
+      provider: 'Marcus Bell',
+      location: 'Northside garage · by appointment',
+      description: 'Brake pads, rotors, fluid checks, and honest safety inspections. You buy the parts at receipt price, or I order them and show you the receipt. Labor is free. Zero markup, ever. I will say no when a job is outside my scope or needs a licensed specialist.',
+      details: [
+        { label: 'Rhythm', value: 'Weekends · 2–4 hrs' },
+        { label: 'At cost', value: 'Pads, rotors, fluid — receipt shown' },
+        { label: 'Good for', value: 'Older cars & tight budgets' }
+      ],
+      note: 'Labor free. Parts at exact receipt price.'
+    },
+    {
+      id: 'seed-garden',
+      pillar: 'daily',
+      exchange: 'atcost',
+      title: 'Organic Backyard Gardening & Seed Share',
+      provider: 'Rosa Jiménez',
+      location: 'Maple Street plots + home visits',
+      description: 'Garden planning, planting, pruning, compost setup, and seasonal coaching. Seedlings and compost are at exact receipt cost; the teaching and labor are free. Harvest is shared with everyone who tends the plot.',
+      details: [
+        { label: 'Season', value: 'Spring–fall · flexible' },
+        { label: 'At cost', value: 'Seedlings & compost at receipt' },
+        { label: 'Capacity', value: '4 households per month' }
+      ],
+      note: 'No plot fee. Harvest shared.'
+    },
+    {
+      id: 'seed-childcare',
+      pillar: 'daily',
+      exchange: 'free',
+      title: 'Childcare & Laundry Support',
+      provider: 'Nia Brooks',
+      location: 'Westside neighborhood',
+      description: 'After-school care, bedtime routines, laundry folding, and pickup help for families in a hard week. Free and consent-based. We meet first, references are available, and a background check can be requested. Parents are always welcome to stay.',
+      details: [
+        { label: 'Rhythm', value: 'Weekday afternoons' },
+        { label: 'Capacity', value: '2 families at a time' },
+        { label: 'Safety', value: 'Meet first · references available' }
+      ],
+      note: 'No unvetted one-on-one time.'
+    },
+    {
+      id: 'seed-legal',
+      pillar: 'civic',
+      exchange: 'free',
+      title: 'Peer Legal Literacy Circles',
+      provider: 'Samir Haddad',
+      location: 'Online + downtown library',
+      description: 'Plain-language sessions on tenants’ rights, small claims, benefits appeals, and how to find a licensed lawyer. This is peer education, not legal representation or individualized advice. We clarify scope at the start of every circle.',
+      details: [
+        { label: 'Rhythm', value: 'First Thursday · 60 min' },
+        { label: 'Scope', value: 'General Peer Education' },
+        { label: 'Not', value: 'Legal representation or advice' }
+      ],
+      scope: 'peer',
+      note: 'Licensed referrals available.'
+    }
+  ]);
+
+  const MULTI_VALUE_FIELDS = new Set(['support', 'capacity', 'interests']);
+
+  /* ------------------------------------------------------------------------
+     02. State, storage & small helpers
+     ------------------------------------------------------------------------ */
+  function createDefaultState() {
+    return {
+      pledge: null,
+      track: null,
+      trackDetails: {},
+      listings: [],
+      requests: [],
+      inquiries: []
+    };
+  }
+
+  function cleanString(value, maxLength = 400) {
+    if (typeof value !== 'string') return '';
+    return value.trim().slice(0, maxLength);
+  }
+
+  // Only accept keys that belong to the object itself. This keeps stray
+  // prototype names (for example "constructor") from passing as valid data.
+  function hasOwn(object, key) {
+    return Object.prototype.hasOwnProperty.call(object, key);
+  }
+
+  function isValidListing(item) {
+    return Boolean(
+      item &&
+      typeof item === 'object' &&
+      typeof item.id === 'string' &&
+      typeof item.title === 'string' &&
+      hasOwn(PILLARS, item.pillar) &&
+      hasOwn(EXCHANGES, item.exchange) &&
+      typeof item.provider === 'string' &&
+      typeof item.location === 'string' &&
+      typeof item.description === 'string'
+    );
+  }
+
+  function normalizeStoredListing(item) {
+    return {
+      id: cleanString(item.id, 100) || `listing-${Date.now().toString(36)}`,
+      title: cleanString(item.title, 80),
+      pillar: item.pillar,
+      exchange: item.exchange,
+      provider: cleanString(item.provider, 60),
+      location: cleanString(item.location, 80),
+      description: cleanString(item.description, 400),
+      note: cleanString(item.note, 120) || 'Added by a neighbor · consent first',
+      scope: hasOwn(SCOPE_LABELS, item.scope) ? item.scope : '',
+      details: Array.isArray(item.details)
+        ? item.details
+            .filter((detail) => detail && typeof detail === 'object')
+            .slice(0, 4)
+            .map((detail) => ({
+              label: cleanString(detail.label, 40),
+              value: cleanString(detail.value, 120)
+            }))
+            .filter((detail) => detail.label && detail.value)
+        : [],
+      isUser: true,
+      createdAt: cleanString(item.createdAt, 40)
+    };
+  }
+
+  function loadState() {
+    const fallback = createDefaultState();
+    let raw = null;
+
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      raw = saved ? JSON.parse(saved) : null;
+    } catch (error) {
+      return fallback;
+    }
+
+    if (!raw || typeof raw !== 'object') return fallback;
+
+    if (raw.pledge && typeof raw.pledge === 'object') {
+      const name = cleanString(raw.pledge.name, 60);
+      if (name) {
+        fallback.pledge = {
+          name,
+          location: cleanString(raw.pledge.location, 80),
+          note: cleanString(raw.pledge.note, 240),
+          signedAt: cleanString(raw.pledge.signedAt, 40)
+        };
+      }
+    }
+
+    if (typeof raw.track === 'string' && hasOwn(TRACKS, raw.track)) {
+      fallback.track = raw.track;
+    }
+
+    if (raw.trackDetails && typeof raw.trackDetails === 'object' && !Array.isArray(raw.trackDetails)) {
+      fallback.trackDetails = raw.trackDetails;
+    }
+
+    if (Array.isArray(raw.listings)) {
+      fallback.listings = raw.listings
+        .filter(isValidListing)
+        .slice(0, 60)
+        .map(normalizeStoredListing);
+    }
+
+    if (Array.isArray(raw.requests)) {
+      fallback.requests = raw.requests
+        .filter((request) => request && typeof request === 'object' && typeof request.listingId === 'string')
+        .slice(0, 100);
+    }
+
+    if (Array.isArray(raw.inquiries)) {
+      fallback.inquiries = raw.inquiries
+        .filter((inquiry) => inquiry && typeof inquiry === 'object' && typeof inquiry.type === 'string')
+        .slice(0, 100);
+    }
+
+    return fallback;
+  }
+
+  let state = loadState();
+  let storageWarningShown = false;
+  let toastTimer = null;
+  let currentListingId = null;
+  let confirmAction = null;
+  let currentInquiryType = 'waitlist';
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (error) {
+      if (!storageWarningShown) {
+        storageWarningShown = true;
+        showToast('Local storage is blocked. Changes will last only for this visit.');
+      }
+    }
+  }
+
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+  function createEl(tagName, className = '', text = '') {
+    const element = document.createElement(tagName);
+    if (className) element.className = className;
+    if (text) element.textContent = text;
+    return element;
+  }
+
+  function createIcon(name) {
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('class', 'icon');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+    const use = document.createElementNS(SVG_NS, 'use');
+    use.setAttribute('href', `#icon-${name}`);
+    svg.appendChild(use);
+    return svg;
+  }
+
+  function makeId(prefix = 'id') {
+    return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+  }
+
+  function domId(value) {
+    return String(value).replace(/[^a-zA-Z0-9_-]/g, '-');
+  }
+
+  function formatDate(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    }).format(date);
+  }
+
+  function initials(name) {
+    const words = String(name || '').trim().split(/\s+/).filter(Boolean);
+    return words.slice(0, 2).map((word) => word.charAt(0).toUpperCase()).join('') || '?';
+  }
+
+  function scrollBehavior() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+  }
+
+  function announce(message) {
+    const region = document.getElementById('live-region');
+    if (!region) return;
+    region.textContent = '';
+    window.setTimeout(() => {
+      region.textContent = message;
+    }, 30);
+  }
+
+  function showToast(message, announceMessage = true) {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+
+    toast.textContent = message;
+    toast.hidden = false;
+    window.requestAnimationFrame(() => toast.classList.add('is-visible'));
+
+    window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => {
+      toast.classList.remove('is-visible');
+      window.setTimeout(() => {
+        toast.hidden = true;
+      }, 220);
+    }, 4200);
+
+    if (announceMessage) announce(message);
+  }
+
+  function getAllListings() {
+    // User posts appear first; seed listings remain available underneath.
+    return [...state.listings, ...SEED_LISTINGS];
+  }
+
+  function findListing(id) {
+    return getAllListings().find((listing) => listing.id === id) || null;
+  }
+
+  function focusListingTitle(id, preventScroll = false) {
+    const card = document.getElementById(`listing-${domId(id)}`);
+    const title = card ? $('.listing-title', card) : null;
+    if (!title) return;
+    title.tabIndex = -1;
+    title.focus({ preventScroll });
+  }
+
+  /* ------------------------------------------------------------------------
+     03. Services & goods directory
+     ------------------------------------------------------------------------ */
+  function getFilterValues() {
+    return {
+      pillar: $('#pillar-filter') ? $('#pillar-filter').value : 'all',
+      exchange: $('#exchange-filter') ? $('#exchange-filter').value : 'all'
+    };
+  }
+
+  function getFilteredListings() {
+    const { pillar, exchange } = getFilterValues();
+    return getAllListings().filter((listing) => {
+      const matchesPillar = pillar === 'all' || listing.pillar === pillar;
+      const matchesExchange = exchange === 'all' || listing.exchange === exchange;
+      return matchesPillar && matchesExchange;
+    });
+  }
+
+  function addBadge(container, className, text) {
+    const badge = createEl('span', `badge ${className}`, text);
+    container.appendChild(badge);
+    return badge;
+  }
+
+  function buildListingCard(listing) {
+    const card = createEl('article', 'listing-card');
+    card.id = `listing-${domId(listing.id)}`;
+    card.dataset.pillar = listing.pillar;
+    card.dataset.listingId = listing.id;
+    if (listing.isUser) card.classList.add('is-user');
+
+    const isRequested = state.requests.some((request) => request.listingId === listing.id);
+    if (isRequested) card.classList.add('is-requested');
+
+    const badges = createEl('div', 'listing-badges');
+    addBadge(badges, 'badge--pillar', PILLARS[listing.pillar].short);
+    addBadge(
+      badges,
+      listing.exchange === 'free' ? 'badge--free' : 'badge--atcost',
+      listing.exchange === 'free' ? '100% Free' : 'Labor free · materials at cost'
+    );
+    if (listing.isUser) addBadge(badges, 'badge--soft', 'Posted by you');
+    if (hasOwn(SCOPE_LABELS, listing.scope)) addBadge(badges, 'badge--soft', SCOPE_LABELS[listing.scope]);
+    card.appendChild(badges);
+
+    const title = createEl('h3', 'listing-title', listing.title);
+    title.id = `listing-title-${domId(listing.id)}`;
+    card.appendChild(title);
+
+    const provider = createEl('p', 'listing-provider');
+    const avatar = createEl('span', 'avatar', initials(listing.provider));
+    avatar.setAttribute('aria-hidden', 'true');
+    provider.append(avatar, document.createTextNode('Offered by '));
+    const providerName = createEl('strong', '', listing.provider);
+    provider.appendChild(providerName);
+    card.appendChild(provider);
+
+    card.appendChild(createEl('p', 'listing-desc', listing.description));
+
+    const meta = createEl('dl', 'listing-meta');
+    const details = Array.isArray(listing.details) && listing.details.length
+      ? listing.details
+      : [{ label: 'Where', value: listing.location }];
+
+    details.forEach((detail) => {
+      if (!detail || !detail.label || !detail.value) return;
+      const row = document.createElement('div');
+      row.appendChild(createEl('dt', '', detail.label));
+      row.appendChild(createEl('dd', '', detail.value));
+      meta.appendChild(row);
+    });
+    card.appendChild(meta);
+
+    const actions = createEl('div', 'listing-actions');
+    const note = createEl(
+      'p',
+      'listing-note',
+      isRequested ? 'Request saved locally · thank you' : listing.note || 'Peer offer · consent first'
+    );
+    note.prepend(createIcon('check'));
+    actions.appendChild(note);
+
+    const requestButton = createEl('button', 'button button--small');
+    requestButton.type = 'button';
+    requestButton.dataset.requestListing = listing.id;
+
+    if (isRequested) {
+      requestButton.classList.add('button--ghost');
+      requestButton.disabled = true;
+      requestButton.append(createIcon('check'), document.createTextNode('Request recorded'));
+      requestButton.setAttribute('aria-label', `Request recorded: ${listing.title}`);
+    } else {
+      requestButton.classList.add('button--outline');
+      requestButton.textContent = 'Request with Mutual Consent';
+      requestButton.setAttribute('aria-label', `Request with Mutual Consent: ${listing.title}`);
+    }
+    actions.appendChild(requestButton);
+
+    if (listing.isUser) {
+      const removeWrap = createEl('div', 'listing-remove');
+      const removeButton = createEl('button');
+      removeButton.type = 'button';
+      removeButton.dataset.removeListing = listing.id;
+      removeButton.append(createIcon('trash'), document.createTextNode('Remove my listing'));
+      removeButton.setAttribute('aria-label', `Remove my listing: ${listing.title}`);
+      removeWrap.appendChild(removeButton);
+      actions.appendChild(removeWrap);
+    }
+
+    card.appendChild(actions);
+    return card;
+  }
+
+  function renderListings(listings) {
+    const grid = document.getElementById('listings-grid');
+    if (!grid) return;
+
+    grid.replaceChildren();
+    if (!listings.length) {
+      const empty = createEl('div', 'no-results');
+      empty.appendChild(createEl('h3', '', 'No offerings match those filters yet.'));
+      empty.appendChild(createEl('p', '', 'Try another pillar or exchange type—or post the first free offer in this category.'));
+      const reset = createEl('button', 'button button--outline button--small', 'Reset filters');
+      reset.type = 'button';
+      reset.dataset.clearFilters = '';
+      empty.appendChild(reset);
+      grid.appendChild(empty);
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    listings.forEach((listing) => fragment.appendChild(buildListingCard(listing)));
+    grid.appendChild(fragment);
+  }
+
+  function updateResultsStatus(shown, total, pillar, exchange) {
+    const status = document.getElementById('results-status');
+    if (!status) return;
+
+    const pillarText = pillar === 'all' ? 'all pillars & goods' : PILLARS[pillar].label;
+    const exchangeText = exchange === 'all' ? 'all exchange types' : EXCHANGES[exchange].label;
+
+    if (!shown) {
+      status.textContent = `No offerings match ${pillarText} and ${exchangeText}. Try resetting the filters.`;
+    } else if (pillar === 'all' && exchange === 'all') {
+      status.textContent = `Showing all ${total} community offerings.`;
+    } else {
+      status.textContent = `Showing ${shown} of ${total} offerings · ${pillarText} · ${exchangeText}.`;
+    }
+  }
+
+  function applyFilters() {
+    const all = getAllListings();
+    const filtered = getFilteredListings();
+    const { pillar, exchange } = getFilterValues();
+    renderListings(filtered);
+    updateResultsStatus(filtered.length, all.length, pillar, exchange);
+  }
+
+  function resetFilters() {
+    const pillarFilter = document.getElementById('pillar-filter');
+    const exchangeFilter = document.getElementById('exchange-filter');
+    if (pillarFilter) pillarFilter.value = 'all';
+    if (exchangeFilter) exchangeFilter.value = 'all';
+    applyFilters();
+  }
+
+  function initDirectory() {
+    const pillarFilter = document.getElementById('pillar-filter');
+    const exchangeFilter = document.getElementById('exchange-filter');
+    const clearButton = document.getElementById('clear-filters');
+    const grid = document.getElementById('listings-grid');
+
+    if (pillarFilter) pillarFilter.addEventListener('change', applyFilters);
+    if (exchangeFilter) exchangeFilter.addEventListener('change', applyFilters);
+    if (clearButton) clearButton.addEventListener('click', resetFilters);
+
+    if (grid) {
+      grid.addEventListener('click', (event) => {
+        const requestButton = event.target.closest('[data-request-listing]');
+        if (requestButton) {
+          openConsentDialog(requestButton.dataset.requestListing, requestButton);
+          return;
+        }
+
+        const removeButton = event.target.closest('[data-remove-listing]');
+        if (removeButton) {
+          confirmRemoveListing(removeButton.dataset.removeListing, removeButton);
+          return;
+        }
+
+        const resetButton = event.target.closest('[data-clear-filters]');
+        if (resetButton) resetFilters();
+      });
+    }
+
+    applyFilters();
+  }
+
+  /* ------------------------------------------------------------------------
+     04. Posting a listing
+     ------------------------------------------------------------------------ */
+  function requireNonBlank(control) {
+    if (!control) return true;
+    if (control.value.trim()) return true;
+    control.setCustomValidity('Please fill out this field.');
+    control.reportValidity();
+    control.setCustomValidity('');
+    control.focus();
+    return false;
+  }
+
+  function initPostForm() {
+    const form = document.getElementById('post-form');
+    if (!form) return;
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+
+      const titleInput = document.getElementById('post-title-input');
+      const providerInput = document.getElementById('post-provider');
+      const locationInput = document.getElementById('post-location');
+      const descriptionInput = document.getElementById('post-description');
+
+      if (![titleInput, providerInput, locationInput, descriptionInput].every(requireNonBlank)) {
+        return;
+      }
+
+      const data = new FormData(form);
+      const title = cleanString(data.get('title'), 80);
+      const provider = cleanString(data.get('provider'), 60);
+      const location = cleanString(data.get('location'), 80);
+      const description = cleanString(data.get('description'), 400);
+      const pillar = String(data.get('pillar') || '');
+      const exchange = String(data.get('exchange') || '');
+      const scope = String(data.get('scope') || '');
+
+      if (!hasOwn(PILLARS, pillar) || !hasOwn(EXCHANGES, exchange)) return;
+      if (scope && !hasOwn(SCOPE_LABELS, scope)) return;
+
+      const listing = {
+        id: makeId('user-listing'),
+        title,
+        provider,
+        location,
+        description,
+        pillar,
+        exchange,
+        scope,
+        details: [
+          { label: 'Where', value: location },
+          { label: 'Exchange', value: EXCHANGES[exchange].label },
+          { label: 'Contact', value: 'Through a consent request' }
+        ],
+        note: 'Posted by a neighbor · consent first',
+        isUser: true,
+        createdAt: new Date().toISOString()
+      };
+
+      state.listings.unshift(listing);
+      saveState();
+
+      resetFilters();
+      form.reset();
+      const postStatus = document.getElementById('post-status');
+      if (postStatus) {
+        postStatus.textContent = 'Published. Your listing is now in the directory above.';
+      }
+      showToast('Listing published to this browser.', false);
+      announce(`Your listing “${listing.title}” was published. It is at the top of the directory.`);
+      focusListingTitle(listing.id);
+    });
+  }
+
+  function confirmRemoveListing(id, trigger) {
+    const listing = state.listings.find((item) => item.id === id);
+    if (!listing) return;
+
+    showConfirm({
+      title: 'Remove your listing?',
+      message: `“${listing.title}” will be removed from this browser. This cannot be undone.`,
+      confirmLabel: 'Remove listing',
+      tone: 'danger',
+      onConfirm: () => {
+        state.listings = state.listings.filter((item) => item.id !== id);
+        saveState();
+        applyFilters();
+        announce('Your listing was removed.');
+        showToast('Listing removed.', false);
+        const status = document.getElementById('results-status');
+        if (status) {
+          status.tabIndex = -1;
+          status.focus({ preventScroll: true });
+        }
+      }
+    });
+  }
+
+  /* ------------------------------------------------------------------------
+     05. Pledge & digital signature
+     ------------------------------------------------------------------------ */
+  function renderPledge() {
+    const card = document.getElementById('signature-card');
+    const banner = document.getElementById('signed-banner');
+    const signedName = document.getElementById('signed-name');
+    const signedDate = document.getElementById('signed-date');
+    if (!card || !banner || !signedName || !signedDate) return;
+
+    const pledge = state.pledge;
+    const isSigned = Boolean(pledge);
+    card.classList.toggle('is-signed', isSigned);
+    banner.hidden = !isSigned;
+
+    if (isSigned) {
+      const when = formatDate(pledge.signedAt);
+      signedName.textContent = `Signed by ${pledge.name}`;
+      signedDate.textContent = [pledge.location || 'Location not shared', when].filter(Boolean).join(' · ');
+    } else {
+      signedName.textContent = '';
+      signedDate.textContent = '';
+    }
+  }
+
+  function renderTrackGate() {
+    const strip = document.getElementById('track-pledge-status');
+    const message = document.getElementById('track-pledge-message');
+    const link = strip ? $('.text-link', strip) : null;
+    if (!strip || !message) return;
+
+    const isSigned = Boolean(state.pledge);
+    strip.classList.toggle('is-signed', isSigned);
+
+    if (isSigned) {
+      const trackText = state.track
+        ? ` Your saved track is ${TRACKS[state.track]}. You can change it whenever your capacity changes.`
+        : ' Choose the track that fits this season of your life.';
+      message.textContent = `Pledge signed by ${state.pledge.name}.${trackText}`;
+      if (link) link.textContent = 'Review the pledge';
+    } else {
+      const trackText = state.track
+        ? ` You are exploring the ${TRACKS[state.track]} track. Sign the pledge to make it official.`
+        : ' You can explore the tracks below. Sign the pledge to make your choice official.';
+      message.textContent = trackText.trim();
+      if (link) link.textContent = 'Go to the pledge';
+    }
+  }
+
+  function initPledgeForm() {
+    const form = document.getElementById('pledge-form');
+    const errorBox = document.getElementById('pledge-error');
+    const withdraw = document.getElementById('withdraw-pledge');
+    const card = document.getElementById('signature-card');
+    if (!form && !withdraw) return;
+
+    if (form) {
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (errorBox) errorBox.hidden = true;
+        if (!form.reportValidity()) return;
+
+        const data = new FormData(form);
+        const name = cleanString(data.get('chosenName'), 60);
+        const location = cleanString(data.get('location'), 80);
+        const note = cleanString(data.get('note'), 240);
+        const agreement = document.getElementById('pledge-agreement');
+        const freeAtCost = document.getElementById('pledge-free-atcost');
+
+        if (!agreement || !agreement.checked) {
+          if (errorBox) {
+            errorBox.textContent = 'Please confirm the five commitments before signing.';
+            errorBox.hidden = false;
+          }
+          if (agreement) agreement.focus();
+          return;
+        }
+
+        if (!freeAtCost || !freeAtCost.checked) {
+          if (errorBox) {
+            errorBox.textContent = 'Please confirm that you will operate on a strictly free or at-cost basis.';
+            errorBox.hidden = false;
+          }
+          if (freeAtCost) freeAtCost.focus();
+          return;
+        }
+
+        if (!name || !location) {
+          if (errorBox) {
+            errorBox.textContent = 'Please add a chosen name and a general location.';
+            errorBox.hidden = false;
+          }
+          return;
+        }
+
+        state.pledge = {
+          name,
+          location,
+          note,
+          signedAt: new Date().toISOString()
+        };
+        saveState();
+        renderPledge();
+        renderTrackGate();
+
+        const banner = document.getElementById('signed-banner');
+        if (banner) {
+          banner.tabIndex = -1;
+          banner.focus({ preventScroll: true });
+        }
+        announce(`Pledge signed by ${name}. Your signature is saved in this browser. Choose your membership track below.`);
+        showToast('Pledge signed. Thank you for choosing community.', false);
+      });
+    }
+
+    if (withdraw) {
+      withdraw.addEventListener('click', () => {
+        showConfirm({
+          title: 'Withdraw your signature?',
+          message: 'Your pledge will be removed from this browser. Your chosen track can remain saved, but it will no longer be marked as pledged.',
+          confirmLabel: 'Withdraw signature',
+          tone: 'danger',
+          onConfirm: () => {
+            state.pledge = null;
+            saveState();
+            renderPledge();
+            renderTrackGate();
+
+            const agreement = document.getElementById('pledge-agreement');
+            if (agreement) agreement.checked = false;
+
+            const freeAtCost = document.getElementById('pledge-free-atcost');
+            if (freeAtCost) freeAtCost.checked = false;
+
+            const firstField = document.getElementById('pledge-agreement') || (form ? form.querySelector('input, textarea, button') : null);
+            if (firstField) firstField.focus({ preventScroll: true });
+
+            announce('Your pledge signature was withdrawn. You can sign again at any time.');
+            showToast('Signature withdrawn.', false);
+          }
+        });
+      });
+    }
+
+    // Ensure clicking the signed banner's copy area doesn't accidentally submit anything.
+    if (card) {
+      card.addEventListener('click', (event) => {
+        if (event.target === event.currentTarget) return;
+      });
+    }
+
+    renderPledge();
+    renderTrackGate();
+  }
+
+  /* ------------------------------------------------------------------------
+     06. Membership tracks
+     ------------------------------------------------------------------------ */
+  function pillarOptions(includeGoods = false) {
+    return Object.entries(PILLARS)
+      .filter(([key]) => includeGoods || key !== 'goods')
+      .map(([key, pillar]) => `<option value="${key}">${pillar.label}</option>`)
+      .join('');
+  }
+
+  const TRACK_TEMPLATES = {
+    contributor: () => `
+      <div class="panel-head">
+        <div class="panel-head-copy">
+          <p class="eyebrow">Active Contributor</p>
+          <h3>What will you share?</h3>
+          <p>Offer the same quality of work you would be paid for—without charging for your time. Be specific about scope, and name the pillar your offer belongs to.</p>
+        </div>
+        <span class="badge badge--pillar">Paid-level, freely given</span>
+      </div>
+      <form class="panel-form">
+        <div class="form-row">
+          <div class="field">
+            <label for="contributor-skill">Skill, trade, or care task <span class="required-mark" aria-hidden="true">*</span></label>
+            <input type="text" id="contributor-skill" name="skill" maxlength="80" required placeholder="e.g., wheelchair ramp carpentry, tax prep, haircuts">
+          </div>
+          <div class="field">
+            <label for="contributor-pillar">Primary pillar <span class="required-mark" aria-hidden="true">*</span></label>
+            <select id="contributor-pillar" name="pillar" required>
+              <option value="">Choose a pillar</option>
+              ${pillarOptions(false)}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="contributor-hours">Monthly hours pledged <span class="required-mark" aria-hidden="true">*</span></label>
+            <input type="number" id="contributor-hours" name="hours" min="1" max="40" step="1" value="4" required>
+            <p class="field-hint">A real, sustainable number. You can change it later.</p>
+          </div>
+          <div class="field">
+            <label for="contributor-availability">Availability <span class="optional">(optional)</span></label>
+            <input type="text" id="contributor-availability" name="availability" maxlength="100" placeholder="e.g., Saturday mornings, online weeknights">
+          </div>
+        </div>
+        <div class="field field--check">
+          <label class="checkbox">
+            <input type="checkbox" name="scope" value="agreed" required>
+            <span>I will agree on scope, safety, and boundaries before starting—and I will refer out work outside my competence or legal scope.</span>
+          </label>
+        </div>
+        <div class="panel-actions">
+          <button class="button button--primary" type="submit">Save contributor track <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></button>
+          <p class="panel-note">Saving records your track and details in this browser only.</p>
+        </div>
+      </form>
+    `,
+
+    apprentice: () => `
+      <div class="panel-head">
+        <div class="panel-head-copy">
+          <p class="eyebrow">Apprentice <span class="optional">(Skill-Builder)</span></p>
+          <h3>What do you want to learn?</h3>
+          <p>Join a mentor and a local or online guild. You are not expected to arrive skilled—only willing to practice safely and give the craft back to the community.</p>
+        </div>
+        <span class="badge badge--pillar">Learn by doing</span>
+      </div>
+      <form class="panel-form">
+        <div class="form-row">
+          <div class="field">
+            <label for="apprentice-craft">Craft or guild <span class="required-mark" aria-hidden="true">*</span></label>
+            <select id="apprentice-craft" name="craft" required>
+              <option value="">Choose a craft or guild</option>
+              <option value="home-repair">Safe home repair &amp; building</option>
+              <option value="web">Community web development</option>
+              <option value="garden">Organic gardening</option>
+              <option value="care">Care circle &amp; listening</option>
+              <option value="other">Something else</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="apprentice-format">Learning format <span class="required-mark" aria-hidden="true">*</span></label>
+            <select id="apprentice-format" name="format" required>
+              <option value="either">Either online or local</option>
+              <option value="online">Online</option>
+              <option value="local">Hands-on local guild</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="apprentice-goals">What do you hope to build or give back? <span class="optional">(optional)</span></label>
+          <textarea id="apprentice-goals" name="goals" rows="3" maxlength="300" placeholder="A ramp for a neighbor, a website for a food co-op, a community garden bed…"></textarea>
+        </div>
+        <div class="field field--check">
+          <label class="checkbox">
+            <input type="checkbox" name="commitment" value="agreed" required>
+            <span>I can commit to at least one guild session and will follow the mentor’s safety and scope guidance.</span>
+          </label>
+        </div>
+        <div class="panel-actions">
+          <button class="button button--primary" type="submit">Save apprentice track <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></button>
+          <p class="panel-note">Unbought Academy mentorship is free. No tuition or debt is created.</p>
+        </div>
+      </form>
+    `,
+
+    care: () => `
+      <div class="panel-head">
+        <div class="panel-head-copy">
+          <p class="eyebrow">Care Circle Member</p>
+          <h3>You do not have to earn care.</h3>
+          <p>This track is for people who cannot work right now due to age, disability, illness, or mental capacity—and for anyone whose capacity changes. No diagnosis is requested. No productivity test. A peer can meet you where you are.</p>
+        </div>
+        <span class="badge badge--amber">Ubuntu welcome</span>
+      </div>
+
+      <div class="care-preview" aria-label="Preview of a Welcome and Care Circle chat">
+        <div class="chat-bubble"><strong>Peer host</strong>Welcome, neighbor. No paperwork or diagnosis here. What would feel supportive this week?</div>
+        <div class="chat-bubble chat-bubble--reply"><strong>You</strong>I could use a short call, and maybe help picking up groceries.</div>
+        <div class="chat-bubble"><strong>Peer host</strong>We can start with a 20-minute call—or just text. You set the pace, and you can change your mind.</div>
+      </div>
+      <p class="ubuntu-preview-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-hands"></use></svg> A Welcome &amp; Care Circle chat is a peer conversation, not a clinical assessment.</p>
+
+      <form class="panel-form">
+        <fieldset>
+          <legend>What would feel supportive? <span class="optional">(choose any)</span></legend>
+          <div class="support-grid">
+            <label class="support-choice"><input type="checkbox" name="support" value="listening"> A listening ear</label>
+            <label class="support-choice"><input type="checkbox" name="support" value="grocery"> Grocery or pharmacy pickup</label>
+            <label class="support-choice"><input type="checkbox" name="support" value="meals"> A meal train</label>
+            <label class="support-choice"><input type="checkbox" name="support" value="rides"> Rides to appointments</label>
+            <label class="support-choice"><input type="checkbox" name="support" value="tech"> Technology help</label>
+            <label class="support-choice"><input type="checkbox" name="support" value="checkin"> A regular check-in</label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Functional capacity &amp; contact preferences <span class="optional">(no diagnosis)</span></legend>
+          <div class="support-grid">
+            <label class="support-choice"><input type="checkbox" name="capacity" value="short-chat"> I can manage a short 20-minute chat</label>
+            <label class="support-choice"><input type="checkbox" name="capacity" value="text-first"> I prefer text first</label>
+            <label class="support-choice"><input type="checkbox" name="capacity" value="lived-experience"> I would like a peer with lived experience</label>
+            <label class="support-choice"><input type="checkbox" name="capacity" value="quiet-space"> A quiet, low-sensory space would help</label>
+            <label class="support-choice"><input type="checkbox" name="capacity" value="coordinate-visit"> Please coordinate before visiting</label>
+            <label class="support-choice"><input type="checkbox" name="capacity" value="interpreter"> I need an interpreter or captions</label>
+          </div>
+        </fieldset>
+
+        <div class="form-row">
+          <div class="field">
+            <label for="care-pace">Preferred pace</label>
+            <select id="care-pace" name="pace">
+              <option value="one-checkin">One short check-in</option>
+              <option value="weekly-month">Weekly for a month</option>
+              <option value="ongoing">Ongoing, low-key support</option>
+              <option value="decide-together">Let’s decide together</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="care-note">Anything you want a peer to know? <span class="optional">(optional)</span></label>
+            <input type="text" id="care-note" name="note" maxlength="160" placeholder="A preference, a boundary, or a good time to reach you.">
+          </div>
+        </div>
+
+        <div class="field field--check">
+          <label class="checkbox">
+            <input type="checkbox" name="requestChat" value="requested" required>
+            <span>Please contact me to arrange a peer Welcome &amp; Care Circle chat. I can withdraw this request at any time.</span>
+          </label>
+        </div>
+
+        <div class="panel-actions">
+          <button class="button button--primary" type="submit">Request Welcome &amp; Care Circle chat <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-chat"></use></svg></button>
+          <p class="panel-note">This prototype stores only what you enter here. No medical or diagnostic information is requested.</p>
+        </div>
+      </form>
+    `,
+
+    observer: () => `
+      <div class="panel-head">
+        <div class="panel-head-copy">
+          <p class="eyebrow">Observer</p>
+          <h3>Stay curious. Stay unpressured.</h3>
+          <p>Reading and listening are forms of participation. You can explore the philosophy and governance before requesting or offering anything.</p>
+        </div>
+        <span class="badge badge--soft">No obligation</span>
+      </div>
+      <form class="panel-form">
+        <fieldset>
+          <legend>What would you like to explore? <span class="optional">(choose any)</span></legend>
+          <div class="support-grid">
+            <label class="support-choice"><input type="checkbox" name="interests" value="philosophy"> Ubuntu &amp; Unbought philosophy</label>
+            <label class="support-choice"><input type="checkbox" name="interests" value="land"> Land trust updates</label>
+            <label class="support-choice"><input type="checkbox" name="interests" value="academy"> Academy open talks</label>
+            <label class="support-choice"><input type="checkbox" name="interests" value="directory"> Service &amp; goods directory</label>
+            <label class="support-choice"><input type="checkbox" name="interests" value="governance"> Care Circle governance</label>
+            <label class="support-choice"><input type="checkbox" name="interests" value="events"> Gatherings &amp; repair days</label>
+          </div>
+        </fieldset>
+        <div class="form-row">
+          <div class="field">
+            <label for="observer-cadence">How often would you like to hear from the community?</label>
+            <select id="observer-cadence" name="cadence">
+              <option value="rarely">Only major updates</option>
+              <option value="monthly">Monthly digest</option>
+              <option value="events">When something is happening nearby</option>
+              <option value="quiet">Keep me quiet for now</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="observer-note">What brought you here? <span class="optional">(optional)</span></label>
+            <input type="text" id="observer-note" name="note" maxlength="140" placeholder="A question, a hope, or a reason to listen.">
+          </div>
+        </div>
+        <div class="field field--check">
+          <label class="checkbox">
+            <input type="checkbox" name="consent" value="agreed" required>
+            <span>I understand that observing is welcome and creates no obligation to offer or request services.</span>
+          </label>
+        </div>
+        <div class="panel-actions">
+          <button class="button button--primary" type="submit">Save observer track <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-eye"></use></svg></button>
+          <p class="panel-note">You can switch tracks whenever your capacity or interest changes.</p>
+        </div>
+      </form>
+    `
+  };
+
+  function hydrateForm(form, details) {
+    if (!form || !details || typeof details !== 'object') return;
+
+    Object.entries(details).forEach(([name, value]) => {
+      if (name === 'savedAt') return;
+      // Field names come from stored data, so only accept simple control names
+      // before building a selector. This prevents malformed or injected selectors.
+      if (!/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(name)) return;
+      const controls = form.querySelectorAll(`[name="${name}"]`);
+      controls.forEach((control) => {
+        if (control.type === 'checkbox') {
+          control.checked = Array.isArray(value) ? value.includes(control.value) : Boolean(value) && value !== 'false';
+        } else if (control.type === 'radio') {
+          control.checked = String(value) === control.value;
+        } else {
+          control.value = value;
+        }
+      });
+    });
+  }
+
+  function collectFormDetails(form) {
+    const data = new FormData(form);
+    const details = {};
+
+    MULTI_VALUE_FIELDS.forEach((fieldName) => {
+      if (form.elements.namedItem(fieldName)) {
+        details[fieldName] = data.getAll(fieldName).map((value) => cleanString(value, 120));
+      }
+    });
+
+    for (const key of new Set(data.keys())) {
+      if (MULTI_VALUE_FIELDS.has(key)) continue;
+      const values = data.getAll(key).map((value) => cleanString(value, 400));
+      details[key] = values.length > 1 ? values : values[0];
+    }
+
+    details.savedAt = new Date().toISOString();
+    return details;
+  }
+
+  function renderTrackPanel(track, options = {}) {
+    const panel = document.getElementById('track-panel');
+    if (!panel) return;
+
+    panel.replaceChildren();
+
+    if (!track || !hasOwn(TRACK_TEMPLATES, track)) {
+      const empty = createEl('div', 'track-empty');
+      const iconWrap = createEl('span', 'track-empty-icon');
+      iconWrap.setAttribute('aria-hidden', 'true');
+      iconWrap.appendChild(createIcon('people'));
+      empty.appendChild(iconWrap);
+      empty.appendChild(createEl('h3', '', 'Choose a track above to see what comes next.'));
+      empty.appendChild(createEl('p', '', 'Nothing is locked in. You can change tracks whenever your capacity changes.'));
+      panel.appendChild(empty);
+      return;
+    }
+
+    // Templates are static, trusted markup. All saved values are hydrated with
+    // DOM properties below, never concatenated into HTML.
+    panel.innerHTML = TRACK_TEMPLATES[track]();
+
+    const form = $('.panel-form', panel);
+    const details = state.trackDetails[track];
+    hydrateForm(form, details);
+
+    if (details && details.savedAt) {
+      const when = formatDate(details.savedAt);
+      const savedNote = createEl(
+        'p',
+        'saved-note',
+        when ? ` Saved ${when}. You can update these details and save again.` : ' Saved. You can update these details and save again.'
+      );
+      savedNote.prepend(createIcon('check'));
+      const head = $('.panel-head', panel);
+      if (head) head.after(savedNote);
+    }
+
+    if (form) {
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (!form.reportValidity()) return;
+
+        const savedDetails = collectFormDetails(form);
+        state.trackDetails[track] = savedDetails;
+        saveState();
+
+        let message = 'Your track details were saved.';
+        if (track === 'contributor') {
+          const hours = savedDetails.hours || '0';
+          message = `Contributor track saved. You pledged ${hours} hours per month in ${hasOwn(PILLARS, savedDetails.pillar) ? PILLARS[savedDetails.pillar].label : 'the community'}.`;
+        } else if (track === 'apprentice') {
+          message = 'Apprentice track saved. Your guild preference is stored in this browser.';
+        } else if (track === 'care') {
+          message = 'Welcome & Care Circle request saved locally. No diagnosis or medical information was requested.';
+        } else if (track === 'observer') {
+          message = 'Observer track saved. Explore at your own pace—no obligation.';
+        }
+
+        renderTrackPanel(track);
+        const newSubmit = $('#track-panel .panel-form button[type="submit"]');
+        if (newSubmit) newSubmit.focus({ preventScroll: true });
+
+        announce(message);
+        showToast(message, false);
+      });
+    }
+
+    if (options.focusPanel) {
+      const heading = $('.panel-head-copy h3', panel);
+      if (heading) {
+        heading.tabIndex = -1;
+        heading.focus({ preventScroll: true });
+      }
+    }
+  }
+
+  function initTracks() {
+    const radios = $$('input[name="membership-track"]');
+
+    radios.forEach((radio) => {
+      radio.addEventListener('change', () => {
+        if (!radio.checked) return;
+        state.track = radio.value;
+        saveState();
+        renderTrackPanel(radio.value);
+        renderTrackGate();
+        announce(`${TRACKS[radio.value]} selected. Complete the details below and save your choice.`);
+      });
+    });
+
+    if (state.track) {
+      const savedRadio = radios.find((radio) => radio.value === state.track);
+      if (savedRadio) savedRadio.checked = true;
+      renderTrackPanel(state.track);
+    } else {
+      renderTrackPanel(null);
+    }
+
+    // Academy “Ask to apprentice” buttons preselect the apprentice track.
+    const apprenticeshipCraftMap = {
+      'Safe home repair': 'home-repair',
+      'Community web development': 'web',
+      'Organic gardening': 'garden'
+    };
+
+    $$('[data-apprentice]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const apprenticeRadio = radios.find((radio) => radio.value === 'apprentice');
+        if (!apprenticeRadio) return;
+
+        apprenticeRadio.checked = true;
+        state.track = 'apprentice';
+        saveState();
+        renderTrackPanel('apprentice', { focusPanel: true });
+        renderTrackGate();
+
+        const craft = apprenticeshipCraftMap[button.dataset.apprentice];
+        const craftSelect = document.getElementById('apprentice-craft');
+        if (craft && craftSelect) craftSelect.value = craft;
+
+        announce('Apprentice track selected. Review the craft and save your details below.');
+        showToast('Apprentice track selected. Finish your details in Join & Tracks.', false);
+
+        const panel = document.getElementById('track-panel');
+        if (panel) {
+          panel.scrollIntoView({ behavior: scrollBehavior(), block: 'center' });
+        }
+      });
+    });
+  }
+
+  /* ------------------------------------------------------------------------
+     07. Tabs, navigation & page polish
+     ------------------------------------------------------------------------ */
+  function initTabs() {
+    const tablist = document.querySelector('#care-tabs [role="tablist"]');
+    if (!tablist) return;
+
+    const tabs = $$('[role="tab"]', tablist);
+
+    function activate(tab, shouldFocus) {
+      tabs.forEach((item) => {
+        const selected = item === tab;
+        item.setAttribute('aria-selected', String(selected));
+        item.tabIndex = selected ? 0 : -1;
+        item.classList.toggle('is-active', selected);
+
+        const panel = document.getElementById(item.getAttribute('aria-controls'));
+        if (panel) panel.hidden = !selected;
+      });
+      if (shouldFocus) tab.focus();
+    }
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => activate(tab, false));
+      tab.addEventListener('keydown', (event) => {
+        let targetIndex = null;
+
+        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+          targetIndex = (index + 1) % tabs.length;
+        } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+          targetIndex = (index - 1 + tabs.length) % tabs.length;
+        } else if (event.key === 'Home') {
+          targetIndex = 0;
+        } else if (event.key === 'End') {
+          targetIndex = tabs.length - 1;
+        }
+
+        if (targetIndex !== null) {
+          event.preventDefault();
+          activate(tabs[targetIndex], true);
+        }
+      });
+    });
+  }
+
+  function initHeader() {
+    const header = document.getElementById('site-header');
+    const toggle = document.getElementById('nav-toggle');
+    const nav = document.getElementById('primary-nav');
+    if (!header || !toggle || !nav) return;
+
+    const toggleLabel = $('.sr-only', toggle);
+    const navLinks = $$('a[href^="#"]', nav).filter((link) => !link.classList.contains('nav-cta'));
+    const navSections = navLinks
+      .map((link) => ({ link, section: document.getElementById(link.hash.slice(1)) }))
+      .filter((item) => item.section);
+
+    function setNavOpen(open) {
+      header.classList.toggle('nav-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      if (toggleLabel) toggleLabel.textContent = open ? 'Close navigation menu' : 'Open navigation menu';
+    }
+
+    toggle.addEventListener('click', () => {
+      setNavOpen(!header.classList.contains('nav-open'));
+    });
+
+    nav.addEventListener('click', (event) => {
+      const link = event.target.closest('a');
+      if (!link) return;
+
+      const wasOpen = header.classList.contains('nav-open');
+      if (!wasOpen) return;
+
+      setNavOpen(false);
+
+      // On small screens the menu covers the page. Move focus to the section
+      // heading so keyboard and screen-reader users land at the destination.
+      if (link.hash && link.hash.length > 1) {
+        window.requestAnimationFrame(() => {
+          const target = document.getElementById(link.hash.slice(1));
+          if (!target) return;
+          const heading = target.matches('h1, h2, h3, h4')
+            ? target
+            : target.querySelector('h1, h2, h3, h4');
+          if (!heading) return;
+          if (!heading.hasAttribute('tabindex')) {
+            heading.setAttribute('tabindex', '-1');
+            heading.addEventListener('blur', () => heading.removeAttribute('tabindex'), { once: true });
+          }
+          heading.focus({ preventScroll: true });
+        });
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && header.classList.contains('nav-open')) {
+        setNavOpen(false);
+        toggle.focus();
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (header.classList.contains('nav-open') && !header.contains(event.target)) {
+        setNavOpen(false);
+      }
+    });
+
+    function updateActiveNav() {
+      const threshold = window.scrollY + header.offsetHeight + 120;
+      let activeLink = null;
+
+      navSections.forEach(({ link, section }) => {
+        if (section.offsetTop <= threshold) activeLink = link;
+      });
+
+      navLinks.forEach((link) => {
+        if (link === activeLink) {
+          link.setAttribute('aria-current', 'location');
+        } else {
+          link.removeAttribute('aria-current');
+        }
+      });
+    }
+
+    let scrollTicking = false;
+    function onScroll() {
+      if (scrollTicking) return;
+      scrollTicking = true;
+      window.requestAnimationFrame(() => {
+        header.classList.toggle('is-scrolled', window.scrollY > 8);
+        updateActiveNav();
+        scrollTicking = false;
+      });
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    header.classList.toggle('is-scrolled', window.scrollY > 8);
+    updateActiveNav();
+  }
+
+  function initVideo() {
+    const video = document.querySelector('.pledge-video');
+    if (!video) return;
+
+    let errorShown = false;
+    function showVideoFallback() {
+      if (errorShown) return;
+      errorShown = true;
+      const note = $('.video-caption p');
+      if (note) {
+        note.textContent = 'The placeholder clip could not load here. The full written pledge is available beside the player, and the captions file is in the project assets.';
+      }
+    }
+
+    const source = video.querySelector('source');
+    if (source) source.addEventListener('error', showVideoFallback);
+    video.addEventListener('error', showVideoFallback);
+
+    // A source error can fire before this deferred script attaches its listener.
+    if (video.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+      showVideoFallback();
+    }
+  }
+
+  function initFooterYear() {
+    const year = document.getElementById('copyright-year');
+    if (year) year.textContent = String(new Date().getFullYear());
+  }
+
+  /* ------------------------------------------------------------------------
+     08. Dialogs, land inquiries & reset
+     ------------------------------------------------------------------------ */
+  function openDialog(dialog) {
+    if (!dialog) return;
+
+    dialog._returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+    if (typeof dialog.showModal === 'function') {
+      if (!dialog.open) dialog.showModal();
+    } else {
+      // Minimal fallback for very old browsers without <dialog> support.
+      dialog.setAttribute('open', '');
+      dialog.setAttribute('role', 'dialog');
+      dialog.setAttribute('aria-modal', 'true');
+    }
+
+    document.body.classList.add('dialog-open');
+
+    window.requestAnimationFrame(() => {
+      const closeButton = dialog.querySelector('.icon-button');
+      if (closeButton) {
+        closeButton.focus();
+      } else {
+        const firstField = dialog.querySelector('input, select, textarea, button, a[href]');
+        if (firstField) firstField.focus();
+      }
+    });
+  }
+
+  function closeDialog(dialog, options = {}) {
+    if (!dialog) return;
+    const { restoreFocus = true } = options;
+    const returnFocus = dialog._returnFocus;
+
+    if (typeof dialog.close === 'function' && dialog.open) {
+      dialog.close();
+    } else {
+      dialog.removeAttribute('open');
+      dialog.removeAttribute('aria-modal');
+    }
+
+    dialog._returnFocus = null;
+
+    if (!document.querySelector('dialog[open]')) {
+      document.body.classList.remove('dialog-open');
+    }
+
+    if (restoreFocus && returnFocus && returnFocus.isConnected) {
+      window.requestAnimationFrame(() => {
+        if (returnFocus.isConnected) returnFocus.focus({ preventScroll: true });
+      });
+    }
+  }
+
+  function initDialogBasics() {
+    const dialogs = $$('dialog');
+
+    dialogs.forEach((dialog) => {
+      dialog.addEventListener('close', () => {
+        if (!document.querySelector('dialog[open]')) {
+          document.body.classList.remove('dialog-open');
+        }
+      });
+
+      // Clicking the backdrop closes the dialog; clicking inside does not.
+      dialog.addEventListener('click', (event) => {
+        if (event.target === dialog) closeDialog(dialog);
+      });
+
+      // Native modal dialogs close on Escape, but wiring it explicitly keeps
+      // the fallback path and assistive setups consistent.
+      dialog.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape' || event.isComposing) return;
+        event.preventDefault();
+        closeDialog(dialog);
+      });
+    });
+
+    $$('[data-dialog-close]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const dialog = button.closest('dialog');
+        if (dialog) closeDialog(dialog);
+      });
+    });
+  }
+
+  function openConsentDialog(listingId, trigger) {
+    const dialog = document.getElementById('consent-dialog');
+    const form = document.getElementById('consent-form');
+    const summaryTitle = document.getElementById('request-summary-title');
+    const summaryMeta = document.getElementById('request-summary-meta');
+    const listing = findListing(listingId);
+
+    if (!dialog || !form || !listing) return;
+
+    currentListingId = listing.id;
+    form.reset();
+    if (summaryTitle) summaryTitle.textContent = listing.title;
+    if (summaryMeta) {
+      summaryMeta.textContent = `${PILLARS[listing.pillar].label} · ${EXCHANGES[listing.exchange].label} · Offered by ${listing.provider}`;
+    }
+
+    dialog._trigger = trigger || null;
+    openDialog(dialog);
+  }
+
+  function initConsentDialog() {
+    const dialog = document.getElementById('consent-dialog');
+    const form = document.getElementById('consent-form');
+    if (!dialog || !form) return;
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+
+      const listing = findListing(currentListingId);
+      if (!listing) {
+        closeDialog(dialog);
+        return;
+      }
+
+      if (state.requests.some((request) => request.listingId === listing.id)) {
+        closeDialog(dialog);
+        announce('A request for this offering is already saved in your browser.');
+        showToast('This request is already recorded locally.', false);
+        return;
+      }
+
+      const data = new FormData(form);
+      state.requests.unshift({
+        id: makeId('request'),
+        listingId: listing.id,
+        listingTitle: listing.title,
+        provider: listing.provider,
+        note: cleanString(data.get('note'), 280),
+        requestedAt: new Date().toISOString()
+      });
+      state.requests = state.requests.slice(0, 100);
+      saveState();
+
+      closeDialog(dialog, { restoreFocus: false });
+      currentListingId = null;
+      applyFilters();
+      focusListingTitle(listing.id);
+
+      announce(`Request recorded for ${listing.title}. This prototype saved it in your browser only.`);
+      showToast('Request recorded locally. No data left this device.', false);
+    });
+  }
+
+  function syncInquiryFields() {
+    const typeSelect = document.getElementById('inquiry-type');
+    const waitlistFields = document.getElementById('waitlist-fields');
+    const landFields = document.getElementById('land-fields');
+    const title = document.getElementById('inquiry-title');
+    const description = document.getElementById('inquiry-description');
+    const agreementLabel = document.getElementById('inquiry-agreement-label');
+    const noteLabel = document.getElementById('inquiry-note-label');
+    if (!typeSelect) return;
+
+    const type = typeSelect.value;
+    currentInquiryType = type;
+
+    const showWaitlist = type === 'waitlist';
+    const showLand = type === 'land';
+
+    if (waitlistFields) waitlistFields.hidden = !showWaitlist;
+    if (landFields) landFields.hidden = !showLand;
+
+    // Disable hidden fields so required validation and FormData stay clean.
+    if (waitlistFields) {
+      $$('input, select, textarea', waitlistFields).forEach((field) => {
+        field.disabled = !showWaitlist;
+      });
+    }
+    if (landFields) {
+      $$('input, select, textarea', landFields).forEach((field) => {
+        field.disabled = !showLand;
+      });
+    }
+
+    if (title) {
+      title.textContent = showLand
+        ? 'Offer land or a building'
+        : type === 'question'
+          ? 'Ask the land circle'
+          : 'Join the housing waitlist';
+    }
+
+    if (description) {
+      description.textContent = showLand
+        ? 'Tell us a little about the land or building, and how you would like it to serve the community. A conversation comes before any agreement.'
+        : type === 'question'
+          ? 'Ask the land circle about community land trusts, stewardship, affordability, or how decisions are made. No question is too basic.'
+          : 'This is an early planning conversation, not an application for housing or credit. Share only what you are comfortable sharing.';
+    }
+
+    if (agreementLabel) {
+      agreementLabel.textContent = showLand
+        ? 'I understand this is an initial conversation, not a legal or financial commitment.'
+        : type === 'question'
+          ? 'I understand this is a planning-stage prototype and no one is obligated to respond.'
+          : 'I understand this is a planning-stage waitlist, not an offer of housing or credit.';
+    }
+
+    if (noteLabel) {
+      noteLabel.textContent = showLand
+        ? 'What should the land circle know? (optional)'
+        : 'What would you like us to know? (optional)';
+    }
+  }
+
+  function openInquiryDialog(type) {
+    const dialog = document.getElementById('inquiry-dialog');
+    const form = document.getElementById('inquiry-form');
+    const typeSelect = document.getElementById('inquiry-type');
+    if (!dialog || !form || !typeSelect) return;
+
+    form.reset();
+    typeSelect.value = ['waitlist', 'land', 'question'].includes(type) ? type : 'waitlist';
+    syncInquiryFields();
+    openDialog(dialog);
+  }
+
+  function initInquiryDialog() {
+    const dialog = document.getElementById('inquiry-dialog');
+    const form = document.getElementById('inquiry-form');
+    const typeSelect = document.getElementById('inquiry-type');
+    if (!dialog || !form || !typeSelect) return;
+
+    typeSelect.addEventListener('change', syncInquiryFields);
+
+    $$('[data-inquiry]').forEach((button) => {
+      button.addEventListener('click', () => openInquiryDialog(button.dataset.inquiry));
+    });
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+
+      const data = new FormData(form);
+      const type = String(data.get('inquiryType') || currentInquiryType);
+      const inquiry = {
+        id: makeId('inquiry'),
+        type,
+        name: cleanString(data.get('name'), 60),
+        contact: cleanString(data.get('contact'), 120),
+        location: cleanString(data.get('location'), 80),
+        household: cleanString(data.get('household'), 20),
+        access: cleanString(data.get('access'), 120),
+        propertyType: cleanString(data.get('propertyType'), 40),
+        tenure: cleanString(data.get('tenure'), 40),
+        note: cleanString(data.get('note'), 400),
+        createdAt: new Date().toISOString()
+      };
+
+      state.inquiries.unshift(inquiry);
+      state.inquiries = state.inquiries.slice(0, 100);
+      saveState();
+
+      closeDialog(dialog);
+
+      const status = document.getElementById('land-inquiry-status');
+      if (status) {
+        status.textContent = type === 'land'
+          ? 'Your land or building inquiry is saved in this browser. A land-circle host would follow up in a real deployment.'
+          : type === 'question'
+            ? 'Your question is saved in this browser. A land-circle host would follow up in a real deployment.'
+            : 'Your housing waitlist inquiry is saved in this browser. This is a planning-stage prototype, not a housing offer.';
+      }
+
+      showToast('Inquiry saved locally. Nothing was transmitted.', false);
+    });
+  }
+
+  function showConfirm(options) {
+    const dialog = document.getElementById('confirm-dialog');
+    const title = document.getElementById('confirm-title');
+    const message = document.getElementById('confirm-message');
+    const accept = document.getElementById('confirm-accept');
+    if (!dialog || !title || !message || !accept) return;
+
+    title.textContent = options.title || 'Are you sure?';
+    message.textContent = options.message || '';
+    accept.textContent = options.confirmLabel || 'Confirm';
+    accept.className = `button ${options.tone === 'danger' ? 'button--danger' : 'button--primary'}`;
+    confirmAction = typeof options.onConfirm === 'function' ? options.onConfirm : null;
+
+    openDialog(dialog);
+  }
+
+  function initConfirmDialog() {
+    const dialog = document.getElementById('confirm-dialog');
+    const accept = document.getElementById('confirm-accept');
+    const cancel = document.getElementById('confirm-cancel');
+    if (!dialog || !accept) return;
+
+    accept.addEventListener('click', () => {
+      const action = confirmAction;
+      confirmAction = null;
+      closeDialog(dialog, { restoreFocus: false });
+      if (action) action();
+    });
+
+    if (cancel) {
+      cancel.addEventListener('click', () => {
+        confirmAction = null;
+        closeDialog(dialog);
+      });
+    }
+
+    $$('[data-confirm-close]', dialog).forEach((button) => {
+      button.addEventListener('click', () => {
+        confirmAction = null;
+        closeDialog(dialog);
+      });
+    });
+
+    dialog.addEventListener('close', () => {
+      confirmAction = null;
+    });
+  }
+
+  function initResetDemo() {
+    const resetButton = document.getElementById('reset-demo');
+    if (!resetButton) return;
+
+    resetButton.addEventListener('click', () => {
+      showConfirm({
+        title: 'Demo Reset / Clear Local Data',
+        message: 'This removes your pledge signature, membership track, custom listings, requests, land inquiries, and donation intents from this browser. It cannot be undone.',
+        confirmLabel: 'Clear local data',
+        tone: 'danger',
+        onConfirm: () => {
+          try {
+            localStorage.removeItem(STORAGE_KEY);
+            Object.keys(localStorage)
+              .filter((key) => key.startsWith('unbought'))
+              .forEach((key) => localStorage.removeItem(key));
+          } catch (error) {
+            // Storage may be blocked; the in-memory reset below still applies.
+          }
+
+          state = createDefaultState();
+          currentListingId = null;
+
+          const pledgeForm = document.getElementById('pledge-form');
+          if (pledgeForm) pledgeForm.reset();
+
+          const postForm = document.getElementById('post-form');
+          if (postForm) postForm.reset();
+
+          const consentForm = document.getElementById('consent-form');
+          if (consentForm) consentForm.reset();
+
+          const inquiryForm = document.getElementById('inquiry-form');
+          if (inquiryForm) inquiryForm.reset();
+
+          const donationForm = document.getElementById('donation-form');
+          if (donationForm) donationForm.reset();
+
+          $$('input[name="membership-track"]').forEach((radio) => {
+            radio.checked = false;
+          });
+
+          renderPledge();
+          renderTrackGate();
+          renderTrackPanel(null);
+          resetFilters();
+
+          const postStatus = document.getElementById('post-status');
+          if (postStatus) postStatus.textContent = 'No account needed. Stored only on this device.';
+
+          const landStatus = document.getElementById('land-inquiry-status');
+          if (landStatus) landStatus.textContent = '';
+
+          document.dispatchEvent(new CustomEvent('unbought:reset'));
+
+          resetButton.focus({ preventScroll: true });
+          announce('All local demo data has been cleared. The page is back to its starting state.');
+          showToast('Local demo data cleared.', false);
+        }
+      });
+    });
+  }
+
+  function initDialogs() {
+    initDialogBasics();
+    initConsentDialog();
+    initInquiryDialog();
+    initConfirmDialog();
+    initResetDemo();
+  }
+
+  /* ------------------------------------------------------------------------
+     09. Initialization
+     ------------------------------------------------------------------------ */
+  function init() {
+    initHeader();
+    initPledgeForm();
+    initTracks();
+    initTabs();
+    initDirectory();
+    initPostForm();
+    initDialogs();
+    initVideo();
+    initFooterYear();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
+})();
