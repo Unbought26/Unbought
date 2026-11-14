@@ -56,12 +56,12 @@
 
   const EXCHANGES = Object.freeze({
     free: {
-      label: '100% Free Labor / Item',
+      label: '100% Free',
       short: '100% Free'
     },
     atcost: {
-      label: 'Free Labor + At-Cost Materials',
-      short: 'Labor free · materials at cost'
+      label: 'At Exact Receipt Cost',
+      short: 'At exact cost'
     }
   });
 
@@ -169,6 +169,66 @@
       ],
       scope: 'peer',
       note: 'Licensed referrals available.'
+    },
+    {
+      id: 'seed-pantry',
+      pillar: 'goods',
+      exchange: 'free',
+      title: 'Neighborhood Pantry & Fresh Produce Share',
+      provider: 'Community Pantry Crew',
+      location: 'St. Aiden’s basement · Wed & Sat',
+      description: 'Shelf-stable staples, fresh produce, bread, and baby supplies, free to anyone who needs them. No proof of income, no forms, no questions. Take what you need and leave what you can. Delivery is available for neighbors who cannot travel.',
+      details: [
+        { label: 'Open', value: 'Wed 4–7pm · Sat 10am–1pm' },
+        { label: 'Cost', value: 'Always free' },
+        { label: 'Access', value: 'Step-free entrance · delivery available' }
+      ],
+      note: 'No eligibility test. No means test.'
+    },
+    {
+      id: 'seed-tools',
+      pillar: 'goods',
+      exchange: 'free',
+      title: 'Tool Library: Borrow, Don’t Buy',
+      provider: 'Westside Tool Library',
+      location: 'Westside workshop · Thursdays 4–7pm',
+      description: 'Drills, saws, ladders, sanders, garden tools, and basic repair kits available to borrow for a week at a time. A short safety walkthrough is offered for tools you have not used before. Bring nothing but a name—no deposit, no fee.',
+      details: [
+        { label: 'Borrow', value: 'Up to 7 days · renew by message' },
+        { label: 'Cost', value: 'Free · no deposit' },
+        { label: 'Good for', value: 'Repairs, gardens, small builds' }
+      ],
+      note: 'Return clean and working, or tell us what broke.'
+    },
+    {
+      id: 'seed-clothing',
+      pillar: 'goods',
+      exchange: 'free',
+      title: 'Clothing, Bedding & Housewares Swap',
+      provider: 'Maple Street Neighbors',
+      location: 'Maple Street Hall · first Sunday',
+      description: 'Free clothing in all sizes, coats, bedding, dishes, and small housewares. Everything is cleaned and sorted before it hits the tables. No swap is required—take what fits your household and leave the rest for a neighbor.',
+      details: [
+        { label: 'When', value: 'First Sunday · 11am–3pm' },
+        { label: 'Cost', value: 'Free · no swap required' },
+        { label: 'Access', value: 'Step-free hall · private changing room' }
+      ],
+      note: 'Sizes and seasons vary. Ask and we will look.'
+    },
+    {
+      id: 'seed-hygiene',
+      pillar: 'goods',
+      exchange: 'atcost',
+      title: 'Bulk Cleaning & Hygiene Supplies at Exact Cost',
+      provider: 'Nia Brooks',
+      location: 'Westside neighborhood · pickup or delivery',
+      description: 'Laundry soap, dish soap, toothpaste, period supplies, and cleaning basics bought in bulk and split at the exact receipt price. Labor is free. Receipts are posted for every order. No markup, no minimum, and no membership fee.',
+      details: [
+        { label: 'Order', value: 'Monthly bulk run · receipt posted' },
+        { label: 'At cost', value: 'Exact shelf price, split by unit' },
+        { label: 'Access', value: 'Porch pickup or local delivery' }
+      ],
+      note: 'Labor free. Supplies at exact receipt price.'
     }
   ]);
 
@@ -388,9 +448,18 @@
     if (announceMessage) announce(message);
   }
 
+  function getDirectoryScope() {
+    const scope = document.body.dataset.directoryScope;
+    return scope === 'goods' || scope === 'labor' ? scope : 'all';
+  }
+
   function getAllListings() {
     // User posts appear first; seed listings remain available underneath.
-    return [...state.listings, ...SEED_LISTINGS];
+    const all = [...state.listings, ...SEED_LISTINGS];
+    const scope = getDirectoryScope();
+    if (scope === 'goods') return all.filter((listing) => listing.pillar === 'goods');
+    if (scope === 'labor') return all.filter((listing) => listing.pillar !== 'goods');
+    return all;
   }
 
   function findListing(id) {
@@ -545,15 +614,22 @@
     const status = document.getElementById('results-status');
     if (!status) return;
 
-    const pillarText = pillar === 'all' ? 'all pillars & goods' : PILLARS[pillar].label;
+    const scope = getDirectoryScope();
+    const pillarText = pillar === 'all'
+      ? (scope === 'goods' ? 'all goods' : 'all pillars & goods')
+      : PILLARS[pillar].label;
     const exchangeText = exchange === 'all' ? 'all exchange types' : EXCHANGES[exchange].label;
+    const offeringText = scope === 'goods' ? 'goods' : scope === 'labor' ? 'free labor offers' : 'community offerings';
 
     if (!shown) {
-      status.textContent = `No offerings match ${pillarText} and ${exchangeText}. Try resetting the filters.`;
+      status.textContent = scope === 'goods'
+        ? `No goods match ${exchangeText}. Try resetting the filter.`
+        : `No offerings match ${pillarText} and ${exchangeText}. Try resetting the filters.`;
     } else if (pillar === 'all' && exchange === 'all') {
-      status.textContent = `Showing all ${total} community offerings.`;
+      status.textContent = `Showing all ${total} ${offeringText}.`;
     } else {
-      status.textContent = `Showing ${shown} of ${total} offerings · ${pillarText} · ${exchangeText}.`;
+      const detail = scope === 'goods' ? exchangeText : `${pillarText} · ${exchangeText}`;
+      status.textContent = `Showing ${shown} of ${total} ${offeringText} · ${detail}.`;
     }
   }
 
@@ -640,7 +716,7 @@
       const provider = cleanString(data.get('provider'), 60);
       const location = cleanString(data.get('location'), 80);
       const description = cleanString(data.get('description'), 400);
-      const pillar = String(data.get('pillar') || '');
+      const pillar = getDirectoryScope() === 'goods' ? 'goods' : String(data.get('pillar') || '');
       const exchange = String(data.get('exchange') || '');
       const scope = String(data.get('scope') || '');
 
@@ -1763,7 +1839,7 @@
     resetButton.addEventListener('click', () => {
       showConfirm({
         title: 'Demo Reset / Clear Local Data',
-        message: 'This removes your pledge signature, membership track, custom listings, requests, land inquiries, and donation intents from this browser. It cannot be undone.',
+        message: 'This removes your pledge signature, membership track, custom listings, requests, waiting-list entry, and donation intents from this browser. It cannot be undone.',
         confirmLabel: 'Clear local data',
         tone: 'danger',
         onConfirm: () => {
