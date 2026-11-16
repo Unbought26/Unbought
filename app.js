@@ -267,12 +267,41 @@
       trackDetails: {},
       listings: [],
       requests: [],
-      inquiries: []
+      inquiries: [],
+      donationIntents: [],
+      contributions: [],
+      severanceFund: {
+        balance: 0,
+        contributions: []
+      }
     };
   }
 
   function isMember() {
     return Boolean(state.pledge && state.pledge.memberId);
+  }
+
+  function formatMoney(value) {
+    const amount = Number(value) || 0;
+    return amount.toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+  }
+
+  function getMemberContributions() {
+    if (!isMember()) return [];
+    return (Array.isArray(state.contributions) ? state.contributions : []).filter((item) => item && item.memberId === state.pledge.memberId);
+  }
+
+  function getMemberDonationIntents() {
+    if (!isMember()) return [];
+    return (Array.isArray(state.donationIntents) ? state.donationIntents : []).filter((item) => item && item.memberId === state.pledge.memberId);
+  }
+
+  function getSeveranceSummary() {
+    const fund = state.severanceFund || { balance: 0, contributions: [] };
+    const balance = Number(fund.balance) || 0;
+    const purchases = (Array.isArray(state.contributions) ? state.contributions : []).filter((c) => c && c.type === 'severance_purchase');
+    const computed = purchases.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+    return { balance: Math.max(balance, computed), count: purchases.length };
   }
 
   function requireMembership(message) {
@@ -413,6 +442,91 @@
         }));
     }
 
+    if (Array.isArray(raw.donationIntents)) {
+      fallback.donationIntents = raw.donationIntents
+        .filter((item) => item && typeof item === 'object')
+        .slice(0, 100)
+        .map((item) => ({
+          id: cleanString(item.id, 40) || makeId('donation'),
+          memberId: cleanString(item.memberId, 100),
+          amount: Number.isFinite(Number(item.amount)) ? Math.max(0, Math.round(Number(item.amount))) : 0,
+          frequency: cleanString(item.frequency, 30),
+          name: cleanString(item.name, 60),
+          email: cleanString(item.email, 120),
+          note: cleanString(item.note, 280),
+          savedAt: cleanString(item.savedAt, 40),
+          status: cleanString(item.status, 30) || 'intent',
+          stockValue: Number.isFinite(Number(item.stockValue)) ? Math.max(0, Number(item.stockValue)) : (Number.isFinite(Number(item.amount)) ? Math.max(0, Number(item.amount)) : 0),
+          thankYouEmailQueued: Boolean(item.thankYouEmailQueued)
+        }))
+        .filter((item) => item.amount >= 1 && ['one-time', 'monthly', 'pledge-later'].includes(item.frequency));
+    }
+
+    // Back-compat: migrate legacy donation intents stored by donate.js
+    if (!fallback.donationIntents.length) {
+      try {
+        const legacyRaw = localStorage.getItem('unbought:donation-intents:v1');
+        const legacy = legacyRaw ? JSON.parse(legacyRaw) : null;
+        if (Array.isArray(legacy)) {
+          fallback.donationIntents = legacy
+            .filter((item) => item && typeof item === 'object' && Number.isFinite(Number(item.amount)) && ['one-time', 'monthly', 'pledge-later'].includes(item.frequency))
+            .slice(0, 100)
+            .map((item) => ({
+              id: cleanString(item.id, 40) || makeId('donation'),
+              memberId: '',
+              amount: Math.max(1, Math.round(Number(item.amount))),
+              frequency: cleanString(item.frequency, 30),
+              name: cleanString(item.name, 60),
+              email: '',
+              note: cleanString(item.note, 280),
+              savedAt: cleanString(item.savedAt, 40),
+              status: 'intent',
+              stockValue: Math.max(1, Math.round(Number(item.amount))),
+              thankYouEmailQueued: false
+            }));
+        }
+      } catch (error) {
+        // Ignore legacy migration errors.
+      }
+    }
+
+    if (Array.isArray(raw.contributions)) {
+      fallback.contributions = raw.contributions
+        .filter((item) => item && typeof item === 'object' && typeof item.type === 'string')
+        .slice(0, 200)
+        .map((item) => ({
+          id: cleanString(item.id, 100) || makeId('contribution'),
+          memberId: cleanString(item.memberId, 100),
+          type: cleanString(item.type, 30), // donation | labor | severance_purchase
+          amount: Number.isFinite(Number(item.amount)) ? Math.max(0, Number(item.amount)) : 0,
+          hours: Number.isFinite(Number(item.hours)) ? Math.max(0, Number(item.hours)) : 0,
+          profession: cleanString(item.profession, 80),
+          stateRegion: cleanString(item.stateRegion, 40),
+          hourlyRate: Number.isFinite(Number(item.hourlyRate)) ? Math.max(0, Number(item.hourlyRate)) : 0,
+          stockValue: Number.isFinite(Number(item.stockValue)) ? Math.max(0, Number(item.stockValue)) : 0,
+          sourceId: cleanString(item.sourceId, 100),
+          note: cleanString(item.note, 280),
+          createdAt: cleanString(item.createdAt, 40),
+          status: cleanString(item.status, 30) || 'recorded',
+          purchaserEmail: cleanString(item.purchaserEmail, 120),
+          purchaserName: cleanString(item.purchaserName, 60)
+        }));
+    }
+
+    if (raw.severanceFund && typeof raw.severanceFund === 'object') {
+      fallback.severanceFund = {
+        balance: Number.isFinite(Number(raw.severanceFund.balance)) ? Math.max(0, Number(raw.severanceFund.balance)) : 0,
+        contributions: Array.isArray(raw.severanceFund.contributions) ? raw.severanceFund.contributions.slice(0, 200) : []
+      };
+    } else {
+      // Recompute from contributions if needed
+      const purchases = fallback.contributions.filter((c) => c.type === 'severance_purchase');
+      fallback.severanceFund = {
+        balance: purchases.reduce((sum, c) => sum + (Number(c.amount) || 0), 0),
+        contributions: purchases.map((c) => c.id)
+      };
+    }
+
     return fallback;
   }
 
@@ -420,6 +534,7 @@
   let storageWarningShown = false;
   let toastTimer = null;
   let currentListingId = null;
+  let currentRequestMode = 'mutual';
   let confirmAction = null;
   let currentInquiryType = 'waitlist';
 
@@ -637,9 +752,11 @@
       requestButton.setAttribute('aria-label', `Request recorded: ${listing.title}`);
     } else if (!isMember()) {
       requestButton.classList.add('button--outline');
-      requestButton.textContent = 'Sign pledge to request';
-      requestButton.setAttribute('aria-label', `Sign the pledge to request: ${listing.title}`);
+      requestButton.textContent = 'Buy as non-member';
+      requestButton.dataset.requestMode = 'purchase';
+      requestButton.setAttribute('aria-label', `Buy ${listing.title} as a non-member (supports severance fund)`);
     } else {
+      requestButton.dataset.requestMode = 'mutual';
       requestButton.classList.add('button--outline');
       requestButton.textContent = 'Request with Mutual Consent';
       requestButton.setAttribute('aria-label', `Request with Mutual Consent: ${listing.title}`);
@@ -866,7 +983,168 @@
   }
 
   /* ------------------------------------------------------------------------
-     05. Pledge & digital signature
+     05. Member account, contributions, stock & severance (prototype)
+     ------------------------------------------------------------------------ */
+  function renderMemberAccount() {
+    const container = document.getElementById('member-account');
+    if (!container) return;
+
+    const signedIn = isMember();
+    const memberContribs = getMemberContributions();
+    const memberDonations = getMemberDonationIntents();
+    const donationTotal = memberDonations.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+    const laborEntries = memberContribs.filter((c) => c.type === 'labor');
+    const laborHours = laborEntries.reduce((sum, c) => sum + (Number(c.hours) || 0), 0);
+    const laborValue = laborEntries.reduce((sum, c) => sum + (Number(c.stockValue) || 0), 0);
+    const donationStock = memberContribs.filter((c) => c.type === 'donation').reduce((sum, c) => sum + (Number(c.stockValue) || 0), 0);
+    const totalStock = memberContribs.reduce((sum, c) => sum + (Number(c.stockValue) || 0), 0);
+    const severance = getSeveranceSummary();
+
+    container.replaceChildren();
+
+    const card = createEl('section', 'account-card');
+    const head = createEl('div', 'account-head');
+    head.appendChild(createEl('p', 'eyebrow', signedIn ? 'Your account' : 'Participation & severance'));
+    head.appendChild(createEl('h3', '', signedIn ? 'Contributions, work, and stock' : 'Members join by pledge; non-members may buy to support the severance fund'));
+    card.appendChild(head);
+
+    if (!signedIn) {
+      const intro = createEl('p', '', 'Anyone can browse. To participate in the commons (post offers/needs, request mutual-aid connections, and manage your track), sign the Unbought Pledge to become a member. People who do not take the pledge can buy goods and services for money in this prototype; proceeds are recorded for the severance fund.');
+      card.appendChild(intro);
+    } else {
+      const meta = createEl('p', 'account-meta', `${state.pledge.name} · ${state.pledge.location || 'Location not shared'} · Member ID ${state.pledge.memberId}`);
+      card.appendChild(meta);
+    }
+
+    const stats = createEl('div', 'account-stats');
+    const statDefs = signedIn ? [
+      ['Donations tracked', `${memberDonations.length} intent${memberDonations.length === 1 ? '' : 's'} · ${formatMoney(donationTotal)}`],
+      ['Work logged', `${laborHours.toLocaleString()} hr · ${formatMoney(laborValue)} stock value`],
+      ['Your stock value (prototype)', formatMoney(totalStock)],
+      ['Severance fund (all non-member purchases)', `${formatMoney(severance.balance)} · ${severance.count} recorded`]
+    ] : [
+      ['Severance fund (non-member purchases)', formatMoney(severance.balance)],
+      ['Recorded non-member purchase intents', String(severance.count)],
+      ['Member benefit', 'Mutual-aid access by pledge (no purchase)'],
+      ['Stock model', 'Donations and logged work hours create stock value for members']
+    ];
+    statDefs.forEach(([label, value]) => {
+      const s = createEl('div', 'account-stat');
+      s.appendChild(createEl('span', 'account-stat-label', label));
+      s.appendChild(createEl('strong', 'account-stat-value', value));
+      stats.appendChild(s);
+    });
+    card.appendChild(stats);
+
+    const model = createEl('p', 'account-note', 'Prototype model (DB-ready, local only): every donation or logged hour gives stock value in the company/community enterprise. Hours are valued at the average hourly wage for your profession in your state/region (enter rate now; future system may auto-calculate). Non-members who contribute through purchases or other recorded contributions may be eligible for a severance share based on contribution percentage; no payouts are made in this prototype.');
+    card.appendChild(model);
+
+    if (signedIn) {
+      // Labor logging form
+      const formWrap = createEl('div', 'account-block');
+      formWrap.appendChild(createEl('h4', '', 'Log work hours (stock value)'));
+      formWrap.appendChild(createEl('p', 'account-note', 'Record hours you worked for the commons. Stock value = hours × average hourly wage for your profession in your state/region. This is stored locally in this prototype.'));
+      const form = document.createElement('form');
+      form.className = 'account-form';
+      form.id = 'labor-log-form';
+      form.innerHTML = `
+        <div class="form-grid">
+          <div class="field">
+            <label for="labor-hours">Hours worked <span class="required-mark" aria-hidden="true">*</span></label>
+            <input type="number" id="labor-hours" name="hours" min="0.25" step="0.25" required placeholder="2">
+          </div>
+          <div class="field">
+            <label for="labor-profession">Profession / role <span class="required-mark" aria-hidden="true">*</span></label>
+            <input type="text" id="labor-profession" name="profession" maxlength="80" required placeholder="Carpenter, tutor, caregiver...">
+          </div>
+          <div class="field">
+            <label for="labor-state">State / region <span class="required-mark" aria-hidden="true">*</span></label>
+            <input type="text" id="labor-state" name="stateRegion" maxlength="40" required placeholder="CA, NY, Ontario...">
+          </div>
+          <div class="field">
+            <label for="labor-rate">Avg hourly wage (USD) <span class="required-mark" aria-hidden="true">*</span></label>
+            <input type="number" id="labor-rate" name="hourlyRate" min="1" step="0.01" required placeholder="28.50">
+            <p class="field-hint">Enter the average hourly wage for this profession in your state now. Future versions may auto-calculate.</p>
+          </div>
+        </div>
+        <div class="field">
+          <label for="labor-note">Note <span class="optional">(optional)</span></label>
+          <input type="text" id="labor-note" name="note" maxlength="200" placeholder="What work was done?">
+        </div>
+        <div class="account-form-actions">
+          <button class="button button--primary button--small" type="submit">Record hours as stock value</button>
+          <p class="form-hint" id="labor-log-status" aria-live="polite"></p>
+        </div>`;
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (!isMember()) return;
+        if (!form.reportValidity()) return;
+        const data = new FormData(form);
+        const hours = Math.max(0, Number(data.get('hours') || 0));
+        const hourlyRate = Math.max(0, Number(data.get('hourlyRate') || 0));
+        const profession = cleanString(data.get('profession'), 80);
+        const stateRegion = cleanString(data.get('stateRegion'), 40);
+        const note = cleanString(data.get('note'), 200);
+        if (!(hours > 0) || !(hourlyRate > 0) || !profession || !stateRegion) return;
+        const stockValue = Math.round(hours * hourlyRate * 100) / 100;
+        const entry = {
+          id: makeId('contribution'),
+          memberId: state.pledge.memberId,
+          type: 'labor',
+          amount: 0,
+          hours,
+          profession,
+          stateRegion,
+          hourlyRate,
+          stockValue,
+          sourceId: '',
+          note,
+          createdAt: new Date().toISOString(),
+          status: 'recorded'
+        };
+        state.contributions = Array.isArray(state.contributions) ? state.contributions : [];
+        state.contributions.unshift(entry);
+        state.contributions = state.contributions.slice(0, 200);
+        saveState();
+        announce(`Recorded ${hours} hour${hours === 1 ? '' : 's'} as ${formatMoney(stockValue)} in stock value.`);
+        showToast('Work hours recorded as contribution/stock value (prototype).', false);
+        renderMemberAccount();
+      });
+      formWrap.appendChild(form);
+      card.appendChild(formWrap);
+
+      // Ledger
+      const ledger = createEl('div', 'account-block');
+      ledger.appendChild(createEl('h4', '', 'Contribution ledger'));
+      if (!memberContribs.length) {
+        ledger.appendChild(createEl('p', 'account-note', 'No contributions recorded yet. Donations you make while signed in and logged work hours will appear here.'));
+      } else {
+        const list = createEl('ul', 'contribution-list');
+        memberContribs.slice(0, 10).forEach((c) => {
+          const item = createEl('li', 'contribution-item');
+          const title = c.type === 'labor'
+            ? `${c.hours} hr ${c.profession} (${c.stateRegion} @ ${formatMoney(c.hourlyRate)}/hr)`
+            : c.type === 'donation'
+              ? `Donation ${formatMoney(c.amount || c.stockValue)}`
+              : `${c.type} ${formatMoney(c.amount || c.stockValue)}`;
+          item.appendChild(createEl('strong', '', title));
+          const sub = `${formatMoney(c.stockValue)} stock value · ${formatDate(c.createdAt) || 'recorded'}${c.note ? ' · ' + c.note : ''}`;
+          item.appendChild(createEl('span', 'contribution-meta', sub));
+          list.appendChild(item);
+        });
+        ledger.appendChild(list);
+        if (memberContribs.length > 10) {
+          ledger.appendChild(createEl('p', 'account-note', `Showing 10 of ${memberContribs.length} contributions.`));
+        }
+      }
+      card.appendChild(ledger);
+    }
+
+    container.appendChild(card);
+  }
+
+  /* ------------------------------------------------------------------------
+     05b. Pledge & digital signature
      ------------------------------------------------------------------------ */
   function renderPledge() {
     const card = document.getElementById('signature-card');
@@ -969,6 +1247,7 @@
         renderPledge();
         renderTrackGate();
         renderTrackPanel(state.track);
+        renderMemberAccount();
         applyFilters();
 
         const banner = document.getElementById('signed-banner');
@@ -994,6 +1273,7 @@
             renderPledge();
             renderTrackGate();
             renderTrackPanel(state.track);
+            renderMemberAccount();
             applyFilters();
 
             const agreement = document.getElementById('pledge-agreement');
@@ -1354,6 +1634,7 @@
         }
 
         renderTrackPanel(track);
+        renderMemberAccount();
         const newSubmit = $('#track-panel .panel-form button[type="submit"]');
         if (newSubmit) newSubmit.focus({ preventScroll: true });
 
@@ -1390,6 +1671,7 @@
         saveState();
         renderTrackPanel(radio.value);
         renderTrackGate();
+        renderMemberAccount();
         announce(`${TRACKS[radio.value]} selected. Complete the details below and save your choice.`);
       });
     });
@@ -1694,22 +1976,51 @@
   }
 
   function openConsentDialog(listingId, trigger) {
-    if (!requireMembership('Sign the Unbought Pledge to become a member before requesting a connection.')) return;
-
     const dialog = document.getElementById('consent-dialog');
     const form = document.getElementById('consent-form');
     const summaryTitle = document.getElementById('request-summary-title');
     const summaryMeta = document.getElementById('request-summary-meta');
+    const summaryLabel = document.querySelector('#request-summary .request-summary-label');
+    const title = document.getElementById('consent-title');
+    const description = document.getElementById('consent-description');
     const listing = findListing(listingId);
 
     if (!dialog || !form || !listing) return;
 
+    currentRequestMode = isMember() ? 'mutual' : 'purchase';
     currentListingId = listing.id;
     form.reset();
+
+    // Toggle purchase/member fields if present
+    const mutualFields = document.getElementById('consent-mutual-fields');
+    const purchaseFields = document.getElementById('consent-purchase-fields');
+    if (mutualFields) mutualFields.hidden = currentRequestMode !== 'mutual';
+    if (purchaseFields) purchaseFields.hidden = currentRequestMode !== 'purchase';
+    $$('input, textarea, select', mutualFields || document).forEach((el) => {
+      if (!mutualFields || !mutualFields.contains(el)) return;
+      if (el.type === 'checkbox') el.required = currentRequestMode === 'mutual';
+    });
+    $$('input, textarea, select', purchaseFields || document).forEach((el) => {
+      if (!purchaseFields || !purchaseFields.contains(el)) return;
+      const requiredPurchase = ['purchaseName', 'purchaseEmail', 'purchaseAmount', 'purchaseAgreement'];
+      if (requiredPurchase.includes(el.name)) el.required = currentRequestMode === 'purchase';
+    });
+
     if (summaryTitle) summaryTitle.textContent = listing.title;
     if (summaryMeta) {
       summaryMeta.textContent = `${PILLARS[listing.pillar].label} · ${EXCHANGES[listing.exchange].label} · Offered by ${listing.provider}`;
     }
+    if (summaryLabel) summaryLabel.textContent = currentRequestMode === 'purchase' ? 'Your purchase request' : 'Your request';
+
+    if (title) title.textContent = currentRequestMode === 'purchase' ? 'Buy as a non-member' : 'Request with mutual consent';
+    if (description) {
+      description.textContent = currentRequestMode === 'purchase'
+        ? 'People without a pledge can buy goods and services for money in this prototype. Your payment intent is recorded locally and allocated to the severance fund (no real payment is processed). Members access the commons through mutual aid instead.'
+        : 'A request starts a conversation. It does not create a sale, a deposit, or a guarantee that an item is still available.';
+    }
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = currentRequestMode === 'purchase' ? 'Record purchase intent' : 'Confirm request';
 
     dialog._trigger = trigger || null;
     openDialog(dialog);
@@ -1730,16 +2041,86 @@
         return;
       }
 
-      if (state.requests.some((request) => request.listingId === listing.id)) {
+      const data = new FormData(form);
+
+      if (currentRequestMode === 'purchase') {
+        const amount = Math.max(0, Number(data.get('purchaseAmount') || 0));
+        const purchaserName = cleanString(data.get('purchaseName'), 60);
+        const purchaserEmail = cleanString(data.get('purchaseEmail'), 120);
+        if (!(amount > 0) || !purchaserName || !purchaserEmail) return;
+
+        const now = new Date().toISOString();
+        const request = {
+          id: makeId('purchase'),
+          type: 'nonmember_purchase',
+          memberId: '',
+          listingId: listing.id,
+          listingTitle: listing.title,
+          provider: listing.provider,
+          note: cleanString(data.get('note'), 280),
+          purchaserName,
+          purchaserEmail,
+          amount,
+          requestedAt: now,
+          status: 'purchase_intent',
+          fund: 'severance'
+        };
+        state.requests.unshift(request);
+        state.requests = state.requests.slice(0, 100);
+
+        const contribution = {
+          id: makeId('contribution'),
+          memberId: '',
+          type: 'severance_purchase',
+          amount,
+          hours: 0,
+          profession: '',
+          stateRegion: '',
+          hourlyRate: 0,
+          stockValue: 0,
+          sourceId: request.id,
+          note: `Non-member purchase intent: ${listing.title}`,
+          createdAt: now,
+          status: 'recorded',
+          purchaserEmail,
+          purchaserName
+        };
+        state.contributions = Array.isArray(state.contributions) ? state.contributions : [];
+        state.contributions.unshift(contribution);
+        state.contributions = state.contributions.slice(0, 200);
+
+        state.severanceFund = state.severanceFund || { balance: 0, contributions: [] };
+        state.severanceFund.balance = (Number(state.severanceFund.balance) || 0) + amount;
+        state.severanceFund.contributions = Array.isArray(state.severanceFund.contributions) ? state.severanceFund.contributions : [];
+        state.severanceFund.contributions.unshift(contribution.id);
+        state.severanceFund.contributions = state.severanceFund.contributions.slice(0, 500);
+
+        saveState();
+        closeDialog(dialog, { restoreFocus: false });
+        currentListingId = null;
+        applyFilters();
+        focusListingTitle(listing.id);
+        announce(`Purchase intent recorded for ${listing.title}. ${amount.toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })} is allocated to the severance fund in this prototype.`);
+        showToast('Purchase intent recorded. Proceeds allocated to the severance fund (prototype).', false);
+        return;
+      }
+
+      if (!isMember()) {
+        closeDialog(dialog);
+        showToast('Sign the Unbought Pledge to make a mutual-aid request as a member.');
+        return;
+      }
+
+      if (state.requests.some((request) => request.listingId === listing.id && request.memberId === state.pledge.memberId && request.type !== 'nonmember_purchase')) {
         closeDialog(dialog);
         announce('A request for this offering is already saved in your browser.');
         showToast('This request is already recorded locally.', false);
         return;
       }
 
-      const data = new FormData(form);
       state.requests.unshift({
         id: makeId('request'),
+        type: 'mutual_aid_request',
         memberId: state.pledge.memberId,
         listingId: listing.id,
         listingTitle: listing.title,
@@ -1979,6 +2360,7 @@
           renderPledge();
           renderTrackGate();
           renderTrackPanel(null);
+          renderMemberAccount();
           resetFilters();
 
           const postStatus = document.getElementById('post-status');
@@ -2018,6 +2400,17 @@
     initDialogs();
     initVideo();
     initFooterYear();
+    renderMemberAccount();
+    document.addEventListener('unbought:donation-recorded', () => {
+      // donation.js writes to shared state; reload to reflect in account UI
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) state = migrateState(JSON.parse(raw));
+      } catch (error) {
+        // ignore
+      }
+      renderMemberAccount();
+    });
   }
 
   if (document.readyState === 'loading') {

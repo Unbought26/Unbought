@@ -92,7 +92,7 @@
         <div class="hero-copy">
           <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Free Stuff Directory</p>
           <h1 id="hero-title">Take What You Need. <span class="mark mark--blue">Leave What You Can.</span></h1>
-          <p class="hero-lede">Food, clothing, tools, and household goods shared freely. No price tags, no deposits, no swap required, and no proof of need. Browse what neighbors have posted or add something to the commons.</p>
+          <p class="hero-lede">Food, clothing, tools, and household goods in the Unbought commons. Pledged members share and request items through mutual aid; people who do not take the pledge may buy goods for money in this prototype, with proceeds going to the severance fund. Browse or add an offering.</p>
 
           <div class="hero-actions">
             <a class="button button--primary" href="#services">Browse Free Stuff <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
@@ -171,7 +171,7 @@
           <article class="standard-card">
             <span class="standard-icon standard-icon--amber" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-basket"></use></svg></span>
             <h3>Goods are free</h3>
-            <p>Food, clothing, tools, and housewares cost nothing. There is no price, no deposit, no swap requirement, and no membership fee.</p>
+            <p>Pledged members share and receive goods through mutual aid in the commons. People who do not take the pledge may buy goods for money in this prototype, and proceeds are allocated to the severance fund (no real payments processed).</p>
           </article>
           <article class="standard-card">
             <span class="standard-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-scale"></use></svg></span>
@@ -213,7 +213,7 @@
           </div>
           <div class="filter-note">
             <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-basket"></use></svg>
-            <p>No price, no deposit, no swap. If you can use it, request it with mutual consent.</p>
+            <p>Members request through mutual consent. Non-members may record a purchase intent in this prototype; proceeds support the severance fund.</p>
           </div>
           <div class="filter-grid">
             <div class="field">
@@ -437,28 +437,54 @@
         </div>
 
         <form id="consent-form">
-          <fieldset class="dialog-fieldset">
-            <legend>Before we connect</legend>
-            <label class="checkbox">
-              <input type="checkbox" name="voluntary" required>
-              <span>I understand this is a voluntary peer exchange with no payment, deposit, or swap, and no guarantee that the item is still available.</span>
-            </label>
-            <label class="checkbox">
-              <input type="checkbox" name="scope" required>
-              <span>I understand every item on this page is free. There is no price tag, no deposit, and no swap required.</span>
-            </label>
-            <label class="checkbox">
-              <input type="checkbox" name="contactConsent" required>
-              <span>I consent to sharing my chosen name and general location with this neighbor for the purpose of this request.</span>
-            </label>
-          </fieldset>
-
-          <div class="field">
-            <label for="consent-note">Context for the provider <span class="optional">(optional)</span></label>
-            <textarea id="consent-note" name="note" rows="3" maxlength="280" placeholder="What do you need, and when could you pick it up?"></textarea>
+          <div id="consent-mutual-fields">
+            <fieldset class="dialog-fieldset">
+              <legend>Before we connect</legend>
+              <label class="checkbox">
+                <input type="checkbox" name="voluntary" required>
+                <span>I understand this is a voluntary peer exchange with no payment, deposit, or swap, and no guarantee that the item is still available.</span>
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" name="scope" required>
+                <span>As a pledged member, I am requesting access through the commons (not purchasing). I will follow Unbought's agreements and mutual consent.</span>
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" name="contactConsent" required>
+                <span>I consent to sharing my chosen name and general location with this neighbor for the purpose of this request.</span>
+              </label>
+            </fieldset>
           </div>
 
-          <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> This prototype stores your request in this browser only. Nothing is sent to a provider.</p>
+          <div id="consent-purchase-fields" hidden>
+            <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-scale"></use></svg> Non-members may buy goods and services for money in this prototype. Proceeds from non-member purchases go to the severance fund. No real payment is collected.</p>
+            <div class="form-grid">
+              <div class="field">
+                <label for="purchase-name">Your name <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="purchase-name" name="purchaseName" maxlength="60" placeholder="Name for this purchase intent">
+              </div>
+              <div class="field">
+                <label for="purchase-email">Email <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="email" id="purchase-email" name="purchaseEmail" maxlength="120" placeholder="you@example.com">
+              </div>
+              <div class="field">
+                <label for="purchase-amount">Offered amount (USD) <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="number" id="purchase-amount" name="purchaseAmount" min="1" step="1" inputmode="decimal" placeholder="25">
+              </div>
+            </div>
+            <div class="field field--check">
+              <label class="checkbox">
+                <input type="checkbox" name="purchaseAgreement" value="yes">
+                <span>I understand this records a non-binding purchase intent in the prototype (no payment processed now) and that proceeds are allocated to the severance fund. I am not a pledged member for this transaction.</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="consent-note">Note / context <span class="optional">(optional)</span></label>
+            <textarea id="consent-note" name="note" rows="3" maxlength="280" placeholder="What do you need, when can you pick up, or details for this purchase intent?"></textarea>
+          </div>
+
+          <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> This prototype stores your request in this browser only. Nothing is sent to a provider and no money is collected.</p>
 
           <div class="dialog-actions">
             <button class="button button--ghost" type="button" data-dialog-close>Not now</button>

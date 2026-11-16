@@ -1,16 +1,18 @@
 /* ==========================================================================
    UNBOUGHT — donate.js
-   Local-only donation intents for the prototype.
+   Local-only donation intents integrated with Unbought membership (prototype).
 
-   No network calls. No payment fields. No payment processing. The form saves
-   a non-binding intent in this browser so the flow can be tested before a real
-   trust, payment provider, and legal/tax structure exist.
+   No payment processing and no real email sending. Donation intents are saved in
+   the shared local app state so members can track them in their account. Guest
+   donors can provide an email for a future thank-you message (recorded locally).
+   Contributions are also recorded in a DB-ready equity/contribution ledger shape.
    ========================================================================== */
 (() => {
   'use strict';
 
-  const STORAGE_KEY = 'unbought:donation-intents:v1';
-  const MAX_INTENTS = 20;
+  const STORAGE_KEY = 'unbought:v1';
+  const LEGACY_STORAGE_KEY = 'unbought:donation-intents:v1';
+  const MAX_INTENTS = 100;
 
   const FREQUENCY_LABELS = Object.freeze({
     'one-time': 'One-time gift',
@@ -29,9 +31,12 @@
   const receiptAgain = document.getElementById('receipt-again');
   const clearButton = document.getElementById('clear-intents');
   const amountInput = document.getElementById('donation-amount');
+  const nameInput = document.getElementById('donation-name');
+  const emailInput = document.getElementById('donation-email');
+  const memberNote = document.getElementById('donation-member-note');
   const liveRegion = document.getElementById('live-region');
 
-  let intents = loadIntents();
+  let state = loadState();
   let clearArmed = false;
   let clearTimer = null;
 
@@ -44,41 +49,82 @@
     return Object.prototype.hasOwnProperty.call(FREQUENCY_LABELS, value);
   }
 
-  function loadIntents() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : null;
-      if (!Array.isArray(parsed)) return [];
-      return parsed
-        .filter((item) => (
-          item &&
-          typeof item === 'object' &&
-          Number.isFinite(item.amount) &&
-          item.amount >= 1 &&
-          isValidFrequency(item.frequency) &&
-          typeof item.savedAt === 'string'
-        ))
-        .slice(0, MAX_INTENTS)
-        .map((item) => ({
-          id: cleanText(item.id, 40),
-          amount: Math.round(item.amount),
-          frequency: item.frequency,
-          name: cleanText(item.name, 60),
-          note: cleanText(item.note, 280),
-          savedAt: item.savedAt
-        }));
-    } catch (error) {
-      return [];
-    }
+  function defaultState() {
+    return {
+      pledge: null,
+      track: null,
+      trackDetails: {},
+      listings: [],
+      requests: [],
+      inquiries: [],
+      donationIntents: [],
+      contributions: []
+    };
   }
 
-  function saveIntents() {
+  function loadState() {
+    let parsed = null;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(intents.slice(0, MAX_INTENTS)));
+      const raw = localStorage.getItem(STORAGE_KEY);
+      parsed = raw ? JSON.parse(raw) : null;
+    } catch (error) {
+      parsed = null;
+    }
+    const base = parsed && typeof parsed === 'object' ? parsed : defaultState();
+    if (!Array.isArray(base.donationIntents)) base.donationIntents = [];
+    if (!Array.isArray(base.contributions)) base.contributions = [];
+
+    // Migrate legacy standalone donation intents if shared state has none.
+    if (!base.donationIntents.length) {
+      try {
+        const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
+        const legacy = legacyRaw ? JSON.parse(legacyRaw) : null;
+        if (Array.isArray(legacy)) {
+          base.donationIntents = legacy
+            .filter((item) => item && typeof item === 'object' && Number.isFinite(Number(item.amount)) && isValidFrequency(item.frequency))
+            .slice(0, MAX_INTENTS)
+            .map((item) => ({
+              id: cleanText(item.id, 40) || `UB-${Date.now().toString(36).toUpperCase()}`,
+              memberId: '',
+              amount: Math.max(1, Math.round(Number(item.amount))),
+              frequency: item.frequency,
+              name: cleanText(item.name, 60),
+              email: '',
+              note: cleanText(item.note, 280),
+              savedAt: cleanText(item.savedAt, 40) || new Date().toISOString(),
+              status: 'intent',
+              stockValue: Math.max(1, Math.round(Number(item.amount))),
+              thankYouEmailQueued: false
+            }));
+        }
+      } catch (error) {
+        // ignore
+      }
+    }
+
+    return base;
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      // Keep legacy key in sync minimally for older tabs/tools.
+      localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify((state.donationIntents || []).slice(0, 20)));
       return true;
     } catch (error) {
       return false;
     }
+  }
+
+  function getMember() {
+    return state.pledge && state.pledge.memberId ? state.pledge : null;
+  }
+
+  function visibleIntents() {
+    const member = getMember();
+    const intents = Array.isArray(state.donationIntents) ? state.donationIntents : [];
+    if (member) return intents.filter((item) => item && item.memberId === member.memberId);
+    return intents;
   }
 
   function announce(message) {
@@ -107,14 +153,40 @@
     }).format(date);
   }
 
+  function syncMemberUI() {
+    const member = getMember();
+    if (memberNote) {
+      memberNote.hidden = false;
+      memberNote.textContent = member
+        ? `Signed in as ${member.name}. Your donation intents will be tracked in your account and counted as contribution/stock value in this prototype.`
+        : 'Donating without an account is welcome. If you provide an email, a thank-you email will be queued in a future system (recorded locally in this prototype).';
+    }
+    if (member && nameInput && !nameInput.value.trim()) {
+      nameInput.value = member.name || '';
+    }
+    if (emailInput) {
+      emailInput.required = !member;
+      const hint = document.getElementById('donation-email-hint');
+      if (hint) {
+        hint.textContent = member
+          ? 'Optional for members (your account can track this donation).'
+          : 'Required if you are donating without an account so we can send a thank-you email later.';
+      }
+    }
+  }
+
   function updateStatus() {
     if (!statusBox) return;
+    const intents = visibleIntents();
     if (!intents.length) {
-      statusBox.textContent = 'No donation intents saved in this browser yet.';
+      statusBox.textContent = getMember()
+        ? 'No donation intents tracked in your account yet.'
+        : 'No donation intents saved in this browser yet.';
       return;
     }
-    const total = intents.reduce((sum, item) => sum + item.amount, 0);
-    statusBox.textContent = `${intents.length} donation intent${intents.length === 1 ? '' : 's'} saved in this browser · ${formatAmount(total)} intended. No money has moved.`;
+    const total = intents.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+    const scope = getMember() ? 'tracked in your account' : 'saved in this browser';
+    statusBox.textContent = `${intents.length} donation intent${intents.length === 1 ? '' : 's'} ${scope} · ${formatAmount(total)} intended. No money has moved.`;
   }
 
   function showReceipt(intent, shouldFocus) {
@@ -122,12 +194,16 @@
 
     receiptRef.textContent = intent.id ? `Reference ${intent.id}` : '';
     const name = intent.name ? ` for ${intent.name}` : '';
-    receiptSummary.textContent = `${formatAmount(intent.amount)} · ${FREQUENCY_LABELS[intent.frequency]}${name} · saved ${formatDate(intent.savedAt)}.`;
+    const tracking = intent.memberId ? 'tracked in your account' : (intent.email ? 'thank-you email queued (prototype)' : 'saved locally');
+    receiptSummary.textContent = `${formatAmount(intent.amount)} · ${FREQUENCY_LABELS[intent.frequency]}${name} · saved ${formatDate(intent.savedAt)} · ${tracking}.`;
     receipt.hidden = false;
 
     if (shouldFocus) {
       receipt.focus({ preventScroll: true });
-      announce(`Donation intent for ${formatAmount(intent.amount)} saved locally. No payment was collected.`);
+      const msg = intent.memberId
+        ? `Donation intent for ${formatAmount(intent.amount)} saved and tracked in your account. No payment was collected.`
+        : `Donation intent for ${formatAmount(intent.amount)} saved locally. ${intent.email ? 'A thank-you email would be sent in a future system.' : 'No payment was collected.'}`;
+      announce(msg);
     }
   }
 
@@ -144,6 +220,7 @@
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     if (errorBox) errorBox.hidden = true;
+    state = loadState(); // refresh in case member state changed in another tab/page
 
     if (!form.reportValidity()) return;
 
@@ -151,6 +228,8 @@
     const amount = Math.round(Number(data.get('amount')));
     const frequency = String(data.get('frequency') || '');
     const agreement = document.getElementById('donation-agreement');
+    const member = getMember();
+    const email = cleanText(data.get('email'), 120);
 
     if (!Number.isFinite(amount) || amount < 1) {
       if (errorBox) {
@@ -170,6 +249,15 @@
       return;
     }
 
+    if (!member && !email) {
+      if (errorBox) {
+        errorBox.textContent = 'Please provide an email so a thank-you message can be sent, or sign the pledge to track donations in your account.';
+        errorBox.hidden = false;
+      }
+      if (emailInput) emailInput.focus();
+      return;
+    }
+
     if (!agreement || !agreement.checked) {
       if (errorBox) {
         errorBox.textContent = 'Please confirm that you understand this is a non-binding prototype intent.';
@@ -181,17 +269,42 @@
 
     const intent = {
       id: `UB-${Date.now().toString(36).toUpperCase()}`,
+      memberId: member ? member.memberId : '',
       amount,
       frequency,
-      name: cleanText(data.get('name'), 60),
+      name: cleanText(data.get('name'), 60) || (member ? member.name : ''),
+      email,
       note: cleanText(data.get('note'), 280),
-      savedAt: new Date().toISOString()
+      savedAt: new Date().toISOString(),
+      status: 'intent',
+      stockValue: amount,
+      thankYouEmailQueued: !member && Boolean(email)
     };
 
-    intents.unshift(intent);
-    intents = intents.slice(0, MAX_INTENTS);
+    state.donationIntents = Array.isArray(state.donationIntents) ? state.donationIntents : [];
+    state.contributions = Array.isArray(state.contributions) ? state.contributions : [];
+    state.donationIntents.unshift(intent);
+    state.donationIntents = state.donationIntents.slice(0, MAX_INTENTS);
 
-    if (!saveIntents()) {
+    // Record a contribution/equity ledger entry (DB-ready). Donations count as stock value.
+    state.contributions.unshift({
+      id: `contrib-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+      memberId: intent.memberId,
+      type: 'donation',
+      amount,
+      hours: 0,
+      profession: '',
+      stateRegion: '',
+      hourlyRate: 0,
+      stockValue: amount,
+      sourceId: intent.id,
+      note: intent.note,
+      createdAt: intent.savedAt,
+      status: 'recorded'
+    });
+    state.contributions = state.contributions.slice(0, 200);
+
+    if (!saveState()) {
       if (errorBox) {
         errorBox.textContent = 'Local storage is blocked, so this intent could not be saved. Nothing was transmitted.';
         errorBox.hidden = false;
@@ -200,9 +313,11 @@
     }
 
     form.reset();
+    syncMemberUI();
     resetClearButton();
     updateStatus();
     showReceipt(intent, true);
+    document.dispatchEvent(new CustomEvent('unbought:donation-recorded', { detail: { intent } }));
   });
 
   if (receiptAgain) {
@@ -215,6 +330,7 @@
 
   if (clearButton) {
     clearButton.addEventListener('click', () => {
+      state = loadState();
       if (!clearArmed) {
         clearArmed = true;
         clearButton.textContent = 'Click again to confirm';
@@ -223,37 +339,37 @@
         return;
       }
 
-      intents = [];
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-      } catch (error) {
-        // The in-memory list is still cleared below.
+      const member = getMember();
+      if (member) {
+        state.donationIntents = (state.donationIntents || []).filter((item) => item.memberId !== member.memberId);
+        state.contributions = (state.contributions || []).filter((item) => !(item.memberId === member.memberId && item.type === 'donation'));
+      } else {
+        state.donationIntents = (state.donationIntents || []).filter((item) => item.memberId);
+        state.contributions = (state.contributions || []).filter((item) => !(item.type === 'donation' && !item.memberId));
       }
+      saveState();
       hideReceipt();
       resetClearButton();
       updateStatus();
-      announce('Saved donation intents were cleared from this browser.');
+      announce(member ? 'Your account donation intents were cleared from this browser.' : 'Saved guest donation intents were cleared from this browser.');
     });
   }
 
   document.addEventListener('unbought:reset', () => {
-    intents = [];
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch (error) {
-      // In-memory state is still cleared below.
-    }
+    state = loadState();
     hideReceipt();
     resetClearButton();
+    syncMemberUI();
     updateStatus();
   });
 
   window.addEventListener('pagehide', resetClearButton);
 
+  syncMemberUI();
   updateStatus();
 
+  const intents = visibleIntents();
   if (intents.length) {
-    // Show the most recent intent on return visits, without stealing focus.
     showReceipt(intents[0], false);
   }
 })();

@@ -209,6 +209,7 @@
         <div class="donation-layout">
           <div class="donation-card">
             <p class="donation-status" id="donation-status" role="status">No donation intents saved in this browser yet.</p>
+            <p class="form-hint" id="donation-equity-note">Anyone can donate. Members can track donations in their account. Every donation (and, in the future, logged work hours valued by your state/profession average wage) records contribution/stock value in a prototype ledger. Non-member purchases of goods/services are recorded separately for the severance fund.</p>
 
             <form id="donation-form">
               <div class="amount-row">
@@ -234,6 +235,14 @@
                 <label for="donation-name">Chosen name <span class="optional">(optional)</span></label>
                 <input type="text" id="donation-name" name="name" maxlength="60" autocomplete="nickname" placeholder="What should the trust call you?">
               </div>
+
+              <div class="field">
+                <label for="donation-email">Email <span id="donation-email-label-note" class="optional">(for non-members)</span></label>
+                <input type="email" id="donation-email" name="email" maxlength="120" autocomplete="email" placeholder="you@example.com">
+                <p class="field-hint" id="donation-email-hint">Required if you are donating without an account so we can send a thank-you email later.</p>
+              </div>
+
+              <p class="form-hint" id="donation-member-note" role="status">Donating without an account is welcome. If you provide an email, a thank-you email will be queued in a future system (recorded locally in this prototype).</p>
 
               <div class="field">
                 <label for="donation-note">Note to the trust <span class="optional">(optional)</span></label>

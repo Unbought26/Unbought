@@ -628,28 +628,54 @@
         </div>
 
         <form id="consent-form">
-          <fieldset class="dialog-fieldset">
-            <legend>Before we connect</legend>
-            <label class="checkbox">
-              <input type="checkbox" name="voluntary" required>
-              <span>I understand this is a voluntary peer exchange. The labor is free, and I will cover any materials that must be bought at their exact receipt price.</span>
-            </label>
-            <label class="checkbox">
-              <input type="checkbox" name="scope" required>
-              <span>I will agree on scope, time, and boundaries—and I understand regulated services are peer education or support, not licensed professional advice.</span>
-            </label>
-            <label class="checkbox">
-              <input type="checkbox" name="contactConsent" required>
-              <span>I consent to sharing my chosen name and general location with this provider for the purpose of this request.</span>
-            </label>
-          </fieldset>
-
-          <div class="field">
-            <label for="consent-note">Context for the provider <span class="optional">(optional)</span></label>
-            <textarea id="consent-note" name="note" rows="3" maxlength="280" placeholder="What do you need, and what would make this exchange feel safe and respectful?"></textarea>
+          <div id="consent-mutual-fields">
+            <fieldset class="dialog-fieldset">
+              <legend>Before we connect</legend>
+              <label class="checkbox">
+                <input type="checkbox" name="voluntary" required>
+                <span>I understand this is a voluntary peer exchange. As a pledged member, the labor is free and I will cover any materials that must be bought at their exact receipt price.</span>
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" name="scope" required>
+                <span>I will agree on scope, time, and boundaries—and I understand regulated services are peer education or support, not licensed professional advice.</span>
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" name="contactConsent" required>
+                <span>I consent to sharing my chosen name and general location with this provider for the purpose of this request.</span>
+              </label>
+            </fieldset>
           </div>
 
-          <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> This prototype stores your request in this browser only. Nothing is sent to a provider.</p>
+          <div id="consent-purchase-fields" hidden>
+            <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-scale"></use></svg> Non-members may buy goods and services for money in this prototype. Proceeds from non-member purchases go to the severance fund. No real payment is collected.</p>
+            <div class="form-grid">
+              <div class="field">
+                <label for="purchase-name">Your name <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="purchase-name" name="purchaseName" maxlength="60" placeholder="Name for this purchase intent">
+              </div>
+              <div class="field">
+                <label for="purchase-email">Email <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="email" id="purchase-email" name="purchaseEmail" maxlength="120" placeholder="you@example.com">
+              </div>
+              <div class="field">
+                <label for="purchase-amount">Offered amount (USD) <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="number" id="purchase-amount" name="purchaseAmount" min="1" step="1" inputmode="decimal" placeholder="25">
+              </div>
+            </div>
+            <div class="field field--check">
+              <label class="checkbox">
+                <input type="checkbox" name="purchaseAgreement" value="yes">
+                <span>I understand this records a non-binding purchase intent in the prototype (no payment processed now) and that proceeds are allocated to the severance fund. I am not a pledged member for this transaction.</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="consent-note">Note / context <span class="optional">(optional)</span></label>
+            <textarea id="consent-note" name="note" rows="3" maxlength="280" placeholder="What do you need help with, timing, or details for this purchase intent?"></textarea>
+          </div>
+
+          <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> This prototype stores your request in this browser only. Nothing is sent to a provider and no money is collected.</p>
 
           <div class="dialog-actions">
             <button class="button button--ghost" type="button" data-dialog-close>Not now</button>
