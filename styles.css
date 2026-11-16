@@ -608,6 +608,7 @@ em {
   display: grid;
   gap: 0.4rem;
   align-content: start;
+  min-width: 0;
 }
 
 .field > label,

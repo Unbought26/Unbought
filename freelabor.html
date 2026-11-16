@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Browse and post free labor from Unbought: repairs, care, tutoring, design, and trades offered at no charge. Materials are at exact receipt cost, with zero markup.">
+  <meta name="description" content="Browse and post free labor from Unbought: repairs, care, tutoring, design, and trades offered at no charge. Labor is free for worker and requester; if materials cannot be found free, the requester pays their exact receipt cost.">
   <meta name="theme-color" content="#1E3A8A">
   <title>Free Labor — Unbought</title>
   <link rel="icon" type="image/png" href="assets/logo.png">
@@ -58,7 +58,7 @@
         <img src="assets/logo.png" alt="Unbought Emblem" width="48" height="48">
         <span class="brand-text">
           <span class="brand-name">Unbought</span>
-          <span class="brand-tagline">Free Labor. Free Education. Free Land.</span>
+          <span class="brand-tagline">Free Labor. Free Goods. Free Education. Free Land.</span>
         </span>
       </a>
 
@@ -101,7 +101,7 @@
 
           <ul class="hero-assurances" aria-label="Our commitments">
             <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> No invoices</li>
-            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Materials at cost</li>
+            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Requester covers materials</li>
             <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Consent first</li>
             <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Open to everyone</li>
           </ul>
@@ -140,7 +140,7 @@
           </div>
           <div class="value-item">
             <span class="value-icon value-icon--amber"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-basket"></use></svg></span>
-            <div><strong>At-cost goods</strong><span>Receipt price. Zero markup.</span></div>
+            <div><strong>Free goods</strong><span>No price tag. No swap required.</span></div>
           </div>
           <div class="value-item">
             <span class="value-icon value-icon--red"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-book"></use></svg></span>
@@ -175,8 +175,8 @@
           </article>
           <article class="standard-card">
             <span class="standard-icon standard-icon--amber" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-basket"></use></svg></span>
-            <h3>Materials are at exact cost</h3>
-            <p>If a repair needs a part, the receipt is shared and the exact price is repaid. Unbought takes no markup and adds no handling fee.</p>
+            <h3>Materials are the only cost</h3>
+            <p>Labor is free for both people. If a repair or build needs supplies that are not available free on Unbought, the person requesting the work buys them or repays their exact receipt price. The worker never fronts the cost, and Unbought adds no markup or handling fee.</p>
           </article>
           <article class="standard-card">
             <span class="standard-icon standard-icon--red" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-hands"></use></svg></span>
@@ -204,7 +204,7 @@
             <p class="eyebrow">Free labor directory</p>
             <h2 id="services-title">The commons, in plain sight.</h2>
           </div>
-          <p class="section-head-aside">Every listing is an offer, not an advertisement. Filter by the Five Pillars of Society or by exchange type, then request a connection with mutual consent.</p>
+          <p class="section-head-aside">Every listing is an offer, not an advertisement. Labor is always free. Filter by the Five Pillars of Society or by whether a project may need materials, then request a connection with mutual consent.</p>
         </div>
 
         <div class="filter-bar" aria-labelledby="filter-title">
@@ -227,16 +227,16 @@
               </select>
             </div>
             <div class="field">
-              <label for="exchange-filter">Exchange Type</label>
+              <label for="exchange-filter">Materials</label>
               <select id="exchange-filter" name="exchangeFilter">
-                <option value="all">All Offers</option>
-                <option value="free">100% Free</option>
-                <option value="atcost">At Exact Receipt Cost</option>
+                <option value="all">All offers</option>
+                <option value="free">No materials needed</option>
+                <option value="atcost">Requester may cover materials</option>
               </select>
             </div>
             <div class="filter-note">
               <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg>
-              <p>At-cost means the exact receipt price. No markup. Ever.</p>
+              <p>Labor is never charged. If supplies cannot be found free, the requester pays their exact receipt price. No markup. Ever.</p>
             </div>
           </div>
           <p class="results-status" id="results-status" role="status" aria-live="polite" aria-atomic="true">Showing all offerings.</p>
@@ -267,7 +267,7 @@
           <div class="post-copy">
             <p class="eyebrow">Add to the commons</p>
             <h3 id="post-title">Post a Free Service</h3>
-            <p>Offer a skill, a repair, a class, or a care task. Keep the exchange honest: labor is free, and any materials are at exact receipt cost.</p>
+            <p>Offer a skill, a repair, a class, or a care task. Keep the exchange honest: labor is free for you and the person requesting it. If materials cannot be found free on Unbought, the requester pays their exact receipt price.</p>
             <div class="post-principle">
               <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-spark"></use></svg>
               <p>Listings are saved in this browser for the demo. In a live community, a peer host would review them with you before publishing.</p>
@@ -292,11 +292,11 @@
                 </select>
               </div>
               <div class="field">
-                <label for="post-exchange">Exchange type <span class="required-mark" aria-hidden="true">*</span></label>
+                <label for="post-exchange">Materials <span class="required-mark" aria-hidden="true">*</span></label>
                 <select id="post-exchange" name="exchange" required>
-                  <option value="">Choose an exchange type</option>
-                  <option value="free">100% Free</option>
-                  <option value="atcost">At Exact Receipt Cost</option>
+                  <option value="">Choose a materials option</option>
+                  <option value="free">No materials needed</option>
+                  <option value="atcost">Requester may cover materials</option>
                 </select>
               </div>
               <div class="field">
@@ -318,7 +318,7 @@
               </div>
               <div class="field field--wide">
                 <label for="post-description">Description <span class="required-mark" aria-hidden="true">*</span></label>
-                <textarea id="post-description" name="description" rows="4" maxlength="400" required placeholder="What are you offering? Include what you can safely do, what is at cost, and how you will agree on scope."></textarea>
+                <textarea id="post-description" name="description" rows="4" maxlength="400" required placeholder="What are you offering? Include what you can safely do, what materials may be needed, and how you will agree on scope."></textarea>
                 <p class="field-hint" id="post-description-hint">Up to 400 characters. Be clear about scope and consent.</p>
               </div>
             </div>
@@ -326,7 +326,7 @@
             <div class="field field--check">
               <label class="checkbox">
                 <input type="checkbox" name="postAgreement" required>
-                <span>I confirm this offer charges nothing for labor, and any materials are at exact receipt cost with zero markup.</span>
+                <span>I confirm this offer charges nothing for labor. If materials cannot be found free, the person requesting the work covers their exact receipt price, with zero markup, and I never ask the worker to front the cost.</span>
               </label>
               <label class="checkbox">
                 <input type="checkbox" name="postScopeAgreement" required>
@@ -548,7 +548,7 @@
             <span class="brand-tagline">Built on Ubuntu &amp; Consent.</span>
           </span>
         </a>
-        <p class="footer-tagline">Free Labor. Free Education. Free Land.<br>Built on Ubuntu &amp; Consent.</p>
+        <p class="footer-tagline">Free Labor. Free Goods. Free Education. Free Land.<br>Built on Ubuntu &amp; Consent.</p>
         <p class="footer-mission">A consent-based, currency-free mutual aid society. Every person has inherent worth, whether or not they can work.</p>
       </div>
 
@@ -619,7 +619,7 @@
       </div>
       <div class="dialog-content">
         <h2 id="consent-title">Request with mutual consent</h2>
-        <p id="consent-description">A request starts a conversation. It does not create an employment relationship, a payment obligation, or a guarantee of service.</p>
+        <p id="consent-description">A request starts a conversation. It does not create an employment relationship, a wage, or a guarantee of service. If materials are needed and cannot be found free, the requester covers their exact receipt cost.</p>
 
         <div class="request-summary" id="request-summary">
           <p class="request-summary-label">Your request</p>
@@ -632,11 +632,11 @@
             <legend>Before we connect</legend>
             <label class="checkbox">
               <input type="checkbox" name="voluntary" required>
-              <span>I understand this is a voluntary peer exchange with no payment, employment relationship, or guarantee.</span>
+              <span>I understand this is a voluntary peer exchange. The labor is free, and I will cover any materials that must be bought at their exact receipt price.</span>
             </label>
             <label class="checkbox">
               <input type="checkbox" name="scope" required>
-              <span>I will agree on scope, time, and boundaries-and I understand regulated services are peer education or support, not licensed professional advice.</span>
+              <span>I will agree on scope, time, and boundaries—and I understand regulated services are peer education or support, not licensed professional advice.</span>
             </label>
             <label class="checkbox">
               <input type="checkbox" name="contactConsent" required>

@@ -60,8 +60,8 @@
       short: '100% Free'
     },
     atcost: {
-      label: 'At Exact Receipt Cost',
-      short: 'At exact cost'
+      label: 'Labor free · requester covers materials',
+      short: 'Requester covers materials'
     }
   });
 
@@ -113,16 +113,16 @@
       id: 'seed-brakes',
       pillar: 'building',
       exchange: 'atcost',
-      title: 'Auto Brake Repair — Parts at Exact Cost',
+      title: 'Free Auto Brake Repair — You Cover the Parts',
       provider: 'Marcus Bell',
       location: 'Northside garage · by appointment',
-      description: 'Brake pads, rotors, fluid checks, and honest safety inspections. You buy the parts at receipt price, or I order them and show you the receipt. Labor is free. Zero markup, ever. I will say no when a job is outside my scope or needs a licensed specialist.',
+      description: 'Brake pads, rotors, fluid checks, and honest safety inspections. The labor is free for both of us. If the parts cannot be found free on Unbought, you buy them at the exact receipt price, or I order them and show you the receipt. Zero markup, ever. I will say no when a job is outside my scope or needs a licensed specialist.',
       details: [
         { label: 'Rhythm', value: 'Weekends · 2–4 hrs' },
-        { label: 'At cost', value: 'Pads, rotors, fluid — receipt shown' },
+        { label: 'Materials', value: 'Requester covers pads, rotors, fluid — receipt shown' },
         { label: 'Good for', value: 'Older cars & tight budgets' }
       ],
-      note: 'Labor free. Parts at exact receipt price.'
+      note: 'Labor free. Requester covers materials at exact receipt price.'
     },
     {
       id: 'seed-garden',
@@ -131,10 +131,10 @@
       title: 'Organic Backyard Gardening & Seed Share',
       provider: 'Rosa Jiménez',
       location: 'Maple Street plots + home visits',
-      description: 'Garden planning, planting, pruning, compost setup, and seasonal coaching. Seedlings and compost are at exact receipt cost; the teaching and labor are free. Harvest is shared with everyone who tends the plot.',
+      description: 'Garden planning, planting, pruning, compost setup, and seasonal coaching. The teaching and labor are free. Seedlings and compost are free when the share has them; if they must be bought, the person requesting the work covers the exact receipt price, never a markup. Harvest is shared with everyone who tends the plot.',
       details: [
         { label: 'Season', value: 'Spring–fall · flexible' },
-        { label: 'At cost', value: 'Seedlings & compost at receipt' },
+        { label: 'Materials', value: 'Free from the share, or requester covers receipt' },
         { label: 'Capacity', value: '4 households per month' }
       ],
       note: 'No plot fee. Harvest shared.'
@@ -218,17 +218,17 @@
     {
       id: 'seed-hygiene',
       pillar: 'goods',
-      exchange: 'atcost',
-      title: 'Bulk Cleaning & Hygiene Supplies at Exact Cost',
+      exchange: 'free',
+      title: 'Bulk Cleaning & Hygiene Supplies — Free',
       provider: 'Nia Brooks',
       location: 'Westside neighborhood · pickup or delivery',
-      description: 'Laundry soap, dish soap, toothpaste, period supplies, and cleaning basics bought in bulk and split at the exact receipt price. Labor is free. Receipts are posted for every order. No markup, no minimum, and no membership fee.',
+      description: 'Laundry soap, dish soap, toothpaste, period supplies, and cleaning basics bought in bulk and shared freely. No price, no split, no minimum, and no membership fee. Take what your household needs; tell us what ran out so the next bulk run covers it.',
       details: [
-        { label: 'Order', value: 'Monthly bulk run · receipt posted' },
-        { label: 'At cost', value: 'Exact shelf price, split by unit' },
+        { label: 'Order', value: 'Monthly bulk run · posted when ready' },
+        { label: 'Cost', value: 'Free · no split, no minimum' },
         { label: 'Access', value: 'Porch pickup or local delivery' }
       ],
-      note: 'Labor free. Supplies at exact receipt price.'
+      note: 'Free supplies. Nothing to repay.'
     }
   ]);
 
@@ -511,11 +511,12 @@
 
     const badges = createEl('div', 'listing-badges');
     addBadge(badges, 'badge--pillar', PILLARS[listing.pillar].short);
-    addBadge(
-      badges,
-      listing.exchange === 'free' ? 'badge--free' : 'badge--atcost',
-      listing.exchange === 'free' ? '100% Free' : 'Labor free · materials at cost'
-    );
+    const isGoods = listing.pillar === 'goods';
+    if (isGoods || listing.exchange === 'free') {
+      addBadge(badges, 'badge--free', isGoods ? '100% Free' : '100% Free · no materials');
+    } else {
+      addBadge(badges, 'badge--atcost', 'Labor free · requester covers materials');
+    }
     if (listing.isUser) addBadge(badges, 'badge--soft', 'Posted by you');
     if (hasOwn(SCOPE_LABELS, listing.scope)) addBadge(badges, 'badge--soft', SCOPE_LABELS[listing.scope]);
     card.appendChild(badges);
@@ -596,7 +597,7 @@
     if (!listings.length) {
       const empty = createEl('div', 'no-results');
       empty.appendChild(createEl('h3', '', 'No offerings match those filters yet.'));
-      empty.appendChild(createEl('p', '', 'Try another pillar or exchange type—or post the first free offer in this category.'));
+      empty.appendChild(createEl('p', '', 'Try another pillar or materials option—or post the first free offer in this category.'));
       const reset = createEl('button', 'button button--outline button--small', 'Reset filters');
       reset.type = 'button';
       reset.dataset.clearFilters = '';
@@ -616,19 +617,17 @@
 
     const scope = getDirectoryScope();
     const pillarText = pillar === 'all'
-      ? (scope === 'goods' ? 'all goods' : 'all pillars & goods')
+      ? ''
       : PILLARS[pillar].label;
-    const exchangeText = exchange === 'all' ? 'all exchange types' : EXCHANGES[exchange].label;
+    const exchangeText = exchange === 'all' ? '' : EXCHANGES[exchange].label;
+    const detail = [pillarText, exchangeText].filter(Boolean).join(' · ');
     const offeringText = scope === 'goods' ? 'goods' : scope === 'labor' ? 'free labor offers' : 'community offerings';
 
     if (!shown) {
-      status.textContent = scope === 'goods'
-        ? `No goods match ${exchangeText}. Try resetting the filter.`
-        : `No offerings match ${pillarText} and ${exchangeText}. Try resetting the filters.`;
-    } else if (pillar === 'all' && exchange === 'all') {
+      status.textContent = `No ${offeringText} match those filters. Try resetting the filters.`;
+    } else if (!detail) {
       status.textContent = `Showing all ${total} ${offeringText}.`;
     } else {
-      const detail = scope === 'goods' ? exchangeText : `${pillarText} · ${exchangeText}`;
       status.textContent = `Showing ${shown} of ${total} ${offeringText} · ${detail}.`;
     }
   }
@@ -717,7 +716,7 @@
       const location = cleanString(data.get('location'), 80);
       const description = cleanString(data.get('description'), 400);
       const pillar = getDirectoryScope() === 'goods' ? 'goods' : String(data.get('pillar') || '');
-      const exchange = String(data.get('exchange') || '');
+      const exchange = pillar === 'goods' ? 'free' : String(data.get('exchange') || '');
       const scope = String(data.get('scope') || '');
 
       if (!hasOwn(PILLARS, pillar) || !hasOwn(EXCHANGES, exchange)) return;
@@ -734,7 +733,7 @@
         scope,
         details: [
           { label: 'Where', value: location },
-          { label: 'Exchange', value: EXCHANGES[exchange].label },
+          { label: pillar === 'goods' ? 'Cost' : 'Materials', value: EXCHANGES[exchange].label },
           { label: 'Contact', value: 'Through a consent request' }
         ],
         note: 'Posted by a neighbor · consent first',
@@ -861,7 +860,7 @@
 
         if (!freeAtCost || !freeAtCost.checked) {
           if (errorBox) {
-            errorBox.textContent = 'Please confirm that you will operate on a strictly free or at-cost basis.';
+            errorBox.textContent = 'Please confirm that labor and goods are free, and that only exact material costs may change hands.';
             errorBox.hidden = false;
           }
           if (freeAtCost) freeAtCost.focus();
