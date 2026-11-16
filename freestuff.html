@@ -215,6 +215,21 @@
             <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-basket"></use></svg>
             <p>No price, no deposit, no swap. If you can use it, request it with mutual consent.</p>
           </div>
+          <div class="filter-grid">
+            <div class="field">
+              <label for="category-filter">Category</label>
+              <select id="category-filter" name="category">
+                <option value="all">All categories</option>
+                <option value="new">Free new stuff</option>
+                <option value="homemade">Free homemade stuff</option>
+                <option value="used">Free old stuff</option>
+                <option value="parts">Free stuff for parts or restoration (broken)</option>
+              </select>
+            </div>
+            <div class="field filter-actions">
+              <button class="button button--ghost button--small" id="clear-filters" type="button">Reset filters</button>
+            </div>
+          </div>
           <p class="results-status" id="results-status" role="status" aria-live="polite" aria-atomic="true">Showing all free goods.</p>
         </div>
 
@@ -264,6 +279,16 @@
               <div class="field">
                 <label for="post-location">Location <span class="required-mark" aria-hidden="true">*</span></label>
                 <input type="text" id="post-location" name="location" maxlength="80" required placeholder="Neighborhood, porch pickup, or venue">
+              </div>
+              <div class="field">
+                <label for="post-category">Category <span class="required-mark" aria-hidden="true">*</span></label>
+                <select id="post-category" name="category" required>
+                  <option value="">Choose a category</option>
+                  <option value="new">Free new stuff</option>
+                  <option value="homemade">Free homemade stuff</option>
+                  <option value="used">Free old stuff</option>
+                  <option value="parts">Free stuff for parts or restoration (broken)</option>
+                </select>
               </div>
               <div class="field field--wide">
                 <label for="post-description">Description <span class="required-mark" aria-hidden="true">*</span></label>

@@ -65,6 +65,25 @@
     }
   });
 
+  const GOODS_CATEGORIES = Object.freeze({
+    new: {
+      label: 'Free new stuff',
+      short: 'New'
+    },
+    homemade: {
+      label: 'Free homemade stuff',
+      short: 'Homemade'
+    },
+    used: {
+      label: 'Free old stuff',
+      short: 'Old'
+    },
+    parts: {
+      label: 'Free stuff for parts or restoration (broken)',
+      short: 'Parts / restoration'
+    }
+  });
+
   const SCOPE_LABELS = Object.freeze({
     peer: 'General Peer Education',
     licensed: 'Licensed Clinical/Legal Service'
@@ -174,6 +193,7 @@
       id: 'seed-pantry',
       pillar: 'goods',
       exchange: 'free',
+      category: 'new',
       title: 'Neighborhood Pantry & Fresh Produce Share',
       provider: 'Community Pantry Crew',
       location: 'St. Aiden’s basement · Wed & Sat',
@@ -189,6 +209,7 @@
       id: 'seed-tools',
       pillar: 'goods',
       exchange: 'free',
+      category: 'used',
       title: 'Tool Library: Borrow, Don’t Buy',
       provider: 'Westside Tool Library',
       location: 'Westside workshop · Thursdays 4–7pm',
@@ -204,6 +225,7 @@
       id: 'seed-clothing',
       pillar: 'goods',
       exchange: 'free',
+      category: 'used',
       title: 'Clothing, Bedding & Housewares Swap',
       provider: 'Maple Street Neighbors',
       location: 'Maple Street Hall · first Sunday',
@@ -219,6 +241,7 @@
       id: 'seed-hygiene',
       pillar: 'goods',
       exchange: 'free',
+      category: 'new',
       title: 'Bulk Cleaning & Hygiene Supplies — Free',
       provider: 'Nia Brooks',
       location: 'Westside neighborhood · pickup or delivery',
@@ -248,6 +271,20 @@
     };
   }
 
+  function isMember() {
+    return Boolean(state.pledge && state.pledge.memberId);
+  }
+
+  function requireMembership(message) {
+    if (isMember()) return true;
+    showToast(message || 'Sign the Unbought Pledge to become a member and participate.');
+    const pledgeLink = document.querySelector('a[href="#pledge"], a[href="index.html#pledge"]');
+    if (pledgeLink) {
+      pledgeLink.focus({ preventScroll: true });
+    }
+    return false;
+  }
+
   function cleanString(value, maxLength = 400) {
     if (typeof value !== 'string') return '';
     return value.trim().slice(0, maxLength);
@@ -274,11 +311,14 @@
   }
 
   function normalizeStoredListing(item) {
+    const category = item.pillar === 'goods' && hasOwn(GOODS_CATEGORIES, item.category) ? item.category : '';
     return {
       id: cleanString(item.id, 100) || `listing-${Date.now().toString(36)}`,
+      memberId: cleanString(item.memberId, 100),
       title: cleanString(item.title, 80),
       pillar: item.pillar,
       exchange: item.exchange,
+      category,
       provider: cleanString(item.provider, 60),
       location: cleanString(item.location, 80),
       description: cleanString(item.description, 400),
@@ -295,7 +335,8 @@
             .filter((detail) => detail.label && detail.value)
         : [],
       isUser: true,
-      createdAt: cleanString(item.createdAt, 40)
+      createdAt: cleanString(item.createdAt, 40),
+      status: cleanString(item.status, 30) || 'active'
     };
   }
 
@@ -315,11 +356,14 @@
     if (raw.pledge && typeof raw.pledge === 'object') {
       const name = cleanString(raw.pledge.name, 60);
       if (name) {
+        const signedAt = cleanString(raw.pledge.signedAt, 40) || new Date().toISOString();
         fallback.pledge = {
+          memberId: cleanString(raw.pledge.memberId, 100) || makeId('member'),
           name,
           location: cleanString(raw.pledge.location, 80),
           note: cleanString(raw.pledge.note, 240),
-          signedAt: cleanString(raw.pledge.signedAt, 40)
+          signedAt,
+          status: 'active'
         };
       }
     }
@@ -342,13 +386,31 @@
     if (Array.isArray(raw.requests)) {
       fallback.requests = raw.requests
         .filter((request) => request && typeof request === 'object' && typeof request.listingId === 'string')
-        .slice(0, 100);
+        .slice(0, 100)
+        .map((request) => ({
+          id: cleanString(request.id, 100) || makeId('request'),
+          memberId: cleanString(request.memberId, 100),
+          listingId: cleanString(request.listingId, 100),
+          listingTitle: cleanString(request.listingTitle, 80),
+          provider: cleanString(request.provider, 60),
+          note: cleanString(request.note, 280),
+          requestedAt: cleanString(request.requestedAt, 40),
+          status: cleanString(request.status, 30) || 'requested'
+        }));
     }
 
     if (Array.isArray(raw.inquiries)) {
       fallback.inquiries = raw.inquiries
         .filter((inquiry) => inquiry && typeof inquiry === 'object' && typeof inquiry.type === 'string')
-        .slice(0, 100);
+        .slice(0, 100)
+        .map((inquiry) => ({
+          ...inquiry,
+          id: cleanString(inquiry.id, 100) || makeId('inquiry'),
+          memberId: cleanString(inquiry.memberId, 100),
+          type: cleanString(inquiry.type, 40),
+          createdAt: cleanString(inquiry.createdAt, 40),
+          status: cleanString(inquiry.status, 30) || 'open'
+        }));
     }
 
     return fallback;
@@ -480,16 +542,19 @@
   function getFilterValues() {
     return {
       pillar: $('#pillar-filter') ? $('#pillar-filter').value : 'all',
-      exchange: $('#exchange-filter') ? $('#exchange-filter').value : 'all'
+      exchange: $('#exchange-filter') ? $('#exchange-filter').value : 'all',
+      category: $('#category-filter') ? $('#category-filter').value : 'all'
     };
   }
 
   function getFilteredListings() {
-    const { pillar, exchange } = getFilterValues();
+    const { pillar, exchange, category } = getFilterValues();
+    const scope = getDirectoryScope();
     return getAllListings().filter((listing) => {
       const matchesPillar = pillar === 'all' || listing.pillar === pillar;
       const matchesExchange = exchange === 'all' || listing.exchange === exchange;
-      return matchesPillar && matchesExchange;
+      const matchesCategory = scope !== 'goods' || category === 'all' || listing.category === category;
+      return matchesPillar && matchesExchange && matchesCategory;
     });
   }
 
@@ -512,6 +577,9 @@
     const badges = createEl('div', 'listing-badges');
     addBadge(badges, 'badge--pillar', PILLARS[listing.pillar].short);
     const isGoods = listing.pillar === 'goods';
+    if (isGoods && hasOwn(GOODS_CATEGORIES, listing.category)) {
+      addBadge(badges, 'badge--soft', GOODS_CATEGORIES[listing.category].label);
+    }
     if (isGoods || listing.exchange === 'free') {
       addBadge(badges, 'badge--free', isGoods ? '100% Free' : '100% Free · no materials');
     } else {
@@ -567,6 +635,10 @@
       requestButton.disabled = true;
       requestButton.append(createIcon('check'), document.createTextNode('Request recorded'));
       requestButton.setAttribute('aria-label', `Request recorded: ${listing.title}`);
+    } else if (!isMember()) {
+      requestButton.classList.add('button--outline');
+      requestButton.textContent = 'Sign pledge to request';
+      requestButton.setAttribute('aria-label', `Sign the pledge to request: ${listing.title}`);
     } else {
       requestButton.classList.add('button--outline');
       requestButton.textContent = 'Request with Mutual Consent';
@@ -611,7 +683,7 @@
     grid.appendChild(fragment);
   }
 
-  function updateResultsStatus(shown, total, pillar, exchange) {
+  function updateResultsStatus(shown, total, pillar, exchange, category) {
     const status = document.getElementById('results-status');
     if (!status) return;
 
@@ -620,8 +692,11 @@
       ? ''
       : PILLARS[pillar].label;
     const exchangeText = exchange === 'all' ? '' : EXCHANGES[exchange].label;
-    const detail = [pillarText, exchangeText].filter(Boolean).join(' · ');
-    const offeringText = scope === 'goods' ? 'goods' : scope === 'labor' ? 'free labor offers' : 'community offerings';
+    const categoryText = scope === 'goods' && category && category !== 'all' && hasOwn(GOODS_CATEGORIES, category)
+      ? GOODS_CATEGORIES[category].label
+      : '';
+    const detail = [pillarText, exchangeText, categoryText].filter(Boolean).join(' · ');
+    const offeringText = scope === 'goods' ? 'free goods' : scope === 'labor' ? 'free labor offers' : 'community offerings';
 
     if (!shown) {
       status.textContent = `No ${offeringText} match those filters. Try resetting the filters.`;
@@ -635,27 +710,31 @@
   function applyFilters() {
     const all = getAllListings();
     const filtered = getFilteredListings();
-    const { pillar, exchange } = getFilterValues();
+    const { pillar, exchange, category } = getFilterValues();
     renderListings(filtered);
-    updateResultsStatus(filtered.length, all.length, pillar, exchange);
+    updateResultsStatus(filtered.length, all.length, pillar, exchange, category);
   }
 
   function resetFilters() {
     const pillarFilter = document.getElementById('pillar-filter');
     const exchangeFilter = document.getElementById('exchange-filter');
+    const categoryFilter = document.getElementById('category-filter');
     if (pillarFilter) pillarFilter.value = 'all';
     if (exchangeFilter) exchangeFilter.value = 'all';
+    if (categoryFilter) categoryFilter.value = 'all';
     applyFilters();
   }
 
   function initDirectory() {
     const pillarFilter = document.getElementById('pillar-filter');
     const exchangeFilter = document.getElementById('exchange-filter');
+    const categoryFilter = document.getElementById('category-filter');
     const clearButton = document.getElementById('clear-filters');
     const grid = document.getElementById('listings-grid');
 
     if (pillarFilter) pillarFilter.addEventListener('change', applyFilters);
     if (exchangeFilter) exchangeFilter.addEventListener('change', applyFilters);
+    if (categoryFilter) categoryFilter.addEventListener('change', applyFilters);
     if (clearButton) clearButton.addEventListener('click', resetFilters);
 
     if (grid) {
@@ -717,28 +796,34 @@
       const description = cleanString(data.get('description'), 400);
       const pillar = getDirectoryScope() === 'goods' ? 'goods' : String(data.get('pillar') || '');
       const exchange = pillar === 'goods' ? 'free' : String(data.get('exchange') || '');
+      const category = pillar === 'goods' ? String(data.get('category') || '') : '';
       const scope = String(data.get('scope') || '');
 
       if (!hasOwn(PILLARS, pillar) || !hasOwn(EXCHANGES, exchange)) return;
+      if (pillar === 'goods' && !hasOwn(GOODS_CATEGORIES, category)) return;
       if (scope && !hasOwn(SCOPE_LABELS, scope)) return;
 
       const listing = {
         id: makeId('user-listing'),
+        memberId: state.pledge.memberId,
         title,
         provider,
         location,
         description,
         pillar,
         exchange,
+        category,
         scope,
         details: [
           { label: 'Where', value: location },
+          ...(pillar === 'goods' ? [{ label: 'Category', value: GOODS_CATEGORIES[category].label }] : []),
           { label: pillar === 'goods' ? 'Cost' : 'Materials', value: EXCHANGES[exchange].label },
           { label: 'Contact', value: 'Through a consent request' }
         ],
-        note: 'Posted by a neighbor · consent first',
+        note: 'Posted by a member · consent first',
         isUser: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        status: 'active'
       };
 
       state.listings.unshift(listing);
@@ -797,8 +882,8 @@
 
     if (isSigned) {
       const when = formatDate(pledge.signedAt);
-      signedName.textContent = `Signed by ${pledge.name}`;
-      signedDate.textContent = [pledge.location || 'Location not shared', when].filter(Boolean).join(' · ');
+      signedName.textContent = `Member: ${pledge.name}`;
+      signedDate.textContent = [pledge.location || 'Location not shared', when ? `Member since ${when}` : 'Membership active'].filter(Boolean).join(' · ');
     } else {
       signedName.textContent = '';
       signedDate.textContent = '';
@@ -811,21 +896,18 @@
     const link = strip ? $('.text-link', strip) : null;
     if (!strip || !message) return;
 
-    const isSigned = Boolean(state.pledge);
-    strip.classList.toggle('is-signed', isSigned);
+    const signedIn = isMember();
+    strip.classList.toggle('is-signed', signedIn);
 
-    if (isSigned) {
+    if (signedIn) {
       const trackText = state.track
-        ? ` Your saved track is ${TRACKS[state.track]}. You can change it whenever your capacity changes.`
-        : ' Choose the track that fits this season of your life.';
-      message.textContent = `Pledge signed by ${state.pledge.name}.${trackText}`;
-      if (link) link.textContent = 'Review the pledge';
+        ? ` Your current track is ${TRACKS[state.track]}. You can manage it here as your capacity changes.`
+        : ' Your membership is active. Choose and manage the track that fits this season of your life.';
+      message.textContent = `Signed in as ${state.pledge.name}.${trackText}`;
+      if (link) link.textContent = 'Manage membership';
     } else {
-      const trackText = state.track
-        ? ` You are exploring the ${TRACKS[state.track]} track. Sign the pledge to make it official.`
-        : ' You can explore the tracks below. Sign the pledge to make your choice official.';
-      message.textContent = trackText.trim();
-      if (link) link.textContent = 'Go to the pledge';
+      message.textContent = 'You can browse labor, goods, and tracks. Sign the Unbought Pledge to become a member and participate—post offers, request connections, and manage your track and messages.';
+      if (link) link.textContent = 'Sign the pledge';
     }
   }
 
@@ -876,37 +958,43 @@
         }
 
         state.pledge = {
+          memberId: makeId('member'),
           name,
           location,
           note,
-          signedAt: new Date().toISOString()
+          signedAt: new Date().toISOString(),
+          status: 'active'
         };
         saveState();
         renderPledge();
         renderTrackGate();
+        renderTrackPanel(state.track);
+        applyFilters();
 
         const banner = document.getElementById('signed-banner');
         if (banner) {
           banner.tabIndex = -1;
           banner.focus({ preventScroll: true });
         }
-        announce(`Pledge signed by ${name}. Your signature is saved in this browser. Choose your membership track below.`);
-        showToast('Pledge signed. Thank you for choosing community.', false);
+        announce(`Welcome, ${name}. Your pledge is signed and your membership is active in this browser. You can now choose a track, post offers, and request connections.`);
+        showToast('Membership active. You can now participate in the community.', false);
       });
     }
 
     if (withdraw) {
       withdraw.addEventListener('click', () => {
         showConfirm({
-          title: 'Withdraw your signature?',
-          message: 'Your pledge will be removed from this browser. Your chosen track can remain saved, but it will no longer be marked as pledged.',
-          confirmLabel: 'Withdraw signature',
+          title: 'Withdraw your membership?',
+          message: 'Your pledge and membership will be removed from this browser. You can still browse offers, but you will need to sign the pledge again to post, request, or manage your track. Your saved track details may remain on this device.',
+          confirmLabel: 'Withdraw membership',
           tone: 'danger',
           onConfirm: () => {
             state.pledge = null;
             saveState();
             renderPledge();
             renderTrackGate();
+            renderTrackPanel(state.track);
+            applyFilters();
 
             const agreement = document.getElementById('pledge-agreement');
             if (agreement) agreement.checked = false;
@@ -917,8 +1005,8 @@
             const firstField = document.getElementById('pledge-agreement') || (form ? form.querySelector('input, textarea, button') : null);
             if (firstField) firstField.focus({ preventScroll: true });
 
-            announce('Your pledge signature was withdrawn. You can sign again at any time.');
-            showToast('Signature withdrawn.', false);
+            announce('Your membership was withdrawn. You can sign the pledge again at any time to participate.');
+            showToast('Membership withdrawn.', false);
           }
         });
       });
@@ -1245,9 +1333,11 @@
     if (form) {
       form.addEventListener('submit', (event) => {
         event.preventDefault();
+        if (!requireMembership('Sign the Unbought Pledge to become a member before saving your track.')) return;
         if (!form.reportValidity()) return;
 
         const savedDetails = collectFormDetails(form);
+        savedDetails.memberId = state.pledge.memberId;
         state.trackDetails[track] = savedDetails;
         saveState();
 
@@ -1287,6 +1377,15 @@
     radios.forEach((radio) => {
       radio.addEventListener('change', () => {
         if (!radio.checked) return;
+        if (!isMember()) {
+          radio.checked = false;
+          if (state.track) {
+            const savedRadio = radios.find((item) => item.value === state.track);
+            if (savedRadio) savedRadio.checked = true;
+          }
+          requireMembership('Sign the Unbought Pledge to become a member before choosing or managing a track.');
+          return;
+        }
         state.track = radio.value;
         saveState();
         renderTrackPanel(radio.value);
@@ -1595,6 +1694,8 @@
   }
 
   function openConsentDialog(listingId, trigger) {
+    if (!requireMembership('Sign the Unbought Pledge to become a member before requesting a connection.')) return;
+
     const dialog = document.getElementById('consent-dialog');
     const form = document.getElementById('consent-form');
     const summaryTitle = document.getElementById('request-summary-title');
@@ -1639,11 +1740,13 @@
       const data = new FormData(form);
       state.requests.unshift({
         id: makeId('request'),
+        memberId: state.pledge.memberId,
         listingId: listing.id,
         listingTitle: listing.title,
         provider: listing.provider,
         note: cleanString(data.get('note'), 280),
-        requestedAt: new Date().toISOString()
+        requestedAt: new Date().toISOString(),
+        status: 'requested'
       });
       state.requests = state.requests.slice(0, 100);
       saveState();
