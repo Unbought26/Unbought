@@ -257,6 +257,49 @@
 
   const MULTI_VALUE_FIELDS = new Set(['support', 'capacity', 'interests']);
 
+  const VOLUNTEER_ROLES = Object.freeze({
+    'project-management': 'Project management',
+    legal: 'Legal counsel & compliance',
+    administrative: 'Administration & records',
+    web: 'Web development',
+    hr: 'HR & people operations',
+    finance: 'Finance & bookkeeping',
+    communications: 'Communications & accessibility'
+  });
+
+  // Report categories are triaged to either the member review board or a
+  // police referral. Criminal matters are never decided by member vote.
+  const REPORT_TYPES = Object.freeze({
+    consent: { label: 'Violation of consent or boundaries', route: 'board' },
+    harassment: { label: 'Harassment or intimidation (non-criminal)', route: 'board' },
+    bias: { label: 'Bias, discrimination, or hateful conduct', route: 'board' },
+    exploitation: { label: 'Exploitation of the commons or members', route: 'board' },
+    safety: { label: 'Unsafe conduct in a shared space or project', route: 'board' },
+    'other-board': { label: 'Other concern that is not a crime', route: 'board' },
+    assault: { label: 'Assault or threat of violence', route: 'criminal' },
+    theft: { label: 'Theft, fraud, or property crime', route: 'criminal' },
+    'sexual-offense': { label: 'Sexual assault or abuse', route: 'criminal' },
+    'other-criminal': { label: 'Other suspected criminal activity', route: 'criminal' }
+  });
+
+  const RESPONSE_DAYS = 3;   // time for the reported member to gather evidence and plead
+  const VOTING_DAYS = 3;     // time for all members to review the case file and vote
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  const MEDIA_TYPES = Object.freeze({
+    video: 'Video link',
+    audio: 'Audio link',
+    image: 'Image link',
+    document: 'Document link'
+  });
+
+  const REFLECTION_OPTIONS = Object.freeze([30, 90, 180]);
+  const TREATMENT_STEPS = Object.freeze([
+    { key: 'evaluation', label: 'Therapeutic evaluation completed (inside or outside Unbought)' },
+    { key: 'plan', label: 'Recommended treatment plan documented' },
+    { key: 'treatment', label: 'Treatment completed or sustained as recommended' }
+  ]);
+
   /* ------------------------------------------------------------------------
      02. State, storage & small helpers
      ------------------------------------------------------------------------ */
@@ -270,6 +313,15 @@
       inquiries: [],
       donationIntents: [],
       contributions: [],
+      volunteerInterests: [],
+      reports: [],
+      settings: {
+        compactDashboard: false,
+        showPrototypeNotices: true
+      },
+      messages: [],
+      chats: [],
+      suggestions: [],
       severanceFund: {
         balance: 0,
         contributions: []
@@ -304,6 +356,59 @@
     return { balance: Math.max(balance, computed), count: purchases.length };
   }
 
+  function allReports() {
+    return Array.isArray(state.reports) ? state.reports : [];
+  }
+
+  function getMemberReports() {
+    if (!isMember()) return [];
+    return allReports().filter((report) => report && report.reporterMemberId === state.pledge.memberId);
+  }
+
+  function isRespondent(report) {
+    if (!isMember() || !report) return false;
+    if (report.respondentMemberId && report.respondentMemberId === state.pledge.memberId) return true;
+    const name = String(state.pledge.name || '').trim().toLowerCase();
+    const respondent = String(report.respondentName || '').trim().toLowerCase();
+    return Boolean(respondent && respondent === name);
+  }
+
+  function reportsAboutMember() {
+    if (!isMember()) return [];
+    return allReports().filter((report) => isRespondent(report));
+  }
+
+  // Move cases whose evidence-gathering window has ended into voting. This is
+  // called on load and on render so the demo stays consistent across reloads.
+  function syncReportPhases() {
+    let changed = false;
+    const now = Date.now();
+    allReports().forEach((report) => {
+      if (report.status !== 'response_period') return;
+      const deadline = Date.parse(report.responseDeadlineAt);
+      if (report.responseDeadlineAt && !Number.isNaN(deadline) && now < deadline) return;
+      report.status = 'board_review';
+      report.votingEndsAt = new Date(now + (VOTING_DAYS * DAY_MS)).toISOString();
+      changed = true;
+    });
+    if (changed) saveState();
+  }
+
+  function isRestrictionComplete(report) {
+    const steps = report.treatmentSteps || {};
+    const periodDone = !report.restrictionEnd || Date.now() >= Date.parse(report.restrictionEnd);
+    return Boolean(periodDone && steps.evaluation && steps.plan && steps.treatment);
+  }
+
+  function getActiveRestriction() {
+    return reportsAboutMember().find((report) => report.status === 'restriction_active') || null;
+  }
+
+  function hasActiveRestriction() {
+    const report = getActiveRestriction();
+    return Boolean(report && !isRestrictionComplete(report));
+  }
+
   function requireMembership(message) {
     if (isMember()) return true;
     showToast(message || 'Sign the Unbought Pledge to become a member and participate.');
@@ -314,9 +419,34 @@
     return false;
   }
 
+  function requireFullAccess(message) {
+    if (!requireMembership()) return false;
+    if (hasActiveRestriction()) {
+      showToast(message || 'Full access is paused during your reflection period. Basic necessities remain available.');
+      return false;
+    }
+    return true;
+  }
+
   function cleanString(value, maxLength = 400) {
     if (typeof value !== 'string') return '';
     return value.trim().slice(0, maxLength);
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[char]));
+  }
+
+  // Only http(s) links become clickable; anything else is shown as plain text.
+  function safeMediaUrl(value) {
+    const url = cleanString(value, 500);
+    return /^https?:\/\//i.test(url) ? url : '';
   }
 
   // Only accept keys that belong to the object itself. This keeps stray
@@ -490,6 +620,83 @@
       }
     }
 
+    if (Array.isArray(raw.volunteerInterests)) {
+      fallback.volunteerInterests = raw.volunteerInterests
+        .filter((item) => item && typeof item === 'object' && typeof item.role === 'string')
+        .slice(0, 100)
+        .map((item) => ({
+          id: cleanString(item.id, 100) || makeId('volunteer'),
+          memberId: cleanString(item.memberId, 100),
+          name: cleanString(item.name, 60),
+          role: cleanString(item.role, 40),
+          note: cleanString(item.note, 280),
+          createdAt: cleanString(item.createdAt, 40),
+          status: cleanString(item.status, 30) || 'interest_recorded'
+        }));
+    }
+
+    if (Array.isArray(raw.reports)) {
+      fallback.reports = raw.reports
+        .filter((item) => item && typeof item === 'object' && typeof item.type === 'string')
+        .slice(0, 200)
+        .map((item) => ({
+          id: cleanString(item.id, 100) || makeId('report'),
+          reporterMemberId: cleanString(item.reporterMemberId, 100),
+          reporterName: cleanString(item.reporterName, 60),
+          respondentName: cleanString(item.respondentName, 80),
+          respondentMemberId: cleanString(item.respondentMemberId, 100),
+          type: cleanString(item.type, 40),
+          typeLabel: hasOwn(REPORT_TYPES, item.type) ? REPORT_TYPES[item.type].label : cleanString(item.typeLabel, 80),
+          route: item.route === 'criminal' ? 'criminal' : 'board',
+          description: cleanString(item.description, 1200),
+          occurredAt: cleanString(item.occurredAt, 20),
+          createdAt: cleanString(item.createdAt, 40),
+          status: ['response_period', 'board_review', 'police_referral', 'restriction_active', 'not_guilty', 'access_restored'].includes(item.status) ? item.status : 'board_review',
+          responseDeadlineAt: cleanString(item.responseDeadlineAt, 40),
+          response: item.response && typeof item.response === 'object' ? {
+            plea: item.response.plea === 'guilty' || item.response.plea === 'not_guilty' ? item.response.plea : '',
+            explanation: cleanString(item.response.explanation, 2000),
+            media: Array.isArray(item.response.media) ? item.response.media.slice(0, 6).map((media) => ({
+              type: hasOwn(MEDIA_TYPES, media.type) ? media.type : 'document',
+              url: cleanString(media.url, 500),
+              caption: cleanString(media.caption, 200)
+            })).filter((media) => media.url || media.caption) : [],
+            submittedAt: cleanString(item.response.submittedAt, 40)
+          } : null,
+          votes: Array.isArray(item.votes) ? item.votes.slice(0, 500).map((vote) => ({
+            memberId: cleanString(vote.memberId, 100),
+            name: cleanString(vote.name, 60),
+            verdict: vote.verdict === 'guilty' || vote.verdict === 'not_guilty' ? vote.verdict : '',
+            reflectionDays: REFLECTION_OPTIONS.includes(Number(vote.reflectionDays)) ? Number(vote.reflectionDays) : null,
+            reason: cleanString(vote.reason, 600),
+            votedAt: cleanString(vote.votedAt, 40)
+          })) : [],
+          comments: Array.isArray(item.comments) ? item.comments.slice(0, 200).map((comment) => ({
+            id: cleanString(comment.id, 100) || makeId('comment'),
+            memberId: cleanString(comment.memberId, 100),
+            name: cleanString(comment.name, 60),
+            text: cleanString(comment.text, 800),
+            createdAt: cleanString(comment.createdAt, 40)
+          })) : [],
+          votingEndsAt: cleanString(item.votingEndsAt, 40),
+          demoVotingClosed: Boolean(item.demoVotingClosed),
+          reflectionDays: REFLECTION_OPTIONS.includes(Number(item.reflectionDays)) ? Number(item.reflectionDays) : null,
+          restrictionStart: cleanString(item.restrictionStart, 40),
+          restrictionEnd: cleanString(item.restrictionEnd, 40),
+          treatmentSteps: {
+            evaluation: Boolean(item.treatmentSteps && item.treatmentSteps.evaluation),
+            plan: Boolean(item.treatmentSteps && item.treatmentSteps.plan),
+            treatment: Boolean(item.treatmentSteps && item.treatmentSteps.treatment)
+          },
+          resolutionAt: cleanString(item.resolutionAt, 40),
+          policeReferral: item.policeReferral && typeof item.policeReferral === 'object' ? {
+            createdAt: cleanString(item.policeReferral.createdAt, 40),
+            status: cleanString(item.policeReferral.status, 30) || 'referral_recorded',
+            note: cleanString(item.policeReferral.note, 280)
+          } : null
+        }));
+    }
+
     if (Array.isArray(raw.contributions)) {
       fallback.contributions = raw.contributions
         .filter((item) => item && typeof item === 'object' && typeof item.type === 'string')
@@ -510,6 +717,57 @@
           status: cleanString(item.status, 30) || 'recorded',
           purchaserEmail: cleanString(item.purchaserEmail, 120),
           purchaserName: cleanString(item.purchaserName, 60)
+        }));
+    }
+
+    if (raw.settings && typeof raw.settings === 'object' && !Array.isArray(raw.settings)) {
+      fallback.settings = {
+        compactDashboard: Boolean(raw.settings.compactDashboard),
+        showPrototypeNotices: raw.settings.showPrototypeNotices !== false
+      };
+    }
+
+    if (Array.isArray(raw.messages)) {
+      fallback.messages = raw.messages
+        .filter((item) => item && typeof item === 'object' && typeof item.body === 'string')
+        .slice(0, 300)
+        .map((item) => ({
+          id: cleanString(item.id, 100) || makeId('message'),
+          memberId: cleanString(item.memberId, 100),
+          name: cleanString(item.name, 60),
+          toName: cleanString(item.toName, 80),
+          body: cleanString(item.body, 1200),
+          createdAt: cleanString(item.createdAt, 40),
+          status: cleanString(item.status, 30) || 'recorded'
+        }));
+    }
+
+    if (Array.isArray(raw.chats)) {
+      fallback.chats = raw.chats
+        .filter((item) => item && typeof item === 'object' && typeof item.body === 'string')
+        .slice(0, 300)
+        .map((item) => ({
+          id: cleanString(item.id, 100) || makeId('chat'),
+          memberId: cleanString(item.memberId, 100),
+          name: cleanString(item.name, 60),
+          channel: cleanString(item.channel, 40) || 'general',
+          body: cleanString(item.body, 1200),
+          createdAt: cleanString(item.createdAt, 40)
+        }));
+    }
+
+    if (Array.isArray(raw.suggestions)) {
+      fallback.suggestions = raw.suggestions
+        .filter((item) => item && typeof item === 'object' && typeof item.text === 'string')
+        .slice(0, 200)
+        .map((item) => ({
+          id: cleanString(item.id, 100) || makeId('suggestion'),
+          memberId: cleanString(item.memberId, 100),
+          name: cleanString(item.name, 60),
+          category: cleanString(item.category, 40) || 'general',
+          text: cleanString(item.text, 1200),
+          createdAt: cleanString(item.createdAt, 40),
+          status: cleanString(item.status, 30) || 'submitted'
         }));
     }
 
@@ -895,6 +1153,7 @@
 
     form.addEventListener('submit', (event) => {
       event.preventDefault();
+      if (!requireFullAccess('Full access is paused during your reflection period. Posting is unavailable until you complete the reflection and treatment requirements.')) return;
       if (!form.reportValidity()) return;
 
       const titleInput = document.getElementById('post-title-input');
@@ -1020,6 +1279,7 @@
     const statDefs = signedIn ? [
       ['Donations tracked', `${memberDonations.length} intent${memberDonations.length === 1 ? '' : 's'} · ${formatMoney(donationTotal)}`],
       ['Work logged', `${laborHours.toLocaleString()} hr · ${formatMoney(laborValue)} stock value`],
+      ['Volunteer roles offered', String(getMemberVolunteerInterests().length)],
       ['Your stock value (prototype)', formatMoney(totalStock)],
       ['Severance fund (all non-member purchases)', `${formatMoney(severance.balance)} · ${severance.count} recorded`]
     ] : [
@@ -1144,6 +1404,976 @@
   }
 
   /* ------------------------------------------------------------------------
+     05a. Volunteer operating team
+     ------------------------------------------------------------------------ */
+  function getMemberVolunteerInterests() {
+    if (!isMember()) return [];
+    return (Array.isArray(state.volunteerInterests) ? state.volunteerInterests : []).filter((item) => item && item.memberId === state.pledge.memberId);
+  }
+
+  function renderVolunteerStatus() {
+    const gate = document.getElementById('volunteer-gate');
+    if (gate) {
+      if (isMember()) {
+        gate.textContent = `Signed in as ${state.pledge.name}. Record a volunteer offer below—stored in this browser only.`;
+        gate.classList.add('is-signed');
+      } else {
+        gate.textContent = 'Browsing these roles is open to everyone. Sign the Unbought Pledge to become a member and record a volunteer offer.';
+        gate.classList.remove('is-signed');
+      }
+    }
+
+    const nameInput = document.getElementById('volunteer-name');
+    if (nameInput && isMember() && !nameInput.value.trim()) nameInput.value = state.pledge.name || '';
+
+    const status = document.getElementById('volunteer-status');
+    if (status) {
+      const interests = getMemberVolunteerInterests();
+      const roles = interests
+        .map((item) => (hasOwn(VOLUNTEER_ROLES, item.role) ? VOLUNTEER_ROLES[item.role] : item.role))
+        .join(', ');
+      status.textContent = interests.length
+        ? `${interests.length} volunteer offer${interests.length === 1 ? '' : 's'} recorded in this browser${roles ? ` (${roles})` : ''}.`
+        : 'No volunteer offers recorded yet.';
+    }
+  }
+
+  function initVolunteerForm() {
+    const form = document.getElementById('volunteer-form');
+    if (!form) return;
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!requireMembership('Sign the Unbought Pledge to become a member before recording a volunteer offer.')) return;
+      if (!requireFullAccess('Full access is paused during your reflection period. Volunteering is unavailable until you complete the reflection and treatment requirements.')) return;
+      if (!form.reportValidity()) return;
+
+      const data = new FormData(form);
+      const role = cleanString(data.get('role'), 40);
+      if (!hasOwn(VOLUNTEER_ROLES, role)) return;
+      const name = cleanString(data.get('name'), 60) || state.pledge.name || '';
+      const note = cleanString(data.get('note'), 280);
+
+      if (getMemberVolunteerInterests().some((item) => item.role === role)) {
+        announce('You already recorded an offer for that role in this browser.');
+        showToast('That volunteer role is already recorded for your account.', false);
+        return;
+      }
+
+      const interest = {
+        id: makeId('volunteer'),
+        memberId: state.pledge.memberId,
+        name,
+        role,
+        note,
+        createdAt: new Date().toISOString(),
+        status: 'interest_recorded'
+      };
+
+      state.volunteerInterests = Array.isArray(state.volunteerInterests) ? state.volunteerInterests : [];
+      state.volunteerInterests.unshift(interest);
+      state.volunteerInterests = state.volunteerInterests.slice(0, 100);
+      saveState();
+
+      form.reset();
+      renderVolunteerStatus();
+      renderMemberAccount();
+      announce(`Volunteer offer for ${VOLUNTEER_ROLES[role]} recorded. This prototype saved it in your browser only.`);
+      showToast('Volunteer offer recorded locally. No data left this device.', false);
+    });
+
+    renderVolunteerStatus();
+  }
+
+  /* ------------------------------------------------------------------------
+     05a-1. Member dashboard shell & panels
+     ------------------------------------------------------------------------ */
+  function renderDashboardGate() {
+    const gate = document.getElementById('dashboard-gate');
+    const dash = document.getElementById('member-dashboard');
+    if (!gate || !dash) return;
+    if (isMember()) {
+      gate.hidden = true;
+      dash.hidden = false;
+      document.body.classList.toggle('dashboard-compact', Boolean(state.settings && state.settings.compactDashboard));
+    } else {
+      gate.hidden = false;
+      dash.hidden = true;
+      document.body.classList.remove('dashboard-compact');
+    }
+  }
+
+  function setDashboardTab(name) {
+    const tabs = Array.from(document.querySelectorAll('[data-dashboard-tab]'));
+    const panels = Array.from(document.querySelectorAll('[data-dashboard-panel]'));
+    const tab = tabs.find((item) => item.dataset.dashboardTab === name);
+    if (!tab) return;
+    tabs.forEach((item) => {
+      const active = item === tab;
+      item.setAttribute('aria-selected', String(active));
+      item.tabIndex = active ? 0 : -1;
+    });
+    panels.forEach((panel) => {
+      panel.hidden = panel.dataset.dashboardPanel !== name;
+    });
+    tab.focus({ preventScroll: true });
+  }
+
+  function initDashboardTabs() {
+    const nav = document.querySelector('.dashboard-tabs');
+    if (!nav) return;
+    nav.addEventListener('click', (event) => {
+      const tab = event.target.closest('[data-dashboard-tab]');
+      if (tab) setDashboardTab(tab.dataset.dashboardTab);
+    });
+    nav.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+      const tabs = Array.from(nav.querySelectorAll('[data-dashboard-tab]'));
+      const current = event.target.closest('[data-dashboard-tab]');
+      if (!current || !tabs.length) return;
+      const index = tabs.indexOf(current);
+      const next = event.key === 'ArrowRight'
+        ? (index + 1) % tabs.length
+        : (index - 1 + tabs.length) % tabs.length;
+      event.preventDefault();
+      setDashboardTab(tabs[next].dataset.dashboardTab);
+    });
+  }
+
+  function renderAccountInfo() {
+    const panel = document.getElementById('account-info-panel');
+    if (!panel || !isMember()) return;
+    const m = state.pledge;
+    const e = escapeHtml;
+    const notice = state.settings && state.settings.showPrototypeNotices
+      ? `<p class="prototype-note">Prototype: account details are stored only on this device. There is no real account, authentication, or server.</p>`
+      : '';
+    panel.innerHTML = `<section class="account-card">
+      <p class="eyebrow">Account</p>
+      <h3>Your membership</h3>
+      <dl class="account-details">
+        <div><dt>Chosen name</dt><dd>${e(m.name)}</dd></div>
+        <div><dt>General location</dt><dd>${e(m.location || 'Not shared')}</dd></div>
+        <div><dt>Member ID</dt><dd>${e(m.memberId)}</dd></div>
+        <div><dt>Pledged on</dt><dd>${e(formatDate(m.signedAt))}</dd></div>
+        <div><dt>Status</dt><dd>${e(m.status || 'active')}</dd></div>
+        <div><dt>Track</dt><dd>${e(state.track && hasOwn(TRACKS, state.track) ? TRACKS[state.track] : 'Not chosen')}</dd></div>
+        <div><dt>Volunteer offers</dt><dd>${getMemberVolunteerInterests().length}</dd></div>
+      </dl>
+      <form class="account-form" data-account-form>
+        <div class="form-row">
+          <div class="field">
+            <label for="account-name">Chosen name</label>
+            <input type="text" id="account-name" name="name" maxlength="60" value="${e(m.name)}" required>
+          </div>
+          <div class="field">
+            <label for="account-location">General location</label>
+            <input type="text" id="account-location" name="location" maxlength="80" value="${e(m.location || '')}">
+          </div>
+        </div>
+        <div class="account-form-actions">
+          <button type="submit" class="button button--primary button--small">Save account details</button>
+        </div>
+      </form>
+      ${notice}
+      <p class="account-note">To withdraw your membership, use the button in the pledge section. Withdrawing removes account access in this browser but keeps your local records.</p>
+    </section>`;
+  }
+
+  function renderSettings() {
+    const panel = document.getElementById('settings-panel');
+    if (!panel || !isMember()) return;
+    const s = state.settings || {};
+    panel.innerHTML = `<section class="account-card">
+      <p class="eyebrow">Settings</p>
+      <h3>Your local preferences</h3>
+      <p class="account-note">These settings only change how this prototype behaves on this device. Nothing is sent anywhere.</p>
+      <form class="account-form" data-settings-form>
+        <label class="checkbox"><input type="checkbox" name="compactDashboard" ${s.compactDashboard ? 'checked' : ''}> <span>Use compact spacing on the dashboard</span></label>
+        <label class="checkbox"><input type="checkbox" name="showPrototypeNotices" ${s.showPrototypeNotices ? 'checked' : ''}> <span>Show prototype notices</span></label>
+        <div class="account-form-actions">
+          <button type="submit" class="button button--primary button--small">Save settings</button>
+        </div>
+      </form>
+    </section>`;
+  }
+
+  function renderCommons() {
+    const panel = document.getElementById('commons-panel');
+    if (!panel || !isMember()) return;
+    const e = escapeHtml;
+    const posts = (Array.isArray(state.listings) ? state.listings : []).filter((item) => item && item.memberId === state.pledge.memberId).slice(0, 6);
+    const chats = (Array.isArray(state.chats) ? state.chats : []).slice(-12).reverse();
+    panel.innerHTML = `<section class="account-card">
+      <p class="eyebrow">The Commons</p>
+      <h3>Everything you can take part in</h3>
+      <div class="commons-links">
+        <a class="commons-link" href="freelabor.html"><strong>Free Labor</strong><span>Offer or request skills and time.</span></a>
+        <a class="commons-link" href="freestuff.html"><strong>Free Stuff</strong><span>Share new, homemade, used, and repairable goods.</span></a>
+        <a class="commons-link" href="future.html#academy"><strong>Academy</strong><span>Learn from a neighbor. Build for the commons.</span></a>
+        <a class="commons-link" href="donate.html"><strong>Donations</strong><span>Support the work. Track your giving here.</span></a>
+      </div>
+      <div class="account-block">
+        <h4>Your postings</h4>
+        ${posts.length ? `<ul class="contribution-list">${posts.map((post) => `<li class="contribution-item"><strong>${e(post.title)}</strong><span class="contribution-meta">${e(formatDate(post.createdAt))} · ${e(post.provider || '')}</span></li>`).join('')}</ul>` : `<p class="account-note">You have not posted an offering in this browser yet.</p>`}
+        <p class="account-note"><a href="freelabor.html#post-title">Post free labor</a> · <a href="freestuff.html#post-title">Post free stuff</a></p>
+      </div>
+      <div class="account-block">
+        <h4>Community chats</h4>
+        <p class="account-note">Local-only channels for this prototype. Nothing is sent to other people.</p>
+        <div class="chat-list">
+          ${chats.length ? chats.map((chat) => `<div class="chat-message"><p class="contribution-meta"><strong>${e(chat.name)}</strong> · ${e(chat.channel)} · ${e(formatDate(chat.createdAt))}</p><p>${e(chat.body)}</p></div>`).join('') : `<p class="account-note">No chat messages yet.</p>`}
+        </div>
+        <form class="account-form" data-chat-form>
+          <div class="form-row">
+            <div class="field">
+              <label for="chat-channel">Channel</label>
+              <select id="chat-channel" name="channel">
+                <option value="general">general</option>
+                <option value="mutual-aid">mutual-aid</option>
+                <option value="projects">projects</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="chat-body">Message</label>
+              <input type="text" id="chat-body" name="body" maxlength="1200" required placeholder="Say something to the community…">
+            </div>
+          </div>
+          <button type="submit" class="button button--primary button--small">Post to chat</button>
+        </form>
+      </div>
+    </section>`;
+  }
+
+  function renderMessages() {
+    const panel = document.getElementById('messages-panel');
+    if (!panel || !isMember()) return;
+    const e = escapeHtml;
+    const messages = (Array.isArray(state.messages) ? state.messages : []).slice(-20).reverse();
+    panel.innerHTML = `<section class="account-card">
+      <p class="eyebrow">Messaging</p>
+      <h3>Your messages</h3>
+      <p class="account-note">Consent-based requests and replies would gather here in a live system. In this prototype, messages stay on this device.</p>
+      ${messages.length ? `<ul class="contribution-list">${messages.map((message) => `<li class="contribution-item"><strong>${e(message.name)}${message.toName ? ` → ${e(message.toName)}` : ''}</strong><span>${e(message.body)}</span><span class="contribution-meta">${e(formatDate(message.createdAt))} · ${e(message.status || 'recorded')}</span></li>`).join('')}</ul>` : `<p class="account-note">No messages recorded yet.</p>`}
+      <form class="account-form" data-message-form>
+        <div class="field">
+          <label for="message-to">To (chosen name)</label>
+          <input type="text" id="message-to" name="toName" maxlength="80" required placeholder="Neighbor's chosen name">
+        </div>
+        <div class="field">
+          <label for="message-body">Message</label>
+          <textarea id="message-body" name="body" rows="3" maxlength="1200" required placeholder="Write a consent-based message…"></textarea>
+        </div>
+        <button type="submit" class="button button--primary button--small">Record message</button>
+      </form>
+    </section>`;
+  }
+
+  function renderSuggestions() {
+    const panel = document.getElementById('suggestions-panel');
+    if (!panel || !isMember()) return;
+    const e = escapeHtml;
+    const items = (Array.isArray(state.suggestions) ? state.suggestions : []).slice(0, 20);
+    panel.innerHTML = `<section class="account-card">
+      <p class="eyebrow">Suggestion box</p>
+      <h3>Help shape the commons</h3>
+      <p class="account-note">Ideas, concerns, and improvements are welcome. This prototype stores suggestions locally only—nothing is sent to a coordinator.</p>
+      <form class="account-form" data-suggestion-form>
+        <div class="field">
+          <label for="suggestion-category">Category</label>
+          <select id="suggestion-category" name="category">
+            <option value="general">General idea</option>
+            <option value="site">Site or accessibility</option>
+            <option value="events">Events &amp; workdays</option>
+            <option value="policy">Policy &amp; governance</option>
+            <option value="safety">Safety &amp; accountability</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="suggestion-text">Your suggestion <span class="required-mark" aria-hidden="true">*</span></label>
+          <textarea id="suggestion-text" name="text" rows="4" maxlength="1200" required placeholder="What would make Unbought better?"></textarea>
+        </div>
+        <button type="submit" class="button button--primary button--small">Submit suggestion</button>
+      </form>
+      <div class="account-block">
+        <h4>Suggestions you recorded</h4>
+        ${items.length ? `<ul class="contribution-list">${items.map((item) => `<li class="contribution-item"><strong>${e(item.category)}</strong><span>${e(item.text)}</span><span class="contribution-meta">${e(formatDate(item.createdAt))} · ${e(item.status || 'submitted')}</span></li>`).join('')}</ul>` : `<p class="account-note">No suggestions recorded in this browser yet.</p>`}
+      </div>
+    </section>`;
+  }
+
+  function renderDashboard() {
+    renderDashboardGate();
+    if (!isMember()) return;
+    renderAccountInfo();
+    renderSettings();
+    renderCommons();
+    renderMessages();
+    renderSuggestions();
+  }
+
+  function initDashboard() {
+    const dash = document.getElementById('member-dashboard');
+    if (!dash) return;
+    initDashboardTabs();
+
+    dash.addEventListener('submit', (event) => {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement)) return;
+      if (!requireMembership()) return;
+      if (!form.reportValidity()) return;
+      const data = new FormData(form);
+      const now = new Date().toISOString();
+
+      if (form.matches('[data-account-form]')) {
+        event.preventDefault();
+        const name = cleanString(data.get('name'), 60);
+        const location = cleanString(data.get('location'), 80);
+        if (!name) return;
+        state.pledge.name = name;
+        state.pledge.location = location;
+        saveState();
+        renderAccountInfo();
+        renderMemberAccount();
+        renderVolunteerStatus();
+        renderAccountability();
+        announce('Your account details were saved in this browser.');
+        showToast('Account details saved locally.', false);
+      } else if (form.matches('[data-settings-form]')) {
+        event.preventDefault();
+        state.settings = {
+          compactDashboard: Boolean(data.get('compactDashboard')),
+          showPrototypeNotices: Boolean(data.get('showPrototypeNotices'))
+        };
+        saveState();
+        renderSettings();
+        renderDashboardGate();
+        renderAccountInfo();
+        announce('Your settings were saved in this browser.');
+        showToast('Settings saved locally.', false);
+      } else if (form.matches('[data-chat-form]')) {
+        event.preventDefault();
+        const body = cleanString(data.get('body'), 1200);
+        if (!body) return;
+        state.chats = Array.isArray(state.chats) ? state.chats : [];
+        state.chats.push({
+          id: makeId('chat'),
+          memberId: state.pledge.memberId,
+          name: state.pledge.name,
+          channel: cleanString(data.get('channel'), 40) || 'general',
+          body,
+          createdAt: now
+        });
+        state.chats = state.chats.slice(-300);
+        saveState();
+        renderCommons();
+        form.reset();
+        announce('Your message was posted to the local community chat.');
+        showToast('Chat message saved locally.', false);
+      } else if (form.matches('[data-message-form]')) {
+        event.preventDefault();
+        const body = cleanString(data.get('body'), 1200);
+        const toName = cleanString(data.get('toName'), 80);
+        if (!body || !toName) return;
+        state.messages = Array.isArray(state.messages) ? state.messages : [];
+        state.messages.push({
+          id: makeId('message'),
+          memberId: state.pledge.memberId,
+          name: state.pledge.name,
+          toName,
+          body,
+          createdAt: now,
+          status: 'recorded'
+        });
+        state.messages = state.messages.slice(-300);
+        saveState();
+        renderMessages();
+        form.reset();
+        announce('Your message was recorded in this browser.');
+        showToast('Message recorded locally.', false);
+      } else if (form.matches('[data-suggestion-form]')) {
+        event.preventDefault();
+        const text = cleanString(data.get('text'), 1200);
+        if (!text) return;
+        state.suggestions = Array.isArray(state.suggestions) ? state.suggestions : [];
+        state.suggestions.unshift({
+          id: makeId('suggestion'),
+          memberId: state.pledge.memberId,
+          name: state.pledge.name,
+          category: cleanString(data.get('category'), 40) || 'general',
+          text,
+          createdAt: now,
+          status: 'submitted'
+        });
+        state.suggestions = state.suggestions.slice(0, 200);
+        saveState();
+        renderSuggestions();
+        form.reset();
+        announce('Your suggestion was submitted in this browser.');
+        showToast('Suggestion saved locally.', false);
+      }
+    });
+
+    renderDashboard();
+  }
+
+  /* ------------------------------------------------------------------------
+     05a-2. Safety & accountability (member dashboard)
+     ------------------------------------------------------------------------ */
+  function reportStatusLabel(status) {
+    const labels = {
+      response_period: 'Response period · evidence gathering',
+      board_review: 'Member review · 3-day vote',
+      police_referral: 'Police referral recorded',
+      restriction_active: 'Reflection · access restricted',
+      not_guilty: 'Found not guilty',
+      access_restored: 'Full access restored'
+    };
+    return labels[status] || status;
+  }
+
+  function votingRemaining(report) {
+    if (report.demoVotingClosed) return 'Voting closed';
+    const end = Date.parse(report.votingEndsAt);
+    if (!end) return 'Voting closed';
+    const ms = end - Date.now();
+    if (ms <= 0) return 'Voting closed';
+    const days = Math.floor(ms / 86400000);
+    const hours = Math.floor((ms % 86400000) / 3600000);
+    return `${days} day${days === 1 ? '' : 's'} ${hours} hour${hours === 1 ? '' : 's'} left`;
+  }
+
+  function pickMajorityValue(values) {
+    if (!values.length) return REFLECTION_OPTIONS[0];
+    const counts = {};
+    values.forEach((value) => { counts[value] = (counts[value] || 0) + 1; });
+    return Object.keys(counts).map(Number).sort((a, b) => a - b)
+      .reduce((best, value) => (counts[value] > counts[best] ? value : best));
+  }
+
+  function resolveAccountabilityReport(report) {
+    const votes = Array.isArray(report.votes) ? report.votes : [];
+    const guilty = votes.filter((vote) => vote.verdict === 'guilty').length;
+    const notGuilty = votes.filter((vote) => vote.verdict === 'not_guilty').length;
+    const now = new Date();
+
+    if (guilty > notGuilty) {
+      const days = pickMajorityValue(votes.filter((vote) => vote.reflectionDays).map((vote) => vote.reflectionDays));
+      report.reflectionDays = days;
+      report.restrictionStart = now.toISOString();
+      report.restrictionEnd = new Date(now.getTime() + (days * 86400000)).toISOString();
+      report.status = 'restriction_active';
+      announce(`Case resolved guilty. Reflection period set to ${days} days.`);
+    } else {
+      report.status = 'not_guilty';
+      announce('Case resolved not guilty. No restriction applied.');
+    }
+    report.resolutionAt = now.toISOString();
+    saveState();
+    renderAccountability();
+    showToast('Voting closed and case resolved locally.', false);
+  }
+
+  function fileAccountabilityReport(form) {
+    const data = new FormData(form);
+    const type = cleanString(data.get('type'), 40);
+    const meta = hasOwn(REPORT_TYPES, type) ? REPORT_TYPES[type] : null;
+    const description = cleanString(data.get('description'), 1200);
+    if (!meta || !description || !data.get('goodFaith')) return;
+
+    const now = new Date();
+    const isCriminal = meta.route === 'criminal';
+    const report = {
+      id: makeId('report'),
+      reporterMemberId: state.pledge.memberId,
+      reporterName: state.pledge.name,
+      respondentName: cleanString(data.get('respondentName'), 80),
+      respondentMemberId: '',
+      type,
+      typeLabel: meta.label,
+      route: meta.route,
+      description,
+      occurredAt: cleanString(data.get('occurredAt'), 20),
+      createdAt: now.toISOString(),
+      status: isCriminal ? 'police_referral' : 'response_period',
+      responseDeadlineAt: isCriminal ? '' : new Date(now.getTime() + (RESPONSE_DAYS * DAY_MS)).toISOString(),
+      response: null,
+      comments: [],
+      votes: [],
+      votingEndsAt: '',
+      demoVotingClosed: false,
+      reflectionDays: null,
+      restrictionStart: '',
+      restrictionEnd: '',
+      treatmentSteps: { evaluation: false, plan: false, treatment: false },
+      resolutionAt: '',
+      policeReferral: isCriminal ? {
+        createdAt: now.toISOString(),
+        status: 'referral_recorded',
+        note: 'Recorded as a police referral for investigation under local and federal law. This prototype does not contact authorities.'
+      } : null
+    };
+
+    state.reports = Array.isArray(state.reports) ? state.reports : [];
+    state.reports.unshift(report);
+    state.reports = state.reports.slice(0, 200);
+    saveState();
+    form.reset();
+    renderAccountability();
+    announce(isCriminal
+      ? 'Criminal matter recorded as a police referral. In a live system it would be referred to police for investigation. Nothing was transmitted in this prototype.'
+      : `Report filed. The reported member has ${RESPONSE_DAYS} days to gather evidence and respond before a ${VOTING_DAYS}-day member vote opens.`);
+    showToast(isCriminal ? 'Police referral recorded (prototype only).' : 'Report filed. Response period is open.', false);
+  }
+
+  function castAccountabilityVote(reportId, data) {
+    if (!isMember()) return;
+    const report = allReports().find((item) => item.id === reportId);
+    if (!report || report.status !== 'board_review') return;
+    if (report.votes.some((vote) => vote.memberId === state.pledge.memberId)) return;
+    if (report.demoVotingClosed || (report.votingEndsAt && Date.now() > Date.parse(report.votingEndsAt))) return;
+
+    const verdict = data.verdict === 'guilty' ? 'guilty' : data.verdict === 'not_guilty' ? 'not_guilty' : '';
+    if (!verdict) return;
+    const days = REFLECTION_OPTIONS.includes(Number(data.reflectionDays)) ? Number(data.reflectionDays) : REFLECTION_OPTIONS[0];
+
+    report.votes = Array.isArray(report.votes) ? report.votes : [];
+    report.votes.push({
+      memberId: state.pledge.memberId,
+      name: state.pledge.name,
+      verdict,
+      reflectionDays: verdict === 'guilty' ? days : null,
+      reason: cleanString(data.reason, 600),
+      votedAt: new Date().toISOString()
+    });
+    saveState();
+    renderAccountability();
+    announce(`Vote recorded: ${verdict === 'guilty' ? 'guilty' : 'not guilty'}, with your reason attached.`);
+    showToast('Vote and reason recorded locally.', false);
+  }
+
+  function submitRespondentResponse(reportId, form) {
+    if (!isMember()) return;
+    syncReportPhases();
+    const report = allReports().find((item) => item.id === reportId);
+    if (!report || report.status !== 'response_period' || !isRespondent(report)) return;
+
+    const data = new FormData(form);
+    const plea = data.get('plea') === 'guilty' ? 'guilty' : data.get('plea') === 'not_guilty' ? 'not_guilty' : '';
+    if (!plea) return;
+
+    const media = [];
+    for (let i = 1; i <= 3; i += 1) {
+      const url = cleanString(data.get(`mediaUrl${i}`), 500);
+      const caption = cleanString(data.get(`mediaCaption${i}`), 200);
+      const type = cleanString(data.get(`mediaType${i}`), 20);
+      if (url || caption) {
+        media.push({ type: hasOwn(MEDIA_TYPES, type) ? type : 'document', url, caption });
+      }
+    }
+
+    const now = new Date();
+    report.response = {
+      plea,
+      explanation: cleanString(data.get('explanation'), 2000),
+      media,
+      submittedAt: now.toISOString()
+    };
+    report.status = 'board_review';
+    report.votingEndsAt = new Date(now.getTime() + (VOTING_DAYS * DAY_MS)).toISOString();
+    saveState();
+    renderAccountability();
+    announce('Your plea and evidence were recorded. Member voting is now open.');
+    showToast('Response recorded. Voting is now open.', false);
+  }
+
+  function addAccountabilityComment(reportId, data) {
+    if (!isMember()) return;
+    const report = allReports().find((item) => item.id === reportId);
+    if (!report || report.route !== 'board') return;
+    const text = cleanString(data.get('text'), 800);
+    if (!text) return;
+
+    report.comments = Array.isArray(report.comments) ? report.comments : [];
+    report.comments.unshift({
+      id: makeId('comment'),
+      memberId: state.pledge.memberId,
+      name: state.pledge.name,
+      text,
+      createdAt: new Date().toISOString()
+    });
+    report.comments = report.comments.slice(0, 200);
+    saveState();
+    renderAccountability();
+    announce('Your comment was added to the case file.');
+    showToast('Comment added locally.', false);
+  }
+
+  function responseRemaining(report) {
+    if (report.status !== 'response_period') return '';
+    const end = Date.parse(report.responseDeadlineAt);
+    if (Number.isNaN(end)) return 'Response period open';
+    const ms = end - Date.now();
+    if (ms <= 0) return 'Response period ended';
+    const days = Math.floor(ms / DAY_MS);
+    const hours = Math.floor((ms % DAY_MS) / 3600000);
+    return `${days} day${days === 1 ? '' : 's'} ${hours} hour${hours === 1 ? '' : 's'} to gather evidence`;
+  }
+
+  function renderCaseFile(report, e) {
+    const response = report.response;
+    const media = response && Array.isArray(response.media) ? response.media : [];
+    let html = `<div class="case-file">
+      <p class="case-file-label">Case file · visible to every member</p>
+      <dl class="case-file-meta">
+        <div><dt>Report type</dt><dd>${e(report.typeLabel || report.type)}</dd></div>
+        <div><dt>Filed by</dt><dd>${e(report.reporterName || 'Member')}${report.reporterMemberId ? ` · ${e(report.reporterMemberId)}` : ''}</dd></div>
+        <div><dt>Reported member</dt><dd>${e(report.respondentName || 'not specified')}</dd></div>
+        ${report.occurredAt ? `<div><dt>When it happened</dt><dd>${e(report.occurredAt)}</dd></div>` : ''}
+        <div><dt>Filed on</dt><dd>${e(formatDate(report.createdAt))}</dd></div>
+      </dl>
+      <p class="case-file-section-title">What was reported</p>
+      <p class="case-file-text">${e(report.description)}</p>
+      <p class="case-file-section-title">Response from the reported member</p>`;
+
+    if (response && response.plea) {
+      html += `<p class="case-response-plea"><strong>Plea:</strong> ${e(response.plea === 'guilty' ? 'Guilty' : 'Not guilty')}${response.submittedAt ? ` · submitted ${e(formatDate(response.submittedAt))}` : ''}</p>
+        <p class="case-file-text">${e(response.explanation || 'No written explanation was provided.')}</p>`;
+      if (media.length) {
+        html += `<ul class="media-list">${media.map((item) => {
+          const url = safeMediaUrl(item.url);
+          return `<li><span class="media-kind">${e(MEDIA_TYPES[item.type] || 'Link')}</span> ${url ? `<a href="${e(url)}" target="_blank" rel="noopener noreferrer">${e(url)}</a>` : e(item.url || 'No link provided')}${item.caption ? ` — ${e(item.caption)}` : ''}</li>`;
+        }).join('')}</ul>`;
+      } else {
+        html += `<p class="account-note">No multimedia evidence was attached.</p>`;
+      }
+    } else {
+      html += `<p class="account-note">No response submitted yet. The reported member may still plead and add evidence during the response period.</p>`;
+    }
+    return `${html}</div>`;
+  }
+
+  function renderCaseComments(report, e) {
+    const comments = Array.isArray(report.comments) ? report.comments : [];
+    return `<div class="case-comments">
+      <p class="case-file-section-title">Member comments (${comments.length})</p>
+      ${comments.length ? `<ul class="comment-list">${comments.map((comment) => `
+        <li class="comment-item">
+          <p class="contribution-meta"><strong>${e(comment.name || 'Member')}</strong> · ${e(formatDate(comment.createdAt))}</p>
+          <p>${e(comment.text)}</p>
+        </li>`).join('')}</ul>` : `<p class="account-note">No comments yet. Members can voice their opinions below.</p>`}
+      <form class="account-form comment-form" data-comment-form data-id="${e(report.id)}">
+        <div class="field">
+          <label for="comment-${e(domId(report.id))}">Add a comment <span class="required-mark" aria-hidden="true">*</span></label>
+          <textarea id="comment-${e(domId(report.id))}" name="text" rows="2" maxlength="800" required placeholder="Share your view on this matter. Named and visible to other members."></textarea>
+          <p class="field-hint">Comments are named and visible to all members. Up to 800 characters.</p>
+        </div>
+        <button type="submit" class="button button--outline button--small">Post comment</button>
+      </form>
+    </div>`;
+  }
+
+  function renderResponseForm(report, e) {
+    const id = e(domId(report.id));
+    return `<form class="account-form response-form" data-response-form data-id="${e(report.id)}">
+      <p class="account-note">You are the reported member. You may plead guilty or not guilty, explain why if you choose, and add links to evidence. In a live system this would accept direct video, audio, and image uploads; this prototype records links and text only.</p>
+      <fieldset class="vote-fieldset"><legend>1. Your plea</legend>
+        <label class="radio-choice"><input type="radio" name="plea" value="guilty" required> Guilty</label>
+        <label class="radio-choice"><input type="radio" name="plea" value="not_guilty" required> Not guilty</label>
+      </fieldset>
+      <div class="field">
+        <label for="response-explanation-${id}">2. Explain why <span class="optional">(optional)</span></label>
+        <textarea id="response-explanation-${id}" name="explanation" rows="4" maxlength="2000" placeholder="Tell the board your side of the story."></textarea>
+        <p class="field-hint">Up to 2000 characters. Other members can read this with your plea.</p>
+      </div>
+      <p class="account-note"><strong>3. Evidence</strong> — add links to video, audio, images, or documents. Leave blank if you have none.</p>
+      ${[1, 2, 3].map((i) => `<div class="media-row">
+        <select name="mediaType${i}" aria-label="Media type ${i}">
+          ${Object.keys(MEDIA_TYPES).map((key) => `<option value="${e(key)}">${e(MEDIA_TYPES[key])}</option>`).join('')}
+        </select>
+        <input type="url" name="mediaUrl${i}" maxlength="500" placeholder="https://…" aria-label="Media link ${i}">
+        <input type="text" name="mediaCaption${i}" maxlength="200" placeholder="Caption (optional)" aria-label="Media caption ${i}">
+      </div>`).join('')}
+      <div class="account-form-actions">
+        <button type="submit" class="button button--primary button--small">Submit plea and evidence</button>
+        <button type="button" class="button button--ghost button--small" data-action="skip-response" data-id="${e(report.id)}">Skip response (open voting)</button>
+      </div>
+    </form>`;
+  }
+
+  function renderAccountability() {
+    const panel = document.getElementById('accountability-panel');
+    if (!panel) return;
+    syncReportPhases();
+
+    if (!isMember()) {
+      panel.innerHTML = `
+        <section class="account-card accountability-card" aria-labelledby="accountability-title">
+          <p class="eyebrow">Member dashboard</p>
+          <h3 id="accountability-title">Safety &amp; accountability</h3>
+          <p class="account-note">Reporting, member review, and access decisions live in the member dashboard. Sign the Unbought Pledge to become a member and access them.</p>
+        </section>`;
+      return;
+    }
+
+    const member = state.pledge;
+    const reports = allReports();
+    const mine = getMemberReports();
+    const aboutMe = reportsAboutMember();
+    const restriction = getActiveRestriction();
+    const openReports = reports.filter((report) => report && ['response_period', 'board_review'].includes(report.status));
+    const resolved = reports.filter((report) => report && ['restriction_active', 'not_guilty', 'access_restored'].includes(report.status)).slice(0, 8);
+    const e = escapeHtml;
+
+    let html = `<section class="account-card accountability-card" aria-labelledby="accountability-title">
+      <p class="eyebrow">Member dashboard · Safety</p>
+      <h3 id="accountability-title">Safety &amp; accountability</h3>
+      <p class="account-note">Members file named reports. Criminal matters are recorded as police referrals for investigation under local and federal law; they are never decided by a member vote. For non-criminal matters, the reported member gets ${RESPONSE_DAYS} days to gather evidence and plead guilty or not guilty with an explanation and multimedia links. Then all members get ${VOTING_DAYS} days to read the complete case file, comment, and vote on guilt, on the reflection period if guilty, and on a reason for their vote. Everything is visible on this dashboard. This prototype records it all locally—nothing is transmitted.</p>`;
+
+    if (restriction) {
+      const complete = isRestrictionComplete(restriction);
+      const steps = restriction.treatmentSteps || {};
+      const stepsDone = TREATMENT_STEPS.every((step) => Boolean(steps[step.key]));
+      const periodDone = !restriction.restrictionEnd || Date.now() >= Date.parse(restriction.restrictionEnd);
+      const remaining = Math.max(0, Math.ceil((Date.parse(restriction.restrictionEnd) - Date.now()) / 86400000));
+      html += `
+        <div class="restriction-banner ${complete ? 'is-complete' : ''}" role="status">
+          <h4>${complete ? 'Eligible for full access' : 'Access restriction active'}</h4>
+          <p>Case ${e(restriction.id)} · ${e(restriction.reflectionDays || 0)}-day reflection ${e(formatDate(restriction.restrictionStart))} – ${e(formatDate(restriction.restrictionEnd))}${complete ? '' : ` · ${remaining} day${remaining === 1 ? '' : 's'} remaining`}.</p>
+          <p><strong>Allowed during reflection:</strong> health care, food, mental health care, legal services, and housing at lower priority if you are on a waiting list. Posting, requesting, track management, volunteering, and other full-access activities are paused.</p>
+          <p><strong>Required to regain full access:</strong> a therapeutic evaluation (inside or outside Unbought), the recommended treatment plan, and completing or sustaining that treatment.</p>
+          <ul class="treatment-list">
+            ${TREATMENT_STEPS.map((step) => {
+              const done = Boolean(steps[step.key]);
+              return `<li><button type="button" class="treatment-step ${done ? 'is-done' : ''}" data-action="toggle-step" data-id="${e(restriction.id)}" data-step="${step.key}" aria-pressed="${done}">${done ? '✓' : '○'} ${e(step.label)}</button></li>`;
+            }).join('')}
+          </ul>
+          ${complete ? `<button type="button" class="button button--primary button--small" data-action="restore-access" data-id="${e(restriction.id)}">Restore full access</button>` : stepsDone && !periodDone ? `<button type="button" class="button button--outline button--small" data-action="complete-period" data-id="${e(restriction.id)}">Mark reflection period complete (demo)</button>` : ''}
+        </div>`;
+    } else if (aboutMe.some((report) => report.status === 'access_restored')) {
+      html += `<p class="account-note">Your full access has been restored after a completed reflection and treatment.</p>`;
+    }
+
+    html += `
+      <div class="account-block">
+        <h4>File a report</h4>
+        <p class="account-note">Filed under ${e(member.name)} (member ID ${e(member.memberId)}). Reports are named; anonymous reports are not accepted.</p>
+        <form class="account-form report-form" data-report-form>
+          <div class="field">
+            <label for="report-type">Type of action being reported <span class="required-mark" aria-hidden="true">*</span></label>
+            <select id="report-type" name="type" required>
+              <option value="">Choose a type…</option>
+              <optgroup label="Reviewed by members (not a crime)">
+                ${Object.keys(REPORT_TYPES).filter((key) => REPORT_TYPES[key].route === 'board').map((key) => `<option value="${e(key)}">${e(REPORT_TYPES[key].label)}</option>`).join('')}
+              </optgroup>
+              <optgroup label="Criminal matter — police referral">
+                ${Object.keys(REPORT_TYPES).filter((key) => REPORT_TYPES[key].route === 'criminal').map((key) => `<option value="${e(key)}">${e(REPORT_TYPES[key].label)}</option>`).join('')}
+              </optgroup>
+            </select>
+          </div>
+          <div class="field">
+            <label for="report-respondent">Member this report is about <span class="optional">(chosen name or member ID)</span></label>
+            <input type="text" id="report-respondent" name="respondentName" maxlength="80" placeholder="Chosen name or member ID">
+            <p class="field-hint">To explore the full review flow locally, you can enter your own chosen name here.</p>
+          </div>
+          <div class="field">
+            <label for="report-when">When did it happen? <span class="optional">(optional)</span></label>
+            <input type="date" id="report-when" name="occurredAt">
+          </div>
+          <div class="field">
+            <label for="report-description">What happened? <span class="required-mark" aria-hidden="true">*</span></label>
+            <textarea id="report-description" name="description" rows="4" maxlength="1200" required placeholder="Describe what happened, where, and who was involved."></textarea>
+          </div>
+          <label class="checkbox">
+            <input type="checkbox" name="goodFaith" required>
+            <span>I confirm this report is made in good faith and is true to the best of my knowledge.</span>
+          </label>
+          <div class="account-form-actions">
+            <button type="submit" class="button button--primary button--small">File report</button>
+            <p class="form-hint">Named reports only · stored in this browser</p>
+          </div>
+        </form>
+      </div>`;
+
+    html += `<div class="account-block"><h4>Your reports</h4>`;
+    if (!mine.length) {
+      html += `<p class="account-note">You have not filed a report in this browser.</p>`;
+    } else {
+      html += `<ul class="case-list">`;
+      mine.forEach((report) => {
+        const isCriminal = report.route === 'criminal';
+        html += `<li class="case-item">
+          <div class="case-item-head"><strong>${e(report.typeLabel || report.type)}</strong><span class="case-status ${isCriminal ? 'case-status--criminal' : ''}">${e(reportStatusLabel(report.status))}</span></div>
+          <p class="contribution-meta">${e(formatDate(report.createdAt))} · about ${e(report.respondentName || 'not specified')}${report.id ? ' · ' + e(report.id) : ''}</p>
+          <details><summary>What was reported</summary><p>${e(report.description)}</p></details>
+          ${isCriminal ? `<p class="case-referral"><strong>Police referral recorded.</strong> ${e(report.policeReferral && report.policeReferral.note ? report.policeReferral.note : 'In a live system this would be sent to local police for investigation. This prototype does not contact authorities.')}</p>` : ''}
+        </li>`;
+      });
+      html += `</ul>`;
+    }
+    html += `</div>`;
+
+    html += `<div class="account-block"><h4>Member review board · open cases</h4>
+      <p class="account-note">Each case opens with a ${RESPONSE_DAYS}-day response period so the reported member can gather evidence and plead. After that, voting is open to all members for ${VOTING_DAYS} days—whoever votes counts. Vote on guilt; if guilty, on the reflection period (30, 90, or 180 days); and always explain why. Every member's reason, the full case file, and all comments are visible here so voters have all the information.</p>`;
+    if (!openReports.length) {
+      html += `<p class="account-note">No cases are open for review right now.</p>`;
+    } else {
+      html += `<ul class="case-list">`;
+      openReports.forEach((report) => {
+        const votes = Array.isArray(report.votes) ? report.votes : [];
+        const guilty = votes.filter((vote) => vote.verdict === 'guilty').length;
+        const notGuilty = votes.filter((vote) => vote.verdict === 'not_guilty').length;
+        const alreadyVoted = votes.some((vote) => vote.memberId === member.memberId);
+        const isResponsePhase = report.status === 'response_period';
+        const canVote = !isResponsePhase && !alreadyVoted && (!report.votingEndsAt || Date.now() <= Date.parse(report.votingEndsAt)) && !report.demoVotingClosed;
+        html += `<li class="case-item case-item--review">
+          <div class="case-item-head"><strong>${e(report.typeLabel || report.type)}</strong><span class="case-status ${isResponsePhase ? 'case-status--response' : ''}">${e(reportStatusLabel(report.status))}</span></div>
+          <p class="contribution-meta">Filed ${e(formatDate(report.createdAt))} · about ${e(report.respondentName || 'not specified')} · ${e(isResponsePhase ? responseRemaining(report) : votingRemaining(report))} · ${votes.length} vote${votes.length === 1 ? '' : 's'}</p>
+          ${renderCaseFile(report, e)}
+          ${isResponsePhase
+            ? (isRespondent(report) ? renderResponseForm(report, e) : `<p class="account-note">The reported member has ${RESPONSE_DAYS} days to gather evidence and plead before voting opens. You can read the full case file and leave a comment now.</p>`)
+            : `<p class="case-tally"><strong>Tally:</strong> guilty ${guilty} · not guilty ${notGuilty}</p>
+              ${votes.length ? `<ul class="vote-reasons">${votes.map((vote) => `
+                <li class="vote-reason">
+                  <p class="contribution-meta"><strong>${e(vote.name || 'Member')}</strong> · voted ${e(vote.verdict === 'guilty' ? 'guilty' : 'not guilty')}${vote.verdict === 'guilty' && vote.reflectionDays ? ` · ${vote.reflectionDays} days` : ''} · ${e(formatDate(vote.votedAt))}</p>
+                  <p>${e(vote.reason || 'No reason was recorded for this vote.')}</p>
+                </li>`).join('')}</ul>` : ''}
+              ${alreadyVoted ? `<p class="account-note">You already voted on this case. Your verdict and reason are listed above.</p>` : canVote ? `
+                <form class="account-form vote-form" data-vote-form data-id="${e(report.id)}">
+                  <fieldset class="vote-fieldset"><legend>1. Your verdict</legend>
+                    <label class="radio-choice"><input type="radio" name="verdict" value="guilty" required> Guilty</label>
+                    <label class="radio-choice"><input type="radio" name="verdict" value="not_guilty" required> Not guilty</label>
+                  </fieldset>
+                  <fieldset class="vote-fieldset"><legend>2. If guilty, reflection period</legend>
+                    ${REFLECTION_OPTIONS.map((days) => `<label class="radio-choice"><input type="radio" name="reflectionDays" value="${days}"> ${days} days</label>`).join('')}
+                  </fieldset>
+                  <div class="field">
+                    <label for="vote-reason-${e(domId(report.id))}">3. Why are you voting this way? <span class="required-mark" aria-hidden="true">*</span></label>
+                    <textarea id="vote-reason-${e(domId(report.id))}" name="reason" rows="3" maxlength="600" required placeholder="Explain your reasoning. Other members can see this with your vote."></textarea>
+                    <p class="field-hint">Your reason is recorded with your vote and shown to other members. Up to 600 characters.</p>
+                  </div>
+                  <button type="submit" class="button button--primary button--small">Submit vote and reason</button>
+                </form>
+              ` : `<p class="account-note">Voting has closed for this case.</p>`}
+              <button type="button" class="button button--ghost button--small" data-action="close-voting" data-id="${e(report.id)}">Close voting now (demo)</button>`}
+          ${renderCaseComments(report, e)}
+        </li>`;
+      });
+      html += `</ul>`;
+    }
+    html += `</div>`;
+
+    html += `<div class="account-block"><h4>Decisions &amp; active restrictions</h4>`;
+    if (!resolved.length) {
+      html += `<p class="account-note">No completed decisions yet.</p>`;
+    } else {
+      html += `<ul class="case-list">`;
+      resolved.forEach((report) => {
+        html += `<li class="case-item">
+          <div class="case-item-head"><strong>${e(report.typeLabel || report.type)}</strong><span class="case-status">${e(reportStatusLabel(report.status))}</span></div>
+          <p class="contribution-meta">${e(formatDate(report.resolutionAt || report.createdAt))} · about ${e(report.respondentName || 'not specified')}${report.reflectionDays ? ' · ' + report.reflectionDays + ' days' : ''}</p>
+          <p class="contribution-meta">${(report.votes || []).length} member vote${(report.votes || []).length === 1 ? '' : 's'}${report.status === 'not_guilty' ? ' · no restriction applied' : ''}</p>
+          <details><summary>Full case file and response</summary>${renderCaseFile(report, e)}</details>
+          ${(report.votes || []).length ? `<details><summary>How members voted and why</summary><ul class="vote-reasons">${report.votes.map((vote) => `
+            <li class="vote-reason">
+              <p class="contribution-meta"><strong>${e(vote.name || 'Member')}</strong> · voted ${e(vote.verdict === 'guilty' ? 'guilty' : 'not guilty')}${vote.verdict === 'guilty' && vote.reflectionDays ? ` · ${vote.reflectionDays} days` : ''}</p>
+              <p>${e(vote.reason || 'No reason was recorded for this vote.')}</p>
+            </li>`).join('')}</ul></details>` : ''}
+          ${renderCaseComments(report, e)}
+        </li>`;
+      });
+      html += `</ul>`;
+    }
+    html += `</div></section>`;
+
+    panel.innerHTML = html;
+  }
+
+  function initAccountability() {
+    const panel = document.getElementById('accountability-panel');
+    if (!panel) return;
+
+    panel.addEventListener('submit', (event) => {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement)) return;
+      if (form.matches('[data-report-form]')) {
+        event.preventDefault();
+        if (!requireMembership()) return;
+        if (!form.reportValidity()) return;
+        fileAccountabilityReport(form);
+      } else if (form.matches('[data-vote-form]')) {
+        event.preventDefault();
+        if (!requireMembership()) return;
+        if (!form.reportValidity()) return;
+        const data = new FormData(form);
+        castAccountabilityVote(form.dataset.id, {
+          verdict: data.get('verdict'),
+          reflectionDays: data.get('reflectionDays'),
+          reason: data.get('reason')
+        });
+      } else if (form.matches('[data-response-form]')) {
+        event.preventDefault();
+        if (!requireMembership()) return;
+        if (!form.reportValidity()) return;
+        submitRespondentResponse(form.dataset.id, form);
+      } else if (form.matches('[data-comment-form]')) {
+        event.preventDefault();
+        if (!requireMembership()) return;
+        if (!form.reportValidity()) return;
+        addAccountabilityComment(form.dataset.id, new FormData(form));
+      }
+    });
+
+    panel.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-action]');
+      if (!button || !panel.contains(button)) return;
+      const report = allReports().find((item) => item.id === button.dataset.id);
+      if (!report) return;
+
+      if (button.dataset.action === 'toggle-step') {
+        if (!isMember() || report.status !== 'restriction_active') return;
+        const step = button.dataset.step;
+        if (!TREATMENT_STEPS.some((item) => item.key === step)) return;
+        report.treatmentSteps = report.treatmentSteps || {};
+        report.treatmentSteps[step] = !report.treatmentSteps[step];
+        saveState();
+        renderAccountability();
+        announce(`${report.treatmentSteps[step] ? 'Completed' : 'Marked incomplete'}: ${step}.`);
+      } else if (button.dataset.action === 'complete-period') {
+        if (!isMember() || report.status !== 'restriction_active') return;
+        if (!TREATMENT_STEPS.every((step) => Boolean((report.treatmentSteps || {})[step.key]))) return;
+        report.restrictionEnd = new Date(Date.now() - 1000).toISOString();
+        saveState();
+        renderAccountability();
+        announce('Reflection period marked complete for this demo.');
+        showToast('Reflection period complete (demo).', false);
+      } else if (button.dataset.action === 'restore-access') {
+        if (!isMember() || report.status !== 'restriction_active' || !isRestrictionComplete(report)) return;
+        report.status = 'access_restored';
+        report.resolutionAt = new Date().toISOString();
+        saveState();
+        renderAccountability();
+        announce('Full access restored after reflection and treatment.');
+        showToast('Full access restored (prototype).', false);
+      } else if (button.dataset.action === 'skip-response') {
+        if (!isMember() || report.status !== 'response_period' || !isRespondent(report)) return;
+        report.status = 'board_review';
+        report.votingEndsAt = new Date(Date.now() + (VOTING_DAYS * DAY_MS)).toISOString();
+        saveState();
+        renderAccountability();
+        announce('Response skipped. Member voting is now open.');
+        showToast('Response skipped. Voting is open.', false);
+      } else if (button.dataset.action === 'close-voting') {
+        if (!isMember() || report.status !== 'board_review') return;
+        report.demoVotingClosed = true;
+        resolveAccountabilityReport(report);
+      }
+    });
+
+    renderAccountability();
+  }
+
+  /* ------------------------------------------------------------------------
      05b. Pledge & digital signature
      ------------------------------------------------------------------------ */
   function renderPledge() {
@@ -1248,6 +2478,9 @@
         renderTrackGate();
         renderTrackPanel(state.track);
         renderMemberAccount();
+        renderVolunteerStatus();
+        renderDashboard();
+        renderAccountability();
         applyFilters();
 
         const banner = document.getElementById('signed-banner');
@@ -1274,6 +2507,9 @@
             renderTrackGate();
             renderTrackPanel(state.track);
             renderMemberAccount();
+            renderVolunteerStatus();
+            renderDashboard();
+            renderAccountability();
             applyFilters();
 
             const agreement = document.getElementById('pledge-agreement');
@@ -1339,9 +2575,9 @@
         </div>
         <div class="form-row">
           <div class="field">
-            <label for="contributor-hours">Monthly hours pledged <span class="required-mark" aria-hidden="true">*</span></label>
-            <input type="number" id="contributor-hours" name="hours" min="1" max="40" step="1" value="4" required>
-            <p class="field-hint">A real, sustainable number. You can change it later.</p>
+            <label for="contributor-hours">Weekly hours pledged <span class="required-mark" aria-hidden="true">*</span></label>
+            <input type="number" id="contributor-hours" name="hours" min="1" max="40" step="1" value="1" required>
+            <p class="field-hint">Phase 1 minimum: 1 hour per week. A real, sustainable number—you can change it later.</p>
           </div>
           <div class="field">
             <label for="contributor-availability">Availability <span class="optional">(optional)</span></label>
@@ -1614,6 +2850,7 @@
       form.addEventListener('submit', (event) => {
         event.preventDefault();
         if (!requireMembership('Sign the Unbought Pledge to become a member before saving your track.')) return;
+        if (!requireFullAccess('Full access is paused during your reflection period. Track management is unavailable until you complete the reflection and treatment requirements.')) return;
         if (!form.reportValidity()) return;
 
         const savedDetails = collectFormDetails(form);
@@ -1624,7 +2861,7 @@
         let message = 'Your track details were saved.';
         if (track === 'contributor') {
           const hours = savedDetails.hours || '0';
-          message = `Contributor track saved. You pledged ${hours} hours per month in ${hasOwn(PILLARS, savedDetails.pillar) ? PILLARS[savedDetails.pillar].label : 'the community'}.`;
+          message = `Contributor track saved. You pledged ${hours} hour${Number(hours) === 1 ? '' : 's'} per week in ${hasOwn(PILLARS, savedDetails.pillar) ? PILLARS[savedDetails.pillar].label : 'the community'}.`;
         } else if (track === 'apprentice') {
           message = 'Apprentice track saved. Your guild preference is stored in this browser.';
         } else if (track === 'care') {
@@ -1665,6 +2902,15 @@
             if (savedRadio) savedRadio.checked = true;
           }
           requireMembership('Sign the Unbought Pledge to become a member before choosing or managing a track.');
+          return;
+        }
+        if (hasActiveRestriction()) {
+          radio.checked = false;
+          if (state.track) {
+            const savedRadio = radios.find((item) => item.value === state.track);
+            if (savedRadio) savedRadio.checked = true;
+          }
+          requireFullAccess('Full access is paused during your reflection period. Track changes are unavailable until you complete the reflection and treatment requirements.');
           return;
         }
         state.track = radio.value;
@@ -2111,6 +3357,11 @@
         return;
       }
 
+      if (!requireFullAccess('Full access is paused during your reflection period. Mutual-aid requests are unavailable until you complete the reflection and treatment requirements.')) {
+        closeDialog(dialog);
+        return;
+      }
+
       if (state.requests.some((request) => request.listingId === listing.id && request.memberId === state.pledge.memberId && request.type !== 'nonmember_purchase')) {
         closeDialog(dialog);
         announce('A request for this offering is already saved in your browser.');
@@ -2361,6 +3612,9 @@
           renderTrackGate();
           renderTrackPanel(null);
           renderMemberAccount();
+          renderVolunteerStatus();
+          renderDashboard();
+          renderAccountability();
           resetFilters();
 
           const postStatus = document.getElementById('post-status');
@@ -2393,6 +3647,9 @@
   function init() {
     initHeader();
     initPledgeForm();
+    initVolunteerForm();
+    initDashboard();
+    initAccountability();
     initTracks();
     initTabs();
     initDirectory();
@@ -2410,6 +3667,7 @@
         // ignore
       }
       renderMemberAccount();
+      renderDashboard();
     });
   }
 

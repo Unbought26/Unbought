@@ -73,6 +73,8 @@
         <ul class="nav-list">
           <li><a href="#how-it-works">How It Works</a></li>
           <li><a href="#pledge">The Pledge</a></li>
+          <li><a href="#dashboard">Dashboard</a></li>
+          <li><a href="#volunteers">Volunteers</a></li>
           <li><a href="freelabor.html">Free Labor</a></li>
           <li><a href="freestuff.html">Free Stuff</a></li>
           <li><a href="future.html">What’s to Come</a></li>
@@ -212,7 +214,7 @@
             <div class="pillar-top">
               <span class="pillar-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-hammer"></use></svg></span>
               <div class="pillar-meta">
-                <span class="badge badge--green">Active launch</span>
+                <span class="badge badge--amber">In progress</span>
                 <span class="pillar-number" aria-hidden="true">01</span>
               </div>
             </div>
@@ -230,7 +232,7 @@
             <div class="pillar-top">
               <span class="pillar-icon pillar-icon--amber"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-basket"></use></svg></span>
               <div class="pillar-meta">
-                <span class="badge badge--green">Active launch</span>
+                <span class="badge badge--amber">In progress</span>
                 <span class="pillar-number" aria-hidden="true">02</span>
               </div>
             </div>
@@ -455,6 +457,7 @@
             <p class="eyebrow">Membership &amp; account</p>
             <h3>Sign the pledge to create your account.</h3>
             <p>Signing the Unbought Pledge is how you join. You can browse labor and goods without an account, but posting, requesting, messaging, and managing your track require membership. For now this is saved in your browser; it is structured to move into a shared database later.</p>
+            <p class="phase-minimum-note"><strong>Phase 1 minimum:</strong> joining asks for a pledge of at least 1 hour per week. We cannot offer housing yet, so the ask is intentionally small. Members who cannot work are still welcome in the Care Circle with no labor obligation.</p>
             <ul class="signature-notes">
               <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Membership stored locally in this prototype</li>
               <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-people"></use></svg> Manage your track, requests, and neighbor communication</li>
@@ -532,7 +535,7 @@
           <a class="text-link text-link--compact" href="#pledge">Sign the pledge</a>
         </div>
 
-        <p class="track-access-note">Track differences are about access and capacity, not rank. Observers read and explore. Contributors and Care Circle members may request. Apprentices learn through real projects and agree on access with a mentor.</p>
+        <p class="track-access-note">Track differences are about access and capacity, not rank. Observers read and explore. Contributors and Care Circle members may request. Apprentices learn through real projects and agree on access with a mentor. The Phase 1 minimum pledge is 1 hour per week; full-time and part-time paths arrive with land development in Phase 3.</p>
 
         <fieldset class="track-fieldset">
           <legend class="sr-only">Choose your membership track</legend>
@@ -545,7 +548,7 @@
                   <span class="track-check" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span>
                 </span>
                 <span class="track-name">Active Contributor</span>
-                <span class="track-desc">Offer a real paid-level skill, trade, or care task and pledge hours each month.</span>
+                <span class="track-desc">Offer a real paid-level skill, trade, or care task and pledge at least 1 hour per week.</span>
                 <span class="track-access"><strong>Access:</strong> request labor, goods, and start a housing conversation.</span>
                 <span class="track-best">Best for: people with time and a craft to share</span>
               </span>
@@ -604,8 +607,62 @@
           </div>
         </div>
 
-        <!-- Rendered by app.js for members: donations, labor hours, stock/contributions, severance summary -->
-        <div id="member-account" class="member-account" aria-labelledby="member-account-title"></div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         MEMBER DASHBOARD
+         ============================================================ -->
+    <section class="section dashboard-section" id="dashboard" aria-labelledby="dashboard-title">
+      <div class="container">
+        <div class="section-head section-head--split">
+          <div>
+            <p class="eyebrow">Your space in the commons</p>
+            <h2 id="dashboard-title">Member dashboard.</h2>
+          </div>
+          <p class="section-head-aside">Everything connected to your membership in one place: your contributions, account and settings, the commons, messages, the review board, and a suggestion box. Browsing the site stays open to everyone; these tools are for pledged members.</p>
+        </div>
+
+        <div class="dashboard-gate" id="dashboard-gate" role="status">
+          <p><strong>Your dashboard is waiting.</strong> Sign the Unbought Pledge to become a member and open these tools. You can still browse labor, goods, and the academy without an account.</p>
+          <a class="button button--primary" href="#pledge">Take the pledge</a>
+        </div>
+
+        <div class="dashboard" id="member-dashboard" hidden>
+          <nav class="dashboard-tabs" role="tablist" aria-label="Dashboard sections">
+            <button type="button" role="tab" id="dash-tab-overview" aria-controls="dash-panel-overview" aria-selected="true" tabindex="0" data-dashboard-tab="overview">Overview</button>
+            <button type="button" role="tab" id="dash-tab-account" aria-controls="dash-panel-account" aria-selected="false" tabindex="-1" data-dashboard-tab="account">Account</button>
+            <button type="button" role="tab" id="dash-tab-settings" aria-controls="dash-panel-settings" aria-selected="false" tabindex="-1" data-dashboard-tab="settings">Settings</button>
+            <button type="button" role="tab" id="dash-tab-commons" aria-controls="dash-panel-commons" aria-selected="false" tabindex="-1" data-dashboard-tab="commons">The Commons</button>
+            <button type="button" role="tab" id="dash-tab-messages" aria-controls="dash-panel-messages" aria-selected="false" tabindex="-1" data-dashboard-tab="messages">Messages</button>
+            <button type="button" role="tab" id="dash-tab-review" aria-controls="dash-panel-review" aria-selected="false" tabindex="-1" data-dashboard-tab="review">Review Board</button>
+            <button type="button" role="tab" id="dash-tab-suggestions" aria-controls="dash-panel-suggestions" aria-selected="false" tabindex="-1" data-dashboard-tab="suggestions">Suggestions</button>
+          </nav>
+
+          <div class="dashboard-panels">
+            <div role="tabpanel" id="dash-panel-overview" aria-labelledby="dash-tab-overview" data-dashboard-panel="overview">
+              <div id="member-account" class="member-account" aria-labelledby="member-account-title"></div>
+            </div>
+            <div role="tabpanel" id="dash-panel-account" aria-labelledby="dash-tab-account" data-dashboard-panel="account" hidden>
+              <div id="account-info-panel" class="dashboard-render"></div>
+            </div>
+            <div role="tabpanel" id="dash-panel-settings" aria-labelledby="dash-tab-settings" data-dashboard-panel="settings" hidden>
+              <div id="settings-panel" class="dashboard-render"></div>
+            </div>
+            <div role="tabpanel" id="dash-panel-commons" aria-labelledby="dash-tab-commons" data-dashboard-panel="commons" hidden>
+              <div id="commons-panel" class="dashboard-render"></div>
+            </div>
+            <div role="tabpanel" id="dash-panel-messages" aria-labelledby="dash-tab-messages" data-dashboard-panel="messages" hidden>
+              <div id="messages-panel" class="dashboard-render"></div>
+            </div>
+            <div role="tabpanel" id="dash-panel-review" aria-labelledby="dash-tab-review" data-dashboard-panel="review" hidden>
+              <div id="accountability-panel" class="accountability-panel" aria-labelledby="accountability-title"></div>
+            </div>
+            <div role="tabpanel" id="dash-panel-suggestions" aria-labelledby="dash-tab-suggestions" data-dashboard-panel="suggestions" hidden>
+              <div id="suggestions-panel" class="dashboard-render"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -619,13 +676,13 @@
             <p class="eyebrow">Find your part</p>
             <h2 id="explore-title">One commons, four doors.</h2>
           </div>
-          <p class="section-head-aside">Start with what you need or what you can offer. Free labor and free goods are open now. Education and land are the next phases we are building toward together.</p>
+          <p class="section-head-aside">Start with what you need or what you can offer. Free labor and free goods are pending and in progress. Education and land are the next phases we are building toward together.</p>
         </div>
 
         <div class="explore-grid">
           <a class="explore-card" href="freelabor.html">
             <span class="explore-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-hammer"></use></svg></span>
-            <span class="explore-kicker">Open now</span>
+            <span class="explore-kicker">In progress</span>
             <h3>Free Labor</h3>
             <p>Repairs, care, tutoring, design, and other paid-level skills offered without a fee. Browse the directory or post your own offer.</p>
             <span class="text-link">Browse free labor <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></span>
@@ -633,7 +690,7 @@
 
           <a class="explore-card" href="freestuff.html">
             <span class="explore-icon explore-icon--amber" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-basket"></use></svg></span>
-            <span class="explore-kicker">Open now</span>
+            <span class="explore-kicker">In progress</span>
             <h3>Free Stuff</h3>
             <p>Food, clothing, tools, and household goods shared freely. No price tags, no deposits, and no swap required.</p>
             <span class="text-link">Browse free goods <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></span>
@@ -654,6 +711,122 @@
             <p>See exactly where gifts go: legal formation, land, operations, and the Free Goods Fund. No payment is processed here.</p>
             <span class="text-link">Read the fund plan <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></span>
           </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         VOLUNTEERS / OPERATING TEAM
+         ============================================================ -->
+    <section class="section volunteers-section" id="volunteers" aria-labelledby="volunteers-title">
+      <div class="container">
+        <div class="section-head section-head--split">
+          <div>
+            <p class="eyebrow">Help sustain the commons</p>
+            <h2 id="volunteers-title">The neighbors who keep Unbought running.</h2>
+          </div>
+          <p class="section-head-aside">Mutual aid needs steady hands behind the scenes. These volunteer roles keep the site alive, the agreements honest, and the community out of court. You do not need a title to help—just consistency, care, and a willingness to learn.</p>
+        </div>
+
+        <p class="volunteer-gate" id="volunteer-gate" role="status">Browsing these roles is open to everyone. Sign the Unbought Pledge to become a member and record a volunteer offer.</p>
+
+        <div class="volunteer-grid">
+          <article class="volunteer-card">
+            <span class="volunteer-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-pin"></use></svg></span>
+            <span class="volunteer-tag">Coordination</span>
+            <h3>Project managers</h3>
+            <p>Keep launches, workdays, and community projects moving with scope, timelines, and follow-through—no bosses, just shared accountability.</p>
+          </article>
+
+          <article class="volunteer-card">
+            <span class="volunteer-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-scale"></use></svg></span>
+            <span class="volunteer-tag">Keep us out of jail</span>
+            <h3>Legal counsel</h3>
+            <p>Lawyers and paralegals help form the trust, review agreements, and keep the commons on the right side of the law.</p>
+          </article>
+
+          <article class="volunteer-card">
+            <span class="volunteer-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-book"></use></svg></span>
+            <span class="volunteer-tag">Records &amp; operations</span>
+            <h3>Administration</h3>
+            <p>Meeting notes, policies, forms, and the unglamorous paperwork that keeps a volunteer-run community trustworthy.</p>
+          </article>
+
+          <article class="volunteer-card">
+            <span class="volunteer-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-hammer"></use></svg></span>
+            <span class="volunteer-tag">Build &amp; maintain</span>
+            <h3>Web developers</h3>
+            <p>Keep this site accessible, fast, and honest: pages, forms, data practices, and the tools members rely on.</p>
+          </article>
+
+          <article class="volunteer-card">
+            <span class="volunteer-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-people"></use></svg></span>
+            <span class="volunteer-tag">Care for volunteers</span>
+            <h3>HR &amp; people ops</h3>
+            <p>Onboarding, conflict support, and boundaries so helping here feels safe and sustainable for everyone.</p>
+          </article>
+
+          <article class="volunteer-card">
+            <span class="volunteer-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-shield"></use></svg></span>
+            <span class="volunteer-tag">Steward resources</span>
+            <h3>Finance &amp; bookkeeping</h3>
+            <p>Track donations, the severance fund, and exact-cost reimbursements so money never becomes a hidden hierarchy.</p>
+          </article>
+
+          <article class="volunteer-card">
+            <span class="volunteer-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-chat"></use></svg></span>
+            <span class="volunteer-tag">Share the work</span>
+            <h3>Communications &amp; accessibility</h3>
+            <p>Plain-language docs, clear updates, and an accessible site so every neighbor can take part.</p>
+          </article>
+        </div>
+
+        <aside class="volunteer-callout">
+          <span class="volunteer-callout-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-shield"></use></svg></span>
+          <div>
+            <h3>Legal and financial care are part of the mission.</h3>
+            <p>Lawyers, paralegals, accountants, bookkeepers, and compliance-minded neighbors help us form the trust properly, keep accurate records, insure the commons, and stay on the right side of the law. In a gift economy, protecting the community legally and financially is how we protect every member—not a betrayal of it.</p>
+          </div>
+        </aside>
+
+        <div class="volunteer-join" id="volunteer-join">
+          <div class="volunteer-join-copy">
+            <p class="eyebrow">Offer your time</p>
+            <h3>Join the operating team.</h3>
+            <p>Tell us where you can help. In this prototype your offer is recorded in this browser only—nothing is sent to a coordinator and no real onboarding happens yet.</p>
+            <p class="volunteer-join-status" id="volunteer-status" role="status">No volunteer offers recorded yet.</p>
+          </div>
+          <form class="volunteer-form" id="volunteer-form">
+            <div class="field">
+              <label for="volunteer-name">Chosen name <span class="required-mark" aria-hidden="true">*</span></label>
+              <input type="text" id="volunteer-name" name="name" maxlength="60" autocomplete="nickname" placeholder="What should we call you?">
+            </div>
+            <div class="field">
+              <label for="volunteer-role">Role you can help with <span class="required-mark" aria-hidden="true">*</span></label>
+              <select id="volunteer-role" name="role" required>
+                <option value="">Choose a role…</option>
+                <option value="project-management">Project management</option>
+                <option value="legal">Legal counsel &amp; compliance</option>
+                <option value="administrative">Administration &amp; records</option>
+                <option value="web">Web development</option>
+                <option value="hr">HR &amp; people operations</option>
+                <option value="finance">Finance &amp; bookkeeping</option>
+                <option value="communications">Communications &amp; accessibility</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="volunteer-note">How can you help? <span class="optional">(optional)</span></label>
+              <textarea id="volunteer-note" name="note" rows="3" maxlength="280" placeholder="Hours you can offer, skills, or anything we should know."></textarea>
+            </div>
+            <label class="checkbox">
+              <input type="checkbox" name="volunteerAgreement" required>
+              <span>I understand this is a local prototype offer, not a job, employment relationship, or background-checked position, and that no one is obligated to contact me from this browser.</span>
+            </label>
+            <div class="volunteer-form-actions">
+              <button class="button button--primary" type="submit">Record volunteer offer</button>
+              <p class="form-hint">Members only · no data leaves this device</p>
+            </div>
+          </form>
         </div>
       </div>
     </section>
@@ -747,6 +920,8 @@
           <h2>Participate</h2>
           <ul>
             <li><a href="#tracks">Join &amp; Tracks</a></li>
+            <li><a href="#dashboard">Dashboard</a></li>
+            <li><a href="#volunteers">Volunteers</a></li>
             <li><a href="future.html">What’s to Come</a></li>
             <li><a href="freelabor.html#care-circle">Care Circle</a></li>
             <li><a href="future.html#waitlist">Waiting List</a></li>
