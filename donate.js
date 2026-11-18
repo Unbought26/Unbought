@@ -17,7 +17,7 @@
   const FREQUENCY_LABELS = Object.freeze({
     'one-time': 'One-time gift',
     monthly: 'Monthly gift',
-    'pledge-later': 'Pledge when the trust opens'
+    'pledge-later': 'Pledge to give when the trust opens'
   });
 
   const form = document.getElementById('donation-form');
@@ -158,8 +158,8 @@
     if (memberNote) {
       memberNote.hidden = false;
       memberNote.textContent = member
-        ? `Signed in as ${member.name}. Your donation intents will be tracked in your account and counted as contribution/stock value in this prototype.`
-        : 'Donating without an account is welcome. If you provide an email, a thank-you email will be queued in a future system (recorded locally in this prototype).';
+        ? `Signed in as ${member.name}. Your donation intents will be tracked in your account and recorded as contribution and stock value in this prototype.`
+        : 'Donating without an account is welcome. If you provide an email, it is recorded locally for a future thank-you note; no email is sent in this prototype.';
     }
     if (member && nameInput && !nameInput.value.trim()) {
       nameInput.value = member.name || '';
@@ -170,7 +170,7 @@
       if (hint) {
         hint.textContent = member
           ? 'Optional for members (your account can track this donation).'
-          : 'Required if you are donating without an account so we can send a thank-you email later.';
+          : 'Required here if you donate without an account. It is stored locally for a possible future thank-you email; no email is sent in this prototype.';
       }
     }
   }
@@ -194,7 +194,7 @@
 
     receiptRef.textContent = intent.id ? `Reference ${intent.id}` : '';
     const name = intent.name ? ` for ${intent.name}` : '';
-    const tracking = intent.memberId ? 'tracked in your account' : (intent.email ? 'thank-you email queued (prototype)' : 'saved locally');
+    const tracking = intent.memberId ? 'tracked in your account' : (intent.email ? 'email recorded locally for a future thank-you note' : 'saved locally');
     receiptSummary.textContent = `${formatAmount(intent.amount)} · ${FREQUENCY_LABELS[intent.frequency]}${name} · saved ${formatDate(intent.savedAt)} · ${tracking}.`;
     receipt.hidden = false;
 
@@ -202,7 +202,9 @@
       receipt.focus({ preventScroll: true });
       const msg = intent.memberId
         ? `Donation intent for ${formatAmount(intent.amount)} saved and tracked in your account. No payment was collected.`
-        : `Donation intent for ${formatAmount(intent.amount)} saved locally. ${intent.email ? 'A thank-you email would be sent in a future system.' : 'No payment was collected.'}`;
+        : intent.email
+          ? `Donation intent for ${formatAmount(intent.amount)} saved locally. No payment was collected. Your email is recorded locally for a possible future thank-you note; no email was sent.`
+          : `Donation intent for ${formatAmount(intent.amount)} saved locally. No payment was collected.`;
       announce(msg);
     }
   }
@@ -251,7 +253,7 @@
 
     if (!member && !email) {
       if (errorBox) {
-        errorBox.textContent = 'Please provide an email so a thank-you message can be sent, or sign the pledge to track donations in your account.';
+        errorBox.textContent = 'Please provide an email so a future thank-you note can be recorded locally, or sign the pledge to track donations in your account.';
         errorBox.hidden = false;
       }
       if (emailInput) emailInput.focus();
@@ -351,7 +353,7 @@
       hideReceipt();
       resetClearButton();
       updateStatus();
-      announce(member ? 'Your account donation intents were cleared from this browser.' : 'Saved guest donation intents were cleared from this browser.');
+      announce(member ? 'Donation intents for your account were cleared from this browser.' : 'Saved guest donation intents were cleared from this browser.');
     });
   }
 

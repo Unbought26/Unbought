@@ -407,7 +407,7 @@
       const labelNode = element.querySelector('[data-auth-label]') || element;
       labelNode.textContent = label;
       element.setAttribute('href', href);
-      element.setAttribute('aria-label', signedIn ? 'Go to your dashboard' : 'Take the pledge');
+      element.setAttribute('aria-label', label);
     });
 
     // Members do not need the pledge page, so retire pledge-only nav links.
@@ -426,7 +426,7 @@
 
     if (topButton) {
       const labelNode = topButton.querySelector('[data-auth-label]') || topButton;
-      labelNode.textContent = signedIn ? 'Go to Dashboard' : 'Sign in';
+      labelNode.textContent = signedIn ? 'Dashboard' : 'Sign in';
     }
     // An existing local account signs in through the pop-up; no account yet
     // means the pledge form is the account setup.
@@ -1082,8 +1082,10 @@
     card.dataset.listingId = listing.id;
     if (listing.isUser) card.classList.add('is-user');
 
-    const isRequested = state.requests.some((request) => request.listingId === listing.id);
-    if (isRequested) card.classList.add('is-requested');
+    const matchingRequests = state.requests.filter((request) => request.listingId === listing.id);
+    const hasMutualRequest = matchingRequests.some((request) => request.type !== 'nonmember_purchase');
+    const hasPurchaseIntent = matchingRequests.some((request) => request.type === 'nonmember_purchase');
+    if (hasMutualRequest || hasPurchaseIntent) card.classList.add('is-requested');
 
     const badges = createEl('div', 'listing-badges');
     addBadge(badges, 'badge--pillar', PILLARS[listing.pillar].short);
@@ -1132,7 +1134,11 @@
     const note = createEl(
       'p',
       'listing-note',
-      isRequested ? 'Request saved locally · thank you' : listing.note || 'Peer offer · consent first'
+      hasMutualRequest
+        ? 'Request saved locally · consent first'
+        : hasPurchaseIntent
+          ? 'Purchase intent recorded locally · no payment processed'
+          : listing.note || 'Peer offer · consent first'
     );
     note.prepend(createIcon('check'));
     actions.appendChild(note);
@@ -1141,16 +1147,23 @@
     requestButton.type = 'button';
     requestButton.dataset.requestListing = listing.id;
 
-    if (isRequested) {
+    if (hasMutualRequest) {
       requestButton.classList.add('button--ghost');
       requestButton.disabled = true;
       requestButton.append(createIcon('check'), document.createTextNode('Request recorded'));
       requestButton.setAttribute('aria-label', `Request recorded: ${listing.title}`);
     } else if (!isMember()) {
-      requestButton.classList.add('button--outline');
-      requestButton.textContent = 'Buy as non-member';
-      requestButton.dataset.requestMode = 'purchase';
-      requestButton.setAttribute('aria-label', `Buy ${listing.title} as a non-member (supports severance fund)`);
+      if (hasPurchaseIntent) {
+        requestButton.classList.add('button--ghost');
+        requestButton.disabled = true;
+        requestButton.append(createIcon('check'), document.createTextNode('Purchase intent recorded'));
+        requestButton.setAttribute('aria-label', `Purchase intent recorded locally for ${listing.title}`);
+      } else {
+        requestButton.classList.add('button--outline');
+        requestButton.textContent = 'Buy as non-member';
+        requestButton.dataset.requestMode = 'purchase';
+        requestButton.setAttribute('aria-label', `Buy ${listing.title} as a non-member (supports severance fund)`);
+      }
     } else {
       requestButton.dataset.requestMode = 'mutual';
       requestButton.classList.add('button--outline');
@@ -1479,11 +1492,11 @@
     const card = createEl('section', 'account-card');
     const head = createEl('div', 'account-head');
     head.appendChild(createEl('p', 'eyebrow', signedIn ? 'Your account' : 'Participation & severance'));
-    head.appendChild(createEl('h3', '', signedIn ? 'Contributions, work, and stock' : 'Members join by pledge; non-members may buy to support the severance fund'));
+    head.appendChild(createEl('h3', '', signedIn ? 'Contributions, work, and stock' : 'Members join by pledge; non-members may record purchase intents'));
     card.appendChild(head);
 
     if (!signedIn) {
-      const intro = createEl('p', '', 'Anyone can browse. To participate in the commons (post offers/needs, request mutual-aid connections, and manage your track), sign the Unbought Pledge to become a member. People who do not take the pledge can buy goods and services for money in this prototype; proceeds are recorded for the severance fund.');
+      const intro = createEl('p', '', 'Anyone can browse. To participate in the commons (post offers/needs, request mutual-aid connections, and manage your track), sign the Unbought Pledge to become a member. People who do not take the pledge can record a purchase intent for goods or services in this prototype; the amount is tracked locally for the severance fund and no real payment is processed.');
       card.appendChild(intro);
     } else {
       const meta = createEl('p', 'account-meta', `${state.pledge.name} · ${state.pledge.location || 'Location not shared'} · Member ID ${state.pledge.memberId}`);
@@ -1496,9 +1509,9 @@
       ['Work logged', `${laborHours.toLocaleString()} hr · ${formatMoney(laborValue)} stock value`],
       ['Volunteer roles offered', String(getMemberVolunteerInterests().length)],
       ['Your stock value (prototype)', formatMoney(totalStock)],
-      ['Severance fund (all non-member purchases)', `${formatMoney(severance.balance)} · ${severance.count} recorded`]
+      ['Severance fund (non-member purchase intents)', `${formatMoney(severance.balance)} · ${severance.count} recorded`]
     ] : [
-      ['Severance fund (non-member purchases)', formatMoney(severance.balance)],
+      ['Severance fund (non-member purchase intents)', formatMoney(severance.balance)],
       ['Recorded non-member purchase intents', String(severance.count)],
       ['Member benefit', 'Mutual-aid access by pledge (no purchase)'],
       ['Stock model', 'Donations and logged work hours create stock value for members']
@@ -1511,7 +1524,7 @@
     });
     card.appendChild(stats);
 
-    const model = createEl('p', 'account-note', 'Prototype model (DB-ready, local only): every donation or logged hour gives stock value in the company/community enterprise. Hours are valued at the average hourly wage for your profession in your state/region (enter rate now; future system may auto-calculate). Non-members who contribute through purchases or other recorded contributions may be eligible for a severance share based on contribution percentage; no payouts are made in this prototype.');
+    const model = createEl('p', 'account-note', 'Prototype model (local only): every donation intent or logged hour gives stock value in the commons. Hours are valued at the average hourly wage you enter for your profession and state or region; a future system may calculate this automatically. Non-members who record contributions may be eligible for a severance share based on contribution percentage; no payouts are made and nothing is transmitted in this prototype.');
     card.appendChild(model);
 
     if (signedIn) {
@@ -1879,7 +1892,7 @@
     const m = state.pledge;
     const e = escapeHtml;
     const notice = state.settings && state.settings.showPrototypeNotices
-      ? `<p class="prototype-note">Prototype: account details and your local username/password are stored only on this device. There is no real authentication or server, and nothing is transmitted.</p>`
+      ? `<p class="prototype-note">Prototype: account details, your username, and a salted password hash are stored only on this device. There is no real authentication or server, and nothing is transmitted.</p>`
       : '';
     panel.innerHTML = `<section class="account-card">
       <p class="eyebrow">Account</p>
@@ -2286,10 +2299,10 @@
       report.restrictionStart = now.toISOString();
       report.restrictionEnd = new Date(now.getTime() + (days * 86400000)).toISOString();
       report.status = 'restriction_active';
-      announce(`Case resolved guilty. Reflection period set to ${days} days.`);
+      announce(`Member found guilty. Reflection period set to ${days} days.`);
     } else {
       report.status = 'not_guilty';
-      announce('Case resolved not guilty. No restriction applied.');
+      announce('Member found not guilty. No restriction applied.');
     }
     report.resolutionAt = now.toISOString();
     saveState();
@@ -2447,7 +2460,7 @@
     const response = report.response;
     const media = response && Array.isArray(response.media) ? response.media : [];
     let html = `<div class="case-file">
-      <p class="case-file-label">Case file · visible to every member</p>
+      <p class="case-file-label">Case file · stored in this browser only</p>
       <dl class="case-file-meta">
         <div><dt>Report type</dt><dd>${e(report.typeLabel || report.type)}</dd></div>
         <div><dt>Filed by</dt><dd>${e(report.reporterName || 'Member')}${report.reporterMemberId ? ` · ${e(report.reporterMemberId)}` : ''}</dd></div>
@@ -2471,7 +2484,9 @@
         html += `<p class="account-note">No multimedia evidence was attached.</p>`;
       }
     } else {
-      html += `<p class="account-note">No response submitted yet. The reported member may still plead and add evidence during the response period.</p>`;
+      html += `<p class="account-note">${report.status === 'response_period'
+        ? 'No response submitted yet. The reported member may still plead and add evidence during the response period.'
+        : 'No response was submitted in this local record.'}</p>`;
     }
     return `${html}</div>`;
   }
@@ -2488,8 +2503,8 @@
       <form class="account-form comment-form" data-comment-form data-id="${e(report.id)}">
         <div class="field">
           <label for="comment-${e(domId(report.id))}">Add a comment <span class="required-mark" aria-hidden="true">*</span></label>
-          <textarea id="comment-${e(domId(report.id))}" name="text" rows="2" maxlength="800" required placeholder="Share your view on this matter. Named and visible to other members."></textarea>
-          <p class="field-hint">Comments are named and visible to all members. Up to 800 characters.</p>
+          <textarea id="comment-${e(domId(report.id))}" name="text" rows="2" maxlength="800" required placeholder="Share your view on this matter. Recorded locally with your name."></textarea>
+          <p class="field-hint">Comments are named and stored in this browser only. Up to 800 characters.</p>
         </div>
         <button type="submit" class="button button--outline button--small">Post comment</button>
       </form>
@@ -2507,7 +2522,7 @@
       <div class="field">
         <label for="response-explanation-${id}">2. Explain why <span class="optional">(optional)</span></label>
         <textarea id="response-explanation-${id}" name="explanation" rows="4" maxlength="2000" placeholder="Tell the board your side of the story."></textarea>
-        <p class="field-hint">Up to 2000 characters. Other members can read this with your plea.</p>
+        <p class="field-hint">Up to 2000 characters. Stored with your plea in this browser only.</p>
       </div>
       <p class="account-note"><strong>3. Evidence</strong> — add links to video, audio, images, or documents. Leave blank if you have none.</p>
       ${[1, 2, 3].map((i) => `<div class="media-row">
@@ -2583,7 +2598,7 @@
         <p class="account-note">Filed under ${e(member.name)} (member ID ${e(member.memberId)}). Reports are named; anonymous reports are not accepted.</p>
         <form class="account-form report-form" data-report-form>
           <div class="field">
-            <label for="report-type">Type of action being reported <span class="required-mark" aria-hidden="true">*</span></label>
+            <label for="report-type">What are you reporting? <span class="required-mark" aria-hidden="true">*</span></label>
             <select id="report-type" name="type" required>
               <option value="">Choose a type…</option>
               <optgroup label="Reviewed by members (not a crime)">
@@ -2637,7 +2652,7 @@
     html += `</div>`;
 
     html += `<div class="account-block"><h4>Member review board · open cases</h4>
-      <p class="account-note">Each case opens with a ${RESPONSE_DAYS}-day response period so the reported member can gather evidence and plead. After that, voting is open to all members for ${VOTING_DAYS} days—whoever votes counts. Vote on guilt; if guilty, on the reflection period (30, 90, or 180 days); and always explain why. Every member's reason, the full case file, and all comments are visible here so voters have all the information.</p>`;
+      <p class="account-note">Each case opens with a ${RESPONSE_DAYS}-day response period so the reported member can gather evidence and plead. After that, voting is open for ${VOTING_DAYS} days—every vote counts. Vote guilty or not guilty; if guilty, choose a reflection period (30, 90, or 180 days), and always explain why. The full case file, votes, reasons, and comments are stored in this browser only for this local prototype.</p>`;
     if (!openReports.length) {
       html += `<p class="account-note">No cases are open for review right now.</p>`;
     } else {
@@ -2672,8 +2687,8 @@
                   </fieldset>
                   <div class="field">
                     <label for="vote-reason-${e(domId(report.id))}">3. Why are you voting this way? <span class="required-mark" aria-hidden="true">*</span></label>
-                    <textarea id="vote-reason-${e(domId(report.id))}" name="reason" rows="3" maxlength="600" required placeholder="Explain your reasoning. Other members can see this with your vote."></textarea>
-                    <p class="field-hint">Your reason is recorded with your vote and shown to other members. Up to 600 characters.</p>
+                    <textarea id="vote-reason-${e(domId(report.id))}" name="reason" rows="3" maxlength="600" required placeholder="Explain your reasoning. Stored locally with your vote."></textarea>
+                    <p class="field-hint">Your reason is recorded with your vote in this browser only. Up to 600 characters.</p>
                   </div>
                   <button type="submit" class="button button--primary button--small">Submit vote and reason</button>
                 </form>
@@ -2755,13 +2770,14 @@
 
       if (button.dataset.action === 'toggle-step') {
         if (!isMember() || report.status !== 'restriction_active') return;
-        const step = button.dataset.step;
-        if (!TREATMENT_STEPS.some((item) => item.key === step)) return;
+        const stepKey = button.dataset.step;
+        const step = TREATMENT_STEPS.find((item) => item.key === stepKey);
+        if (!step) return;
         report.treatmentSteps = report.treatmentSteps || {};
-        report.treatmentSteps[step] = !report.treatmentSteps[step];
+        report.treatmentSteps[stepKey] = !report.treatmentSteps[stepKey];
         saveState();
         renderAccountability();
-        announce(`${report.treatmentSteps[step] ? 'Completed' : 'Marked incomplete'}: ${step}.`);
+        announce(`${report.treatmentSteps[stepKey] ? 'Completed' : 'Marked incomplete'}: ${step.label}.`);
       } else if (button.dataset.action === 'complete-period') {
         if (!isMember() || report.status !== 'restriction_active') return;
         if (!TREATMENT_STEPS.every((step) => Boolean((report.treatmentSteps || {})[step.key]))) return;
@@ -2860,13 +2876,13 @@
         : ' Your membership is active. Choose and manage the track that fits this season of your life.';
       message.textContent = `Signed in as ${state.pledge.name}.${trackText}`;
       if (link) {
-        link.textContent = 'Go to Dashboard';
+        link.textContent = 'Dashboard';
         link.setAttribute('href', 'dashboard.html');
       }
     } else {
       message.textContent = 'You can browse labor, goods, and tracks. Sign the Unbought Pledge to become a member and participate—post offers, request connections, and manage your track and messages.';
       if (link) {
-        link.textContent = 'Take the pledge';
+        link.textContent = 'Take the Pledge';
         link.setAttribute('href', 'pledge.html');
       }
     }
@@ -3056,7 +3072,7 @@
       withdraw.addEventListener('click', () => {
         showConfirm({
           title: 'Withdraw your membership?',
-          message: 'Your pledge, membership, and local username/password will be removed from this browser. You can still browse offers, but you will need to sign the pledge again to post, request, or manage your track. Your saved track details may remain on this device.',
+          message: 'Your membership, username, and salted password hash will be removed from this browser. You can still browse offers, but you will need to sign the pledge again to post, request, or manage your track. Your saved track details may remain on this device.',
           confirmLabel: 'Withdraw membership',
           tone: 'danger',
           onConfirm: () => {
@@ -3355,13 +3371,14 @@
         </fieldset>
         <div class="form-row">
           <div class="field">
-            <label for="observer-cadence">How often would you like to hear from the community?</label>
+            <label for="observer-cadence">How often would you like local reminders?</label>
             <select id="observer-cadence" name="cadence">
               <option value="rarely">Only major updates</option>
-              <option value="monthly">Monthly digest</option>
+              <option value="monthly">Monthly summary</option>
               <option value="events">When something is happening nearby</option>
-              <option value="quiet">Keep me quiet for now</option>
+              <option value="quiet">No reminders for now</option>
             </select>
+            <p class="field-hint">This preference is saved only in this browser; nothing is sent.</p>
           </div>
           <div class="field">
             <label for="observer-note">What brought you here? <span class="optional">(optional)</span></label>
@@ -3876,7 +3893,7 @@
     if (title) title.textContent = currentRequestMode === 'purchase' ? 'Buy as a non-member' : 'Request with mutual consent';
     if (description) {
       description.textContent = currentRequestMode === 'purchase'
-        ? 'People without a pledge can buy goods and services for money in this prototype. Your payment intent is recorded locally and allocated to the severance fund (no real payment is processed). Members access the commons through mutual aid instead.'
+        ? 'In this prototype, people without a pledge can record a purchase intent for goods or services. The amount is recorded locally for the severance fund; no real payment is processed and nothing is transmitted. Members access the commons through mutual aid instead.'
         : 'A request starts a conversation. It does not create a sale, a deposit, or a guarantee that an item is still available.';
     }
 
@@ -3962,8 +3979,8 @@
         currentListingId = null;
         applyFilters();
         focusListingTitle(listing.id);
-        announce(`Purchase intent recorded for ${listing.title}. ${amount.toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })} is allocated to the severance fund in this prototype.`);
-        showToast('Purchase intent recorded. Proceeds allocated to the severance fund (prototype).', false);
+        announce(`Purchase intent recorded for ${listing.title}. ${amount.toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })} is recorded locally for the severance fund in this prototype.`);
+        showToast('Purchase intent recorded locally for the severance fund. No payment was processed and nothing was transmitted.', false);
         return;
       }
 
@@ -4190,7 +4207,7 @@
     resetButton.addEventListener('click', () => {
       showConfirm({
         title: 'Demo Reset / Clear Local Data',
-        message: 'This removes your pledge signature, membership track, custom listings, requests, waiting-list entry, and donation intents from this browser. It cannot be undone.',
+        message: 'This removes your pledge and membership, account credentials, track, listings, requests, inquiries, donation intents, contributions, severance fund records, volunteer offers, reports and votes, messages, suggestions, waiting-list entry, and settings from this browser. It cannot be undone.',
         confirmLabel: 'Clear local data',
         tone: 'danger',
         onConfirm: () => {

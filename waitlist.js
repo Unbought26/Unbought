@@ -281,7 +281,9 @@
     button.addEventListener('click', () => {
       const value = button.dataset.waitlistInterest;
       openWaitlistDialog({ interest: value, edit: true, fill: false });
-      setStatus('Added to the form. Finish your details to join the waiting list.');
+      setStatus(value === 'land'
+        ? 'Added to the form. Finish your details to record your land inquiry locally.'
+        : 'Added to the form. Finish your details to join the waiting list.');
     });
   });
 
