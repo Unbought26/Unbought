@@ -55,7 +55,7 @@
        ============================================================ -->
   <header class="site-header" id="site-header">
     <div class="container header-inner">
-      <a class="brand" href="index.html" aria-label="Unbought — home">
+      <a class="brand" href="index.html#top" aria-label="Unbought — public home">
         <img src="assets/logo.png" alt="Unbought Emblem" width="48" height="48">
         <span class="brand-text">
           <span class="brand-name">Unbought</span>
@@ -71,15 +71,12 @@
 
       <nav class="primary-nav" id="primary-nav" aria-label="Primary">
         <ul class="nav-list">
-          <li><a href="index.html">Home</a></li>
-          <li><a href="index.html#dashboard">Dashboard</a></li>
-          <li><a href="index.html#newsboard">Newsboard</a></li>
+          <li><a href="index.html">How It Works</a></li>
           <li><a href="freelabor.html">Free Labor</a></li>
           <li><a href="freestuff.html">Free Stuff</a></li>
-          <li><a href="future.html" aria-current="page">What’s to Come</a></li>
-          <li><a href="index.html#volunteers">Volunteers</a></li>
           <li><a href="donate.html">Donate</a></li>
-          <li><a class="nav-cta" href="#waitlist">Join the Waiting List</a></li>
+          <li><a href="future.html" aria-current="page">What’s to Come</a></li>
+          <li><a class="nav-cta" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span></a></li>
         </ul>
       </nav>
     </div>
@@ -184,7 +181,7 @@
               <li>Free goods directory and materials policy</li>
               <li>Pledge, tracks, and Care Circle governance</li>
               <li><strong>Phase 1 minimum: 1 hour per week</strong> (no housing offered yet)</li>
-              <li><a href="index.html#pledge">See what signing the pledge means</a></li>
+              <li><a href="pledge.html">See what signing the pledge means</a></li>
             </ul>
             <a class="text-link" href="freelabor.html">Browse free labor <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
           </li>
@@ -547,6 +544,44 @@
     </section>
 
     <!-- ============================================================
+         SUPPORT THE PLAN — NON-MEMBERS WELCOME
+         ============================================================ -->
+    <section class="section section--tint support-section" id="support" aria-labelledby="support-title">
+      <div class="container">
+        <div class="section-head section-head--split">
+          <div>
+            <p class="eyebrow">Support the plan</p>
+            <h2 id="support-title">You can help without taking the pledge.</h2>
+          </div>
+          <p class="section-head-aside">The pledge is how members join. Donations are open to everyone. If you believe in where this is going but are not ready to pledge, you can still help fund the trust, the website, and the commons.</p>
+        </div>
+
+        <div class="support-grid">
+          <div class="support-copy">
+            <ul class="support-points">
+              <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg><span><strong>No membership needed.</strong> Anyone can leave a donation intent on the donation page.</span></li>
+              <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg><span><strong>Non-members leave an email</strong> so we can thank you if this becomes a real organization.</span></li>
+              <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg><span><strong>No payment is collected</strong> and nothing is transmitted. No tax receipt is issued in this prototype.</span></li>
+              <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg><span><strong>No influence over decisions.</strong> Giving does not buy a vote or a say in how the commons is run.</span></li>
+            </ul>
+            <div class="support-actions">
+              <a class="button button--primary" href="donate.html">Make a donation <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+              <a class="button button--outline" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span></a>
+              <button class="button button--outline" type="button" data-volunteer-trigger>Volunteer with us</button>
+            </div>
+          </div>
+
+          <aside class="support-card" aria-labelledby="support-card-title">
+            <span class="badge badge--amber">No strings attached</span>
+            <h3 id="support-card-title">Why donations matter now</h3>
+            <p>Phase 1 is pending and in progress. Gifts pay for legal and trust formation, land research, hosting, and the small operational costs of keeping an open commons alive. Members build the labor and goods; donors help build the container it all sits in.</p>
+            <p class="support-card-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> This is a planning-stage prototype. Your intent stays in this browser and nothing is transmitted.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
          CLOSING CALL TO ACTION
          ============================================================ -->
     <section class="section closing-cta" id="take-action" aria-labelledby="cta-title">
@@ -556,9 +591,10 @@
           <h2 id="cta-title">Help build what comes next.</h2>
           <p>No bosses. No gatekeeping. No currency. Sign the Unbought Pledge, join the waiting list, and bring the skill, land, or time that this next phase needs.</p>
           <div class="closing-cta-actions">
-            <a class="button button--amber" href="index.html#pledge">Watch &amp; Sign the Unbought Pledge <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+            <a class="button button--amber" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span> <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
             <a class="button button--outline" href="#waitlist">Join the Waiting List</a>
             <a class="button button--outline" href="donate.html">Donate to the Trust</a>
+            <button class="button button--outline" type="button" data-volunteer-trigger>Volunteer with us</button>
           </div>
         </div>
         <aside class="closing-cta-card" aria-labelledby="cta-fund-title">
@@ -583,7 +619,7 @@
   <footer class="site-footer" id="footer">
     <div class="container footer-main">
       <div class="footer-brand">
-        <a class="brand brand--footer" href="index.html" aria-label="Unbought — home">
+        <a class="brand brand--footer" href="index.html#top" aria-label="Unbought — public home">
           <img src="assets/logo.png" alt="Unbought Emblem" width="56" height="56">
           <span class="brand-text">
             <span class="brand-name">Unbought</span>
@@ -600,7 +636,7 @@
           <ul>
             <li><a href="index.html">Home</a></li>
             <li><a href="index.html#how-it-works">How It Works</a></li>
-            <li><a href="index.html#pledge">The Pledge</a></li>
+            <li data-pledge-nav><a href="pledge.html">The Pledge</a></li>
             <li><a href="index.html#why-unbought">Why Unbought</a></li>
             <li><a href="freelabor.html">Free Labor</a></li>
             <li><a href="freestuff.html">Free Stuff</a></li>
@@ -621,7 +657,7 @@
           <h2>Transparency</h2>
           <ul>
             <li><a href="index.html#newsboard">Newsboard</a></li>
-            <li><a href="index.html#pledge">Five commitments</a></li>
+            <li data-pledge-nav><a href="pledge.html">Five commitments</a></li>
             <li><a href="freelabor.html#care-circle">Anti-bias review</a></li>
             <li><a href="#land">Phase 3 status</a></li>
             <li><a href="donate.html">Donations &amp; trust</a></li>

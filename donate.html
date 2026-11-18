@@ -43,7 +43,7 @@
 
   <header class="site-header" id="site-header">
     <div class="container header-inner">
-      <a class="brand" href="index.html#top" aria-label="Unbought — back to the home page">
+      <a class="brand" href="index.html#top" aria-label="Unbought — public home">
         <img src="assets/logo.png" alt="Unbought Emblem" width="48" height="48">
         <span class="brand-text">
           <span class="brand-name">Unbought</span>
@@ -59,15 +59,12 @@
 
       <nav class="primary-nav" id="primary-nav" aria-label="Primary">
         <ul class="nav-list">
-          <li><a href="index.html">Home</a></li>
-          <li><a href="index.html#dashboard">Dashboard</a></li>
-          <li><a href="index.html#newsboard">Newsboard</a></li>
+          <li><a href="index.html">How It Works</a></li>
           <li><a href="freelabor.html">Free Labor</a></li>
           <li><a href="freestuff.html">Free Stuff</a></li>
-          <li><a href="future.html">What’s to Come</a></li>
-          <li><a href="index.html#volunteers">Volunteers</a></li>
           <li><a href="donate.html" aria-current="page">Donate</a></li>
-          <li><a class="nav-cta" href="index.html#pledge">Take the Pledge</a></li>
+          <li><a href="future.html">What’s to Come</a></li>
+          <li><a class="nav-cta" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span></a></li>
         </ul>
       </nav>
     </div>
@@ -311,7 +308,7 @@
           <h2 id="donate-cta-title">Money is not the only way to fund the commons.</h2>
           <p>Share a skill, teach a neighbor, post a free good, or join the Care Circle. A trust needs money; a community needs presence.</p>
           <div class="closing-cta-actions">
-            <a class="button button--amber" href="index.html#pledge">Take the Unbought Pledge <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+            <a class="button button--amber" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span> <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
             <a class="button button--outline" href="index.html#services">Browse services &amp; goods</a>
           </div>
         </div>
@@ -328,7 +325,7 @@
   <footer class="site-footer" id="footer">
     <div class="container footer-main">
       <div class="footer-brand">
-        <a class="brand brand--footer" href="index.html#top" aria-label="Unbought — back to the home page">
+        <a class="brand brand--footer" href="index.html#top" aria-label="Unbought — public home">
           <img src="assets/logo.png" alt="Unbought Emblem" width="56" height="56">
           <span class="brand-text">
             <span class="brand-name">Unbought</span>
@@ -345,7 +342,7 @@
           <ul>
             <li><a href="index.html">Home</a></li>
             <li><a href="index.html#how-it-works">How It Works</a></li>
-            <li><a href="index.html#pledge">The Pledge</a></li>
+            <li data-pledge-nav><a href="pledge.html">The Pledge</a></li>
             <li><a href="index.html#why-unbought">Why Unbought</a></li>
             <li><a href="freelabor.html">Free Labor</a></li>
             <li><a href="freestuff.html">Free Stuff</a></li>
@@ -370,7 +367,7 @@
             <li><a href="#accountability">No-influence policy</a></li>
             <li><a href="future.html#land">Phase 3 status</a></li>
             <li><a href="index.html#accessibility">Accessibility Statement</a></li>
-            <li><a href="index.html#pledge">Five commitments</a></li>
+            <li data-pledge-nav><a href="pledge.html">Five commitments</a></li>
           </ul>
         </div>
       </nav>

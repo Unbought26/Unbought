@@ -96,6 +96,11 @@ body.dialog-open {
   overflow: hidden;
 }
 
+/* The hidden attribute always wins, even on elements with a display rule. */
+[hidden] {
+  display: none !important;
+}
+
 img,
 svg,
 video {
@@ -1717,6 +1722,55 @@ em {
   background: rgba(255, 255, 255, 0.055);
 }
 
+.age-note {
+  margin: -0.2rem 0 0;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgba(217, 155, 38, 0.45);
+  border-radius: var(--radius-sm);
+  background: rgba(217, 155, 38, 0.12);
+  color: #F7E6C4;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+.age-note strong { color: var(--amber-light); }
+
+.pledge-account-fields {
+  display: grid;
+  gap: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+.pledge-account-fields .eyebrow { margin-bottom: -0.3rem; color: var(--amber-light); }
+.password-note {
+  margin: -0.2rem 0 0;
+  color: var(--on-blue);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.signin-form {
+  display: grid;
+  gap: 1rem;
+}
+.signin-form .form-error { margin: -0.3rem 0 0; }
+
+.pledge-privacy-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--on-blue);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+.pledge-privacy-note .icon {
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.15rem;
+  flex: none;
+  color: var(--amber-light);
+}
+
 .signed-banner {
   display: flex;
   align-items: center;
@@ -3225,6 +3279,71 @@ em {
 .newsboard-connect { display: flex; align-items: flex-start; gap: 0.7rem; margin-top: 1.2rem; padding: 1rem 1.15rem; border: 1px solid #E3C583; border-radius: var(--radius); background: #FBFCFE; }
 .newsboard-connect .icon { width: 1.3rem; height: 1.3rem; margin-top: 0.1rem; flex: none; color: var(--amber-deep); }
 .newsboard-connect p { margin: 0; color: var(--amber-deep); font-size: 0.85rem; line-height: 1.6; }
+
+/* Dedicated pledge / sign-in page */
+.pledge-intro { padding-block: clamp(3rem, 6vw, 5rem); background: linear-gradient(160deg, var(--blue-deeper), var(--blue) 70%); color: #fff; }
+.pledge-intro-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: clamp(1.5rem, 4vw, 3.5rem); align-items: start; }
+.pledge-intro h1 { margin: 0.35rem 0 0.9rem; font-size: clamp(2.6rem, 6vw, 4.5rem); line-height: 1; letter-spacing: -0.04em; }
+.pledge-intro-lede { max-width: 62ch; margin: 0 0 1rem; color: var(--on-blue); font-size: 1.05rem; line-height: 1.7; }
+.pledge-intro-note { display: flex; align-items: flex-start; gap: 0.5rem; max-width: 62ch; margin: 0; color: var(--on-blue); font-size: 0.85rem; line-height: 1.6; }
+.pledge-intro-note .icon { width: 1.15rem; height: 1.15rem; margin-top: 0.15rem; flex: none; color: var(--amber-light); }
+.pledge-signin-panel { padding: clamp(1.25rem, 3vw, 2rem); border: 1px solid rgba(255,255,255,0.22); border-radius: var(--radius-lg); background: rgba(255,255,255,0.08); box-shadow: 0 20px 50px rgba(8,18,46,0.28); backdrop-filter: blur(4px); }
+.pledge-signin-panel h2 { margin: 0.3rem 0 0.6rem; color: #fff; font-size: 1.9rem; }
+.pledge-signin-panel p { margin: 0 0 0.9rem; color: var(--on-blue); font-size: 0.92rem; line-height: 1.65; }
+.pledge-signin-panel .eyebrow { color: var(--amber-light); }
+.pledge-signin-panel .text-link { display: inline-flex; margin: 0.9rem 0; color: #fff; }
+.pledge-signin-panel .form-hint { margin-bottom: 0; color: var(--on-blue); font-size: 0.8rem; }
+.pledge-already-signed { padding-block: 1.25rem; background: var(--green-soft); }
+.pledge-already-signed .signed-banner { border-color: #B9DBCA; background: #fff; }
+.pledge-page .pledge-section { border-top: 1px solid var(--border); }
+
+/* How It Works page: short membership concept section */
+.membership-section { background: var(--blue-mist); }
+.membership-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: clamp(1.5rem, 4vw, 3rem); align-items: start; margin-top: 1.75rem; }
+.membership-summary, .membership-join { padding: clamp(1.25rem, 3vw, 2rem); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--card); box-shadow: var(--shadow-sm); }
+.membership-summary h3, .membership-join h3 { margin: 0 0 0.9rem; font-size: 1.35rem; }
+.membership-commitments { display: grid; gap: 0.75rem; margin: 0; padding-left: 1.4rem; color: var(--muted); }
+.membership-commitments li { line-height: 1.65; }
+.membership-commitments strong { color: var(--ink); }
+.membership-join .eyebrow { margin-top: 0; }
+.membership-join p { color: var(--muted); line-height: 1.7; }
+.membership-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin: 1.2rem 0 0.7rem; }
+.membership-join .form-hint { margin: 0; font-size: 0.8rem; }
+
+@media (max-width: 800px) {
+  .membership-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* What's to Come: support section for non-members */
+.support-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: clamp(1.5rem, 4vw, 3rem); align-items: start; margin-top: 1.5rem; }
+.support-points { display: grid; gap: 0.8rem; margin: 0; padding: 0; list-style: none; }
+.support-points li { display: flex; align-items: flex-start; gap: 0.6rem; color: var(--muted); line-height: 1.65; }
+.support-points .icon { width: 1.1rem; height: 1.1rem; margin-top: 0.25rem; flex: none; color: var(--green); }
+.support-points strong { color: var(--ink); }
+.support-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 1.4rem; }
+.support-card { padding: clamp(1.25rem, 3vw, 1.8rem); border: 1px solid var(--amber-light); border-radius: var(--radius-lg); background: var(--amber-soft); }
+.support-card h3 { margin: 0.8rem 0 0.6rem; font-size: 1.3rem; }
+.support-card p { margin: 0 0 0.9rem; color: var(--muted-dark); line-height: 1.7; }
+.support-card-note { display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0 !important; font-size: 0.85rem; color: var(--amber-deep) !important; }
+.support-card-note .icon { width: 1.05rem; height: 1.05rem; margin-top: 0.15rem; flex: none; }
+
+@media (max-width: 800px) {
+  .support-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Dashboard menu (member hub) */
+.dashboard-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem; margin-bottom: 0.9rem; }
+.dashboard-menu-item { display: flex; align-items: center; justify-content: center; gap: 0.5rem; min-height: 54px; padding: 0.7rem 0.9rem; border: 1px solid var(--border); border-radius: 12px; background: var(--card); color: var(--ink); font: inherit; font-size: 0.88rem; font-weight: 700; text-align: center; text-decoration: none; cursor: pointer; box-shadow: var(--shadow-sm); transition: border-color 0.16s var(--ease), background-color 0.16s var(--ease); }
+.dashboard-menu-item .icon { width: 1.15rem; height: 1.15rem; flex: none; color: var(--blue); }
+.dashboard-menu-item:hover { border-color: var(--blue); background: var(--blue-mist); }
+.dashboard-menu-item.is-active { border-color: var(--blue); background: var(--blue); color: #fff; box-shadow: 0 6px 18px rgba(30,58,138,0.22); }
+.dashboard-menu-item.is-active .icon { color: #fff; }
+.dashboard-menu-item[hidden] { display: none; }
+.dashboard-newsboard .newsboard-feed { margin-top: 1.25rem; }
+
+@media (max-width: 800px) {
+  .pledge-intro-grid { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* --------------------------------------------------------------------------
    14. Footer
@@ -5946,7 +6065,7 @@ em {
 
 .volunteer-join {
   display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
   margin-top: 1.5rem;
   padding: 1.5rem;
@@ -5971,6 +6090,20 @@ em {
   flex-wrap: wrap;
 }
 .volunteer-form-actions .form-hint { margin: 0; }
+
+/* Shared volunteer pop-up (built by app.js on all pages) */
+.dialog--volunteer { width: min(600px, calc(100vw - 2rem)); }
+.dialog form[hidden] { display: none; }
+.volunteer-guest-note {
+  margin: 0.25rem 0 0.4rem;
+  padding: 1rem;
+  border: 1px solid var(--amber-light);
+  border-radius: 12px;
+  background: var(--amber-soft);
+}
+.volunteer-guest-note p { margin: 0 0 0.9rem; color: var(--muted-dark); font-size: 0.9rem; line-height: 1.6; }
+.volunteer-guest-note strong { color: var(--amber-deep); }
+#volunteer-dialog-status { margin-top: 1rem; }
 
 @media (max-width: 900px) {
   .volunteer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

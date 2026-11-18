@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The Unbought Pledge. Read the five commitments and sign in by signing the pledge. This prototype stores your membership locally; nothing is transmitted.">
+  <meta name="theme-color" content="#1E3A8A">
+  <title>The Pledge — Unbought</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body class="pledge-page">
+
+  <!-- Accessible skip link: visible on keyboard focus -->
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- Global screen-reader announcements -->
+  <div id="live-region" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Visible toast; hidden from AT so the live region is the single announcement -->
+  <div id="toast" class="toast" aria-hidden="true" hidden></div>
+
+  <!-- Reusable line-icon sprite (no external icon dependency) -->
+  <svg class="svg-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="icon-hammer" viewBox="0 0 24 24"><path d="m14 7 3-3 3 3-3 3m-3-3-8 8m3-3 5 5M4 20l4-4"/></symbol>
+    <symbol id="icon-heart" viewBox="0 0 24 24"><path d="M20.8 5.6a5.5 5.5 0 0 0-7.8 0L12 6.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 22l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></symbol>
+    <symbol id="icon-leaf" viewBox="0 0 24 24"><path d="M20 4C10 4 4 9 4 17c0 1 .2 2 .5 3C13 20 20 14 20 4Z"/><path d="M4.5 19.5C7 14 11 10.5 16 9"/></symbol>
+    <symbol id="icon-book" viewBox="0 0 24 24"><path d="M3 5a3 3 0 0 1 3-2h6v18H6a3 3 0 0 1-3-3V5Zm18 0a3 3 0 0 0-3-2h-6v18h6a3 3 0 0 0 3-3V5Z"/></symbol>
+    <symbol id="icon-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6m2 4a5 5 0 0 1 3 4.6V21"/></symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="icon-basket" viewBox="0 0 24 24"><path d="M3 9h18l-2 11H5L3 9Zm4 0 3-6m7 6-3-6M8 13v3m4-3v3m4-3v3"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 8.8 8 11 4.6-2.2 8-6 8-11V5l-8-3Z"/><path d="m8.5 11.5 2.5 2.5 4.5-5"/></symbol>
+    <symbol id="icon-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9a7 7 0 0 1 11.6-2L20 12M4 12l2.3 5a7 7 0 0 0 11.6-2"/></symbol>
+  </svg>
+
+  <!-- ============================================================
+       HEADER
+       ============================================================ -->
+  <header class="site-header" id="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html#top" aria-label="Unbought — public home">
+        <img src="assets/logo.png" alt="Unbought Emblem" width="48" height="48">
+        <span class="brand-text">
+          <span class="brand-name">Unbought</span>
+          <span class="brand-tagline">Free Labor. Free Goods. Free Education. Free Land.</span>
+        </span>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+        <span class="sr-only">Open navigation menu</span>
+        <svg class="icon nav-toggle-icon-open" aria-hidden="true" focusable="false"><use href="#icon-menu"></use></svg>
+        <svg class="icon nav-toggle-icon-close" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+      </button>
+
+      <nav class="primary-nav" id="primary-nav" aria-label="Primary">
+        <ul class="nav-list">
+          <li><a href="index.html">How It Works</a></li>
+          <li><a href="freelabor.html">Free Labor</a></li>
+          <li><a href="freestuff.html">Free Stuff</a></li>
+          <li><a href="donate.html">Donate</a></li>
+          <li><a href="future.html">What’s to Come</a></li>
+          <li><a class="nav-cta" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span></a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ============================================================
+         PLEDGE INTRO + SIGN IN
+         ============================================================ -->
+    <section class="section pledge-intro" id="top" aria-labelledby="pledge-page-title">
+      <div class="container pledge-intro-grid">
+        <div>
+          <p class="eyebrow"><span class="badge badge--amber">Membership</span> The same door, two names</p>
+          <h1 id="pledge-page-title">The pledge.</h1>
+          <p class="pledge-intro-lede">“The pledge” and “take the pledge” are the same thing. Read the five commitments below, then set up a username and password and sign. That creates your local membership and opens your dashboard.</p>
+          <p class="pledge-intro-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Prototype: this is a local, browser-only account. Your username and password stay on this device—never on a server. Do not reuse a real password. Nothing is transmitted.</p>
+        </div>
+
+        <div class="pledge-signin-panel">
+          <p class="eyebrow">Already a member?</p>
+          <h2>Sign in</h2>
+          <p>If you already set up an account, use your username and password. New here? Signing the pledge below sets them up.</p>
+          <button class="button button--primary" id="signin-top" type="button">
+            <span data-auth-label>Sign in</span> <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg>
+          </button>
+          <a class="text-link" id="pledge-to-dashboard-link" href="dashboard.html" hidden>Go straight to your dashboard <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+          <p class="form-hint">Your account lives only in this browser. Nothing is transmitted.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SIGN IN WITH THE USERNAME/PASSWORD YOU SET UP
+         ============================================================ -->
+    <section class="section membership-section" id="signin-form-panel" hidden aria-labelledby="signin-form-title">
+      <div class="container membership-grid">
+        <div class="membership-summary">
+          <p class="eyebrow">Welcome back</p>
+          <h2 id="signin-form-title">Sign in to your commons account.</h2>
+          <p>Use the username and password you created when you signed the pledge. This account is stored only in this browser; it is a prototype, not a secure login.</p>
+          <p class="form-hint">Forgot your local details? There is no server to recover them from. You can clear this browser's demo data and sign the pledge again.</p>
+        </div>
+        <div class="membership-join">
+          <form class="signin-form" id="signin-form">
+            <div class="field">
+              <label for="signin-username">Username <span class="required-mark" aria-hidden="true">*</span></label>
+              <input type="text" id="signin-username" name="username" autocomplete="username" maxlength="40" required placeholder="Your username">
+            </div>
+            <div class="field">
+              <label for="signin-password">Password <span class="required-mark" aria-hidden="true">*</span></label>
+              <input type="password" id="signin-password" name="password" autocomplete="current-password" maxlength="200" required placeholder="Your password">
+            </div>
+            <p class="form-error" id="signin-error" role="alert" hidden></p>
+            <div class="form-actions form-actions--stack">
+              <button class="button button--primary" type="submit">Sign in <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></button>
+              <p class="form-hint">Nothing is transmitted. Demo only.</p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         ALREADY SIGNED IN
+         ============================================================ -->
+    <section class="pledge-already-signed" id="pledge-already-signed" hidden aria-label="You are signed in">
+      <div class="container">
+        <div class="signed-banner">
+          <span class="signed-icon" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span>
+          <div class="signed-copy">
+            <p class="signed-kicker">You are signed in</p>
+            <p class="signed-name" id="already-signed-name"></p>
+            <p class="signed-date">Your dashboard is your home now. The pledge is always here if you need to read it again.</p>
+          </div>
+          <a class="button button--primary button--small" href="dashboard.html">Open dashboard <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         THE FIVE COMMITMENTS
+         ============================================================ -->
+    <section class="section pledge-section" id="pledge" aria-labelledby="pledge-title">
+      <div class="container">
+        <div class="section-head section-head--split">
+          <div>
+            <p class="eyebrow">The Unbought Pledge</p>
+            <h2 id="pledge-title">A pledge you can hear, read, and sign.</h2>
+          </div>
+          <p class="section-head-aside">Watch the short film, read the five commitments in full, then add your name, addresses, phone number, and date of birth. Members must be 18 or older. Your details stay in this browser—not on a server, not for sale.</p>
+        </div>
+
+        <div class="pledge-grid">
+          <div class="media-column">
+            <div class="video-frame">
+              <video class="pledge-video" controls preload="metadata" poster="assets/pledge-poster.png" width="1280" height="720">
+                <source src="assets/unbought-pledge.mp4" type="video/mp4">
+                <track kind="captions" src="assets/unbought-pledge.vtt" srclang="en" label="English Subtitles" default>
+                Your browser does not support the video element. The full written pledge appears beside this film.
+              </video>
+            </div>
+            <div class="video-caption">
+              <span class="badge badge--soft">Placeholder reel</span>
+              <p>The pledge film is a placeholder in this prototype. The complete commitments are written beside it, and captions are enabled by default.</p>
+            </div>
+          </div>
+
+          <div class="commitments-card">
+            <div class="commitments-head">
+              <p class="eyebrow">Five core commitments</p>
+              <h3>What signing means</h3>
+            </div>
+            <ol class="commitments">
+              <li>
+                <span class="commitment-number" aria-hidden="true">1</span>
+                <div>
+                  <h4>I Reject Currency as a Measure of Human Worth</h4>
+                  <p>A person’s value is inherent, not earned through labor or wealth. Whether a neighbor is able-bodied or paralyzed, rich in skills or in need of food and shelter, they deserve dignity, safety, and care. I practice Ubuntu—“I am because we are”—knowing my well-being is bound to my community’s.</p>
+                </div>
+              </li>
+              <li>
+                <span class="commitment-number" aria-hidden="true">2</span>
+                <div>
+                  <h4>I Will Give Freely Without Keeping Score</h4>
+                  <p>I enter this space to build mutual self-reliance, not to extract profit. I will not keep a ledger of owed favors or hoard what the community can share.</p>
+                  <ul class="commitment-cases">
+                    <li><strong>If I can work or create:</strong> <span>I offer real, practical skills, labor, or mentorship freely, with no expectation of direct repayment.</span></li>
+                    <li><strong>If I provide goods:</strong> <span>I offer them freely, with no price tag, deposit, or swap requirement.</span></li>
+                    <li><strong>If a project needs materials:</strong> <span>I ask the person requesting the work to cover their exact receipt price when they cannot be found free on Unbought. I add no markup and take no profit, and the worker never has to front the cost.</span></li>
+                    <li><strong>If I cannot work</strong> <span>due to age, disability, illness, or capacity: I accept care without shame, knowing my presence and humanity are enough.</span></li>
+                  </ul>
+                </div>
+              </li>
+              <li>
+                <span class="commitment-number" aria-hidden="true">3</span>
+                <div>
+                  <h4>I Honor Consent and Personal Boundaries</h4>
+                  <p>This is a free, non-hierarchical society built on voluntary cooperation, not coercion. I respect bodily autonomy, time, energy, and boundaries. “No” is a complete sentence, and every exchange of labor, housing, or mentorship requires clear, ongoing mutual consent.</p>
+                </div>
+              </li>
+              <li>
+                <span class="commitment-number" aria-hidden="true">4</span>
+                <div>
+                  <h4>I Commit to Lifelong Learning and Collective Empowerment</h4>
+                  <p>Education is a birthright, not a commodity. If I hold knowledge or a trade, I share it openly. If I am learning, I approach mentorship with humility and dedication so I can pass those skills forward and help free my community from dependence on the market.</p>
+                </div>
+              </li>
+              <li>
+                <span class="commitment-number" aria-hidden="true">5</span>
+                <div>
+                  <h4>I Stand Against Exploitation and Gatekeeping</h4>
+                  <p>I will not use Unbought's commons, labor, goods, or land-trust resources to fuel outside businesses, hoard wealth, or exploit others. Members access the commons through mutual aid; non-member purchases support the severance fund. I hold myself and fellow members accountable through restorative dialogue, transparency, and shared social responsibility.</p>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="signature-card" id="signature-card">
+          <div class="signature-copy">
+            <p class="eyebrow">Membership &amp; account</p>
+            <h3>Sign the pledge to create your account.</h3>
+            <p>Signing the Unbought Pledge is how you join. You can browse labor and goods without an account, but posting, requesting, messaging, and managing your track require membership. For now this is saved in your browser; it is structured to move into a shared database later.</p>
+            <p class="phase-minimum-note"><strong>Phase 1 minimum:</strong> joining asks for a pledge of at least 1 hour per week. We cannot offer housing yet, so the ask is intentionally small. Members who cannot work are still welcome in the Care Circle with no labor obligation.</p>
+            <ul class="signature-notes">
+              <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Membership stored locally in this prototype</li>
+              <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-people"></use></svg> Manage your track, requests, and neighbor communication</li>
+              <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg> Withdraw membership at any time</li>
+            </ul>
+
+            <div class="signed-banner" id="signed-banner" hidden>
+              <span class="signed-icon" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span>
+              <div class="signed-copy">
+                <p class="signed-kicker">Membership active</p>
+                <p class="signed-name" id="signed-name"></p>
+                <p class="signed-date" id="signed-date"></p>
+              </div>
+              <button class="button button--ghost-light button--small" id="signout-account" type="button" hidden>Sign out</button>
+              <button class="button button--ghost-light button--small" id="withdraw-pledge" type="button">Withdraw membership</button>
+            </div>
+          </div>
+
+          <form class="pledge-form" id="pledge-form" aria-labelledby="pledge-form-title">
+            <h4 class="sr-only" id="pledge-form-title">Sign the Unbought Pledge</h4>
+            <p class="signature-declaration">“I have read this pledge and choose, of my own free will, to step outside the transactional mindset. I pledge my solidarity, my honesty, and my care to this community.”</p>
+            <div class="field field--on-blue field--check">
+              <label class="checkbox">
+                <input type="checkbox" id="pledge-agreement" name="agreement" required>
+                <span>I agree to the five commitments above and to practice consent, non-extraction, and unconditional care.</span>
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" id="pledge-free-atcost" name="freeAtCost" required>
+                <span>I agree to uphold the Unbought Pledge: labor and goods are free, and only exact material costs may change hands when supplies cannot be found free.</span>
+              </label>
+            </div>
+
+            <div class="form-row">
+              <div class="field field--on-blue">
+                <label for="pledge-full-name">Full name <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="pledge-full-name" name="fullName" autocomplete="name" maxlength="100" required placeholder="Your full name">
+              </div>
+              <div class="field field--on-blue">
+                <label for="pledge-name">Chosen name <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="pledge-name" name="chosenName" autocomplete="nickname" maxlength="60" required placeholder="What should we call you?">
+              </div>
+            </div>
+
+            <div class="field field--on-blue">
+              <label for="pledge-mailing">Mailing address <span class="required-mark" aria-hidden="true">*</span></label>
+              <textarea id="pledge-mailing" name="mailingAddress" rows="2" maxlength="240" autocomplete="street-address" required placeholder="Street, city, region, postal code"></textarea>
+            </div>
+
+            <div class="field field--on-blue field--check">
+              <label class="checkbox">
+                <input type="checkbox" id="pledge-same-address" name="sameAddress">
+                <span>My physical address is the same as my mailing address</span>
+              </label>
+            </div>
+
+            <div class="field field--on-blue" id="physical-address-field">
+              <label for="pledge-physical">Physical address <span class="required-mark" aria-hidden="true">*</span></label>
+              <textarea id="pledge-physical" name="physicalAddress" rows="2" maxlength="240" required placeholder="Where you live, if different from your mailing address"></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="field field--on-blue">
+                <label for="pledge-phone">Phone number <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="tel" id="pledge-phone" name="phone" autocomplete="tel" maxlength="40" required placeholder="A number where we can reach you">
+              </div>
+              <div class="field field--on-blue">
+                <label for="pledge-dob">Date of birth <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="date" id="pledge-dob" name="dob" autocomplete="bday" min="1900-01-01" required>
+              </div>
+            </div>
+
+            <p class="age-note" id="age-note"><strong>18 and over only.</strong> You must be 18 or older to sign the Unbought Pledge. If you are under 18, you can browse the commons freely and sign when you turn 18.</p>
+
+            <div class="form-row">
+              <div class="field field--on-blue">
+                <label for="pledge-location">General location <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="pledge-location" name="location" autocomplete="address-level2" maxlength="80" required placeholder="City, neighborhood, or “online”">
+              </div>
+              <div class="field field--on-blue">
+                <label for="pledge-note">What does Ubuntu mean to you? <span class="optional">(optional)</span></label>
+                <input type="text" id="pledge-note" name="note" maxlength="240" placeholder="A sentence you want to carry into the community.">
+              </div>
+            </div>
+
+            <div class="pledge-account-fields">
+              <p class="eyebrow">Set up your sign-in</p>
+              <div class="form-row">
+                <div class="field field--on-blue">
+                  <label for="pledge-username">Username <span class="required-mark" aria-hidden="true">*</span></label>
+                  <input type="text" id="pledge-username" name="username" autocomplete="username" maxlength="40" required placeholder="3–40 letters, numbers, . _ or -">
+                </div>
+                <div class="field field--on-blue">
+                  <label for="pledge-password">Password <span class="required-mark" aria-hidden="true">*</span></label>
+                  <input type="password" id="pledge-password" name="password" autocomplete="new-password" minlength="8" maxlength="200" required placeholder="At least 8 characters">
+                </div>
+              </div>
+              <div class="field field--on-blue">
+                <label for="pledge-password-confirm">Confirm password <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="password" id="pledge-password-confirm" name="passwordConfirm" autocomplete="new-password" maxlength="200" required placeholder="Repeat your password">
+              </div>
+              <p class="password-note">Do not reuse a real password. This prototype saves a local hash on this device only—there is no server, no recovery, and no real security.</p>
+            </div>
+
+            <p class="pledge-privacy-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Prototype: your name, addresses, phone number, date of birth, username, and password hash stay in this browser only. Nothing is transmitted, sold, or shared, and no real account is created.</p>
+
+            <p class="form-error" id="pledge-error" role="alert" hidden></p>
+
+            <div class="form-actions form-actions--stack">
+              <button class="button button--amber" type="submit">Sign pledge &amp; sign in <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></button>
+              <p class="form-hint">Your pledge creates your community membership in this prototype. Contact details are stored locally and structured for a future shared database. Nothing is transmitted.</p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="site-footer" id="footer">
+    <div class="container footer-main">
+      <div class="footer-brand">
+        <a class="brand brand--footer" href="index.html#top" aria-label="Unbought — public home">
+          <img src="assets/logo.png" alt="Unbought Emblem" width="56" height="56">
+          <span class="brand-text">
+            <span class="brand-name">Unbought</span>
+            <span class="brand-tagline">Built on Ubuntu &amp; Consent.</span>
+          </span>
+        </a>
+        <p class="footer-tagline">Free Labor. Free Goods. Free Education. Free Land.<br>Built on Ubuntu &amp; Consent.</p>
+        <p class="footer-mission">A consent-based, currency-free mutual aid society. Every person has inherent worth, whether or not they can work.</p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Footer">
+        <div>
+          <h2>Explore</h2>
+          <ul>
+            <li><a href="index.html#top">Home</a></li>
+            <li><a href="index.html#how-it-works">How It Works</a></li>
+            <li><a href="pledge.html" aria-current="page">The Pledge</a></li>
+            <li><a href="index.html#why-unbought">Why Unbought</a></li>
+            <li><a href="freelabor.html">Free Labor</a></li>
+            <li><a href="freestuff.html">Free Stuff</a></li>
+            <li><a href="donate.html">Donate</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Participate</h2>
+          <ul>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="index.html#tracks">Join &amp; Tracks</a></li>
+            <li><a href="index.html#volunteers">Volunteers</a></li>
+            <li><a href="future.html">What’s to Come</a></li>
+            <li><a href="future.html#waitlist">Waiting List</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Transparency</h2>
+          <ul>
+            <li><a href="index.html#newsboard">Newsboard</a></li>
+            <li><a href="pledge.html">Five commitments</a></li>
+            <li><a href="future.html#land">Phase 3 status</a></li>
+            <li><a href="donate.html">Donations &amp; trust</a></li>
+            <li><a href="index.html#accessibility">Accessibility Statement</a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+
+    <div class="container footer-utility">
+      <div class="footer-utility-copy">
+        <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
+        <p>Your pledge, track, listings, waiting-list entry, and donation intents stay in this browser.</p>
+      </div>
+      <button class="button button--ghost-light button--small" id="reset-demo" type="button">
+        <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>
+        Demo Reset / Clear Local Data
+      </button>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>© <span id="copyright-year">2026</span> Unbought. A community practice, not a product.</p>
+      <a class="footer-top-link" href="#top">Back to top <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+    </div>
+  </footer>
+
+  <!-- Generic accessible confirmation dialog (used by "Withdraw membership") -->
+  <dialog class="dialog dialog--small" id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+    <div class="dialog-shell">
+      <div class="dialog-top">
+        <p class="eyebrow">Please confirm</p>
+        <button class="icon-button" type="button" data-confirm-close aria-label="Close the confirmation dialog">
+          <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+        </button>
+      </div>
+      <div class="dialog-content">
+        <h2 id="confirm-title">Are you sure?</h2>
+        <p id="confirm-message"></p>
+        <div class="dialog-actions">
+          <button class="button button--ghost" type="button" id="confirm-cancel">Cancel</button>
+          <button class="button button--primary" type="button" id="confirm-accept">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+</body>
+</html>

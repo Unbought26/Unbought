@@ -27,6 +27,32 @@
   const STORAGE_KEY = 'unbought:v1';
   const SVG_NS = 'http://www.w3.org/2000/svg';
 
+  // Sample newsboard posts shared by the public site and the member dashboard.
+  // A blog service will replace this list in the live site.
+  const NEWS_POSTS = Object.freeze([
+    {
+      date: '2026-11-17',
+      label: 'Nov 17, 2026',
+      tag: 'Phase 1',
+      title: 'Phase 1 is taking shape',
+      body: 'The free labor and free goods directories are being built. The joining pledge asks for one hour a week while housing is still out of reach.'
+    },
+    {
+      date: '2026-11-17',
+      label: 'Nov 17, 2026',
+      tag: 'Phase 3',
+      title: 'Home donations keep your home for life',
+      body: 'We published how donating a house works: full lifetime access, your choice of when to move, and a real contribution in hours or taxes.'
+    },
+    {
+      date: '2026-11-17',
+      label: 'Nov 17, 2026',
+      tag: 'Community tools',
+      title: 'The member dashboard is ready to test',
+      body: 'Account, settings, the commons, messages, the review board, and a suggestion box are now in one place for pledged members to try locally.'
+    }
+  ]);
+
   const PILLARS = Object.freeze({
     building: {
       label: 'Building, Repair & Infrastructure',
@@ -306,6 +332,10 @@
   function createDefaultState() {
     return {
       pledge: null,
+      auth: {
+        credential: null,
+        session: { signedIn: false, signedInAt: null }
+      },
       track: null,
       trackDetails: {},
       listings: [],
@@ -329,8 +359,83 @@
     };
   }
 
+  function getCredential() {
+    return state.auth && state.auth.credential ? state.auth.credential : null;
+  }
+
+  function isSignedIn() {
+    return Boolean(state.auth && state.auth.session && state.auth.session.signedIn);
+  }
+
   function isMember() {
-    return Boolean(state.pledge && state.pledge.memberId);
+    return isSignedIn() && Boolean(state.pledge && state.pledge.memberId);
+  }
+
+  function normalizeUsername(value) {
+    return cleanString(value, 40).toLowerCase();
+  }
+
+  // Prototype-only local credential check. This is NOT real cryptography and
+  // must never be used for a live account system.
+  function hashPassword(password, salt) {
+    let hash = 2166136261;
+    const input = `${salt}:${password}`;
+    for (let i = 0; i < input.length; i += 1) {
+      hash ^= input.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16).padStart(8, '0');
+  }
+
+  function setSession(signedIn) {
+    if (!state.auth) state.auth = { credential: null, session: {} };
+    state.auth.session = {
+      signedIn: Boolean(signedIn),
+      signedInAt: signedIn ? new Date().toISOString() : null
+    };
+    saveState();
+  }
+
+  // The signed pledge is the sign-in. Members land on the dashboard; everyone
+  // else is invited to "Take the Pledge" on its dedicated page.
+  function renderAuthUi() {
+    const signedIn = isMember();
+    const href = signedIn ? 'dashboard.html' : 'pledge.html';
+    const label = signedIn ? 'Dashboard' : 'Take the Pledge';
+
+    document.querySelectorAll('[data-auth-cta]').forEach((element) => {
+      const labelNode = element.querySelector('[data-auth-label]') || element;
+      labelNode.textContent = label;
+      element.setAttribute('href', href);
+      element.setAttribute('aria-label', signedIn ? 'Go to your dashboard' : 'Take the pledge');
+    });
+
+    // Members do not need the pledge page, so retire pledge-only nav links.
+    document.querySelectorAll('[data-pledge-nav]').forEach((item) => {
+      item.hidden = signedIn;
+    });
+
+    const topButton = document.getElementById('signin-top');
+    const form = document.getElementById('pledge-form');
+    const signinPanel = document.getElementById('signin-form-panel');
+    const signedPanel = document.getElementById('pledge-already-signed');
+    const dashboardLink = document.getElementById('pledge-to-dashboard-link');
+    const alreadyName = document.getElementById('already-signed-name');
+    const signoutButton = document.getElementById('signout-account');
+    const hasCredential = Boolean(getCredential());
+
+    if (topButton) {
+      const labelNode = topButton.querySelector('[data-auth-label]') || topButton;
+      labelNode.textContent = signedIn ? 'Go to Dashboard' : 'Sign in';
+    }
+    // An existing local account signs in with username/password; no account yet
+    // means the pledge form is the account setup.
+    if (form) form.hidden = signedIn || hasCredential;
+    if (signinPanel) signinPanel.hidden = signedIn || !hasCredential;
+    if (signedPanel) signedPanel.hidden = !signedIn;
+    if (dashboardLink) dashboardLink.hidden = !signedIn;
+    if (signoutButton) signoutButton.hidden = !signedIn;
+    if (alreadyName && signedIn) alreadyName.textContent = `Signed in as ${state.pledge.name}`;
   }
 
   function formatMoney(value) {
@@ -412,7 +517,7 @@
   function requireMembership(message) {
     if (isMember()) return true;
     showToast(message || 'Sign the Unbought Pledge to become a member and participate.');
-    const pledgeLink = document.querySelector('a[href="#pledge"], a[href="index.html#pledge"]');
+    const pledgeLink = document.querySelector('a[data-auth-cta], a[href="pledge.html"]');
     if (pledgeLink) {
       pledgeLink.focus({ preventScroll: true });
     }
@@ -519,12 +624,40 @@
         fallback.pledge = {
           memberId: cleanString(raw.pledge.memberId, 100) || makeId('member'),
           name,
+          fullName: cleanString(raw.pledge.fullName, 100),
           location: cleanString(raw.pledge.location, 80),
+          mailingAddress: cleanString(raw.pledge.mailingAddress, 240),
+          physicalAddress: cleanString(raw.pledge.physicalAddress, 240),
+          phone: cleanString(raw.pledge.phone, 40),
+          dob: cleanString(raw.pledge.dob, 10),
           note: cleanString(raw.pledge.note, 240),
           signedAt,
           status: 'active'
         };
       }
+    }
+
+    const rawAuth = raw.auth && typeof raw.auth === 'object' ? raw.auth : null;
+    const rawCredential = rawAuth && rawAuth.credential && typeof rawAuth.credential === 'object'
+      ? rawAuth.credential
+      : null;
+    if (rawCredential) {
+      const username = normalizeUsername(rawCredential.username);
+      const salt = cleanString(rawCredential.salt, 40);
+      const passwordHash = cleanString(rawCredential.passwordHash, 16);
+      if (username && salt && passwordHash) {
+        fallback.auth.credential = { username, salt, passwordHash };
+      }
+    }
+    if (rawAuth && rawAuth.session && typeof rawAuth.session === 'object') {
+      fallback.auth.session = {
+        signedIn: Boolean(rawAuth.session.signedIn),
+        signedInAt: cleanString(rawAuth.session.signedInAt, 40) || null
+      };
+    }
+    if (!fallback.auth.credential && fallback.pledge) {
+      // Legacy local pledges predate usernames; keep them signed in.
+      fallback.auth.session = { signedIn: true, signedInAt: fallback.pledge.signedAt };
     }
 
     if (typeof raw.track === 'string' && hasOwn(TRACKS, raw.track)) {
@@ -1411,34 +1544,119 @@
     return (Array.isArray(state.volunteerInterests) ? state.volunteerInterests : []).filter((item) => item && item.memberId === state.pledge.memberId);
   }
 
+  // One shared pop-up form, built once from app.js so every page that loads
+  // this script can open it from a [data-volunteer-trigger] button.
+  function buildVolunteerDialog() {
+    if (document.getElementById('volunteer-dialog')) return;
+
+    const roleOptions = Object.entries(VOLUNTEER_ROLES)
+      .map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`)
+      .join('');
+
+    const dialog = document.createElement('dialog');
+    dialog.className = 'dialog dialog--volunteer';
+    dialog.id = 'volunteer-dialog';
+    dialog.setAttribute('aria-labelledby', 'volunteer-dialog-title');
+    dialog.setAttribute('aria-describedby', 'volunteer-dialog-intro');
+    dialog.innerHTML = `
+      <div class="dialog-shell">
+        <div class="dialog-top">
+          <p class="eyebrow">Offer your time</p>
+          <button class="icon-button" type="button" data-dialog-close aria-label="Close the volunteer form">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+          </button>
+        </div>
+        <div class="dialog-content">
+          <h2 id="volunteer-dialog-title">Join the operating team.</h2>
+          <p id="volunteer-dialog-intro">Tell us where you can help. In this prototype your offer is recorded in this browser only—nothing is sent to a coordinator and no real onboarding happens yet.</p>
+          <p class="volunteer-gate" id="volunteer-dialog-gate" data-volunteer-gate role="status"></p>
+          <div class="volunteer-guest-note" id="volunteer-guest-note" hidden>
+            <p><strong>Members only.</strong> Sign the Unbought Pledge to become a member before recording a volunteer offer. Browsing the roles is open to everyone.</p>
+            <a class="button button--primary button--small" href="pledge.html">Take the Pledge <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+          </div>
+          <form class="volunteer-form" id="volunteer-form">
+            <div class="field">
+              <label for="volunteer-name">Chosen name <span class="required-mark" aria-hidden="true">*</span></label>
+              <input type="text" id="volunteer-name" name="name" maxlength="60" autocomplete="nickname" placeholder="What should we call you?">
+            </div>
+            <div class="field">
+              <label for="volunteer-role">Role you can help with <span class="required-mark" aria-hidden="true">*</span></label>
+              <select id="volunteer-role" name="role" required>
+                <option value="">Choose a role…</option>
+                ${roleOptions}
+              </select>
+            </div>
+            <div class="field">
+              <label for="volunteer-note">How can you help? <span class="optional">(optional)</span></label>
+              <textarea id="volunteer-note" name="note" rows="3" maxlength="280" placeholder="Hours you can offer, skills, or anything we should know."></textarea>
+            </div>
+            <label class="checkbox">
+              <input type="checkbox" name="volunteerAgreement" required>
+              <span>I understand this is a local prototype offer, not a job, employment relationship, or background-checked position, and that no one is obligated to contact me from this browser.</span>
+            </label>
+            <div class="volunteer-form-actions">
+              <button class="button button--primary" type="submit">Record volunteer offer</button>
+              <p class="form-hint">Members only · no data leaves this device</p>
+            </div>
+          </form>
+          <p class="volunteer-join-status" id="volunteer-dialog-status" data-volunteer-status role="status">No volunteer offers recorded yet.</p>
+        </div>
+      </div>`;
+    document.body.appendChild(dialog);
+  }
+
+  function openVolunteerDialog() {
+    const dialog = document.getElementById('volunteer-dialog');
+    if (!dialog) return;
+    renderVolunteerStatus();
+    openDialog(dialog);
+  }
+
   function renderVolunteerStatus() {
-    const gate = document.getElementById('volunteer-gate');
-    if (gate) {
-      if (isMember()) {
-        gate.textContent = `Signed in as ${state.pledge.name}. Record a volunteer offer below—stored in this browser only.`;
-        gate.classList.add('is-signed');
-      } else {
-        gate.textContent = 'Browsing these roles is open to everyone. Sign the Unbought Pledge to become a member and record a volunteer offer.';
-        gate.classList.remove('is-signed');
-      }
-    }
+    const signedIn = isMember();
+    const memberName = signedIn ? (state.pledge.name || '') : '';
+
+    const gateText = signedIn
+      ? `Signed in as ${memberName}. Record a volunteer offer in this pop-up—stored in this browser only.`
+      : 'Browsing these roles is open to everyone. Sign the Unbought Pledge to become a member and record a volunteer offer.';
+
+    $$('[data-volunteer-gate], #volunteer-gate').forEach((gate) => {
+      gate.textContent = gateText;
+      gate.classList.toggle('is-signed', signedIn);
+    });
+
+    const form = document.getElementById('volunteer-form');
+    if (form) form.hidden = !signedIn;
+
+    const guestNote = document.getElementById('volunteer-guest-note');
+    if (guestNote) guestNote.hidden = signedIn;
 
     const nameInput = document.getElementById('volunteer-name');
-    if (nameInput && isMember() && !nameInput.value.trim()) nameInput.value = state.pledge.name || '';
+    if (nameInput && signedIn && !nameInput.value.trim()) nameInput.value = memberName;
 
-    const status = document.getElementById('volunteer-status');
-    if (status) {
-      const interests = getMemberVolunteerInterests();
-      const roles = interests
-        .map((item) => (hasOwn(VOLUNTEER_ROLES, item.role) ? VOLUNTEER_ROLES[item.role] : item.role))
-        .join(', ');
-      status.textContent = interests.length
-        ? `${interests.length} volunteer offer${interests.length === 1 ? '' : 's'} recorded in this browser${roles ? ` (${roles})` : ''}.`
-        : 'No volunteer offers recorded yet.';
-    }
+    const interests = getMemberVolunteerInterests();
+    const roles = interests
+      .map((item) => (hasOwn(VOLUNTEER_ROLES, item.role) ? VOLUNTEER_ROLES[item.role] : item.role))
+      .join(', ');
+    const statusText = interests.length
+      ? `${interests.length} volunteer offer${interests.length === 1 ? '' : 's'} recorded in this browser${roles ? ` (${roles})` : ''}.`
+      : 'No volunteer offers recorded yet.';
+
+    $$('[data-volunteer-status], #volunteer-status').forEach((status) => {
+      status.textContent = statusText;
+    });
   }
 
   function initVolunteerForm() {
+    buildVolunteerDialog();
+
+    $$('[data-volunteer-trigger]').forEach((trigger) => {
+      trigger.addEventListener('click', (event) => {
+        event.preventDefault();
+        openVolunteerDialog();
+      });
+    });
+
     const form = document.getElementById('volunteer-form');
     if (!form) return;
 
@@ -1516,7 +1734,40 @@
     panels.forEach((panel) => {
       panel.hidden = panel.dataset.dashboardPanel !== name;
     });
+
+    document.querySelectorAll('[data-menu-tab]').forEach((item) => {
+      const active = item.dataset.menuTab === name;
+      item.classList.toggle('is-active', active);
+      if (active) item.setAttribute('aria-current', 'page');
+      else item.removeAttribute('aria-current');
+    });
+
     tab.focus({ preventScroll: true });
+  }
+
+  function initDashboardMenu() {
+    const menu = document.querySelector('.dashboard-menu');
+    if (!menu) return;
+    menu.addEventListener('click', (event) => {
+      const item = event.target.closest('[data-menu-tab]');
+      if (!item) return;
+      event.preventDefault();
+      setDashboardTab(item.dataset.menuTab);
+    });
+  }
+
+  function renderNewsFeeds() {
+    document.querySelectorAll('[data-news-feed]').forEach((feed) => {
+      if (feed.children.length) return;
+      feed.innerHTML = NEWS_POSTS.map((post) => {
+        const e = escapeHtml;
+        return `<article class="news-item">
+          <p class="news-meta"><time datetime="${e(post.date)}">${e(post.label)}</time> · <span class="news-tag">${e(post.tag)}</span></p>
+          <h3>${e(post.title)}</h3>
+          <p>${e(post.body)}</p>
+        </article>`;
+      }).join('');
+    });
   }
 
   function initDashboardTabs() {
@@ -1546,14 +1797,19 @@
     const m = state.pledge;
     const e = escapeHtml;
     const notice = state.settings && state.settings.showPrototypeNotices
-      ? `<p class="prototype-note">Prototype: account details are stored only on this device. There is no real account, authentication, or server.</p>`
+      ? `<p class="prototype-note">Prototype: account details and your local username/password are stored only on this device. There is no real authentication or server, and nothing is transmitted.</p>`
       : '';
     panel.innerHTML = `<section class="account-card">
       <p class="eyebrow">Account</p>
       <h3>Your membership</h3>
       <dl class="account-details">
+        <div><dt>Full name</dt><dd>${e(m.fullName || 'Not shared')}</dd></div>
         <div><dt>Chosen name</dt><dd>${e(m.name)}</dd></div>
         <div><dt>General location</dt><dd>${e(m.location || 'Not shared')}</dd></div>
+        <div><dt>Mailing address</dt><dd>${e(m.mailingAddress || 'Not shared')}</dd></div>
+        <div><dt>Physical address</dt><dd>${e(m.physicalAddress || 'Not shared')}</dd></div>
+        <div><dt>Phone number</dt><dd>${e(m.phone || 'Not shared')}</dd></div>
+        <div><dt>Date of birth</dt><dd>${e(m.dob || 'Not shared')}</dd></div>
         <div><dt>Member ID</dt><dd>${e(m.memberId)}</dd></div>
         <div><dt>Pledged on</dt><dd>${e(formatDate(m.signedAt))}</dd></div>
         <div><dt>Status</dt><dd>${e(m.status || 'active')}</dd></div>
@@ -2376,6 +2632,30 @@
   /* ------------------------------------------------------------------------
      05b. Pledge & digital signature
      ------------------------------------------------------------------------ */
+  // Whole years as of today. Returns null for empty or impossible dates.
+  function getAgeFromDob(dob) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dob)) return null;
+    const [year, month, day] = dob.split('-').map(Number);
+    const birth = new Date(year, month - 1, day);
+    if (birth.getFullYear() !== year || birth.getMonth() !== month - 1 || birth.getDate() !== day) return null;
+    const now = new Date();
+    let age = now.getFullYear() - year;
+    const beforeBirthday = now.getMonth() < month - 1 ||
+      (now.getMonth() === month - 1 && now.getDate() < day);
+    if (beforeBirthday) age -= 1;
+    return age;
+  }
+
+  function showPledgeError(message, focusId) {
+    const box = document.getElementById('pledge-error');
+    if (box) {
+      box.textContent = message;
+      box.hidden = false;
+    }
+    const field = focusId ? document.getElementById(focusId) : null;
+    if (field) field.focus({ preventScroll: true });
+  }
+
   function renderPledge() {
     const card = document.getElementById('signature-card');
     const banner = document.getElementById('signed-banner');
@@ -2384,7 +2664,7 @@
     if (!card || !banner || !signedName || !signedDate) return;
 
     const pledge = state.pledge;
-    const isSigned = Boolean(pledge);
+    const isSigned = isMember() && Boolean(pledge);
     card.classList.toggle('is-signed', isSigned);
     banner.hidden = !isSigned;
 
@@ -2412,11 +2692,38 @@
         ? ` Your current track is ${TRACKS[state.track]}. You can manage it here as your capacity changes.`
         : ' Your membership is active. Choose and manage the track that fits this season of your life.';
       message.textContent = `Signed in as ${state.pledge.name}.${trackText}`;
-      if (link) link.textContent = 'Manage membership';
+      if (link) {
+        link.textContent = 'Go to Dashboard';
+        link.setAttribute('href', 'dashboard.html');
+      }
     } else {
       message.textContent = 'You can browse labor, goods, and tracks. Sign the Unbought Pledge to become a member and participate—post offers, request connections, and manage your track and messages.';
-      if (link) link.textContent = 'Sign the pledge';
+      if (link) {
+        link.textContent = 'Take the pledge';
+        link.setAttribute('href', 'pledge.html');
+      }
     }
+  }
+
+  function initPledgePage() {
+    const button = document.getElementById('signin-top');
+    if (!button) return;
+    button.addEventListener('click', () => {
+      if (isMember()) {
+        window.location.assign('dashboard.html');
+        return;
+      }
+      const form = document.getElementById('pledge-form');
+      const signinPanel = document.getElementById('signin-form-panel');
+      const useSignin = Boolean(signinPanel && !signinPanel.hidden);
+      const target = useSignin ? signinPanel : (document.getElementById('signature-card') || form);
+      if (!target) return;
+      target.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
+      const first = useSignin
+        ? document.getElementById('signin-username')
+        : (document.getElementById('pledge-agreement') || (form ? form.querySelector('input') : null));
+      if (first) first.focus({ preventScroll: true });
+    });
   }
 
   function initPledgeForm() {
@@ -2426,16 +2733,63 @@
     const card = document.getElementById('signature-card');
     if (!form && !withdraw) return;
 
+    // Members must be 18+. The submit handler applies the real age check;
+    // no max attribute is used so the visitor gets a clear explanation.
+    const dobInput = document.getElementById('pledge-dob');
+
+    const sameAddress = document.getElementById('pledge-same-address');
+    const mailingInput = document.getElementById('pledge-mailing');
+    const physicalInput = document.getElementById('pledge-physical');
+    if (sameAddress && mailingInput && physicalInput) {
+      const syncAddress = () => {
+        if (sameAddress.checked) {
+          physicalInput.value = mailingInput.value;
+          physicalInput.readOnly = true;
+        } else {
+          physicalInput.readOnly = false;
+          if (physicalInput.value === mailingInput.value) physicalInput.value = '';
+        }
+      };
+      sameAddress.addEventListener('change', syncAddress);
+      mailingInput.addEventListener('input', () => {
+        if (sameAddress.checked) physicalInput.value = mailingInput.value;
+      });
+    }
+
     if (form) {
       form.addEventListener('submit', (event) => {
         event.preventDefault();
         if (errorBox) errorBox.hidden = true;
+
+        // Check age before native validation so under-18 visitors get a clear
+        // explanation instead of a generic date-range tooltip.
+        const earlyAge = getAgeFromDob(dobInput ? dobInput.value : '');
+        if (earlyAge === null) {
+          showPledgeError('Please enter a valid date of birth.', 'pledge-dob');
+          return;
+        }
+        if (earlyAge < 18) {
+          showPledgeError('You must be 18 or older to sign the Unbought Pledge. You can keep browsing the commons and sign when you turn 18. Nothing was saved.', 'pledge-dob');
+          announce('Members must be 18 or older. Your pledge was not signed.');
+          return;
+        }
+
         if (!form.reportValidity()) return;
 
         const data = new FormData(form);
+        const fullName = cleanString(data.get('fullName'), 100);
         const name = cleanString(data.get('chosenName'), 60);
         const location = cleanString(data.get('location'), 80);
+        const mailingAddress = cleanString(data.get('mailingAddress'), 240);
+        const physicalAddress = sameAddress && sameAddress.checked
+          ? mailingAddress
+          : cleanString(data.get('physicalAddress'), 240);
+        const phone = cleanString(data.get('phone'), 40);
+        const dob = cleanString(data.get('dob'), 10);
         const note = cleanString(data.get('note'), 240);
+        const username = normalizeUsername(data.get('username'));
+        const password = String(data.get('password') || '');
+        const passwordConfirm = String(data.get('passwordConfirm') || '');
         const agreement = document.getElementById('pledge-agreement');
         const freeAtCost = document.getElementById('pledge-free-atcost');
 
@@ -2457,21 +2811,57 @@
           return;
         }
 
-        if (!name || !location) {
-          if (errorBox) {
-            errorBox.textContent = 'Please add a chosen name and a general location.';
-            errorBox.hidden = false;
-          }
+        if (!fullName || !name || !location || !mailingAddress || !physicalAddress || !phone) {
+          showPledgeError('Please complete your full name, chosen name, mailing address, physical address, phone number, and general location.', 'pledge-full-name');
+          return;
+        }
+
+        if (!/^[a-z0-9_.-]{3,40}$/.test(username)) {
+          showPledgeError('Choose a username of 3–40 letters, numbers, periods, underscores, or hyphens.', 'pledge-username');
+          return;
+        }
+        if (password.length < 8) {
+          showPledgeError('Choose a password of at least 8 characters.', 'pledge-password');
+          return;
+        }
+        if (password !== passwordConfirm) {
+          showPledgeError('Your passwords do not match.', 'pledge-password-confirm');
+          return;
+        }
+        const existingCredential = getCredential();
+        if (existingCredential && existingCredential.username === username) {
+          showPledgeError('That username is already used by the account on this device. Sign in instead.', 'pledge-username');
+          return;
+        }
+
+        const age = getAgeFromDob(dob);
+        if (age === null) {
+          showPledgeError('Please enter a valid date of birth.', 'pledge-dob');
+          return;
+        }
+        if (age < 18) {
+          showPledgeError('You must be 18 or older to sign the Unbought Pledge. You can keep browsing the commons and sign when you turn 18. Nothing was saved.', 'pledge-dob');
+          announce('Members must be 18 or older. Your pledge was not signed.');
           return;
         }
 
         state.pledge = {
           memberId: makeId('member'),
           name,
+          fullName,
           location,
+          mailingAddress,
+          physicalAddress,
+          phone,
+          dob,
           note,
           signedAt: new Date().toISOString(),
           status: 'active'
+        };
+        const salt = makeId('salt');
+        state.auth = {
+          credential: { username, salt, passwordHash: hashPassword(password, salt) },
+          session: { signedIn: true, signedInAt: new Date().toISOString() }
         };
         saveState();
         renderPledge();
@@ -2482,13 +2872,14 @@
         renderDashboard();
         renderAccountability();
         applyFilters();
+        renderAuthUi();
 
         const banner = document.getElementById('signed-banner');
         if (banner) {
           banner.tabIndex = -1;
           banner.focus({ preventScroll: true });
         }
-        announce(`Welcome, ${name}. Your pledge is signed and your membership is active in this browser. You can now choose a track, post offers, and request connections.`);
+        announce(`Welcome, ${name}. Your username ${username} is set up and your membership is active in this browser. You can now choose a track, post offers, and request connections.`);
         showToast('Membership active. You can now participate in the community.', false);
       });
     }
@@ -2497,11 +2888,12 @@
       withdraw.addEventListener('click', () => {
         showConfirm({
           title: 'Withdraw your membership?',
-          message: 'Your pledge and membership will be removed from this browser. You can still browse offers, but you will need to sign the pledge again to post, request, or manage your track. Your saved track details may remain on this device.',
+          message: 'Your pledge, membership, and local username/password will be removed from this browser. You can still browse offers, but you will need to sign the pledge again to post, request, or manage your track. Your saved track details may remain on this device.',
           confirmLabel: 'Withdraw membership',
           tone: 'danger',
           onConfirm: () => {
             state.pledge = null;
+            state.auth = { credential: null, session: { signedIn: false, signedInAt: null } };
             saveState();
             renderPledge();
             renderTrackGate();
@@ -2511,6 +2903,7 @@
             renderDashboard();
             renderAccountability();
             applyFilters();
+            renderAuthUi();
 
             const agreement = document.getElementById('pledge-agreement');
             if (agreement) agreement.checked = false;
@@ -2537,6 +2930,54 @@
 
     renderPledge();
     renderTrackGate();
+  }
+
+  function initSigninForm() {
+    const form = document.getElementById('signin-form');
+    const errorBox = document.getElementById('signin-error');
+    const signout = document.getElementById('signout-account');
+
+    if (form) {
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (errorBox) errorBox.hidden = true;
+        if (!form.reportValidity()) return;
+
+        const data = new FormData(form);
+        const username = normalizeUsername(data.get('username'));
+        const password = String(data.get('password') || '');
+        const credential = getCredential();
+
+        if (!credential || username !== credential.username ||
+            hashPassword(password, credential.salt) !== credential.passwordHash) {
+          const message = 'That username or password does not match the account stored in this browser.';
+          if (errorBox) {
+            errorBox.textContent = message;
+            errorBox.hidden = false;
+          }
+          announce('Sign in failed. Check your username and password.');
+          return;
+        }
+
+        setSession(true);
+        announce(`Welcome back, ${state.pledge ? state.pledge.name : username}.`);
+        showToast('Signed in. Opening your dashboard.', false);
+        window.location.assign('dashboard.html');
+      });
+    }
+
+    if (signout) {
+      signout.addEventListener('click', () => {
+        setSession(false);
+        renderAuthUi();
+        renderPledge();
+        renderMemberAccount();
+        renderVolunteerStatus();
+        renderDashboard();
+        announce('You are signed out. Your membership details remain on this device.');
+        showToast('Signed out of this browser.', false);
+      });
+    }
   }
 
   /* ------------------------------------------------------------------------
@@ -3616,6 +4057,7 @@
           renderDashboard();
           renderAccountability();
           resetFilters();
+          renderAuthUi();
 
           const postStatus = document.getElementById('post-status');
           if (postStatus) postStatus.textContent = 'No account needed. Stored only on this device.';
@@ -3646,9 +4088,12 @@
      ------------------------------------------------------------------------ */
   function init() {
     initHeader();
+    initPledgePage();
     initPledgeForm();
+    initSigninForm();
     initVolunteerForm();
     initDashboard();
+    initDashboardMenu();
     initAccountability();
     initTracks();
     initTabs();
@@ -3658,11 +4103,12 @@
     initVideo();
     initFooterYear();
     renderMemberAccount();
+    renderAuthUi();
+    renderNewsFeeds();
     document.addEventListener('unbought:donation-recorded', () => {
       // donation.js writes to shared state; reload to reflect in account UI
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) state = migrateState(JSON.parse(raw));
+        state = loadState();
       } catch (error) {
         // ignore
       }
