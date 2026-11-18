@@ -1748,6 +1748,8 @@ em {
   line-height: 1.55;
 }
 
+.signin-trigger { margin-top: 1.2rem; }
+
 .signin-form {
   display: grid;
   gap: 1rem;

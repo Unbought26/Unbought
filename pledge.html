@@ -80,7 +80,7 @@
         <div>
           <p class="eyebrow"><span class="badge badge--amber">Membership</span> The same door, two names</p>
           <h1 id="pledge-page-title">The pledge.</h1>
-          <p class="pledge-intro-lede">“The pledge” and “take the pledge” are the same thing. Read the five commitments below, then set up a username and password and sign. That creates your local membership and opens your dashboard.</p>
+          <p class="pledge-intro-lede">The Unbought Pledge is a shared agreement for a gift economy: every person’s dignity is inherent, labor and goods are given without keeping score, consent and boundaries are honored, skills are shared freely, and the commons is protected from exploitation. Signing it means you agree to practice those commitments in how you offer, request, and communicate here—not that you owe payment, wages, or a favor in return.</p>
           <p class="pledge-intro-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Prototype: this is a local, browser-only account. Your username and password stay on this device—never on a server. Do not reuse a real password. Nothing is transmitted.</p>
         </div>
 
@@ -93,37 +93,6 @@
           </button>
           <a class="text-link" id="pledge-to-dashboard-link" href="dashboard.html" hidden>Go straight to your dashboard <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
           <p class="form-hint">Your account lives only in this browser. Nothing is transmitted.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================================
-         SIGN IN WITH THE USERNAME/PASSWORD YOU SET UP
-         ============================================================ -->
-    <section class="section membership-section" id="signin-form-panel" hidden aria-labelledby="signin-form-title">
-      <div class="container membership-grid">
-        <div class="membership-summary">
-          <p class="eyebrow">Welcome back</p>
-          <h2 id="signin-form-title">Sign in to your commons account.</h2>
-          <p>Use the username and password you created when you signed the pledge. This account is stored only in this browser; it is a prototype, not a secure login.</p>
-          <p class="form-hint">Forgot your local details? There is no server to recover them from. You can clear this browser's demo data and sign the pledge again.</p>
-        </div>
-        <div class="membership-join">
-          <form class="signin-form" id="signin-form">
-            <div class="field">
-              <label for="signin-username">Username <span class="required-mark" aria-hidden="true">*</span></label>
-              <input type="text" id="signin-username" name="username" autocomplete="username" maxlength="40" required placeholder="Your username">
-            </div>
-            <div class="field">
-              <label for="signin-password">Password <span class="required-mark" aria-hidden="true">*</span></label>
-              <input type="password" id="signin-password" name="password" autocomplete="current-password" maxlength="200" required placeholder="Your password">
-            </div>
-            <p class="form-error" id="signin-error" role="alert" hidden></p>
-            <div class="form-actions form-actions--stack">
-              <button class="button button--primary" type="submit">Sign in <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></button>
-              <p class="form-hint">Nothing is transmitted. Demo only.</p>
-            </div>
-          </form>
         </div>
       </div>
     </section>
@@ -235,6 +204,9 @@
               <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-people"></use></svg> Manage your track, requests, and neighbor communication</li>
               <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg> Withdraw membership at any time</li>
             </ul>
+            <button class="button button--amber button--small signin-trigger" type="button" data-signin-trigger hidden>
+              Sign in with your username <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg>
+            </button>
 
             <div class="signed-banner" id="signed-banner" hidden>
               <span class="signed-icon" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span>
@@ -417,6 +389,37 @@
       <a class="footer-top-link" href="#top">Back to top <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
     </div>
   </footer>
+
+  <!-- Sign-in pop-up for members who already set up a local username/password -->
+  <dialog class="dialog dialog--small" id="signin-dialog" aria-labelledby="signin-dialog-title" aria-describedby="signin-dialog-intro">
+    <div class="dialog-shell">
+      <div class="dialog-top">
+        <p class="eyebrow">Welcome back</p>
+        <button class="icon-button" type="button" data-dialog-close aria-label="Close the sign-in dialog">
+          <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+        </button>
+      </div>
+      <div class="dialog-content">
+        <h2 id="signin-dialog-title">Sign in to your commons account.</h2>
+        <p id="signin-dialog-intro">Use the username and password you created when you signed the pledge. This account is stored only in this browser; it is a prototype, not a secure login.</p>
+        <form class="signin-form" id="signin-form">
+          <div class="field">
+            <label for="signin-username">Username <span class="required-mark" aria-hidden="true">*</span></label>
+            <input type="text" id="signin-username" name="username" autocomplete="username" maxlength="40" required placeholder="Your username">
+          </div>
+          <div class="field">
+            <label for="signin-password">Password <span class="required-mark" aria-hidden="true">*</span></label>
+            <input type="password" id="signin-password" name="password" autocomplete="current-password" maxlength="200" required placeholder="Your password">
+          </div>
+          <p class="form-error" id="signin-error" role="alert" hidden></p>
+          <div class="form-actions form-actions--stack">
+            <button class="button button--primary" type="submit">Sign in <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></button>
+            <p class="form-hint">Nothing is transmitted. Demo only.</p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </dialog>
 
   <!-- Generic accessible confirmation dialog (used by "Withdraw membership") -->
   <dialog class="dialog dialog--small" id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">

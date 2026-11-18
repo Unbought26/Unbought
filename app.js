@@ -417,7 +417,7 @@
 
     const topButton = document.getElementById('signin-top');
     const form = document.getElementById('pledge-form');
-    const signinPanel = document.getElementById('signin-form-panel');
+    const signinTriggers = document.querySelectorAll('[data-signin-trigger]');
     const signedPanel = document.getElementById('pledge-already-signed');
     const dashboardLink = document.getElementById('pledge-to-dashboard-link');
     const alreadyName = document.getElementById('already-signed-name');
@@ -428,10 +428,12 @@
       const labelNode = topButton.querySelector('[data-auth-label]') || topButton;
       labelNode.textContent = signedIn ? 'Go to Dashboard' : 'Sign in';
     }
-    // An existing local account signs in with username/password; no account yet
+    // An existing local account signs in through the pop-up; no account yet
     // means the pledge form is the account setup.
     if (form) form.hidden = signedIn || hasCredential;
-    if (signinPanel) signinPanel.hidden = signedIn || !hasCredential;
+    signinTriggers.forEach((trigger) => {
+      trigger.hidden = signedIn || !hasCredential;
+    });
     if (signedPanel) signedPanel.hidden = !signedIn;
     if (dashboardLink) dashboardLink.hidden = !signedIn;
     if (signoutButton) signoutButton.hidden = !signedIn;
@@ -2705,6 +2707,16 @@
     }
   }
 
+  function openSigninDialog() {
+    const dialog = document.getElementById('signin-dialog');
+    const errorBox = document.getElementById('signin-error');
+    if (errorBox) {
+      errorBox.textContent = '';
+      errorBox.hidden = true;
+    }
+    openDialog(dialog);
+  }
+
   function initPledgePage() {
     const button = document.getElementById('signin-top');
     if (!button) return;
@@ -2713,16 +2725,7 @@
         window.location.assign('dashboard.html');
         return;
       }
-      const form = document.getElementById('pledge-form');
-      const signinPanel = document.getElementById('signin-form-panel');
-      const useSignin = Boolean(signinPanel && !signinPanel.hidden);
-      const target = useSignin ? signinPanel : (document.getElementById('signature-card') || form);
-      if (!target) return;
-      target.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
-      const first = useSignin
-        ? document.getElementById('signin-username')
-        : (document.getElementById('pledge-agreement') || (form ? form.querySelector('input') : null));
-      if (first) first.focus({ preventScroll: true });
+      openSigninDialog();
     });
   }
 
@@ -2936,6 +2939,11 @@
     const form = document.getElementById('signin-form');
     const errorBox = document.getElementById('signin-error');
     const signout = document.getElementById('signout-account');
+    const triggers = document.querySelectorAll('[data-signin-trigger]');
+
+    triggers.forEach((trigger) => {
+      trigger.addEventListener('click', openSigninDialog);
+    });
 
     if (form) {
       form.addEventListener('submit', (event) => {
@@ -2962,6 +2970,7 @@
         setSession(true);
         announce(`Welcome back, ${state.pledge ? state.pledge.name : username}.`);
         showToast('Signed in. Opening your dashboard.', false);
+        closeDialog(document.getElementById('signin-dialog'));
         window.location.assign('dashboard.html');
       });
     }
