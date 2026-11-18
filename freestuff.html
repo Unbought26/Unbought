@@ -210,6 +210,11 @@
         <div class="filter-bar" aria-labelledby="filter-title">
           <div class="filter-head">
             <h3 id="filter-title">Every item is free</h3>
+            <div class="filter-head-actions">
+              <button class="button button--primary button--small" id="post-trigger" type="button" data-post-trigger>
+                Post Free Stuff <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-plus"></use></svg>
+              </button>
+            </div>
           </div>
           <div class="filter-note">
             <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-basket"></use></svg>
@@ -254,7 +259,7 @@
         </div>
 
         <!-- Post form -->
-        <section class="post-card" aria-labelledby="post-title">
+        <section class="post-card" aria-labelledby="post-title" hidden>
           <div class="post-copy">
             <p class="eyebrow">Add to the commons</p>
             <h3 id="post-title">Post Free Stuff</h3>
@@ -276,10 +281,24 @@
                 <label for="post-provider">Your chosen name <span class="required-mark" aria-hidden="true">*</span></label>
                 <input type="text" id="post-provider" name="provider" maxlength="60" required placeholder="How should neighbors know you?">
               </div>
-              <div class="field">
-                <label for="post-location">Location <span class="required-mark" aria-hidden="true">*</span></label>
-                <input type="text" id="post-location" name="location" maxlength="80" required placeholder="Neighborhood, porch pickup, or venue">
-              </div>
+              <fieldset class="field field--wide location-fields">
+                <legend>Location <span class="required-mark" aria-hidden="true">*</span></legend>
+                <div class="form-grid form-grid--location">
+                  <div class="field location-city">
+                    <label for="post-city">City <span class="required-mark" aria-hidden="true">*</span></label>
+                    <input type="text" id="post-city" name="city" maxlength="60" autocomplete="address-level2" required placeholder="City">
+                  </div>
+                  <div class="field location-state">
+                    <label for="post-state">State <span class="required-mark" aria-hidden="true">*</span></label>
+                    <input type="text" id="post-state" name="state" maxlength="2" autocomplete="address-level1" required placeholder="NC">
+                  </div>
+                  <div class="field location-zip">
+                    <label for="post-zip">ZIP code <span class="required-mark" aria-hidden="true">*</span></label>
+                    <input type="text" id="post-zip" name="zip" maxlength="10" inputmode="numeric" autocomplete="postal-code" required placeholder="12345">
+                  </div>
+                </div>
+                <input type="hidden" id="post-location" name="location">
+              </fieldset>
               <div class="field">
                 <label for="post-category">Category <span class="required-mark" aria-hidden="true">*</span></label>
                 <select id="post-category" name="category" required>
@@ -310,7 +329,7 @@
 
             <div class="post-actions">
               <button class="button button--primary" type="submit">Publish listing <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-plus"></use></svg></button>
-              <p class="form-hint" id="post-status" role="status">No account needed. Stored only on this device.</p>
+              <p class="form-hint" id="post-status" role="status">For pledged members. Stored only on this device. Nothing is transmitted.</p>
             </div>
           </form>
         </section>
@@ -487,14 +506,6 @@
           </div>
 
           <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> This prototype stores your request in this browser only. Nothing is sent to a provider and no money is collected.</p>
-
-          <div class="donate-nudge">
-            <span class="donate-nudge-icon" aria-hidden="true"><svg class="icon"><use href="#icon-heart"></use></svg></span>
-            <div>
-              <p><strong>A small way to say thanks.</strong> If you have received goods or services you would have otherwise paid for, consider leaving a small donation. Every bit helps to fund this initiative.</p>
-              <a class="button button--amber button--small" href="donate.html">Support the commons <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
-            </div>
-          </div>
 
           <div class="dialog-actions">
             <button class="button button--ghost" type="button" data-dialog-close>Not now</button>

@@ -80,7 +80,7 @@
             <p class="eyebrow">Your space in the commons</p>
             <h1 id="dashboard-title">Member dashboard.</h1>
           </div>
-          <p class="section-head-aside">Everything connected to your membership in one place: the newsboard, your contributions, account and settings, the commons, messages, the review board, and a suggestion box. Browsing the public site stays open to everyone; these tools are for pledged members.</p>
+          <p class="section-head-aside">Everything connected to your membership in one place: the newsboard, your contributions, account and settings, the commons, exchange confirmations, messages, the review board, and a suggestion box. Browsing the public site stays open to everyone; these tools are for pledged members.</p>
         </div>
 
         <div class="dashboard-gate" id="dashboard-gate" role="status">
@@ -102,6 +102,10 @@
               <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-heart"></use></svg>
               <span>Donate</span>
             </a>
+            <button class="dashboard-menu-item" type="button" data-menu-tab="exchanges">
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg>
+              <span>Exchanges</span>
+            </button>
             <button class="dashboard-menu-item" type="button" data-menu-tab="review">
               <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-scale"></use></svg>
               <span>Review Board</span>
@@ -118,6 +122,7 @@
             <button type="button" role="tab" id="dash-tab-account" aria-controls="dash-panel-account" aria-selected="false" tabindex="-1" data-dashboard-tab="account">Account</button>
             <button type="button" role="tab" id="dash-tab-settings" aria-controls="dash-panel-settings" aria-selected="false" tabindex="-1" data-dashboard-tab="settings">Settings</button>
             <button type="button" role="tab" id="dash-tab-commons" aria-controls="dash-panel-commons" aria-selected="false" tabindex="-1" data-dashboard-tab="commons">The Commons</button>
+            <button type="button" role="tab" id="dash-tab-exchanges" aria-controls="dash-panel-exchanges" aria-selected="false" tabindex="-1" data-dashboard-tab="exchanges">Exchanges</button>
             <button type="button" role="tab" id="dash-tab-messages" aria-controls="dash-panel-messages" aria-selected="false" tabindex="-1" data-dashboard-tab="messages">Messages</button>
             <button type="button" role="tab" id="dash-tab-review" aria-controls="dash-panel-review" aria-selected="false" tabindex="-1" data-dashboard-tab="review">Review Board</button>
             <button type="button" role="tab" id="dash-tab-suggestions" aria-controls="dash-panel-suggestions" aria-selected="false" tabindex="-1" data-dashboard-tab="suggestions">Suggestions</button>
@@ -151,6 +156,9 @@
             </div>
             <div role="tabpanel" id="dash-panel-commons" aria-labelledby="dash-tab-commons" data-dashboard-panel="commons" hidden>
               <div id="commons-panel" class="dashboard-render"></div>
+            </div>
+            <div role="tabpanel" id="dash-panel-exchanges" aria-labelledby="dash-tab-exchanges" data-dashboard-panel="exchanges" hidden>
+              <div id="exchanges-panel" class="dashboard-render"></div>
             </div>
             <div role="tabpanel" id="dash-panel-messages" aria-labelledby="dash-tab-messages" data-dashboard-panel="messages" hidden>
               <div id="messages-panel" class="dashboard-render"></div>

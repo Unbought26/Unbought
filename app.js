@@ -683,12 +683,15 @@
         .slice(0, 100)
         .map((request) => ({
           id: cleanString(request.id, 100) || makeId('request'),
+          type: cleanString(request.type, 40) || 'mutual_aid_request',
           memberId: cleanString(request.memberId, 100),
           listingId: cleanString(request.listingId, 100),
           listingTitle: cleanString(request.listingTitle, 80),
           provider: cleanString(request.provider, 60),
           note: cleanString(request.note, 280),
+          pillar: cleanString(request.pillar, 40),
           requestedAt: cleanString(request.requestedAt, 40),
+          confirmedAt: cleanString(request.confirmedAt, 40),
           status: cleanString(request.status, 30) || 'requested'
         }));
     }
@@ -1282,9 +1285,64 @@
     return false;
   }
 
+  // The posting form lives in a dialog on both directory pages. It stays in
+  // the hidden source card until this runs, then moves into the pop-up.
+  function buildPostDialog(form) {
+    const existing = document.getElementById('post-dialog');
+    if (existing) return existing;
+
+    const card = form.closest('.post-card');
+    const isGoods = getDirectoryScope() === 'goods';
+    const heading = isGoods ? 'Post Free Stuff' : 'Post a Free Service';
+    const intro = isGoods
+      ? 'Offer food, clothing, tools, supplies, or household goods. Everything posted here is free: no price, no deposit, and no swap required.'
+      : 'Offer a skill, a repair, a class, or a care task. Keep the exchange honest: labor is free for you and the person requesting it. If materials cannot be found free on Unbought, the requester pays their exact receipt price.';
+
+    const dialog = document.createElement('dialog');
+    dialog.className = 'dialog dialog--post';
+    dialog.id = 'post-dialog';
+    dialog.setAttribute('aria-labelledby', 'post-dialog-title');
+    dialog.setAttribute('aria-describedby', 'post-dialog-intro');
+    dialog.innerHTML = `
+      <div class="dialog-shell">
+        <div class="dialog-top">
+          <p class="eyebrow">Add to the commons</p>
+          <button class="icon-button" type="button" data-dialog-close aria-label="Close the posting form">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+          </button>
+        </div>
+        <div class="dialog-content">
+          <h2 id="post-dialog-title">${escapeHtml(heading)}</h2>
+          <p id="post-dialog-intro">${escapeHtml(intro)}</p>
+          <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Posting is for pledged members. Listings stay in this browser; nothing is sent to a provider or published online.</p>
+          <div id="post-form-mount"></div>
+        </div>
+      </div>`;
+    document.body.appendChild(dialog);
+    dialog.querySelector('#post-form-mount').appendChild(form);
+    if (card) card.hidden = true;
+    return dialog;
+  }
+
+  function flagInvalidField(input, message) {
+    if (!input) return;
+    input.setCustomValidity(message);
+    input.reportValidity();
+    input.focus();
+    input.addEventListener('input', () => input.setCustomValidity(''), { once: true });
+  }
+
   function initPostForm() {
     const form = document.getElementById('post-form');
     if (!form) return;
+    const dialog = buildPostDialog(form);
+
+    $$('[data-post-trigger]').forEach((trigger) => {
+      trigger.addEventListener('click', (event) => {
+        event.preventDefault();
+        openDialog(dialog);
+      });
+    });
 
     form.addEventListener('submit', (event) => {
       event.preventDefault();
@@ -1293,22 +1351,39 @@
 
       const titleInput = document.getElementById('post-title-input');
       const providerInput = document.getElementById('post-provider');
-      const locationInput = document.getElementById('post-location');
+      const cityInput = document.getElementById('post-city');
+      const stateInput = document.getElementById('post-state');
+      const zipInput = document.getElementById('post-zip');
       const descriptionInput = document.getElementById('post-description');
 
-      if (![titleInput, providerInput, locationInput, descriptionInput].every(requireNonBlank)) {
+      if (![titleInput, providerInput, cityInput, stateInput, zipInput, descriptionInput].every(requireNonBlank)) {
         return;
       }
 
       const data = new FormData(form);
       const title = cleanString(data.get('title'), 80);
       const provider = cleanString(data.get('provider'), 60);
-      const location = cleanString(data.get('location'), 80);
+      const city = cleanString(data.get('city'), 60);
+      const stateCode = cleanString(data.get('state'), 2).toUpperCase();
+      const zip = cleanString(data.get('zip'), 10);
       const description = cleanString(data.get('description'), 400);
       const pillar = getDirectoryScope() === 'goods' ? 'goods' : String(data.get('pillar') || '');
       const exchange = pillar === 'goods' ? 'free' : String(data.get('exchange') || '');
       const category = pillar === 'goods' ? String(data.get('category') || '') : '';
       const scope = String(data.get('scope') || '');
+
+      if (!/^[A-Z]{2}$/.test(stateCode)) {
+        flagInvalidField(stateInput, 'Use the two-letter state code, such as NC.');
+        return;
+      }
+      if (!/^\d{5}(?:-\d{4})?$/.test(zip)) {
+        flagInvalidField(zipInput, 'Use a 5-digit ZIP code, or ZIP+4 such as 12345-6789.');
+        return;
+      }
+
+      const location = `${city}, ${stateCode} ${zip}`;
+      const locationInput = document.getElementById('post-location');
+      if (locationInput) locationInput.value = location;
 
       if (!hasOwn(PILLARS, pillar) || !hasOwn(EXCHANGES, exchange)) return;
       if (pillar === 'goods' && !hasOwn(GOODS_CATEGORIES, category)) return;
@@ -1342,6 +1417,7 @@
 
       resetFilters();
       form.reset();
+      closeDialog(dialog, { restoreFocus: false });
       const postStatus = document.getElementById('post-status');
       if (postStatus) {
         postStatus.textContent = 'Published. Your listing is now in the directory above.';
@@ -1350,6 +1426,10 @@
       announce(`Your listing “${listing.title}” was published. It is at the top of the directory.`);
       focusListingTitle(listing.id);
     });
+
+    if (window.location.hash === '#post-trigger' || window.location.hash === '#post-form') {
+      openDialog(dialog);
+    }
   }
 
   function confirmRemoveListing(id, trigger) {
@@ -1856,6 +1936,64 @@
     </section>`;
   }
 
+  function getExchangeType(request) {
+    const listing = findListing(request && request.listingId);
+    const pillar = (request && request.pillar) || (listing ? listing.pillar : '');
+    return pillar === 'goods' ? 'product' : 'service';
+  }
+
+  function isConfirmedExchange(request) {
+    return Boolean(request && (request.status === 'service_completed' || request.status === 'product_delivered'));
+  }
+
+  function renderExchanges() {
+    const panel = document.getElementById('exchanges-panel');
+    if (!panel || !isMember()) return;
+    const e = escapeHtml;
+    const requests = (Array.isArray(state.requests) ? state.requests : [])
+      .filter((request) => request && request.memberId === state.pledge.memberId && request.type === 'mutual_aid_request')
+      .slice(0, 30);
+    const open = requests.filter((request) => !isConfirmedExchange(request));
+    const confirmed = requests.filter(isConfirmedExchange);
+
+    const itemMarkup = (request, done) => {
+      const type = getExchangeType(request);
+      const label = type === 'product' ? 'Product delivered' : 'Service completed';
+      const confirmedAt = done && request.confirmedAt ? ` · confirmed ${e(formatDate(request.confirmedAt))}` : '';
+      return `<li class="exchange-item">
+        <div class="exchange-copy">
+          <strong>${e(request.listingTitle || 'Commons request')}</strong>
+          <span class="contribution-meta">${e(type === 'product' ? 'Product' : 'Service')} · requested ${e(formatDate(request.requestedAt))}${confirmedAt}</span>
+          ${request.provider ? `<span class="contribution-meta">Offered by ${e(request.provider)}</span>` : ''}
+        </div>
+        ${done
+          ? `<span class="badge badge--green">${e(label)}</span>`
+          : `<button class="button button--outline button--small" type="button" data-confirm-exchange="${e(request.id)}">${e(label)}</button>`}
+      </li>`;
+    };
+
+    panel.innerHTML = `<section class="account-card">
+      <p class="eyebrow">Exchanges</p>
+      <h3>Confirm what you received</h3>
+      <p class="account-note">When a neighbor finishes a service or delivers a product, confirm it here. This is a local prototype record: nothing is verified by another person and nothing is transmitted.</p>
+      <div class="account-block">
+        <h4>Open requests</h4>
+        ${open.length ? `<ul class="exchange-list">${open.map((request) => itemMarkup(request, false)).join('')}</ul>` : `<p class="account-note">No open requests to confirm yet. Make a request from Free Labor or Free Stuff first.</p>`}
+      </div>
+      <div class="account-block">
+        <h4>Confirmed exchanges</h4>
+        ${confirmed.length ? `<ul class="exchange-list">${confirmed.map((request) => itemMarkup(request, true)).join('')}</ul>` : `<p class="account-note">Nothing confirmed yet. The thank-you note appears after your first confirmation.</p>`}
+      </div>
+      ${confirmed.length ? `<div class="donate-nudge donate-nudge--dashboard">
+        <span class="donate-nudge-icon" aria-hidden="true"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-heart"></use></svg></span>
+        <div>
+          <p><strong>A small way to say thanks.</strong> If you have received goods or services you would have otherwise paid for, consider leaving a small donation. Every bit helps to fund this initiative.</p>
+          <a class="button button--amber button--small" href="donate.html">Support the commons <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+        </div>
+      </div>` : ''}
+    </section>`;
+  }
+
   function renderCommons() {
     const panel = document.getElementById('commons-panel');
     if (!panel || !isMember()) return;
@@ -1874,7 +2012,7 @@
       <div class="account-block">
         <h4>Your postings</h4>
         ${posts.length ? `<ul class="contribution-list">${posts.map((post) => `<li class="contribution-item"><strong>${e(post.title)}</strong><span class="contribution-meta">${e(formatDate(post.createdAt))} · ${e(post.provider || '')}</span></li>`).join('')}</ul>` : `<p class="account-note">You have not posted an offering in this browser yet.</p>`}
-        <p class="account-note"><a href="freelabor.html#post-title">Post free labor</a> · <a href="freestuff.html#post-title">Post free stuff</a></p>
+        <p class="account-note"><a href="freelabor.html#post-trigger">Post free labor</a> · <a href="freestuff.html#post-trigger">Post free stuff</a></p>
       </div>
       <div class="account-block">
         <h4>Community chats</h4>
@@ -1966,6 +2104,7 @@
     renderAccountInfo();
     renderSettings();
     renderCommons();
+    renderExchanges();
     renderMessages();
     renderSuggestions();
   }
@@ -1974,6 +2113,32 @@
     const dash = document.getElementById('member-dashboard');
     if (!dash) return;
     initDashboardTabs();
+
+    dash.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-confirm-exchange]');
+      if (!button || !isMember()) return;
+      event.preventDefault();
+
+      const request = state.requests.find((item) => item && item.id === button.dataset.confirmExchange
+        && item.memberId === state.pledge.memberId && item.type === 'mutual_aid_request');
+      if (!request || isConfirmedExchange(request)) return;
+
+      const type = getExchangeType(request);
+      const label = type === 'product' ? 'Product delivered' : 'Service completed';
+      showConfirm({
+        title: `${type === 'product' ? 'Product' : 'Service'} confirmed?`,
+        message: `Confirm that “${request.listingTitle || 'this exchange'}” was completed. This only records it in this browser; nothing is sent or independently verified.`,
+        confirmLabel: label,
+        onConfirm: () => {
+          request.status = type === 'product' ? 'product_delivered' : 'service_completed';
+          request.confirmedAt = new Date().toISOString();
+          saveState();
+          renderExchanges();
+          announce(`${label} recorded locally. The thank-you note is now available.`);
+          showToast('Confirmation saved locally. Thank-you note unlocked.', false);
+        }
+      });
+    });
 
     dash.addEventListener('submit', (event) => {
       const form = event.target;
@@ -3753,6 +3918,7 @@
           listingId: listing.id,
           listingTitle: listing.title,
           provider: listing.provider,
+          pillar: listing.pillar,
           note: cleanString(data.get('note'), 280),
           purchaserName,
           purchaserEmail,
@@ -3826,6 +3992,7 @@
         listingId: listing.id,
         listingTitle: listing.title,
         provider: listing.provider,
+        pillar: listing.pillar,
         note: cleanString(data.get('note'), 280),
         requestedAt: new Date().toISOString(),
         status: 'requested'
@@ -4069,7 +4236,7 @@
           renderAuthUi();
 
           const postStatus = document.getElementById('post-status');
-          if (postStatus) postStatus.textContent = 'No account needed. Stored only on this device.';
+          if (postStatus) postStatus.textContent = 'For pledged members. Stored only on this device. Nothing is transmitted.';
 
           const landStatus = document.getElementById('land-inquiry-status');
           if (landStatus) landStatus.textContent = '';
