@@ -33,8 +33,9 @@ security and must be replaced before any production deployment.
 
 ## Hosting
 
-The project is hosted at <https://github.com/hooahvixen/Unbought>. The published
-site uses GitHub Pages from the `main` branch.
+The project is hosted at <https://github.com/Unbought26/Unbought>. The published
+site is <https://unbought26.github.io/Unbought/> and uses GitHub Pages from the
+`main` branch.
 
 ## Provenance
 
