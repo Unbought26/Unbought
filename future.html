@@ -96,7 +96,7 @@
           <p class="hero-lede">Unbought starts with what neighbors can share today. Phase 2 builds the Unbought Academy. Phase 3 builds the community land trust. Add your name to the waiting list and help shape what comes next.</p>
 
           <div class="hero-actions">
-            <a class="button button--primary" href="#waitlist">Join the Waiting List <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+            <a class="button button--primary" href="#waitlist" data-waitlist-trigger>Join the Waiting List <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
             <a class="button button--outline" href="#roadmap">See the Roadmap</a>
           </div>
 
@@ -479,66 +479,17 @@
         </div>
 
         <div class="waitlist-card">
-          <div class="waitlist-receipt" id="waitlist-receipt" tabindex="-1" role="status" hidden>
-            <span class="badge badge--green">On the list</span>
-            <h3>You’re on the waiting list, <span id="waitlist-receipt-name"></span>.</h3>
-            <p id="waitlist-receipt-details" class="waitlist-receipt-details"></p>
-            <p class="waitlist-receipt-label">You asked to hear about:</p>
-            <ul id="waitlist-receipt-interests" class="waitlist-receipt-interests"></ul>
-            <div class="waitlist-receipt-actions">
-              <button class="button button--outline button--small" id="waitlist-edit" type="button">Edit my entry</button>
-              <button class="button button--ghost button--small" id="waitlist-withdraw" type="button">Withdraw from the list</button>
-            </div>
-            <p class="waitlist-receipt-note">This entry stays in this browser. It is not a housing application, a course enrollment, or a financial commitment.</p>
+          <span class="badge badge--soft">One local entry</span>
+          <h3>Your place in what comes next.</h3>
+          <p class="form-hint">Open the short form to tell us which parts of Unbought you want to hear about. It opens as a pop-up and stays in this browser.</p>
+          <div class="waitlist-card-actions">
+            <button class="button button--primary" id="waitlist-open" type="button" data-waitlist-trigger>
+              <span data-waitlist-label>Join the waiting list</span> <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-plus"></use></svg>
+            </button>
+            <button class="button button--outline button--small" id="waitlist-inline-edit" type="button" hidden>Edit my entry</button>
+            <button class="button button--ghost button--small" id="waitlist-inline-withdraw" type="button" hidden>Withdraw from the list</button>
           </div>
-
-          <form class="waitlist-form" id="waitlist-form">
-            <h3>Join the waiting list</h3>
-            <p class="form-hint">No account required. Share only what you are comfortable sharing.</p>
-
-            <div class="form-grid">
-              <div class="field">
-                <label for="waitlist-name">Chosen name <span class="required-mark" aria-hidden="true">*</span></label>
-                <input type="text" id="waitlist-name" name="name" maxlength="60" autocomplete="name" required>
-              </div>
-              <div class="field">
-                <label for="waitlist-contact">Email or phone <span class="required-mark" aria-hidden="true">*</span></label>
-                <input type="text" id="waitlist-contact" name="contact" maxlength="120" autocomplete="email" required placeholder="How would we reach you in a real deployment?">
-              </div>
-              <div class="field field--wide">
-                <label for="waitlist-location">General location <span class="required-mark" aria-hidden="true">*</span></label>
-                <input type="text" id="waitlist-location" name="location" maxlength="80" required placeholder="City, neighborhood, or region">
-              </div>
-            </div>
-
-            <fieldset class="waitlist-interests">
-              <legend>What do you want to hear about? <span class="required-mark" aria-hidden="true">*</span></legend>
-              <label class="checkbox"><input type="checkbox" name="interests" value="academy"><span>Unbought Academy</span></label>
-              <label class="checkbox"><input type="checkbox" name="interests" value="land"><span>Land trust &amp; housing</span></label>
-              <label class="checkbox"><input type="checkbox" name="interests" value="donations"><span>Donations &amp; trust formation</span></label>
-              <label class="checkbox"><input type="checkbox" name="interests" value="labor"><span>Free labor &amp; services</span></label>
-              <label class="checkbox"><input type="checkbox" name="interests" value="goods"><span>Free goods</span></label>
-            </fieldset>
-
-            <div class="field">
-              <label for="waitlist-note">What would you like us to know? <span class="optional">(optional)</span></label>
-              <textarea id="waitlist-note" name="note" rows="3" maxlength="400" placeholder="A skill you want to learn, land you want to share, or what would make this feel safe."></textarea>
-            </div>
-
-            <p class="form-error" id="waitlist-error" hidden role="alert"></p>
-
-            <div class="field field--check">
-              <label class="checkbox">
-                <input type="checkbox" id="waitlist-agreement" name="agreement" required>
-                <span>I understand this is a planning-stage waiting list, not an enrollment, a housing offer, or a financial commitment.</span>
-              </label>
-            </div>
-
-            <div class="post-actions">
-              <button class="button button--primary" type="submit">Add my name <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-plus"></use></svg></button>
-              <p class="form-hint" id="waitlist-status" role="status">Stored only on this device.</p>
-            </div>
-          </form>
+          <p class="form-hint" id="waitlist-inline-status" role="status">Stored only on this device. Nothing is transmitted.</p>
         </div>
       </div>
     </section>
@@ -592,7 +543,7 @@
           <p>No bosses. No gatekeeping. No currency. Sign the Unbought Pledge, join the waiting list, and bring the skill, land, or time that this next phase needs.</p>
           <div class="closing-cta-actions">
             <a class="button button--amber" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span> <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
-            <a class="button button--outline" href="#waitlist">Join the Waiting List</a>
+            <a class="button button--outline" href="#waitlist" data-waitlist-trigger>Join the Waiting List</a>
             <a class="button button--outline" href="donate.html">Donate to the Trust</a>
             <button class="button button--outline" type="button" data-volunteer-trigger>Volunteer with us</button>
           </div>
@@ -683,6 +634,83 @@
       <a class="footer-top-link" href="#top">Back to top <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
     </div>
   </footer>
+
+  <!-- Waiting-list form pop-up -->
+  <dialog class="dialog dialog--waitlist" id="waitlist-dialog" aria-labelledby="waitlist-dialog-title" aria-describedby="waitlist-dialog-intro">
+    <div class="dialog-shell">
+      <div class="dialog-top">
+        <p class="eyebrow">Planning-stage list</p>
+        <button class="icon-button" type="button" data-dialog-close aria-label="Close the waiting list form">
+          <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+        </button>
+      </div>
+      <div class="dialog-content">
+        <h2 id="waitlist-dialog-title">Waiting list</h2>
+        <p id="waitlist-dialog-intro">One entry, saved only in this browser. Tell us which parts of Unbought you want to hear about so we can shape the first Academy guilds and the land trust conversation. Nothing is transmitted, sold, or shared.</p>
+
+        <div class="waitlist-receipt" id="waitlist-receipt" tabindex="-1" role="status" hidden>
+          <span class="badge badge--green">On the list</span>
+          <h3>You’re on the waiting list, <span id="waitlist-receipt-name"></span>.</h3>
+          <p id="waitlist-receipt-details" class="waitlist-receipt-details"></p>
+          <p class="waitlist-receipt-label">You asked to hear about:</p>
+          <ul id="waitlist-receipt-interests" class="waitlist-receipt-interests"></ul>
+          <div class="waitlist-receipt-actions">
+            <button class="button button--outline button--small" id="waitlist-edit" type="button">Edit my entry</button>
+            <button class="button button--ghost button--small" id="waitlist-withdraw" type="button">Withdraw from the list</button>
+          </div>
+          <p class="waitlist-receipt-note">This entry stays in this browser. It is not a housing application, a course enrollment, or a financial commitment.</p>
+        </div>
+
+        <form class="waitlist-form" id="waitlist-form">
+          <h3>Join the waiting list</h3>
+          <p class="form-hint">No account required. Share only what you are comfortable sharing.</p>
+
+          <div class="form-grid">
+            <div class="field">
+              <label for="waitlist-name">Chosen name <span class="required-mark" aria-hidden="true">*</span></label>
+              <input type="text" id="waitlist-name" name="name" maxlength="60" autocomplete="name" required>
+            </div>
+            <div class="field">
+              <label for="waitlist-contact">Email or phone <span class="required-mark" aria-hidden="true">*</span></label>
+              <input type="text" id="waitlist-contact" name="contact" maxlength="120" autocomplete="email" required placeholder="How would we reach you in a real deployment?">
+            </div>
+            <div class="field field--wide">
+              <label for="waitlist-location">General location <span class="required-mark" aria-hidden="true">*</span></label>
+              <input type="text" id="waitlist-location" name="location" maxlength="80" required placeholder="City, neighborhood, or region">
+            </div>
+          </div>
+
+          <fieldset class="waitlist-interests">
+            <legend>What do you want to hear about? <span class="required-mark" aria-hidden="true">*</span></legend>
+            <label class="checkbox"><input type="checkbox" name="interests" value="academy"><span>Unbought Academy</span></label>
+            <label class="checkbox"><input type="checkbox" name="interests" value="land"><span>Land trust &amp; housing</span></label>
+            <label class="checkbox"><input type="checkbox" name="interests" value="donations"><span>Donations &amp; trust formation</span></label>
+            <label class="checkbox"><input type="checkbox" name="interests" value="labor"><span>Free labor &amp; services</span></label>
+            <label class="checkbox"><input type="checkbox" name="interests" value="goods"><span>Free goods</span></label>
+          </fieldset>
+
+          <div class="field">
+            <label for="waitlist-note">What would you like us to know? <span class="optional">(optional)</span></label>
+            <textarea id="waitlist-note" name="note" rows="3" maxlength="400" placeholder="A skill you want to learn, land you want to share, or what would make this feel safe."></textarea>
+          </div>
+
+          <p class="form-error" id="waitlist-error" hidden role="alert"></p>
+
+          <div class="field field--check">
+            <label class="checkbox">
+              <input type="checkbox" id="waitlist-agreement" name="agreement" required>
+              <span>I understand this is a planning-stage waiting list, not an enrollment, a housing offer, or a financial commitment.</span>
+            </label>
+          </div>
+
+          <div class="post-actions">
+            <button class="button button--primary" type="submit">Add my name <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-plus"></use></svg></button>
+            <p class="form-hint" id="waitlist-status" role="status">Stored only on this device.</p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </dialog>
 
   <!-- Generic accessible confirmation dialog -->
   <dialog class="dialog dialog--small" id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">

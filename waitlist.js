@@ -14,6 +14,7 @@
     goods: 'Free goods'
   };
 
+  const dialog = document.getElementById('waitlist-dialog');
   const form = document.getElementById('waitlist-form');
   if (!form) return;
 
@@ -21,11 +22,14 @@
   const receiptName = document.getElementById('waitlist-receipt-name');
   const receiptDetails = document.getElementById('waitlist-receipt-details');
   const receiptInterests = document.getElementById('waitlist-receipt-interests');
-  const status = document.getElementById('waitlist-status');
+  const dialogStatus = document.getElementById('waitlist-status');
+  const inlineStatus = document.getElementById('waitlist-inline-status');
   const errorBox = document.getElementById('waitlist-error');
   const editButton = document.getElementById('waitlist-edit');
   const withdrawButton = document.getElementById('waitlist-withdraw');
-  const heading = document.getElementById('waitlist-title');
+  const inlineEditButton = document.getElementById('waitlist-inline-edit');
+  const inlineWithdrawButton = document.getElementById('waitlist-inline-withdraw');
+  const openButton = document.getElementById('waitlist-open');
   const agreement = document.getElementById('waitlist-agreement');
 
   let saved = loadSaved();
@@ -90,6 +94,25 @@
     }
   }
 
+  function setStatus(message) {
+    if (dialogStatus) dialogStatus.textContent = message;
+    if (inlineStatus) inlineStatus.textContent = message;
+  }
+
+  function syncEntryActions() {
+    const hasEntry = Boolean(saved);
+    [editButton, inlineEditButton].forEach((button) => {
+      if (button) button.hidden = !hasEntry;
+    });
+    [withdrawButton, inlineWithdrawButton].forEach((button) => {
+      if (button) button.hidden = !hasEntry;
+    });
+    if (openButton) {
+      const label = openButton.querySelector('[data-waitlist-label]') || openButton;
+      label.textContent = hasEntry ? 'View my entry' : 'Join the waiting list';
+    }
+  }
+
   function renderReceipt() {
     if (!receipt || !saved) return;
 
@@ -111,8 +134,8 @@
 
     receipt.hidden = false;
     form.hidden = true;
-    if (status) status.textContent = '';
-    receipt.focus({ preventScroll: true });
+    syncEntryActions();
+    setStatus(`You’re on the waiting list, ${saved.name}. Your entry stays in this browser.`);
   }
 
   function showForm(options = {}) {
@@ -121,20 +144,72 @@
 
     if (saved && options.fill !== false) fillForm(saved);
 
-    if (options.focus) {
-      const target = heading || form.querySelector('input, select, textarea, button');
-      if (target) {
-        if (target === heading) heading.tabIndex = -1;
-        target.focus({ preventScroll: true });
-      }
-      const section = document.getElementById('waitlist');
-      if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    if (options.focus && dialog && dialog.open) focusDialog();
   }
 
   function announce(message) {
     const live = document.getElementById('live-region');
     if (live) live.textContent = message;
+  }
+
+  function focusDialog() {
+    if (!dialog || !dialog.open) return;
+    const target = !form.hidden
+      ? (form.querySelector('input:not([type="checkbox"]), textarea') || form.querySelector('button'))
+      : receipt;
+    if (target && typeof target.focus === 'function') target.focus({ preventScroll: true });
+  }
+
+  function openWaitlistDialog(options = {}) {
+    if (!dialog) return;
+
+    if (errorBox) {
+      errorBox.textContent = '';
+      errorBox.hidden = true;
+    }
+
+    if (options.interest) {
+      const input = form.querySelector(`input[name="interests"][value="${options.interest}"]`);
+      if (input) input.checked = true;
+    }
+
+    if (options.edit || !saved) {
+      showForm({ fill: options.fill !== false, focus: false });
+    } else {
+      renderReceipt();
+    }
+
+    if (!dialog.open) {
+      if (typeof dialog.showModal === 'function') {
+        dialog.showModal();
+      } else {
+        dialog.setAttribute('open', '');
+        dialog.setAttribute('role', 'dialog');
+        dialog.setAttribute('aria-modal', 'true');
+      }
+      document.body.classList.add('dialog-open');
+    }
+
+    window.requestAnimationFrame(focusDialog);
+  }
+
+  function editEntry() {
+    openWaitlistDialog({ edit: true });
+  }
+
+  function withdrawEntry() {
+    saved = null;
+    clearSaved();
+    form.reset();
+    if (errorBox) {
+      errorBox.textContent = '';
+      errorBox.hidden = true;
+    }
+    syncEntryActions();
+    showForm({ fill: false, focus: false });
+    setStatus('Your waiting list entry was removed from this browser.');
+    announce('Waiting list entry removed from this browser.');
+    if (dialog && dialog.open) window.requestAnimationFrame(focusDialog);
   }
 
   form.addEventListener('submit', (event) => {
@@ -186,33 +261,27 @@
     announce(`Waiting list entry saved for ${entry.name}. It stays in this browser.`);
   });
 
-  if (editButton) {
-    editButton.addEventListener('click', () => showForm({ focus: true }));
-  }
+  [editButton, inlineEditButton].forEach((button) => {
+    if (button) button.addEventListener('click', editEntry);
+  });
 
-  if (withdrawButton) {
-    withdrawButton.addEventListener('click', () => {
-      saved = null;
-      clearSaved();
-      form.reset();
-      if (errorBox) errorBox.hidden = true;
-      showForm({ focus: true });
-      if (status) status.textContent = 'Your waiting list entry was removed from this browser.';
-      announce('Waiting list entry removed from this browser.');
+  [withdrawButton, inlineWithdrawButton].forEach((button) => {
+    if (button) button.addEventListener('click', withdrawEntry);
+  });
+
+  document.querySelectorAll('[data-waitlist-trigger]').forEach((trigger) => {
+    trigger.addEventListener('click', (event) => {
+      event.preventDefault();
+      openWaitlistDialog();
     });
-  }
+  });
 
   // Cards for the Academy and Land Trust can add themselves to the list.
   document.querySelectorAll('[data-waitlist-interest]').forEach((button) => {
     button.addEventListener('click', () => {
       const value = button.dataset.waitlistInterest;
-      if (value) {
-        const input = form.querySelector(`input[name="interests"][value="${value}"]`);
-        if (input) input.checked = true;
-      }
-      if (receipt && !receipt.hidden) showForm({ fill: false });
-      if (status) status.textContent = 'Added to the form below. Finish your details to join the waiting list.';
-      showForm({ focus: true, fill: false });
+      openWaitlistDialog({ interest: value, edit: true, fill: false });
+      setStatus('Added to the form. Finish your details to join the waiting list.');
     });
   });
 
@@ -220,11 +289,16 @@
     saved = null;
     clearSaved();
     form.reset();
-    if (errorBox) errorBox.hidden = true;
-    if (status) status.textContent = '';
+    if (errorBox) {
+      errorBox.textContent = '';
+      errorBox.hidden = true;
+    }
+    syncEntryActions();
+    setStatus('Stored only on this device. Nothing is transmitted.');
     showForm();
   });
 
+  syncEntryActions();
   if (saved) {
     fillForm(saved);
     renderReceipt();
