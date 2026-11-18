@@ -3285,7 +3285,8 @@ em {
 /* Dedicated pledge / sign-in page */
 .pledge-intro { padding-block: clamp(3rem, 6vw, 5rem); background: linear-gradient(160deg, var(--blue-deeper), var(--blue) 70%); color: #fff; }
 .pledge-intro-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: clamp(1.5rem, 4vw, 3.5rem); align-items: start; }
-.pledge-intro h1 { margin: 0.35rem 0 0.9rem; font-size: clamp(2.6rem, 6vw, 4.5rem); line-height: 1; letter-spacing: -0.04em; }
+.pledge-intro .eyebrow { color: var(--amber-light); }
+.pledge-intro h1 { margin: 0.35rem 0 0.9rem; color: #fff; font-size: clamp(2.6rem, 6vw, 4.5rem); line-height: 1.08; letter-spacing: -0.025em; }
 .pledge-intro-lede { max-width: 62ch; margin: 0 0 1rem; color: var(--on-blue); font-size: 1.05rem; line-height: 1.7; }
 .pledge-intro-note { display: flex; align-items: flex-start; gap: 0.5rem; max-width: 62ch; margin: 0; color: var(--on-blue); font-size: 0.85rem; line-height: 1.6; }
 .pledge-intro-note .icon { width: 1.15rem; height: 1.15rem; margin-top: 0.15rem; flex: none; color: var(--amber-light); }
