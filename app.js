@@ -31,25 +31,25 @@
   // A blog service will replace this list in the live site.
   const NEWS_POSTS = Object.freeze([
     {
-      date: '2026-11-17',
-      label: 'Nov 17, 2026',
-      tag: 'Phase 1',
-      title: 'Phase 1 is taking shape',
-      body: 'The free labor and free goods directories are being built. The joining pledge asks for one hour a week while housing is still out of reach.'
+      date: '2026-11-18',
+      label: 'Nov 18, 2026',
+      tag: 'Site update',
+      title: 'Unbought moves to GitHub Pages',
+      body: 'The prototype now has a public home. Source, updates, and the provenance note live in one public repository; the site itself still stores all demo activity in your browser.'
     },
     {
-      date: '2026-11-17',
-      label: 'Nov 17, 2026',
-      tag: 'Phase 3',
-      title: 'Home donations keep your home for life',
-      body: 'We published how donating a house works: full lifetime access, your choice of when to move, and a real contribution in hours or taxes.'
-    },
-    {
-      date: '2026-11-17',
-      label: 'Nov 17, 2026',
+      date: '2026-11-12',
+      label: 'Nov 12, 2026',
       tag: 'Community tools',
-      title: 'The member dashboard is ready to test',
-      body: 'Account, settings, the commons, messages, the review board, and a suggestion box are now in one place for pledged members to try locally.'
+      title: 'Post forms moved into dialogs',
+      body: 'Labor and goods forms now open in keyboard-friendly dialogs instead of blocking the page. Location is entered as city, state, and ZIP, then composed into one listing label.'
+    },
+    {
+      date: '2026-11-05',
+      label: 'Nov 5, 2026',
+      tag: 'Member dashboard',
+      title: 'Exchange confirmations are ready to test',
+      body: 'Members can confirm a completed service or a delivered product in Dashboard. The thank-you note appears only after a confirmation, and nothing is transmitted.'
     }
   ]);
 
