@@ -33,6 +33,13 @@
     {
       date: '2026-11-18',
       label: 'Nov 18, 2026',
+      tag: 'Member profile',
+      title: 'Public resumes are ready to preview',
+      body: 'Members can now see a filtered public resume with a chosen first name, City/State, skills, commons totals, availability, and an optional phone. Legal name, street address, ZIP, housing status, and birthdate stay private.'
+    },
+    {
+      date: '2026-11-18',
+      label: 'Nov 18, 2026',
       tag: 'Site update',
       title: 'Unbought moves to GitHub Pages',
       body: 'The prototype now has a public home. Source, updates, and the provenance note live in one public repository; the site itself still stores all demo activity in your browser.'
@@ -120,6 +127,15 @@
     apprentice: 'Apprentice (Skill-Builder)',
     care: 'Care Circle Member',
     observer: 'Observer'
+  });
+
+  const HOUSING_STATUSES = Object.freeze({
+    own: 'Own',
+    rent: 'Rent',
+    transient: 'Transient',
+    'live with family': 'Live with family',
+    'intentional community': 'Intentional community',
+    homeless: 'Homeless'
   });
 
   /* Six realistic seed listings. User-created listings are prepended at runtime. */
@@ -540,6 +556,53 @@
     return value.trim().slice(0, maxLength);
   }
 
+  function cleanCount(value) {
+    const number = Number(value);
+    return Number.isFinite(number) && number > 0 ? Math.floor(number) : 0;
+  }
+
+  function cleanHours(value) {
+    const number = Number(value);
+    return Number.isFinite(number) && number > 0 ? Math.round(number * 100) / 100 : 0;
+  }
+
+  function normalizeHousingStatus(value) {
+    const status = cleanString(value, 30);
+    if (hasOwn(HOUSING_STATUSES, status)) return status;
+    if (status === 'family') return 'live with family';
+    if (status === 'intentional') return 'intentional community';
+    return '';
+  }
+
+  function firstName(value) {
+    return cleanString(value, 60).split(/\s+/)[0] || '';
+  }
+
+  function safeCity(value) {
+    const city = cleanString(value, 80).replace(/[.,\s]+$/, '');
+    if (!city || /^\d/.test(city)) return '';
+    // A street line is never a safe public City value.
+    if (/\b(st|street|ave|avenue|rd|road|dr|drive|ln|lane|blvd|boulevard|ct|court|way|ter|terrace|pkwy|parkway)\b/i.test(city)) return '';
+    return city;
+  }
+
+  // Public resumes show City, State only. If the address cannot be parsed
+  // safely, the caller falls back to the member's general location.
+  function parseCityState(address) {
+    const parts = cleanString(address, 240)
+      .split(/[\n,]+/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    for (let index = 0; index < parts.length; index += 1) {
+      const match = parts[index].match(/^([A-Za-z]{2})(?:\s+\d{5}(?:-\d{4})?)?$/);
+      if (!match || index === 0) continue;
+      const city = safeCity(parts[index - 1]);
+      if (city) return `${city}, ${match[1].toUpperCase()}`;
+    }
+    return '';
+  }
+
   function escapeHtml(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, (char) => ({
       '&': '&amp;',
@@ -630,8 +693,19 @@
           location: cleanString(raw.pledge.location, 80),
           mailingAddress: cleanString(raw.pledge.mailingAddress, 240),
           physicalAddress: cleanString(raw.pledge.physicalAddress, 240),
+          housingStatus: normalizeHousingStatus(raw.pledge.housingStatus),
           phone: cleanString(raw.pledge.phone, 40),
           dob: cleanString(raw.pledge.dob, 10),
+          paidSkills: cleanString(raw.pledge.paidSkills, 400),
+          unpaidSkills: cleanString(raw.pledge.unpaidSkills, 400),
+          donationCount: cleanCount(raw.pledge.donationCount),
+          hoursCompleted: cleanHours(raw.pledge.hoursCompleted),
+          hoursUsed: cleanHours(raw.pledge.hoursUsed),
+          itemsGifted: cleanCount(raw.pledge.itemsGifted),
+          itemsTaken: cleanCount(raw.pledge.itemsTaken),
+          available: raw.pledge.available !== false,
+          publicAddressSource: raw.pledge.publicAddressSource === 'physical' ? 'physical' : 'mailing',
+          publicPhone: Boolean(raw.pledge.publicPhone),
           note: cleanString(raw.pledge.note, 240),
           signedAt,
           status: 'active'
@@ -856,6 +930,21 @@
           purchaserEmail: cleanString(item.purchaserEmail, 120),
           purchaserName: cleanString(item.purchaserName, 60)
         }));
+    }
+
+    if (fallback.pledge) {
+      // Legacy profiles did not store counters explicitly. Seed them from
+      // existing local records so the resume is useful without re-entry.
+      if (!raw.pledge || !hasOwn(raw.pledge, 'donationCount')) {
+        fallback.pledge.donationCount = fallback.donationIntents.length;
+      }
+      if (!raw.pledge || !hasOwn(raw.pledge, 'hoursCompleted')) {
+        fallback.pledge.hoursCompleted = cleanHours(
+          fallback.contributions
+            .filter((item) => item.type === 'labor')
+            .reduce((sum, item) => sum + (Number(item.hours) || 0), 0)
+        );
+      }
     }
 
     if (raw.settings && typeof raw.settings === 'object' && !Array.isArray(raw.settings)) {
@@ -1596,7 +1685,7 @@
         saveState();
         announce(`Recorded ${hours} hour${hours === 1 ? '' : 's'} as ${formatMoney(stockValue)} in stock value.`);
         showToast('Work hours recorded as contribution/stock value (prototype).', false);
-        renderMemberAccount();
+        renderSharedMemberViews();
       });
       formWrap.appendChild(form);
       card.appendChild(formWrap);
@@ -1790,7 +1879,7 @@
 
       form.reset();
       renderVolunteerStatus();
-      renderMemberAccount();
+      renderSharedMemberViews();
       announce(`Volunteer offer for ${VOLUNTEER_ROLES[role]} recorded. This prototype saved it in your browser only.`);
       showToast('Volunteer offer recorded locally. No data left this device.', false);
     });
@@ -1891,6 +1980,7 @@
     if (!panel || !isMember()) return;
     const m = state.pledge;
     const e = escapeHtml;
+    const credential = getCredential();
     const notice = state.settings && state.settings.showPrototypeNotices
       ? `<p class="prototype-note">Prototype: account details, your username, and a salted password hash are stored only on this device. There is no real authentication or server, and nothing is transmitted.</p>`
       : '';
@@ -1898,13 +1988,27 @@
       <p class="eyebrow">Account</p>
       <h3>Your membership</h3>
       <dl class="account-details">
-        <div><dt>Full name</dt><dd>${e(m.fullName || 'Not shared')}</dd></div>
+        <div><dt>Full legal name</dt><dd>${e(m.fullName || 'Not shared')}</dd></div>
         <div><dt>Chosen name</dt><dd>${e(m.name)}</dd></div>
+        <div><dt>Username</dt><dd>${e(credential && credential.username ? credential.username : 'Not set')}</dd></div>
+        <div><dt>Password hash (local prototype)</dt><dd>${e(credential && credential.passwordHash ? credential.passwordHash : 'Not set')}</dd></div>
+        <div><dt>Password salt (local prototype)</dt><dd>${e(credential && credential.salt ? credential.salt : 'Not set')}</dd></div>
         <div><dt>General location</dt><dd>${e(m.location || 'Not shared')}</dd></div>
         <div><dt>Mailing address</dt><dd>${e(m.mailingAddress || 'Not shared')}</dd></div>
         <div><dt>Physical address</dt><dd>${e(m.physicalAddress || 'Not shared')}</dd></div>
+        <div><dt>Housing status</dt><dd>${e(hasOwn(HOUSING_STATUSES, m.housingStatus) ? HOUSING_STATUSES[m.housingStatus] : 'Not shared')}</dd></div>
         <div><dt>Phone number</dt><dd>${e(m.phone || 'Not shared')}</dd></div>
         <div><dt>Date of birth</dt><dd>${e(m.dob || 'Not shared')}</dd></div>
+        <div><dt>Career / paid skills</dt><dd>${e(m.paidSkills || 'Not listed')}</dd></div>
+        <div><dt>Unpaid skills</dt><dd>${e(m.unpaidSkills || 'Not listed')}</dd></div>
+        <div><dt>Donation count</dt><dd>${cleanCount(m.donationCount)}</dd></div>
+        <div><dt>Hours completed on Unbought</dt><dd>${cleanHours(m.hoursCompleted)}</dd></div>
+        <div><dt>Hours used on Unbought</dt><dd>${cleanHours(m.hoursUsed)}</dd></div>
+        <div><dt>Items gifted</dt><dd>${cleanCount(m.itemsGifted)}</dd></div>
+        <div><dt>Items taken</dt><dd>${cleanCount(m.itemsTaken)}</dd></div>
+        <div><dt>Availability</dt><dd>${m.available === false ? 'Not available right now' : 'Available'}</dd></div>
+        <div><dt>Public City, State from</dt><dd>${m.publicAddressSource === 'physical' ? 'Physical address' : 'Mailing address'}</dd></div>
+        <div><dt>Public phone</dt><dd>${m.publicPhone ? 'Shown on resume' : 'Hidden from resume'}</dd></div>
         <div><dt>Member ID</dt><dd>${e(m.memberId)}</dd></div>
         <div><dt>Pledged on</dt><dd>${e(formatDate(m.signedAt))}</dd></div>
         <div><dt>Status</dt><dd>${e(m.status || 'active')}</dd></div>
@@ -1922,12 +2026,49 @@
             <input type="text" id="account-location" name="location" maxlength="80" value="${e(m.location || '')}">
           </div>
         </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="account-housing">Housing status</label>
+            <select id="account-housing" name="housingStatus">
+              ${Object.entries(HOUSING_STATUSES).map(([value, label]) => `<option value="${value}"${m.housingStatus === value ? ' selected' : ''}>${e(label)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label for="account-public-address">Public City, State from</label>
+            <select id="account-public-address" name="publicAddressSource">
+              <option value="mailing"${m.publicAddressSource !== 'physical' ? ' selected' : ''}>Mailing address</option>
+              <option value="physical"${m.publicAddressSource === 'physical' ? ' selected' : ''}>Physical address</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="account-paid-skills">Career / paid skills</label>
+            <textarea id="account-paid-skills" name="paidSkills" rows="3" maxlength="400">${e(m.paidSkills || '')}</textarea>
+          </div>
+          <div class="field">
+            <label for="account-unpaid-skills">Unpaid skills</label>
+            <textarea id="account-unpaid-skills" name="unpaidSkills" rows="3" maxlength="400">${e(m.unpaidSkills || '')}</textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label for="account-donations">Donation count</label><input type="number" id="account-donations" name="donationCount" min="0" step="1" value="${cleanCount(m.donationCount)}"></div>
+          <div class="field"><label for="account-hours-completed">Hours completed</label><input type="number" id="account-hours-completed" name="hoursCompleted" min="0" step="0.25" value="${cleanHours(m.hoursCompleted)}"></div>
+          <div class="field"><label for="account-hours-used">Hours used</label><input type="number" id="account-hours-used" name="hoursUsed" min="0" step="0.25" value="${cleanHours(m.hoursUsed)}"></div>
+          <div class="field"><label for="account-items-gifted">Items gifted</label><input type="number" id="account-items-gifted" name="itemsGifted" min="0" step="1" value="${cleanCount(m.itemsGifted)}"></div>
+          <div class="field"><label for="account-items-taken">Items taken</label><input type="number" id="account-items-taken" name="itemsTaken" min="0" step="1" value="${cleanCount(m.itemsTaken)}"></div>
+        </div>
+        <div class="account-privacy-options">
+          <label class="checkbox"><input type="checkbox" name="available"${m.available !== false ? ' checked' : ''}> <span>Available for exchanges</span></label>
+          <label class="checkbox"><input type="checkbox" name="publicPhone"${m.publicPhone ? ' checked' : ''}> <span>Show my phone number on my public resume</span></label>
+        </div>
         <div class="account-form-actions">
           <button type="submit" class="button button--primary button--small">Save account details</button>
+          <a class="button button--outline button--small" href="profile.html">View public resume</a>
         </div>
       </form>
       ${notice}
-      <p class="account-note">To withdraw your membership, use the button in the pledge section. Withdrawing removes account access in this browser but keeps your local records.</p>
+      <p class="account-note">Only you can see this full record on this device. Your public resume hides your legal name, street address, ZIP, housing status, and birthdate. To withdraw your membership, use the button in the pledge section.</p>
     </section>`;
   }
 
@@ -1947,6 +2088,136 @@
         </div>
       </form>
     </section>`;
+  }
+
+  function getPublicResume(member) {
+    const address = member.publicAddressSource === 'physical' ? member.physicalAddress : member.mailingAddress;
+    return {
+      displayName: firstName(member.name),
+      cityState: parseCityState(address) || parseCityState(member.location) || 'City not shared',
+      paidSkills: cleanString(member.paidSkills, 400),
+      unpaidSkills: cleanString(member.unpaidSkills, 400),
+      donationCount: cleanCount(member.donationCount),
+      hoursCompleted: cleanHours(member.hoursCompleted),
+      hoursUsed: cleanHours(member.hoursUsed),
+      itemsGifted: cleanCount(member.itemsGifted),
+      itemsTaken: cleanCount(member.itemsTaken),
+      available: member.available !== false,
+      phone: member.publicPhone ? cleanString(member.phone, 40) : ''
+    };
+  }
+
+  function renderProfile() {
+    const publicPanel = document.getElementById('public-resume');
+    const privatePanel = document.getElementById('private-profile');
+    if (!publicPanel) return;
+
+    const e = escapeHtml;
+    const m = state.pledge;
+    const credential = getCredential();
+
+    if (!m) {
+      publicPanel.innerHTML = `<section class="resume-card">
+        <p class="eyebrow">Member profile</p>
+        <h2>No public resume yet</h2>
+        <p>When someone signs the pledge on this device, their public resume will appear here.</p>
+        <a class="button button--primary" href="pledge.html">Take the Pledge <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+      </section>`;
+      if (privatePanel) privatePanel.innerHTML = '';
+      return;
+    }
+
+    const resume = getPublicResume(m);
+    const skillList = (value) => {
+      const items = cleanString(value, 400)
+        .split(/[\n,]+/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+      return items.length
+        ? `<ul class="resume-skills">${items.map((item) => `<li>${e(item)}</li>`).join('')}</ul>`
+        : `<p class="resume-empty">Not listed yet.</p>`;
+    };
+    const metrics = [
+      ['Donation count', resume.donationCount],
+      ['Hours completed', resume.hoursCompleted],
+      ['Hours used', resume.hoursUsed],
+      ['Items gifted', resume.itemsGifted],
+      ['Items taken', resume.itemsTaken]
+    ];
+
+    publicPanel.innerHTML = `<section class="resume-card" aria-labelledby="resume-name">
+      <div class="resume-head">
+        <div>
+          <p class="eyebrow">Public resume</p>
+          <h2 id="resume-name">${e(resume.displayName || 'Member')}</h2>
+          <p class="resume-location"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-pin"></use></svg> ${e(resume.cityState)}</p>
+          ${resume.phone ? `<p class="resume-phone">Public phone: ${e(resume.phone)}</p>` : ''}
+        </div>
+        <span class="resume-availability ${resume.available ? 'is-available' : ''}">${resume.available ? 'Available' : 'Not available right now'}</span>
+      </div>
+      <div class="resume-section">
+        <h3>Career / paid skills</h3>
+        ${skillList(resume.paidSkills)}
+      </div>
+      <div class="resume-section">
+        <h3>Unpaid skills</h3>
+        ${skillList(resume.unpaidSkills)}
+      </div>
+      <div class="resume-section">
+        <h3>Commons record</h3>
+        <dl class="resume-metrics">
+          ${metrics.map(([label, value]) => `<div><dt>${e(label)}</dt><dd>${e(value)}</dd></div>`).join('')}
+        </dl>
+      </div>
+      <p class="account-note">This resume shows only the first name, City/State, skills, commons totals, availability, and an optional public phone. Legal name, street address, ZIP, housing status, and birthdate are never included.</p>
+    </section>`;
+
+    if (!privatePanel) return;
+    if (!isMember()) {
+      privatePanel.innerHTML = '';
+      return;
+    }
+
+    privatePanel.innerHTML = `<section class="account-card private-profile" aria-labelledby="private-profile-title">
+      <p class="eyebrow">Private to you</p>
+      <h2 id="private-profile-title">Your full member record</h2>
+      <p class="account-note">This section appears only in your signed-in browser. It is not part of the public resume.</p>
+      <dl class="account-details">
+        <div><dt>Full legal name</dt><dd>${e(m.fullName || 'Not shared')}</dd></div>
+        <div><dt>Chosen name</dt><dd>${e(m.name)}</dd></div>
+        <div><dt>Username</dt><dd>${e(credential && credential.username ? credential.username : 'Not set')}</dd></div>
+        <div><dt>Password hash (local prototype)</dt><dd>${e(credential && credential.passwordHash ? credential.passwordHash : 'Not set')}</dd></div>
+        <div><dt>Password salt (local prototype)</dt><dd>${e(credential && credential.salt ? credential.salt : 'Not set')}</dd></div>
+        <div><dt>General location</dt><dd>${e(m.location || 'Not shared')}</dd></div>
+        <div><dt>Mailing address</dt><dd>${e(m.mailingAddress || 'Not shared')}</dd></div>
+        <div><dt>Physical address</dt><dd>${e(m.physicalAddress || 'Not shared')}</dd></div>
+        <div><dt>Housing status</dt><dd>${e(hasOwn(HOUSING_STATUSES, m.housingStatus) ? HOUSING_STATUSES[m.housingStatus] : 'Not shared')}</dd></div>
+        <div><dt>Phone number</dt><dd>${e(m.phone || 'Not shared')}</dd></div>
+        <div><dt>Date of birth</dt><dd>${e(m.dob || 'Not shared')}</dd></div>
+        <div><dt>Career / paid skills</dt><dd>${e(m.paidSkills || 'Not listed')}</dd></div>
+        <div><dt>Unpaid skills</dt><dd>${e(m.unpaidSkills || 'Not listed')}</dd></div>
+        <div><dt>Donation count</dt><dd>${cleanCount(m.donationCount)}</dd></div>
+        <div><dt>Hours completed on Unbought</dt><dd>${cleanHours(m.hoursCompleted)}</dd></div>
+        <div><dt>Hours used on Unbought</dt><dd>${cleanHours(m.hoursUsed)}</dd></div>
+        <div><dt>Items gifted</dt><dd>${cleanCount(m.itemsGifted)}</dd></div>
+        <div><dt>Items taken</dt><dd>${cleanCount(m.itemsTaken)}</dd></div>
+        <div><dt>Availability</dt><dd>${m.available === false ? 'Not available right now' : 'Available'}</dd></div>
+        <div><dt>Public City, State from</dt><dd>${m.publicAddressSource === 'physical' ? 'Physical address' : 'Mailing address'}</dd></div>
+        <div><dt>Public phone</dt><dd>${m.publicPhone ? 'Shown on resume' : 'Hidden from resume'}</dd></div>
+        <div><dt>Member ID</dt><dd>${e(m.memberId)}</dd></div>
+        <div><dt>Pledged on</dt><dd>${e(formatDate(m.signedAt))}</dd></div>
+        <div><dt>Status</dt><dd>${e(m.status || 'active')}</dd></div>
+        <div><dt>Track</dt><dd>${e(state.track && hasOwn(TRACKS, state.track) ? TRACKS[state.track] : 'Not chosen')}</dd></div>
+        <div><dt>Volunteer offers</dt><dd>${getMemberVolunteerInterests().length}</dd></div>
+        <div><dt>Private note</dt><dd>${e(m.note || 'Not shared')}</dd></div>
+      </dl>
+      <a class="button button--outline button--small" href="dashboard.html">Edit in Dashboard</a>
+    </section>`;
+  }
+
+  function renderSharedMemberViews() {
+    renderMemberAccount();
+    renderProfile();
   }
 
   function getExchangeType(request) {
@@ -2168,9 +2439,20 @@
         if (!name) return;
         state.pledge.name = name;
         state.pledge.location = location;
+        state.pledge.housingStatus = normalizeHousingStatus(data.get('housingStatus'));
+        state.pledge.paidSkills = cleanString(data.get('paidSkills'), 400);
+        state.pledge.unpaidSkills = cleanString(data.get('unpaidSkills'), 400);
+        state.pledge.donationCount = cleanCount(data.get('donationCount'));
+        state.pledge.hoursCompleted = cleanHours(data.get('hoursCompleted'));
+        state.pledge.hoursUsed = cleanHours(data.get('hoursUsed'));
+        state.pledge.itemsGifted = cleanCount(data.get('itemsGifted'));
+        state.pledge.itemsTaken = cleanCount(data.get('itemsTaken'));
+        state.pledge.available = Boolean(data.get('available'));
+        state.pledge.publicPhone = Boolean(data.get('publicPhone'));
+        state.pledge.publicAddressSource = data.get('publicAddressSource') === 'physical' ? 'physical' : 'mailing';
         saveState();
         renderAccountInfo();
-        renderMemberAccount();
+        renderSharedMemberViews();
         renderVolunteerStatus();
         renderAccountability();
         announce('Your account details were saved in this browser.');
@@ -2970,6 +3252,9 @@
           : cleanString(data.get('physicalAddress'), 240);
         const phone = cleanString(data.get('phone'), 40);
         const dob = cleanString(data.get('dob'), 10);
+        const housingStatus = normalizeHousingStatus(data.get('housingStatus'));
+        const paidSkills = cleanString(data.get('paidSkills'), 400);
+        const unpaidSkills = cleanString(data.get('unpaidSkills'), 400);
         const note = cleanString(data.get('note'), 240);
         const username = normalizeUsername(data.get('username'));
         const password = String(data.get('password') || '');
@@ -2997,6 +3282,10 @@
 
         if (!fullName || !name || !location || !mailingAddress || !physicalAddress || !phone) {
           showPledgeError('Please complete your full name, chosen name, mailing address, physical address, phone number, and general location.', 'pledge-full-name');
+          return;
+        }
+        if (!hasOwn(HOUSING_STATUSES, housingStatus)) {
+          showPledgeError('Please choose your housing status.', 'pledge-housing');
           return;
         }
 
@@ -3036,8 +3325,19 @@
           location,
           mailingAddress,
           physicalAddress,
+          housingStatus,
           phone,
           dob,
+          paidSkills,
+          unpaidSkills,
+          donationCount: 0,
+          hoursCompleted: 0,
+          hoursUsed: 0,
+          itemsGifted: 0,
+          itemsTaken: 0,
+          available: true,
+          publicAddressSource: 'mailing',
+          publicPhone: false,
           note,
           signedAt: new Date().toISOString(),
           status: 'active'
@@ -3051,7 +3351,7 @@
         renderPledge();
         renderTrackGate();
         renderTrackPanel(state.track);
-        renderMemberAccount();
+        renderSharedMemberViews();
         renderVolunteerStatus();
         renderDashboard();
         renderAccountability();
@@ -3082,7 +3382,7 @@
             renderPledge();
             renderTrackGate();
             renderTrackPanel(state.track);
-            renderMemberAccount();
+            renderSharedMemberViews();
             renderVolunteerStatus();
             renderDashboard();
             renderAccountability();
@@ -3161,7 +3461,7 @@
         setSession(false);
         renderAuthUi();
         renderPledge();
-        renderMemberAccount();
+        renderSharedMemberViews();
         renderVolunteerStatus();
         renderDashboard();
         announce('You are signed out. Your membership details remain on this device.');
@@ -3503,7 +3803,7 @@
         }
 
         renderTrackPanel(track);
-        renderMemberAccount();
+        renderSharedMemberViews();
         const newSubmit = $('#track-panel .panel-form button[type="submit"]');
         if (newSubmit) newSubmit.focus({ preventScroll: true });
 
@@ -3549,7 +3849,7 @@
         saveState();
         renderTrackPanel(radio.value);
         renderTrackGate();
-        renderMemberAccount();
+        renderSharedMemberViews();
         announce(`${TRACKS[radio.value]} selected. Complete the details below and save your choice.`);
       });
     });
@@ -4245,7 +4545,7 @@
           renderPledge();
           renderTrackGate();
           renderTrackPanel(null);
-          renderMemberAccount();
+          renderSharedMemberViews();
           renderVolunteerStatus();
           renderDashboard();
           renderAccountability();
@@ -4295,17 +4595,22 @@
     initDialogs();
     initVideo();
     initFooterYear();
-    renderMemberAccount();
+    renderSharedMemberViews();
     renderAuthUi();
     renderNewsFeeds();
     document.addEventListener('unbought:donation-recorded', () => {
       // donation.js writes to shared state; reload to reflect in account UI
       try {
         state = loadState();
+        if (state.pledge) {
+          const recordedDonations = getMemberDonationIntents().length;
+          state.pledge.donationCount = Math.max(cleanCount(state.pledge.donationCount), recordedDonations);
+          saveState();
+        }
       } catch (error) {
         // ignore
       }
-      renderMemberAccount();
+      renderSharedMemberViews();
       renderDashboard();
     });
   }

@@ -15,7 +15,8 @@ transmitted to a server.
 - `freestuff.html` — Free Stuff directory and post form
 - `donate.html` — Donation form and closing call to action
 - `future.html` — What’s to Come, donation information, and waiting list
-- `dashboard.html` — Member dashboard and Exchanges
+- `dashboard.html` — Member dashboard, full private record, and Exchanges
+- `profile.html` — Public member resume with a private record for the signed-in member
 
 ## Running locally
 
@@ -30,6 +31,19 @@ Then visit <http://localhost:8000/>.
 Prototype sign-in accepts a locally created username and password. Passwords are
 stored only in the browser as a salted prototype hash; this is not real account
 security and must be replaced before any production deployment.
+
+## Member data and public resume
+
+The local member record stores full legal name, chosen name, mailing and physical
+addresses, housing status, birthdate, phone, career/paid skills, unpaid skills,
+donation count, hours completed, hours used, items gifted, items taken,
+availability, and public-sharing choices. The full record is visible only in the
+Dashboard and in the signed-in member profile.
+
+The public resume is a filtered projection. It shows the chosen first name,
+City/State from the member-selected mailing or physical address, both skill lists,
+commons totals, availability, and a phone number only when the member opts in. It
+never includes the legal name, street address, ZIP, housing status, or birthdate.
 
 ## Hosting
 

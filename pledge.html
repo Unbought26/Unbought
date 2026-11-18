@@ -308,6 +308,20 @@
               <textarea id="pledge-physical" name="physicalAddress" rows="2" maxlength="240" required placeholder="Where you live, if different from your mailing address"></textarea>
             </div>
 
+            <div class="field field--on-blue">
+              <label for="pledge-housing">Housing status <span class="required-mark" aria-hidden="true">*</span></label>
+              <select id="pledge-housing" name="housingStatus" required>
+                <option value="" selected>Choose one</option>
+                <option value="own">Own</option>
+                <option value="rent">Rent</option>
+                <option value="transient">Transient</option>
+                <option value="live with family">Live with family</option>
+                <option value="intentional community">Intentional community</option>
+                <option value="homeless">Homeless</option>
+              </select>
+              <p class="form-hint">Private profile detail. Never shown on your public resume.</p>
+            </div>
+
             <div class="form-row">
               <div class="field field--on-blue">
                 <label for="pledge-phone">Phone number <span class="required-mark" aria-hidden="true">*</span></label>
@@ -329,6 +343,19 @@
               <div class="field field--on-blue">
                 <label for="pledge-note">What does Ubuntu mean to you? <span class="optional">(optional)</span></label>
                 <input type="text" id="pledge-note" name="note" maxlength="240" placeholder="A sentence you want to carry into the community.">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="field field--on-blue">
+                <label for="pledge-paid-skills">Career / paid skills <span class="optional">(optional)</span></label>
+                <textarea id="pledge-paid-skills" name="paidSkills" rows="3" maxlength="400" placeholder="Trades, professions, paid experience"></textarea>
+                <p class="form-hint">Listed on your public resume.</p>
+              </div>
+              <div class="field field--on-blue">
+                <label for="pledge-unpaid-skills">Unpaid skills <span class="optional">(optional)</span></label>
+                <textarea id="pledge-unpaid-skills" name="unpaidSkills" rows="3" maxlength="400" placeholder="Care, repair, organizing, teaching, making"></textarea>
+                <p class="form-hint">Listed on your public resume.</p>
               </div>
             </div>
 
@@ -400,6 +427,7 @@
           <h2>Participate</h2>
           <ul>
             <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="profile.html">Member profile</a></li>
             <li><a href="index.html#tracks">Join &amp; Tracks</a></li>
             <li><a href="index.html#volunteers">Volunteers</a></li>
             <li><a href="future.html">What’s to Come</a></li>
