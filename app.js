@@ -38,6 +38,13 @@
     {
       date: '2026-11-19',
       label: 'Nov 19, 2026',
+      tag: 'Site',
+      title: 'A FAQ and a question mark that follows you',
+      body: 'There is now a plain-language FAQ linked in the site map, plus a small question mark button on every page. It covers membership, privacy, local-only data, member labels, the Poconos rollout, and what is and is not possible in this prototype.'
+    },
+    {
+      date: '2026-11-19',
+      label: 'Nov 19, 2026',
       tag: 'Free Stuff',
       title: 'Filter by city, state, and ZIP',
       body: 'The goods catalog can now narrow offers by city, two-letter state, and ZIP prefix. Sort by location or by nearest ZIP using the sort ZIP control. New posts save those fields separately, and older posts keep working from their readable location label. Everything still stays in this browser.'
@@ -6001,6 +6008,22 @@
     });
   }
 
+  // A small always-visible question mark keeps the FAQ one tap away on every
+  // page, including the FAQ itself.
+  function initFaqButton() {
+    if (document.getElementById('faq-fab')) return;
+    const link = document.createElement('a');
+    link.id = 'faq-fab';
+    link.className = 'faq-fab';
+    link.href = 'faq.html';
+    link.setAttribute('aria-label', 'Open the frequently asked questions');
+    const mark = document.createElement('span');
+    mark.setAttribute('aria-hidden', 'true');
+    mark.textContent = '?';
+    link.appendChild(mark);
+    document.body.appendChild(link);
+  }
+
   function initDialogs() {
     initDialogBasics();
     initReportDialog();
@@ -6028,6 +6051,7 @@
     initPostForm();
     initDialogs();
     initVideo();
+    initFaqButton();
     initFooterYear();
     renderSharedMemberViews();
     renderAuthUi();

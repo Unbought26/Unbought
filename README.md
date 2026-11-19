@@ -55,6 +55,14 @@ for the full legal name and a chosen name, and the chosen-name setting in the
 Dashboard stays editable. Legal name, address, birthdate, housing status, and phone
 are never auto-filled elsewhere.
 
+## FAQ and help button
+
+`faq.html` answers common questions about membership, privacy, local-only
+prototype data, goods and labor, safety reporting, member labels, and the
+Poconos rollout. It is linked from every footer site map, and `app.js` adds a
+small fixed question-mark button to every page so the FAQ is always one tap
+away. The FAQ uses native `<details>` accordions and needs no extra script.
+
 ## Free Stuff catalog and filters
 
 The goods directory has a filter sidebar and a compact product grid: category,

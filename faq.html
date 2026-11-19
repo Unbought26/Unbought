@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Answers to common questions about Unbought: membership, free goods and labor, privacy, local-only data, member labels, and the Poconos rollout.">
+  <meta name="theme-color" content="#1E3A8A">
+  <title>FAQ — Unbought</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body class="faq-page">
+
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <div id="live-region" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div id="toast" class="toast" aria-hidden="true" hidden></div>
+
+  <svg class="svg-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="icon-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="icon-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9a7 7 0 0 1 11.6-2L20 12M4 12l2.3 5a7 7 0 0 0 11.6-2"/></symbol>
+  </svg>
+
+  <header class="site-header" id="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html#top" aria-label="Unbought — public home">
+        <img src="assets/logo.png" alt="Unbought Emblem" width="48" height="48">
+        <span class="brand-text">
+          <span class="brand-name">Unbought</span>
+          <span class="brand-tagline">Free Labor. Free Goods. Free Education. Free Land.</span>
+        </span>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+        <span class="sr-only">Open navigation menu</span>
+        <svg class="icon nav-toggle-icon-open" aria-hidden="true" focusable="false"><use href="#icon-menu"></use></svg>
+        <svg class="icon nav-toggle-icon-close" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+      </button>
+
+      <nav class="primary-nav" id="primary-nav" aria-label="Primary">
+        <ul class="nav-list">
+          <li><a href="index.html">How It Works</a></li>
+          <li><a href="freelabor.html">Free Labor</a></li>
+          <li><a href="freestuff.html">Free Stuff</a></li>
+          <li><a href="donate.html">Donate</a></li>
+          <li><a href="future.html">What’s to Come</a></li>
+        </ul>
+      </nav>
+
+      <a class="nav-cta" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span></a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="section faq-section" id="top" aria-labelledby="faq-page-title">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="badge badge--soft">Good questions</span> Frequently asked</p>
+          <h1 id="faq-page-title">The honest answers, in plain language.</h1>
+          <p>Unbought is a prototype for a consent-based, currency-free mutual aid society. Nothing here processes payments, sends messages to other people, or uploads your information.</p>
+        </div>
+
+        <div class="faq-groups">
+          <section class="faq-group" aria-labelledby="faq-basics">
+            <h2 id="faq-basics">The basics</h2>
+            <details>
+              <summary>What is Unbought?</summary>
+              <p>A practice of sharing labor, goods, care, education, and land without money changing hands between neighbors. The site is a local-first prototype: it shows what a shared commons could look like while every action stays in this browser.</p>
+            </details>
+            <details>
+              <summary>What does “Built on Consent” mean?</summary>
+              <p>Nothing is taken, assigned, or published about you without your agreement. Offers are invitations, requests need a clear yes, and your public profile shows only what you choose to share.</p>
+            </details>
+            <details>
+              <summary>Is this a real service right now?</summary>
+              <p>Not yet. There is no shared database, no real accounts, no payment processing, and no server transmission. You can explore the full experience locally; a future backend can use the same structured records.</p>
+            </details>
+            <details>
+              <summary>Why the Poconos?</summary>
+              <p>This first rollout is rooted in Pocono-area towns in Pennsylvania. The location examples across the site use places like Stroudsburg, East Stroudsburg, Mount Pocono, and Jim Thorpe. You can still enter your own location.</p>
+            </details>
+          </section>
+
+          <section class="faq-group" aria-labelledby="faq-membership">
+            <h2 id="faq-membership">Membership and privacy</h2>
+            <details>
+              <summary>What does taking the pledge do?</summary>
+              <p>It records your membership locally, along with the legal name and contact details the prototype needs to model real intake. It is not a legal contract and nothing is transmitted.</p>
+            </details>
+            <details>
+              <summary>What does my public profile show?</summary>
+              <p>Your chosen first name, the City/State you select, your skills, your commons totals, your availability, and a phone number only if you opt in. It never shows your legal name, street address, ZIP, housing status, or birthdate.</p>
+            </details>
+            <details>
+              <summary>Why ask for a legal name and addresses at all?</summary>
+              <p>The intake mirrors what a real mutual-aid trust would need for accountability and emergency contact. In this prototype it stays in your browser and is never shown on your public resume.</p>
+            </details>
+            <details>
+              <summary>Can people under 18 join?</summary>
+              <p>Not in this version. The sign-up form blocks birthdates that would make someone under 18. We are building a separate, safer path for younger neighbors before opening it up.</p>
+            </details>
+            <details>
+              <summary>What are seed and founding members?</summary>
+              <p>A seed member is the first person of a profession to sign up in a ZIP code. Founding members are the seed members who signed up during Unbought’s first year. Membership years begin at the exact moment of the vernal equinox, not on January 1. The first year runs from the March 20, 2026 equinox at 14:46 UTC to the March 20, 2027 equinox at 20:25 UTC — 4:25pm Eastern.</p>
+            </details>
+            <details>
+              <summary>When do member labels appear?</summary>
+              <p>The rollout target is the exact 2027 vernal equinox, March 20 at 4:25pm Eastern. Until then the dashboard shows labels as pending so nobody is labeled before the rollout moment.</p>
+            </details>
+          </section>
+
+          <section class="faq-group" aria-labelledby="faq-goods">
+            <h2 id="faq-goods">Goods, labor, and exchanges</h2>
+            <details>
+              <summary>What can I offer on Free Stuff?</summary>
+              <p>Legal, safe goods: groceries, household items, clothing, furniture, tech, tools, solar panels, raw materials, vehicles, gift cards from independent small businesses and co-ops, and other useful things. Vehicles are free; the recipient pays state registration and titling fees. Major-corporation gift cards, weapons, medication, recalled goods, and unsafe items are not allowed.</p>
+            </details>
+            <details>
+              <summary>What can I offer on Free Labor?</summary>
+              <p>Any safe skill you can freely share: repair, care, tutoring, organizing, design, and more. If materials are needed, say so. Regulated work requires an honesty check about licensing. The labor is never billed; any materials are agreed on separately at exact cost.</p>
+            </details>
+            <details>
+              <summary>Can I add photos?</summary>
+              <p>Yes. Members can attach up to three photos to a goods or labor post. They are resized in your browser and saved locally. Each photo has a storage-reference field for a future database, but nothing is uploaded now.</p>
+            </details>
+            <details>
+              <summary>How do I find something nearby?</summary>
+              <p>The Free Stuff catalog filters by category, condition, color, brand, city, state, and ZIP prefix. You can sort by newest, title, category, location, or nearest to a ZIP you enter. Active filters can be removed one at a time.</p>
+            </details>
+            <details>
+              <summary>Can non-members get anything?</summary>
+              <p>Non-members can record a local purchase intent today, and members will soon be able to opt in to set prices for goods and labor. The money would go to the Unbought fund; members always get things free.</p>
+            </details>
+          </section>
+
+          <section class="faq-group" aria-labelledby="faq-safety">
+            <h2 id="faq-safety">Safety and accountability</h2>
+            <details>
+              <summary>How do safety reports work?</summary>
+              <p>Reports are tied to the thing you were looking at — a listing, message, chat, profile, or dashboard item — so you never have to type someone’s name into a report form. You can attach local messages, pictures, or other files as evidence. Everything stays in this browser and nothing is transmitted.</p>
+            </details>
+            <details>
+              <summary>Why are there no police reports?</summary>
+              <p>This prototype does not contact authorities or any outside service. The review board is a local, consent-based model for thinking about accountability, not a legal process.</p>
+            </details>
+            <details>
+              <summary>What happens during a reflection period?</summary>
+              <p>Some full-access actions pause while a member works through the reflection and treatment steps recorded in their dashboard. The steps are local records in the prototype, with no outside review or reporting.</p>
+            </details>
+            <details>
+              <summary>Will friends and groups be part of this?</summary>
+              <p>Yes. Friends, groups, and social chat are being added next. Each group is capped at 150 people so conversation stays human-scale.</p>
+            </details>
+          </section>
+
+          <section class="faq-group" aria-labelledby="faq-technical">
+            <h2 id="faq-technical">Prototype details</h2>
+            <details>
+              <summary>Where is my data stored?</summary>
+              <p>In your browser’s local storage under the Unbought keys. Clearing site data or using the Demo Reset button removes it. There is no account recovery because there is no server account.</p>
+            </details>
+            <details>
+              <summary>Does the site track me or show ads?</summary>
+              <p>No. There are no analytics, ads, external frameworks, or third-party requests. The single catalog-style layout on Free Stuff is a visual nod only, built with Unbought’s own content and colors.</p>
+            </details>
+            <details>
+              <summary>How do I report a bug or suggest something?</summary>
+              <p>Use the suggestion form on the dashboard, or the waiting-list form on What’s to Come. Both record locally in this prototype and are ready to be connected to a real system later.</p>
+            </details>
+          </section>
+        </div>
+
+        <div class="faq-cta">
+          <h2>Still have a question?</h2>
+          <p>Talk to us at the next community gathering, or leave a note in the waiting list.</p>
+          <div class="faq-cta-actions">
+            <a class="button button--primary" href="future.html#waitlist">Join the waiting list</a>
+            <a class="button button--outline" href="index.html#newsboard">Read the Newsboard</a>
+            <a class="button button--outline" href="pledge.html">Take the Pledge</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="footer">
+    <div class="container footer-main">
+      <div class="footer-brand">
+        <a class="brand brand--footer" href="#top" aria-label="Unbought — back to the top">
+          <img src="assets/logo.png" alt="Unbought Emblem" width="56" height="56">
+          <span class="brand-text">
+            <span class="brand-name">Unbought</span>
+            <span class="brand-tagline">Built on Consent.</span>
+          </span>
+        </a>
+        <p class="footer-tagline">Free Labor. Free Goods. Free Education. Free Land.</p>
+        <p class="footer-mission">A consent-based, currency-free mutual aid society. Every person has inherent worth, whether or not they can work.</p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Footer">
+        <div>
+          <h2>Explore</h2>
+          <ul>
+            <li><a href="index.html#top">Home</a></li>
+            <li><a href="index.html#how-it-works">How It Works</a></li>
+            <li><a href="pledge.html">The Pledge</a></li>
+            <li><a href="freelabor.html">Free Labor</a></li>
+            <li><a href="freestuff.html">Free Stuff</a></li>
+            <li><a href="donate.html">Donate</a></li>
+            <li><a href="faq.html" aria-current="page">FAQ</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Participate</h2>
+          <ul>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="profile.html">Member profile</a></li>
+            <li><a href="index.html#tracks">Join &amp; Tracks</a></li>
+            <li><a href="index.html#volunteers">Volunteers</a></li>
+            <li><a href="future.html">What’s to Come</a></li>
+            <li><a href="future.html#waitlist">Waiting List</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Transparency</h2>
+          <ul>
+            <li><a href="index.html#newsboard">Newsboard</a></li>
+            <li><a href="pledge.html">Five commitments</a></li>
+            <li><a href="future.html#land">Phase 3 status</a></li>
+            <li><a href="donate.html">Donations &amp; trust</a></li>
+            <li><a href="index.html#accessibility">Accessibility Statement</a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+
+    <div class="container footer-utility">
+      <div class="footer-utility-copy">
+        <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
+        <p>Your pledge, track, listings, waiting-list entry, and donation intents stay in this browser.</p>
+      </div>
+      <button class="button button--ghost-light button--small" id="reset-demo" type="button">
+        <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>
+        Demo Reset / Clear Local Data
+      </button>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>© <span id="copyright-year">2026</span> Unbought. A community practice, not a product.</p>
+      <a class="footer-top-link" href="#top">Back to top <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+    </div>
+  </footer>
+
+  <dialog class="dialog dialog--small" id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+    <div class="dialog-shell">
+      <div class="dialog-top">
+        <p class="eyebrow">Please confirm</p>
+        <button class="icon-button" type="button" data-confirm-close aria-label="Close the confirmation dialog">
+          <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+        </button>
+      </div>
+      <h2 id="confirm-title">Are you sure?</h2>
+      <p id="confirm-message"></p>
+      <div class="dialog-actions">
+        <button class="button button--outline" type="button" data-confirm-cancel>Cancel</button>
+        <button class="button button--primary" type="button" data-confirm-accept>Confirm</button>
+      </div>
+    </div>
+  </dialog>
+</body>
+</html>
