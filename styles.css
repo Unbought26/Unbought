@@ -6654,3 +6654,567 @@ body.dashboard-compact .account-block { margin-top: 0.7rem; padding-top: 0.7rem;
   .account-details > div { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
   .dashboard-tabs button { flex: 1 1 45%; font-size: 0.9rem; }
 }
+
+/* --------------------------------------------------------------------------
+   19. Goods catalog — the single intentional nod to a familiar storefront
+   Only the Free Stuff directory uses this compact, product-grid treatment.
+   Colors, type, and content stay Unbought's own.
+   -------------------------------------------------------------------------- */
+body[data-directory-scope="goods"] .market-shell {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  gap: 1.1rem;
+  align-items: start;
+  margin-top: 1.35rem;
+}
+
+body[data-directory-scope="goods"] .market-sidebar { min-width: 0; }
+
+body[data-directory-scope="goods"] .market-filters {
+  padding: 0.9rem 1rem 1.1rem;
+  border-color: #D8DEE7;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+body[data-directory-scope="goods"] .market-filters .filter-head {
+  margin-bottom: 0.6rem;
+}
+
+body[data-directory-scope="goods"] .market-filters .filter-head h3 {
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+body[data-directory-scope="goods"] .filter-reset {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--blue);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+body[data-directory-scope="goods"] .market-filters .filter-note {
+  min-height: 0;
+  padding: 0.55rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+body[data-directory-scope="goods"] .facet-groups {
+  margin-top: 0.35rem;
+}
+
+body[data-directory-scope="goods"] .facet-group {
+  margin: 0;
+  padding: 0.85rem 0;
+  border: 0;
+  border-top: 1px solid #E6E9EE;
+}
+
+body[data-directory-scope="goods"] .facet-group legend {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding: 0;
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+body[data-directory-scope="goods"] .facet-group select,
+body[data-directory-scope="goods"] .facet-group input[type="search"] {
+  width: 100%;
+  min-height: 36px;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #C9D0DA;
+  border-radius: 4px;
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 0.8rem;
+}
+
+body[data-directory-scope="goods"] .location-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr) minmax(0, 0.8fr);
+  gap: 0.35rem;
+}
+
+body[data-directory-scope="goods"] .location-filters input {
+  min-width: 0;
+}
+
+body[data-directory-scope="goods"] .facet-group .field-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+body[data-directory-scope="goods"] .facet-list {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+}
+
+body[data-directory-scope="goods"] .facet-list--colors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 0.5rem;
+  max-height: 230px;
+}
+
+body[data-directory-scope="goods"] .facet-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.14rem 0;
+  color: var(--muted-dark);
+  font-size: 0.76rem;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+body[data-directory-scope="goods"] .facet-check input {
+  flex: none;
+  margin: 0;
+  accent-color: var(--blue);
+}
+
+body[data-directory-scope="goods"] .facet-check--color {
+  min-width: 0;
+}
+
+body[data-directory-scope="goods"] .color-dot {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border: 1px solid #B9C1CD;
+  border-radius: 50%;
+}
+
+body[data-directory-scope="goods"] .color-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-directory-scope="goods"] .facet-row + .facet-row {
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px dashed #E2E7EE;
+}
+
+body[data-directory-scope="goods"] .facet-row-label {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: var(--ink);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+body[data-directory-scope="goods"] .market-main { min-width: 0; }
+
+body[data-directory-scope="goods"] .market-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #D8DEE7;
+  border-radius: 6px;
+  background: #fff;
+}
+
+body[data-directory-scope="goods"] .market-toolbar-copy .eyebrow {
+  margin-bottom: 0.1rem;
+  font-size: 0.62rem;
+}
+
+body[data-directory-scope="goods"] .market-toolbar-copy h3 {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+body[data-directory-scope="goods"] .market-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+body[data-directory-scope="goods"] .market-toolbar-actions .button {
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+body[data-directory-scope="goods"] .market-sort {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+body[data-directory-scope="goods"] .market-sort select,
+body[data-directory-scope="goods"] .market-sort input {
+  min-height: 34px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #C9D0DA;
+  border-radius: 4px;
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 0.78rem;
+}
+
+body[data-directory-scope="goods"] .market-sort input {
+  width: 72px;
+}
+
+body[data-directory-scope="goods"] .market-sort--distance input {
+  width: 68px;
+}
+
+body[data-directory-scope="goods"] .results-status {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  border: 0;
+  font-size: 0.76rem;
+}
+
+body[data-directory-scope="goods"] .active-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-top: 0.6rem;
+}
+
+body[data-directory-scope="goods"] .active-filters-label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+body[data-directory-scope="goods"] .filter-chip,
+body[data-directory-scope="goods"] .filter-chip-clear {
+  padding: 0.2rem 0.5rem;
+  border: 1px solid #C9D3E6;
+  border-radius: 14px;
+  background: var(--blue-mist);
+  color: var(--blue-deep);
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+body[data-directory-scope="goods"] .filter-chip:hover {
+  background: var(--blue-soft);
+}
+
+body[data-directory-scope="goods"] .filter-chip-clear {
+  border-color: transparent;
+  background: none;
+  color: var(--blue);
+  text-decoration: underline;
+}
+
+body[data-directory-scope="goods"] .listing-grid {
+  grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
+  gap: 0.85rem;
+  margin-top: 0.9rem;
+}
+
+body[data-directory-scope="goods"] .listing-card.product-card {
+  padding: 0.8rem;
+  border-color: #DDE2E9;
+  border-radius: 6px;
+  box-shadow: none;
+  transition: box-shadow 0.18s var(--ease), border-color 0.18s var(--ease);
+}
+
+body[data-directory-scope="goods"] .listing-card.product-card:hover {
+  transform: none;
+  border-color: #B7C2D6;
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.12);
+}
+
+body[data-directory-scope="goods"] .product-media {
+  display: grid;
+  place-items: center;
+  height: 150px;
+  margin-bottom: 0.7rem;
+  border: 1px solid #EEF1F5;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #FBFBFD 0%, #F1F3F7 100%);
+}
+
+body[data-directory-scope="goods"] .product-glyph {
+  font-size: 3.7rem;
+  line-height: 1;
+  filter: saturate(0.92);
+}
+
+body[data-directory-scope="goods"] .product-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+body[data-directory-scope="goods"] .product-price-value {
+  color: var(--red);
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+body[data-directory-scope="goods"] .product-price-note {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+body[data-directory-scope="goods"] .product-card .listing-badges {
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+body[data-directory-scope="goods"] .product-card .badge {
+  padding: 0.12rem 0.35rem;
+  border-radius: 3px;
+  font-size: 0.6rem;
+  line-height: 1.3;
+}
+
+body[data-directory-scope="goods"] .product-card .listing-title {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-bottom: 0.35rem;
+  color: var(--blue);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+body[data-directory-scope="goods"] .product-card .listing-title:hover {
+  text-decoration: underline;
+}
+
+body[data-directory-scope="goods"] .product-card .listing-provider {
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.7rem;
+}
+
+body[data-directory-scope="goods"] .product-card .avatar {
+  width: 24px;
+  height: 24px;
+  font-size: 0.58rem;
+}
+
+body[data-directory-scope="goods"] .product-card .listing-desc {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-bottom: 0.55rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+body[data-directory-scope="goods"] .product-card .listing-meta {
+  gap: 0.25rem;
+  margin-bottom: 0.65rem;
+  padding: 0.5rem 0;
+}
+
+body[data-directory-scope="goods"] .product-card .listing-meta > div {
+  grid-template-columns: 62px minmax(0, 1fr);
+  gap: 0.3rem;
+}
+
+body[data-directory-scope="goods"] .product-card .listing-meta dt {
+  font-size: 0.56rem;
+}
+
+body[data-directory-scope="goods"] .product-card .listing-meta dd {
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+body[data-directory-scope="goods"] .product-card .listing-actions {
+  gap: 0.45rem;
+}
+
+body[data-directory-scope="goods"] .product-card .listing-actions [data-request-listing]:not(:disabled) {
+  border-color: var(--amber);
+  border-radius: 18px;
+  background: var(--amber);
+  color: #241700;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+body[data-directory-scope="goods"] .product-card .listing-actions [data-request-listing]:not(:disabled):hover {
+  border-color: #C18614;
+  background: #C18614;
+}
+
+body[data-directory-scope="goods"] .product-card .listing-note {
+  font-size: 0.64rem;
+}
+
+body[data-directory-scope="goods"] .product-card .button--report {
+  padding: 0;
+  font-size: 0.68rem;
+}
+
+body[data-directory-scope="goods"] .goods-attributes .form-grid {
+  margin-bottom: 0.2rem;
+}
+
+@media (max-width: 1024px) {
+  body[data-directory-scope="goods"] .market-shell {
+    grid-template-columns: 1fr;
+  }
+
+  body[data-directory-scope="goods"] .facet-groups {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 1.5rem;
+  }
+}
+
+@media (max-width: 700px) {
+  body[data-directory-scope="goods"] .market-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  body[data-directory-scope="goods"] .market-toolbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 560px) {
+  body[data-directory-scope="goods"] .facet-groups {
+    grid-template-columns: 1fr;
+  }
+
+  body[data-directory-scope="goods"] .listing-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  body[data-directory-scope="goods"] .product-media {
+    height: 120px;
+  }
+
+  body[data-directory-scope="goods"] .product-glyph {
+    font-size: 3rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   20. Local-only post photos (goods and labor)
+   -------------------------------------------------------------------------- */
+.post-photo-field input[type="file"] {
+  width: 100%;
+  padding: 0.55rem;
+  border: 1px dashed #C9D0DA;
+  border-radius: 6px;
+  background: #fff;
+  font-family: var(--sans);
+  font-size: 0.8rem;
+}
+
+.post-photos-preview {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.6rem;
+}
+
+.post-photo {
+  position: relative;
+  width: 92px;
+  margin: 0;
+}
+
+.post-photo img {
+  display: block;
+  width: 92px;
+  height: 92px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--sand);
+}
+
+.post-photo-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  padding: 0.1rem 0.35rem;
+  border: 0;
+  border-radius: 12px;
+  background: var(--red-deep);
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.product-media {
+  position: relative;
+  overflow: hidden;
+}
+
+.product-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.product-photo-count {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 0.1rem 0.4rem;
+  border-radius: 10px;
+  background: rgba(17, 24, 39, 0.75);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.listing-photos {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.listing-photos img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--sand);
+}

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Browse and share free goods with Unbought: food, clothing, tools, and household supplies at no cost. No means test, no membership fee, no price tag, no swap required.">
+  <meta name="description" content="Browse and share free goods with Unbought: groceries, furniture, tech, tools, solar panels, raw materials, cars, small-business gift cards, and more at no cost. No means test, no membership fee, no price tag, no swap required.">
   <meta name="theme-color" content="#1E3A8A">
   <title>Free Stuff — Unbought</title>
   <link rel="icon" type="image/png" href="assets/logo.png">
@@ -93,7 +93,7 @@
         <div class="hero-copy">
           <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Free Stuff Directory</p>
           <h1 id="hero-title">Take What You Need. <span class="mark mark--blue">Leave What You Can.</span></h1>
-          <p class="hero-lede">Food, clothing, tools, and household goods in the Unbought commons. Pledged members share and request items through mutual aid; people who do not take the pledge may record a local purchase intent for goods. Amounts are tracked for the severance fund in this prototype, with no real payment processed. Browse or add an offering.</p>
+          <p class="hero-lede">Groceries, furniture, tech, tools, solar panels, raw materials, cars, gift cards from independent businesses, and more in the Unbought commons. Pledged members share and request items through mutual aid; people who do not take the pledge may record a local purchase intent for goods. Amounts are tracked for the severance fund in this prototype, with no real payment processed. Browse or add an offering.</p>
 
           <div class="hero-actions">
             <a class="button button--primary" href="#services">Browse Free Stuff <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
@@ -208,35 +208,87 @@
           <p class="section-head-aside">Every listing is an offer, not an advertisement. Members request goods with mutual consent; non-members may record a local purchase intent in this prototype. No real payment is processed and nothing is transmitted.</p>
         </div>
 
-        <div class="filter-bar" aria-labelledby="filter-title">
-          <div class="filter-head">
-            <h3 id="filter-title">Browse shared goods</h3>
-            <div class="filter-head-actions">
-              <button class="button button--primary button--small" id="post-trigger" type="button" data-post-trigger>
-                Post Free Stuff <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-plus"></use></svg>
-              </button>
+        <div class="market-shell">
+          <aside class="market-sidebar" aria-label="Filter free goods">
+            <div class="filter-bar market-filters" aria-labelledby="filter-title">
+              <div class="filter-head">
+                <h3 id="filter-title">Filter results</h3>
+                <button class="filter-reset" id="clear-filters" type="button">Clear all</button>
+              </div>
+              <div class="filter-note">
+                <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-basket"></use></svg>
+                <p>Members request through mutual consent. Non-members may record a purchase intent in this prototype; the amount is tracked locally for the severance fund and no real payment is processed.</p>
+              </div>
+              <div class="facet-groups">
+                <fieldset class="facet-group">
+                  <legend>Category</legend>
+                  <select id="category-filter" name="category">
+                    <option value="all">All categories</option>
+                  </select>
+                </fieldset>
+                <fieldset class="facet-group">
+                  <legend>Condition</legend>
+                  <div class="facet-list" id="condition-options"></div>
+                </fieldset>
+                <fieldset class="facet-group">
+                  <legend>Color</legend>
+                  <div class="facet-list facet-list--colors" id="color-options"></div>
+                </fieldset>
+                <fieldset class="facet-group">
+                  <legend>Brand</legend>
+                  <input type="search" id="brand-filter" name="brand" list="brand-options" placeholder="Search a brand" autocomplete="off">
+                  <datalist id="brand-options"></datalist>
+                </fieldset>
+                <fieldset class="facet-group">
+                  <legend>Location</legend>
+                  <div class="location-filters">
+                    <input type="search" id="city-filter" name="city" placeholder="Stroudsburg" autocomplete="address-level2" aria-label="Filter by city">
+                    <input type="text" id="state-filter" name="state" maxlength="2" placeholder="PA" autocomplete="address-level1" aria-label="Filter by two-letter state code">
+                    <input type="search" id="zip-filter" name="zip" maxlength="5" inputmode="numeric" placeholder="183" autocomplete="postal-code" aria-label="Filter by ZIP code prefix">
+                  </div>
+                  <p class="field-hint">ZIP filters by prefix. Use “Sort near ZIP” below for proximity.</p>
+                </fieldset>
+                <fieldset class="facet-group" id="facet-filter-group" hidden>
+                  <legend id="facet-filter-title">Item details</legend>
+                  <div id="facet-options"></div>
+                </fieldset>
+              </div>
+            </div>
+          </aside>
+
+          <div class="market-main">
+            <div class="market-toolbar">
+              <div class="market-toolbar-copy">
+                <p class="eyebrow">Free stuff directory</p>
+                <h3 id="market-results-title">Browse shared goods</h3>
+              </div>
+              <div class="market-toolbar-actions">
+                <button class="button button--primary button--small" id="post-trigger" type="button" data-post-trigger>
+                  Post Free Stuff <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-plus"></use></svg>
+                </button>
+                <div class="market-sort">
+                  <label for="sort-filter">Sort by</label>
+                  <select id="sort-filter" name="sort">
+                    <option value="featured">Featured</option>
+                    <option value="newest">Newest first</option>
+                    <option value="title">Title A–Z</option>
+                    <option value="category">Category</option>
+                    <option value="location">Location (state · city)</option>
+                    <option value="distance">Nearest to sort ZIP</option>
+                  </select>
+                  <div class="market-sort market-sort--distance">
+                    <label for="distance-zip">Sort near ZIP</label>
+                    <input type="text" id="distance-zip" name="nearZip" maxlength="5" inputmode="numeric" placeholder="18360" autocomplete="postal-code">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="results-status" id="results-status" role="status" aria-live="polite" aria-atomic="true">Showing all free goods.</p>
+            <div class="active-filters" id="active-filters" hidden></div>
+            <div class="listing-grid" id="listings-grid" aria-label="Free goods listings">
+              <p class="listing-loading">Loading community offerings…</p>
             </div>
           </div>
-          <div class="filter-note">
-            <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-basket"></use></svg>
-            <p>Members request through mutual consent. Non-members may record a purchase intent in this prototype; the amount is tracked locally for the severance fund and no real payment is processed.</p>
-          </div>
-          <div class="filter-grid">
-            <div class="field">
-              <label for="category-filter">Category</label>
-              <select id="category-filter" name="category">
-                <option value="all">All categories</option>
-                <option value="new">Free new stuff</option>
-                <option value="homemade">Free homemade stuff</option>
-                <option value="used">Free old stuff</option>
-                <option value="parts">Free stuff for parts or restoration (broken)</option>
-              </select>
-            </div>
-            <div class="field filter-actions">
-              <button class="button button--ghost button--small" id="clear-filters" type="button">Reset filters</button>
-            </div>
-          </div>
-          <p class="results-status" id="results-status" role="status" aria-live="polite" aria-atomic="true">Showing all free goods.</p>
         </div>
 
         <div class="directory-guardrails" role="note" aria-labelledby="guardrails-title">
@@ -287,15 +339,15 @@
                 <div class="form-grid form-grid--location">
                   <div class="field location-city">
                     <label for="post-city">City <span class="required-mark" aria-hidden="true">*</span></label>
-                    <input type="text" id="post-city" name="city" maxlength="60" autocomplete="address-level2" required placeholder="City">
+                    <input type="text" id="post-city" name="city" maxlength="60" autocomplete="address-level2" required placeholder="Stroudsburg">
                   </div>
                   <div class="field location-state">
                     <label for="post-state">State <span class="required-mark" aria-hidden="true">*</span></label>
-                    <input type="text" id="post-state" name="state" maxlength="2" autocomplete="address-level1" required placeholder="NC">
+                    <input type="text" id="post-state" name="state" maxlength="2" autocomplete="address-level1" required placeholder="PA">
                   </div>
                   <div class="field location-zip">
                     <label for="post-zip">ZIP code <span class="required-mark" aria-hidden="true">*</span></label>
-                    <input type="text" id="post-zip" name="zip" maxlength="10" inputmode="numeric" autocomplete="postal-code" required placeholder="12345">
+                    <input type="text" id="post-zip" name="zip" maxlength="10" inputmode="numeric" autocomplete="postal-code" required placeholder="18360">
                   </div>
                 </div>
                 <input type="hidden" id="post-location" name="location">
@@ -304,16 +356,21 @@
                 <label for="post-category">Category <span class="required-mark" aria-hidden="true">*</span></label>
                 <select id="post-category" name="category" required>
                   <option value="">Choose a category</option>
-                  <option value="new">Free new stuff</option>
-                  <option value="homemade">Free homemade stuff</option>
-                  <option value="used">Free old stuff</option>
-                  <option value="parts">Free stuff for parts or restoration (broken)</option>
                 </select>
+                <p class="field-hint" id="goods-category-hint">Choose a category to see the details that help neighbors find this item.</p>
               </div>
+              <div id="goods-attributes" class="goods-attributes"></div>
               <div class="field field--wide">
                 <label for="post-description">Description <span class="required-mark" aria-hidden="true">*</span></label>
                 <textarea id="post-description" name="description" rows="4" maxlength="400" required placeholder="What are you offering? Include size, quantity, condition, and pickup details."></textarea>
                 <p class="field-hint" id="post-description-hint">Up to 400 characters. Be clear about condition and pickup.</p>
+              </div>
+              <div class="field field--wide post-photo-field">
+                <label for="post-photos">Photos <span class="optional">(optional, up to 3)</span></label>
+                <input type="file" id="post-photos" name="photos" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+                <p class="field-hint">Resized and stored in this browser only. Nothing is uploaded or transmitted.</p>
+                <div class="post-photos-preview" id="post-photos-preview"></div>
+                <p class="field-hint" id="post-photo-count">0 of 3 photos selected.</p>
               </div>
             </div>
 

@@ -28,11 +28,34 @@
   const SVG_NS = 'http://www.w3.org/2000/svg';
   const reportEvidenceDrafts = new WeakMap();
   const reportEvidencePending = new WeakMap();
+  const postPhotoDrafts = new WeakMap();
+  const postPhotoPending = new WeakMap();
   let reportDialog = null;
 
   // Sample newsboard posts shared by the public site and the member dashboard.
   // A blog service will replace this list in the live site.
   const NEWS_POSTS = Object.freeze([
+    {
+      date: '2026-11-19',
+      label: 'Nov 19, 2026',
+      tag: 'Free Stuff',
+      title: 'Filter by city, state, and ZIP',
+      body: 'The goods catalog can now narrow offers by city, two-letter state, and ZIP prefix. Sort by location or by nearest ZIP using the sort ZIP control. New posts save those fields separately, and older posts keep working from their readable location label. Everything still stays in this browser.'
+    },
+    {
+      date: '2026-11-19',
+      label: 'Nov 19, 2026',
+      tag: 'Member posts',
+      title: 'Add photos to your goods and labor posts',
+      body: 'Members can attach up to three photos to an offer. Images are resized and kept in this browser only, then shown as thumbnails on the listing. Each photo has a storage-reference field ready for a future database; nothing is uploaded now.'
+    },
+    {
+      date: '2026-11-19',
+      label: 'Nov 19, 2026',
+      tag: 'Free Stuff',
+      title: 'Find it by category, condition, color, and brand',
+      body: 'The goods directory now has a filter sidebar and a product-style catalog. You can gift or find groceries, furniture, tech, tools, solar gear, raw materials, cars, gift cards for independent businesses, and more. Everything stays free for members and local-only in this prototype.'
+    },
     {
       date: '2026-11-19',
       label: 'Nov 19, 2026',
@@ -115,23 +138,166 @@
     }
   });
 
+  // Goods are described by what they are (category), their condition, color and
+  // brand, plus a few category-specific attributes. These definitions drive both
+  // the directory filters and the posting form so the two stay in sync.
   const GOODS_CATEGORIES = Object.freeze({
-    new: {
-      label: 'Free new stuff',
-      short: 'New'
+    groceries: {
+      label: 'Groceries & food',
+      short: 'Groceries',
+      note: 'Food must be within date, properly stored, and free of recalls.',
+      facets: ['foodType', 'diet'],
+      color: false,
+      brand: false
     },
-    homemade: {
-      label: 'Free homemade stuff',
-      short: 'Homemade'
+    household: {
+      label: 'Household & cleaning',
+      short: 'Household',
+      note: 'Unopened or gently used household supplies are welcome.',
+      facets: ['householdType'],
+      color: false,
+      brand: true
     },
-    used: {
-      label: 'Free old stuff',
-      short: 'Old'
+    clothing: {
+      label: 'Clothing & textiles',
+      short: 'Clothing',
+      note: 'Clean clothing, shoes, and fabric in any size.',
+      facets: ['clothingSize', 'season'],
+      color: true,
+      brand: true
     },
-    parts: {
-      label: 'Free stuff for parts or restoration (broken)',
-      short: 'Parts / restoration'
+    furniture: {
+      label: 'Furniture',
+      short: 'Furniture',
+      note: 'Clean, sturdy furniture. Say whether pickup or delivery is available.',
+      facets: ['room', 'material'],
+      color: true,
+      brand: true
+    },
+    tech: {
+      label: 'Tech & electronics',
+      short: 'Tech',
+      note: 'Working devices, parts, and accessories. Clear personal data before gifting.',
+      facets: ['deviceType'],
+      color: true,
+      brand: true
+    },
+    tools: {
+      label: 'Tools & equipment',
+      short: 'Tools',
+      note: 'Hand tools, power tools, and garden gear in safe working order.',
+      facets: ['toolType'],
+      color: true,
+      brand: true
+    },
+    solar: {
+      label: 'Solar panels & energy',
+      short: 'Solar',
+      note: 'Panels, inverters, and mounting gear. State the wattage and whether the set is complete.',
+      facets: ['panelType', 'wattage'],
+      color: false,
+      brand: true
+    },
+    materials: {
+      label: 'Raw materials',
+      short: 'Materials',
+      note: 'Lumber, metal, fabric, plastic, paper, and other building or craft inputs.',
+      facets: ['materialType'],
+      color: false,
+      brand: false
+    },
+    vehicles: {
+      label: 'Vehicles',
+      short: 'Vehicles',
+      note: 'The item is free; the receiving neighbor covers registration and titling fees.',
+      facets: ['vehicleType', 'fuel', 'titleStatus'],
+      color: true,
+      brand: true
+    },
+    'gift-cards': {
+      label: 'Gift cards & vouchers',
+      short: 'Gift cards',
+      note: 'Independent small businesses and local co-ops only, never major corporations.',
+      facets: ['cardType', 'businessType'],
+      color: false,
+      brand: false
+    },
+    other: {
+      label: 'Other legal goods',
+      short: 'Other',
+      note: 'Anything else that is legal, safe, and free to give.',
+      facets: [],
+      color: true,
+      brand: true
     }
+  });
+
+  const GOOD_CONDITIONS = Object.freeze({
+    new: 'New / unopened',
+    homemade: 'Homemade or grown',
+    used: 'Used / gently used',
+    refurbished: 'Refurbished or repaired',
+    parts: 'For parts or restoration'
+  });
+
+  const GOOD_COLORS = Object.freeze([
+    'Black', 'White', 'Gray', 'Silver', 'Red', 'Blue', 'Green', 'Yellow',
+    'Orange', 'Purple', 'Pink', 'Brown / tan', 'Multicolor', 'Other'
+  ]);
+
+  // Category-specific fields. Keys are stored on listing.attributes so the
+  // record stays structured for a future database instead of free-form text.
+  const GOOD_FACETS = Object.freeze({
+    foodType: { label: 'Food type', options: ['Produce', 'Pantry staples', 'Dairy & eggs', 'Frozen', 'Baked goods', 'Baby food'] },
+    diet: { label: 'Diet', options: ['Standard', 'Vegetarian', 'Vegan', 'Gluten-free', 'Halal', 'Kosher'] },
+    householdType: { label: 'Item type', options: ['Cleaning', 'Hygiene', 'Kitchen', 'Bedding', 'Laundry', 'Other'] },
+    clothingSize: { label: 'Size', options: ['Adult', 'Child', 'Baby', 'Mixed / assorted'] },
+    season: { label: 'Season', options: ['All season', 'Warm weather', 'Cold weather'] },
+    room: { label: 'Room', options: ['Living room', 'Bedroom', 'Kitchen & dining', 'Office', 'Outdoor', 'Other'] },
+    material: { label: 'Material', options: ['Wood', 'Metal', 'Fabric / upholstery', 'Plastic', 'Glass', 'Other'] },
+    deviceType: { label: 'Device type', options: ['Computer & tablet', 'Phone', 'Audio', 'Camera & video', 'Gaming', 'Parts & accessories', 'Other'] },
+    toolType: { label: 'Tool type', options: ['Hand tools', 'Power tools', 'Garden', 'Kitchen', 'Automotive', 'Other'] },
+    panelType: { label: 'Panel type', options: ['Monocrystalline', 'Polycrystalline', 'Thin-film', 'Inverter / parts'] },
+    wattage: { label: 'Wattage', options: ['Under 100 W', '100-300 W', 'Over 300 W', 'Not specified'] },
+    materialType: { label: 'Material', options: ['Lumber & wood', 'Metal', 'Fabric & fiber', 'Plastic', 'Paper & cardboard', 'Building supplies', 'Other'] },
+    vehicleType: { label: 'Vehicle type', options: ['Car', 'Truck', 'Van', 'Motorcycle', 'Trailer', 'Other'] },
+    fuel: { label: 'Fuel', options: ['Gasoline', 'Diesel', 'Hybrid', 'Electric', 'Not applicable'] },
+    titleStatus: { label: 'Title', options: ['Clear title in hand', 'Title available', 'Paperwork needed', 'Not specified'] },
+    cardType: { label: 'Card for', options: ['Groceries', 'Gas', 'Hardware & supplies', 'Restaurant & cafe', 'Local services', 'Other small business'] },
+    businessType: { label: 'Business', options: ['Independent small business', 'Local co-op', 'Neighbor-run'] }
+  });
+
+  // Small product-style thumbnails and color chips for the goods directory.
+  // These are decorative: the text details always carry the same information.
+  const GOODS_CATEGORY_ICONS = Object.freeze({
+    groceries: '🥬',
+    household: '🧼',
+    clothing: '🧥',
+    furniture: '🪑',
+    tech: '💻',
+    tools: '🔧',
+    solar: '☀️',
+    materials: '🪵',
+    vehicles: '🚗',
+    'gift-cards': '🎁',
+    other: '📦'
+  });
+
+  const COLOR_SWATCHES = Object.freeze({
+    Black: '#1F2937',
+    White: '#FFFFFF',
+    Gray: '#9CA3AF',
+    Silver: '#C0C4CC',
+    Red: '#B44332',
+    Blue: '#1E3A8A',
+    Green: '#2F6B4F',
+    Yellow: '#D99B26',
+    Orange: '#C96A22',
+    Purple: '#6D4FA3',
+    Pink: '#D47CA0',
+    'Brown / tan': '#A67C52',
+    Multicolor: 'conic-gradient(#B44332, #D99B26, #2F6B4F, #1E3A8A, #B44332)',
+    Other: '#7C8798'
   });
 
   const SCOPE_LABELS = Object.freeze({
@@ -252,7 +418,9 @@
       id: 'seed-pantry',
       pillar: 'goods',
       exchange: 'free',
-      category: 'new',
+      category: 'groceries',
+      condition: 'new',
+      attributes: { foodType: 'Pantry staples', diet: 'Standard' },
       title: 'Neighborhood Pantry & Fresh Produce Share',
       provider: 'Community Pantry Crew',
       location: 'St. Aiden’s basement · Wed & Sat',
@@ -268,7 +436,10 @@
       id: 'seed-tools',
       pillar: 'goods',
       exchange: 'free',
-      category: 'used',
+      category: 'tools',
+      condition: 'used',
+      color: 'Multicolor',
+      attributes: { toolType: 'Hand tools' },
       title: 'Tool Library: Borrow, Don’t Buy',
       provider: 'Westside Tool Library',
       location: 'Westside workshop · Thursdays 4–7pm',
@@ -284,7 +455,10 @@
       id: 'seed-clothing',
       pillar: 'goods',
       exchange: 'free',
-      category: 'used',
+      category: 'clothing',
+      condition: 'used',
+      color: 'Multicolor',
+      attributes: { clothingSize: 'Adult', season: 'All season' },
       title: 'Clothing, Bedding & Housewares Swap',
       provider: 'Maple Street Neighbors',
       location: 'Maple Street Hall · first Sunday',
@@ -300,7 +474,9 @@
       id: 'seed-hygiene',
       pillar: 'goods',
       exchange: 'free',
-      category: 'new',
+      category: 'household',
+      condition: 'new',
+      attributes: { householdType: 'Hygiene' },
       title: 'Bulk Cleaning & Hygiene Supplies — Free',
       provider: 'Nia Brooks',
       location: 'Westside neighborhood · pickup or delivery',
@@ -311,6 +487,120 @@
         { label: 'Access', value: 'Porch pickup or local delivery' }
       ],
       note: 'Free supplies. Nothing to repay.'
+    },
+    {
+      id: 'seed-furniture',
+      pillar: 'goods',
+      exchange: 'free',
+      category: 'furniture',
+      condition: 'used',
+      color: 'Brown / tan',
+      attributes: { room: 'Living room', material: 'Wood' },
+      title: 'Solid Wood Bookshelves & Side Tables',
+      provider: 'Rosa Jiménez',
+      location: 'Maple Street · porch pickup',
+      description: 'Sturdy solid-wood shelves and side tables, cleaned and sanded. Pickup from the porch, or delivery within a few miles if we can arrange it. No payment, no swap—just give them a good home.',
+      details: [
+        { label: 'Pickup', value: 'Porch pickup · local delivery possible' },
+        { label: 'Cost', value: 'Free · no swap required' },
+        { label: 'Condition', value: 'Clean, sturdy, gently used' }
+      ],
+      note: 'Furniture is free. You arrange transport.'
+    },
+    {
+      id: 'seed-laptop',
+      pillar: 'goods',
+      exchange: 'free',
+      category: 'tech',
+      condition: 'refurbished',
+      color: 'Silver',
+      brand: 'Dell',
+      attributes: { deviceType: 'Computer & tablet' },
+      title: 'Refurbished Laptops for Students & Neighbors',
+      provider: 'Devin Reyes',
+      location: 'Downtown library · Tuesday drop-in',
+      description: 'Refurbished laptops wiped clean, with a fresh operating system and a charger. Free to a neighbor who needs one for school, work, or getting online. We help set up a mail account and basic security on arrival.',
+      details: [
+        { label: 'Where', value: 'Tuesday library drop-in' },
+        { label: 'Cost', value: 'Free · no deposit' },
+        { label: 'Note', value: 'Data wiped before handoff' }
+      ],
+      note: 'One per household while they last.'
+    },
+    {
+      id: 'seed-solar',
+      pillar: 'goods',
+      exchange: 'free',
+      category: 'solar',
+      condition: 'new',
+      brand: '',
+      attributes: { panelType: 'Monocrystalline', wattage: '100-300 W' },
+      title: 'Solar Panel Starter Kits & Inverters',
+      provider: 'Solar Mutual Aid Crew',
+      location: 'Westside workshop · by appointment',
+      description: 'Unused monocrystalline panels, charge controllers, and inverters donated by a local installer. Free for a neighborhood project or a household getting started. We will help you check that the pieces fit before you take them.',
+      details: [
+        { label: 'Pickup', value: 'By appointment · Westside workshop' },
+        { label: 'Cost', value: 'Free · no deposit' },
+        { label: 'Support', value: 'Compatibility check offered' }
+      ],
+      note: 'Installation is your responsibility; ask a peer first.'
+    },
+    {
+      id: 'seed-lumber',
+      pillar: 'goods',
+      exchange: 'free',
+      category: 'materials',
+      condition: 'used',
+      attributes: { materialType: 'Lumber & wood' },
+      title: 'Clean Scrap Lumber & Building Supplies',
+      provider: 'Marcus Bell',
+      location: 'Northside garage · weekends',
+      description: 'Offcuts of clean, untreated lumber, plus a few boxes of fasteners and insulation left over from community builds. Sorted by size. Take what your project needs; nothing is priced and nothing is owed.',
+      details: [
+        { label: 'Pickup', value: 'Weekends · Northside garage' },
+        { label: 'Cost', value: 'Free · no swap required' },
+        { label: 'Condition', value: 'Clean, dry, untreated' }
+      ],
+      note: 'Sorted by size. Take only what you can use.'
+    },
+    {
+      id: 'seed-car',
+      pillar: 'goods',
+      exchange: 'free',
+      category: 'vehicles',
+      condition: 'used',
+      color: 'Blue',
+      brand: 'Toyota',
+      attributes: { vehicleType: 'Car', fuel: 'Gasoline', titleStatus: 'Clear title in hand' },
+      title: 'Compact Car — Free; Recipient Covers Title & Registration',
+      provider: 'Amara Okafor',
+      location: 'Eastside · by appointment',
+      description: 'A reliable compact car with a clean title in hand, free to a neighbor who needs it. The car itself costs nothing: the receiving person covers the registration and titling fees. We meet first, go over the paperwork together, and you can have a mechanic inspect it.',
+      details: [
+        { label: 'Cost', value: 'Free · recipient covers title & registration fees' },
+        { label: 'Title', value: 'Clear title in hand' },
+        { label: 'Safety', value: 'Meet first · inspection welcome' }
+      ],
+      note: 'Fees are paid to the state, not to Unbought.'
+    },
+    {
+      id: 'seed-giftcard',
+      pillar: 'goods',
+      exchange: 'free',
+      category: 'gift-cards',
+      condition: 'new',
+      attributes: { cardType: 'Groceries', businessType: 'Independent small business' },
+      title: 'Gift Cards for Independent Local Grocers',
+      provider: 'Maple Street Neighbors',
+      location: 'Maple Street Hall · first Sunday',
+      description: 'Unused gift cards for independent, neighborhood-owned grocers and co-ops—never a major corporation. Cards are handed over with the balance shown, and we help you find the store if you are new to the area.',
+      details: [
+        { label: 'Where', value: 'First Sunday · Maple Street Hall' },
+        { label: 'Business', value: 'Independent small business or co-op only' },
+        { label: 'Cost', value: 'Free · no swap required' }
+      ],
+      note: 'Balance shown at handoff. No major chains.'
     }
   ]);
 
@@ -359,6 +649,18 @@
     maxTextLength: 20000,
     imageTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
     accepted: 'image/jpeg,image/png,image/webp,image/gif,text/*,.txt,.csv,.json,.md,.log,.pdf,audio/*,video/*'
+  });
+
+  // Post photos are local previews in this prototype. Each record has a
+  // storageRef field so a future database can hold the real image while the
+  // other fields (name, type, size, dimensions, addedAt) stay the same.
+  const POST_PHOTOS = Object.freeze({
+    maxItems: 3,
+    maxFileBytes: 8 * 1024 * 1024,
+    maxEdge: 800,
+    maxDataLength: 140000,
+    imageTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+    accepted: 'image/jpeg,image/png,image/webp,image/gif'
   });
 
   const REFLECTION_OPTIONS = Object.freeze([30, 90, 180]);
@@ -722,6 +1024,108 @@
     });
   }
 
+  // Photo records are shaped like a future database row: an id, metadata, and
+  // a local-only dataUrl. A later backend can fill storageRef and drop the
+  // dataUrl without changing any of the listing code.
+  async function preparePostPhoto(file) {
+    if (!file || !POST_PHOTOS.imageTypes.includes(file.type)) return null;
+    if (Number(file.size) > POST_PHOTOS.maxFileBytes) return null;
+    try {
+      const sourceUrl = await readFileAsDataUrl(file);
+      const image = await new Promise((resolve, reject) => {
+        const element = new Image();
+        element.onload = () => resolve(element);
+        element.onerror = () => reject(new Error('image-failed'));
+        element.src = sourceUrl;
+      });
+      const width = image.naturalWidth || image.width;
+      const height = image.naturalHeight || image.height;
+      if (!width || !height) return null;
+      const scale = Math.min(1, POST_PHOTOS.maxEdge / Math.max(width, height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(width * scale));
+      canvas.height = Math.max(1, Math.round(height * scale));
+      const context = canvas.getContext('2d');
+      if (!context) return null;
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.68);
+      if (dataUrl.length > POST_PHOTOS.maxDataLength) return null;
+      return {
+        id: makeId('photo'),
+        name: cleanString(file.name, 120) || 'Photo',
+        mime: 'image/jpeg',
+        size: Number(file.size) || 0,
+        width: canvas.width,
+        height: canvas.height,
+        dataUrl,
+        storageRef: '',
+        addedAt: new Date().toISOString()
+      };
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async function preparePostPhotos(files) {
+    const photos = [];
+    for (const file of files) {
+      if (photos.length >= POST_PHOTOS.maxItems) break;
+      const photo = await preparePostPhoto(file);
+      if (photo) photos.push(photo);
+    }
+    return photos;
+  }
+
+  function cleanPostPhotos(items) {
+    return (Array.isArray(items) ? items : [])
+      .slice(0, POST_PHOTOS.maxItems)
+      .map((item) => {
+        if (!item || typeof item !== 'object') return null;
+        const dataUrl = typeof item.dataUrl === 'string'
+          && item.dataUrl.startsWith('data:image/jpeg;base64,')
+          && item.dataUrl.length <= POST_PHOTOS.maxDataLength
+          ? item.dataUrl
+          : '';
+        if (!dataUrl) return null;
+        return {
+          id: cleanString(item.id, 100) || makeId('photo'),
+          name: cleanString(item.name, 120) || 'Photo',
+          mime: 'image/jpeg',
+          size: Number(item.size) || 0,
+          width: Number(item.width) || 0,
+          height: Number(item.height) || 0,
+          dataUrl,
+          storageRef: cleanString(item.storageRef, 160),
+          addedAt: cleanString(item.addedAt, 40)
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function renderPostPhotos(form, photos) {
+    const preview = $('#post-photos-preview', form);
+    const count = $('#post-photo-count', form);
+    if (count) count.textContent = `${photos.length} of ${POST_PHOTOS.maxItems} photos selected.`;
+    if (!preview) return;
+    preview.replaceChildren();
+    photos.forEach((photo, index) => {
+      const figure = createEl('figure', 'post-photo');
+      const image = createEl('img');
+      image.src = photo.dataUrl;
+      image.alt = `Selected photo: ${photo.name}`;
+      image.loading = 'lazy';
+      figure.appendChild(image);
+      const remove = createEl('button', 'post-photo-remove', 'Remove');
+      remove.type = 'button';
+      remove.dataset.removePostPhoto = String(index);
+      remove.setAttribute('aria-label', `Remove photo ${photo.name}`);
+      figure.appendChild(remove);
+      preview.appendChild(figure);
+    });
+  }
+
   function getReportContextSummary(report) {
     const area = cleanString(report && report.contextArea, 80) || 'Dashboard';
     const detail = cleanString(report && report.contextDetail, 160);
@@ -768,7 +1172,26 @@
   }
 
   function normalizeStoredListing(item) {
-    const category = item.pillar === 'goods' && hasOwn(GOODS_CATEGORIES, item.category) ? item.category : '';
+    const isGoods = item.pillar === 'goods';
+    // Listings saved before the goods taxonomy changed used condition words as
+    // their category. Keep them usable by moving the old value to condition.
+    const legacyCategories = { new: 'new', homemade: 'homemade', used: 'used', parts: 'parts' };
+    let category = isGoods && hasOwn(GOODS_CATEGORIES, item.category) ? item.category : '';
+    let condition = isGoods && hasOwn(GOOD_CONDITIONS, item.condition) ? item.condition : '';
+    if (isGoods && !category && hasOwn(legacyCategories, item.category)) {
+      category = 'other';
+      condition = legacyCategories[item.category];
+    }
+    const attributes = {};
+    if (isGoods && item.attributes && typeof item.attributes === 'object') {
+      Object.keys(GOOD_FACETS).forEach((key) => {
+        const value = cleanString(item.attributes[key], 60);
+        if (value && GOOD_FACETS[key].options.includes(value)) attributes[key] = value;
+      });
+    }
+    // Keep a structured location on every listing so filters can use city,
+    // state, and ZIP without relying on the human-readable label alone.
+    const place = locationOf(item);
     return {
       id: cleanString(item.id, 100) || `listing-${Date.now().toString(36)}`,
       memberId: cleanString(item.memberId, 100),
@@ -776,8 +1199,18 @@
       pillar: item.pillar,
       exchange: item.exchange,
       category,
+      ...(isGoods ? {
+        condition,
+        color: GOOD_COLORS.includes(item.color) ? item.color : '',
+        brand: cleanString(item.brand, 60),
+        attributes
+      } : {}),
+      photos: cleanPostPhotos(item.photos),
       provider: cleanString(item.provider, 60),
       location: cleanString(item.location, 80),
+      city: place.city,
+      state: place.state,
+      zip: place.zip,
       description: cleanString(item.description, 400),
       note: cleanString(item.note, 120) || 'Added by a neighbor · consent first',
       scope: hasOwn(SCOPE_LABELS, item.scope) ? item.scope : '',
@@ -1271,23 +1704,111 @@
   /* ------------------------------------------------------------------------
      03. Services & goods directory
      ------------------------------------------------------------------------ */
+  function checkedFilterValues(selector) {
+    return $$(selector).map((input) => input.value).filter(Boolean);
+  }
+
   function getFilterValues() {
+    const attributes = {};
+    $$('[data-filter-facet]:checked').forEach((input) => {
+      const key = input.dataset.filterFacet;
+      if (!key || !hasOwn(GOOD_FACETS, key)) return;
+      if (!attributes[key]) attributes[key] = [];
+      attributes[key].push(input.value);
+    });
     return {
       pillar: $('#pillar-filter') ? $('#pillar-filter').value : 'all',
       exchange: $('#exchange-filter') ? $('#exchange-filter').value : 'all',
-      category: $('#category-filter') ? $('#category-filter').value : 'all'
+      category: $('#category-filter') ? $('#category-filter').value : 'all',
+      conditions: checkedFilterValues('[data-filter-condition]:checked'),
+      colors: checkedFilterValues('[data-filter-color]:checked'),
+      brand: $('#brand-filter') ? $('#brand-filter').value.trim() : '',
+      city: $('#city-filter') ? $('#city-filter').value.trim() : '',
+      state: $('#state-filter') ? $('#state-filter').value.trim().toUpperCase() : '',
+      zip: $('#zip-filter') ? $('#zip-filter').value.replace(/\D/g, '').slice(0, 5) : '',
+      nearZip: $('#distance-zip') ? $('#distance-zip').value.replace(/\D/g, '').slice(0, 5) : '',
+      attributes,
+      sort: $('#sort-filter') ? $('#sort-filter').value : 'featured'
     };
   }
 
-  function getFilteredListings() {
-    const { pillar, exchange, category } = getFilterValues();
-    const scope = getDirectoryScope();
-    return getAllListings().filter((listing) => {
-      const matchesPillar = pillar === 'all' || listing.pillar === pillar;
-      const matchesExchange = exchange === 'all' || listing.exchange === exchange;
-      const matchesCategory = scope !== 'goods' || category === 'all' || listing.category === category;
-      return matchesPillar && matchesExchange && matchesCategory;
+  function goodsCategoryShort(listing) {
+    return hasOwn(GOODS_CATEGORIES, listing.category) ? GOODS_CATEGORIES[listing.category].short : '';
+  }
+
+  // New listings store city/state/ZIP separately. Seed listings only have a
+  // readable location label, so derive the same fields from that label.
+  function locationOf(listing) {
+    const text = String((listing && listing.location) || '');
+    const city = cleanString(listing && listing.city, 60) || text.split(/[·+,]/)[0].trim();
+    const state = cleanString(listing && listing.state, 2).toUpperCase()
+      || (text.match(/\b[A-Z]{2}\b/) || [''])[0];
+    const zip = cleanString(listing && listing.zip, 10)
+      || (text.match(/\b\d{5}(?:-\d{4})?\b/) || [''])[0];
+    return { city, state, zip, text };
+  }
+
+  function listingMatchesFilters(listing, values, scope) {
+    if (values.pillar !== 'all' && listing.pillar !== values.pillar) return false;
+    if (values.exchange !== 'all' && listing.exchange !== values.exchange) return false;
+
+    const place = locationOf(listing);
+    if (values.city) {
+      const cityQuery = values.city.toLowerCase();
+      if (!place.city.toLowerCase().includes(cityQuery) && !place.text.toLowerCase().includes(cityQuery)) return false;
+    }
+    if (values.state && place.state !== values.state) return false;
+    if (values.zip && !place.zip.replace(/\D/g, '').startsWith(values.zip)) return false;
+
+    if (scope !== 'goods') return true;
+
+    if (values.category !== 'all' && listing.category !== values.category) return false;
+    if (values.conditions.length && !values.conditions.includes(listing.condition)) return false;
+    if (values.colors.length && !values.colors.includes(listing.color)) return false;
+    if (values.brand) {
+      const brand = String(listing.brand || '').toLowerCase();
+      if (!brand.includes(values.brand.toLowerCase())) return false;
+    }
+
+    const attributes = listing.attributes && typeof listing.attributes === 'object' ? listing.attributes : {};
+    return Object.keys(values.attributes).every((key) => {
+      const selected = values.attributes[key];
+      return !selected.length || selected.includes(attributes[key]);
     });
+  }
+
+  function getFilteredListings() {
+    const values = getFilterValues();
+    const scope = getDirectoryScope();
+    const filtered = getAllListings().filter((listing) => listingMatchesFilters(listing, values, scope));
+    if (scope !== 'goods') return filtered;
+
+    const sorted = [...filtered];
+    if (values.sort === 'title') {
+      sorted.sort((a, b) => String(a.title).localeCompare(String(b.title)));
+    } else if (values.sort === 'newest') {
+      sorted.sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    } else if (values.sort === 'category') {
+      sorted.sort((a, b) => goodsCategoryShort(a).localeCompare(goodsCategoryShort(b)) || String(a.title).localeCompare(String(b.title)));
+    } else if (values.sort === 'location') {
+      sorted.sort((a, b) => {
+        const first = locationOf(a);
+        const second = locationOf(b);
+        return first.state.localeCompare(second.state)
+          || first.city.localeCompare(second.city)
+          || String(a.title).localeCompare(String(b.title));
+      });
+    } else if (values.sort === 'distance' && values.nearZip) {
+      // Prototype approximation: compare the first five ZIP digits. It is a
+      // simple local sort, not a map or a real distance calculation.
+      const origin = Number(values.nearZip);
+      const distance = (item) => {
+        const zip = locationOf(item).zip.replace(/\D/g, '').slice(0, 5);
+        return /^\d{5}$/.test(zip) ? Math.abs(Number(zip) - origin) : Number.MAX_SAFE_INTEGER;
+      };
+      sorted.sort((a, b) => distance(a) - distance(b) || String(a.title).localeCompare(String(b.title)));
+    }
+    return sorted;
   }
 
   function addBadge(container, className, text) {
@@ -1302,6 +1823,44 @@
     card.dataset.pillar = listing.pillar;
     card.dataset.listingId = listing.id;
     if (listing.isUser) card.classList.add('is-user');
+
+    const photos = cleanPostPhotos(listing.photos);
+
+    // On the goods page each offer gets a product-style thumbnail and a
+    // prominent free price, a small nod to a familiar catalog layout.
+    const isProductCard = listing.pillar === 'goods' && getDirectoryScope() === 'goods';
+    if (isProductCard) {
+      card.classList.add('product-card');
+      const media = createEl('div', 'product-media');
+      if (photos.length) {
+        const image = createEl('img', 'product-photo');
+        image.src = photos[0].dataUrl;
+        image.alt = `Photo of ${listing.title}`;
+        image.loading = 'lazy';
+        media.appendChild(image);
+        if (photos.length > 1) {
+          media.appendChild(createEl('span', 'product-photo-count', `+${photos.length - 1}`));
+        }
+      } else {
+        media.setAttribute('aria-hidden', 'true');
+        media.appendChild(createEl('span', 'product-glyph', GOODS_CATEGORY_ICONS[listing.category] || '📦'));
+      }
+      card.appendChild(media);
+      const price = createEl('div', 'product-price');
+      price.appendChild(createEl('span', 'product-price-value', 'FREE'));
+      price.appendChild(createEl('span', 'product-price-note', goodsCategoryShort(listing)));
+      card.appendChild(price);
+    } else if (photos.length) {
+      const strip = createEl('div', 'listing-photos');
+      photos.forEach((photo) => {
+        const image = createEl('img');
+        image.src = photo.dataUrl;
+        image.alt = `Photo of ${listing.title}`;
+        image.loading = 'lazy';
+        strip.appendChild(image);
+      });
+      card.appendChild(strip);
+    }
 
     const matchingRequests = state.requests.filter((request) => request.listingId === listing.id);
     const hasMutualRequest = matchingRequests.some((request) => request.type !== 'nonmember_purchase');
@@ -1339,8 +1898,22 @@
 
     const meta = createEl('dl', 'listing-meta');
     const details = Array.isArray(listing.details) && listing.details.length
-      ? listing.details
+      ? [...listing.details]
       : [{ label: 'Where', value: listing.location }];
+
+    if (isProductCard) {
+      if (hasOwn(GOOD_CONDITIONS, listing.condition)) {
+        details.push({ label: 'Condition', value: GOOD_CONDITIONS[listing.condition] });
+      }
+      if (listing.color) details.push({ label: 'Color', value: listing.color });
+      if (listing.brand) details.push({ label: 'Brand', value: listing.brand });
+      const attributes = listing.attributes && typeof listing.attributes === 'object' ? listing.attributes : {};
+      Object.keys(attributes).forEach((key) => {
+        if (hasOwn(GOOD_FACETS, key) && attributes[key]) {
+          details.push({ label: GOOD_FACETS[key].label, value: attributes[key] });
+        }
+      });
+    }
 
     details.forEach((detail) => {
       if (!detail || !detail.label || !detail.value) return;
@@ -1427,7 +2000,7 @@
     if (!listings.length) {
       const empty = createEl('div', 'no-results');
       empty.appendChild(createEl('h3', '', 'No offerings match those filters yet.'));
-      empty.appendChild(createEl('p', '', 'Try another pillar or materials option—or post the first free offer in this category.'));
+      empty.appendChild(createEl('p', '', 'Try another category, condition, color, brand, or item detail—or post the first free offer here.'));
       const reset = createEl('button', 'button button--outline button--small', 'Reset filters');
       reset.type = 'button';
       reset.dataset.clearFilters = '';
@@ -1441,45 +2014,267 @@
     grid.appendChild(fragment);
   }
 
-  function updateResultsStatus(shown, total, pillar, exchange, category) {
+  function updateResultsStatus(shown, total) {
     const status = document.getElementById('results-status');
     if (!status) return;
 
+    const values = getFilterValues();
     const scope = getDirectoryScope();
-    const pillarText = pillar === 'all'
-      ? ''
-      : PILLARS[pillar].label;
-    const exchangeText = exchange === 'all' ? '' : EXCHANGES[exchange].label;
-    const categoryText = scope === 'goods' && category && category !== 'all' && hasOwn(GOODS_CATEGORIES, category)
-      ? GOODS_CATEGORIES[category].label
-      : '';
-    const detail = [pillarText, exchangeText, categoryText].filter(Boolean).join(' · ');
+    const detail = [];
+    if (values.pillar !== 'all' && hasOwn(PILLARS, values.pillar)) detail.push(PILLARS[values.pillar].label);
+    if (values.exchange !== 'all' && hasOwn(EXCHANGES, values.exchange)) detail.push(EXCHANGES[values.exchange].label);
+    if (scope === 'goods') {
+      if (values.category !== 'all' && hasOwn(GOODS_CATEGORIES, values.category)) {
+        detail.push(GOODS_CATEGORIES[values.category].label);
+      }
+      values.conditions.forEach((value) => {
+        if (hasOwn(GOOD_CONDITIONS, value)) detail.push(GOOD_CONDITIONS[value]);
+      });
+      values.colors.forEach((value) => detail.push(value));
+      if (values.brand) detail.push(`Brand: ${values.brand}`);
+      Object.keys(values.attributes).forEach((key) => {
+        if (!hasOwn(GOOD_FACETS, key)) return;
+        values.attributes[key].forEach((value) => detail.push(`${GOOD_FACETS[key].label}: ${value}`));
+      });
+    }
     const offeringText = scope === 'goods' ? 'free goods' : scope === 'labor' ? 'free labor offers' : 'community offerings';
 
     if (!shown) {
       status.textContent = `No ${offeringText} match those filters. Try resetting the filters.`;
-    } else if (!detail) {
+    } else if (!detail.length) {
       status.textContent = `Showing all ${total} ${offeringText}.`;
     } else {
-      status.textContent = `Showing ${shown} of ${total} ${offeringText} · ${detail}.`;
+      status.textContent = `Showing ${shown} of ${total} ${offeringText} · ${detail.join(' · ')}.`;
     }
+  }
+
+  function renderActiveFilters() {
+    const container = document.getElementById('active-filters');
+    if (!container) return;
+
+    const values = getFilterValues();
+    const chips = [];
+    const addChip = (label, attrs) => chips.push({ label, attrs });
+
+    if (values.city) addChip(`City: ${values.city}`, { clearFilter: 'city' });
+    if (values.state) addChip(`State: ${values.state}`, { clearFilter: 'state' });
+    if (values.zip) addChip(`ZIP near: ${values.zip}`, { clearFilter: 'zip' });
+
+    if (getDirectoryScope() === 'goods') {
+      if (values.category !== 'all' && hasOwn(GOODS_CATEGORIES, values.category)) {
+        addChip(`Category: ${GOODS_CATEGORIES[values.category].label}`, { clearFilter: 'category' });
+      }
+      values.conditions.forEach((value) => {
+        if (hasOwn(GOOD_CONDITIONS, value)) {
+          addChip(GOOD_CONDITIONS[value], { clearFilter: 'condition', clearValue: value });
+        }
+      });
+      values.colors.forEach((value) => {
+        addChip(value, { clearFilter: 'color', clearValue: value });
+      });
+      if (values.brand) addChip(`Brand: ${values.brand}`, { clearFilter: 'brand' });
+      Object.keys(values.attributes).forEach((key) => {
+        if (!hasOwn(GOOD_FACETS, key)) return;
+        values.attributes[key].forEach((value) => {
+          addChip(`${GOOD_FACETS[key].label}: ${value}`, { clearFilter: 'facet', clearKey: key, clearValue: value });
+        });
+      });
+    } else {
+      if (values.pillar !== 'all' && hasOwn(PILLARS, values.pillar)) {
+        addChip(PILLARS[values.pillar].label, { clearFilter: 'pillar' });
+      }
+      if (values.exchange !== 'all' && hasOwn(EXCHANGES, values.exchange)) {
+        addChip(EXCHANGES[values.exchange].label, { clearFilter: 'exchange' });
+      }
+    }
+
+    container.replaceChildren();
+    if (!chips.length) {
+      container.hidden = true;
+      return;
+    }
+    container.hidden = false;
+    container.appendChild(createEl('span', 'active-filters-label', 'Active filters:'));
+    chips.forEach((chip) => {
+      const button = createEl('button', 'filter-chip');
+      button.type = 'button';
+      Object.keys(chip.attrs).forEach((key) => {
+        button.dataset[key] = chip.attrs[key];
+      });
+      button.append(document.createTextNode(chip.label), document.createTextNode(' ×'));
+      button.setAttribute('aria-label', `Remove filter: ${chip.label}`);
+      container.appendChild(button);
+    });
+    const clearAll = createEl('button', 'filter-chip-clear', 'Clear all');
+    clearAll.type = 'button';
+    clearAll.dataset.clearFilter = 'all';
+    container.appendChild(clearAll);
+  }
+
+  function clearActiveFilter(button) {
+    const kind = button.dataset.clearFilter;
+    const value = button.dataset.clearValue || '';
+    if (kind === 'all') {
+      resetFilters();
+      return;
+    }
+    if (kind === 'category' || kind === 'brand' || kind === 'pillar' || kind === 'exchange'
+      || kind === 'city' || kind === 'state' || kind === 'zip') {
+      const idMap = {
+        category: 'category-filter',
+        brand: 'brand-filter',
+        pillar: 'pillar-filter',
+        exchange: 'exchange-filter',
+        city: 'city-filter',
+        state: 'state-filter',
+        zip: 'zip-filter'
+      };
+      const control = document.getElementById(idMap[kind]);
+      if (control) control.value = kind === 'brand' || kind === 'city' || kind === 'state' || kind === 'zip' ? '' : 'all';
+    } else if (kind === 'condition' || kind === 'color' || kind === 'facet') {
+      const attr = kind === 'condition' ? 'data-filter-condition' : kind === 'color' ? 'data-filter-color' : 'data-filter-facet';
+      const key = kind === 'facet' && button.dataset.clearKey
+        ? `[data-filter-facet="${button.dataset.clearKey}"]`
+        : `[${attr}]`;
+      $$(key).forEach((input) => {
+        if (input.value === value) input.checked = false;
+      });
+    }
+    applyFilters();
+  }
+
+  function renderStaticFilterOptions() {
+    const categorySelect = document.getElementById('category-filter');
+    if (categorySelect) {
+      const current = categorySelect.value || 'all';
+      categorySelect.replaceChildren();
+      const all = document.createElement('option');
+      all.value = 'all';
+      all.textContent = 'All categories';
+      categorySelect.appendChild(all);
+      Object.keys(GOODS_CATEGORIES).forEach((key) => {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = GOODS_CATEGORIES[key].label;
+        categorySelect.appendChild(option);
+      });
+      categorySelect.value = hasOwn(GOODS_CATEGORIES, current) ? current : 'all';
+    }
+
+    const conditionBox = document.getElementById('condition-options');
+    if (conditionBox) {
+      conditionBox.replaceChildren();
+      Object.keys(GOOD_CONDITIONS).forEach((key) => {
+        const label = createEl('label', 'facet-check');
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = key;
+        input.dataset.filterCondition = '';
+        label.append(input, document.createTextNode(GOOD_CONDITIONS[key]));
+        conditionBox.appendChild(label);
+      });
+    }
+
+    const colorBox = document.getElementById('color-options');
+    if (colorBox) {
+      colorBox.replaceChildren();
+      GOOD_COLORS.forEach((color) => {
+        const label = createEl('label', 'facet-check facet-check--color');
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = color;
+        input.dataset.filterColor = '';
+        const swatch = createEl('span', 'color-dot');
+        swatch.style.background = COLOR_SWATCHES[color] || '#7C8798';
+        label.append(input, swatch, createEl('span', 'color-name', color));
+        colorBox.appendChild(label);
+      });
+    }
+
+    const datalist = document.getElementById('brand-options');
+    if (datalist) {
+      datalist.replaceChildren();
+      const brands = new Set();
+      getAllListings().forEach((listing) => {
+        if (listing.pillar === 'goods' && listing.brand) brands.add(listing.brand);
+      });
+      Array.from(brands).sort().forEach((brand) => {
+        const option = document.createElement('option');
+        option.value = brand;
+        datalist.appendChild(option);
+      });
+    }
+  }
+
+  function renderCategoryFacets() {
+    const group = document.getElementById('facet-filter-group');
+    const container = document.getElementById('facet-options');
+    const title = document.getElementById('facet-filter-title');
+    const categorySelect = document.getElementById('category-filter');
+    if (!group || !container) return;
+
+    const category = categorySelect ? categorySelect.value : 'all';
+    const definition = hasOwn(GOODS_CATEGORIES, category) ? GOODS_CATEGORIES[category] : null;
+    if (!definition || !definition.facets.length) {
+      group.hidden = true;
+      container.replaceChildren();
+      return;
+    }
+
+    const checked = {};
+    $$('[data-filter-facet]:checked').forEach((input) => {
+      if (!checked[input.dataset.filterFacet]) checked[input.dataset.filterFacet] = [];
+      checked[input.dataset.filterFacet].push(input.value);
+    });
+
+    group.hidden = false;
+    if (title) title.textContent = `${definition.short} details`;
+    container.replaceChildren();
+    definition.facets.forEach((key) => {
+      const facet = GOOD_FACETS[key];
+      if (!facet) return;
+      const row = createEl('div', 'facet-row');
+      row.appendChild(createEl('span', 'facet-row-label', facet.label));
+      const options = createEl('div', 'facet-options');
+      facet.options.forEach((option) => {
+        const label = createEl('label', 'facet-check');
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = option;
+        input.dataset.filterFacet = key;
+        if (checked[key] && checked[key].includes(option)) input.checked = true;
+        label.append(input, document.createTextNode(option));
+        options.appendChild(label);
+      });
+      row.appendChild(options);
+      container.appendChild(row);
+    });
   }
 
   function applyFilters() {
     const all = getAllListings();
     const filtered = getFilteredListings();
-    const { pillar, exchange, category } = getFilterValues();
     renderListings(filtered);
-    updateResultsStatus(filtered.length, all.length, pillar, exchange, category);
+    updateResultsStatus(filtered.length, all.length);
+    renderActiveFilters();
   }
 
   function resetFilters() {
-    const pillarFilter = document.getElementById('pillar-filter');
-    const exchangeFilter = document.getElementById('exchange-filter');
-    const categoryFilter = document.getElementById('category-filter');
-    if (pillarFilter) pillarFilter.value = 'all';
-    if (exchangeFilter) exchangeFilter.value = 'all';
-    if (categoryFilter) categoryFilter.value = 'all';
+    const ids = ['pillar-filter', 'exchange-filter', 'category-filter'];
+    ids.forEach((id) => {
+      const control = document.getElementById(id);
+      if (control) control.value = 'all';
+    });
+    ['brand-filter', 'city-filter', 'state-filter', 'zip-filter', 'distance-zip'].forEach((id) => {
+      const control = document.getElementById(id);
+      if (control) control.value = '';
+    });
+    const sortFilter = document.getElementById('sort-filter');
+    if (sortFilter) sortFilter.value = 'featured';
+    $$('[data-filter-condition], [data-filter-color], [data-filter-facet]').forEach((input) => {
+      input.checked = false;
+    });
+    renderCategoryFacets();
     applyFilters();
   }
 
@@ -1487,13 +2282,42 @@
     const pillarFilter = document.getElementById('pillar-filter');
     const exchangeFilter = document.getElementById('exchange-filter');
     const categoryFilter = document.getElementById('category-filter');
+    const brandFilter = document.getElementById('brand-filter');
+    const cityFilter = document.getElementById('city-filter');
+    const stateFilter = document.getElementById('state-filter');
+    const zipFilter = document.getElementById('zip-filter');
+    const distanceZip = document.getElementById('distance-zip');
+    const sortFilter = document.getElementById('sort-filter');
     const clearButton = document.getElementById('clear-filters');
     const grid = document.getElementById('listings-grid');
+    const activeFilters = document.getElementById('active-filters');
 
     if (pillarFilter) pillarFilter.addEventListener('change', applyFilters);
     if (exchangeFilter) exchangeFilter.addEventListener('change', applyFilters);
-    if (categoryFilter) categoryFilter.addEventListener('change', applyFilters);
+    if (brandFilter) brandFilter.addEventListener('input', applyFilters);
+    if (cityFilter) cityFilter.addEventListener('input', applyFilters);
+    if (stateFilter) stateFilter.addEventListener('input', applyFilters);
+    if (zipFilter) zipFilter.addEventListener('input', applyFilters);
+    if (distanceZip) distanceZip.addEventListener('input', applyFilters);
+    if (sortFilter) sortFilter.addEventListener('change', applyFilters);
+    if (categoryFilter) {
+      categoryFilter.addEventListener('change', () => {
+        renderCategoryFacets();
+        applyFilters();
+      });
+    }
     if (clearButton) clearButton.addEventListener('click', resetFilters);
+
+    ['condition-options', 'color-options', 'facet-options'].forEach((id) => {
+      const box = document.getElementById(id);
+      if (box) box.addEventListener('change', applyFilters);
+    });
+    if (activeFilters) {
+      activeFilters.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-clear-filter]');
+        if (button) clearActiveFilter(button);
+      });
+    }
 
     if (grid) {
       grid.addEventListener('click', (event) => {
@@ -1514,6 +2338,8 @@
       });
     }
 
+    renderStaticFilterOptions();
+    renderCategoryFacets();
     applyFilters();
   }
 
@@ -1540,7 +2366,7 @@
     const isGoods = getDirectoryScope() === 'goods';
     const heading = isGoods ? 'Post Free Stuff' : 'Post a Free Service';
     const intro = isGoods
-      ? 'Offer food, clothing, tools, supplies, or household goods. Everything posted here is free: no price, no deposit, and no swap required.'
+      ? 'Offer groceries, furniture, tech, tools, solar gear, raw materials, vehicles, gift cards for independent businesses, or anything else legal and safe to give. Everything posted here is free: no price, no deposit, and no swap required.'
       : 'Offer a skill, a repair, a class, or a care task. Keep the exchange honest: labor is free for you and the person requesting it. If materials cannot be found free on Unbought, the requester pays their exact receipt price.';
 
     const dialog = document.createElement('dialog');
@@ -1577,6 +2403,113 @@
     input.addEventListener('input', () => input.setCustomValidity(''), { once: true });
   }
 
+  function makePostSelect(labelText, id, name, options, placeholder, required) {
+    const field = createEl('div', 'field');
+    const label = createEl('label', '', labelText);
+    label.htmlFor = id;
+    field.appendChild(label);
+    const select = document.createElement('select');
+    select.id = id;
+    select.name = name;
+    if (required) select.required = true;
+    const empty = document.createElement('option');
+    empty.value = '';
+    empty.textContent = placeholder;
+    select.appendChild(empty);
+    options.forEach(([value, text]) => {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = text;
+      select.appendChild(option);
+    });
+    field.appendChild(select);
+    return field;
+  }
+
+  // Goods get structured attributes (condition, color, brand, and a few
+  // category-specific details) so the filter sidebar and the listing stay in
+  // sync. The same helpers are inert on the labor page.
+  function buildGoodsPostFields(populateCategories = false) {
+    const mount = document.getElementById('goods-attributes');
+    const categorySelect = document.getElementById('post-category');
+    if (!mount || !categorySelect) return;
+
+    if (populateCategories) {
+      categorySelect.replaceChildren();
+      const empty = document.createElement('option');
+      empty.value = '';
+      empty.textContent = 'Choose a category';
+      categorySelect.appendChild(empty);
+      Object.keys(GOODS_CATEGORIES).forEach((key) => {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = GOODS_CATEGORIES[key].label;
+        categorySelect.appendChild(option);
+      });
+    }
+
+    const previous = {};
+    ['post-condition', 'post-color', 'post-brand'].forEach((id) => {
+      const control = document.getElementById(id);
+      if (control) previous[id] = control.value;
+    });
+    $$('[data-post-facet]', mount).forEach((control) => {
+      previous[`facet:${control.dataset.postFacet}`] = control.value;
+    });
+
+    const category = categorySelect.value;
+    const definition = hasOwn(GOODS_CATEGORIES, category) ? GOODS_CATEGORIES[category] : null;
+    const hint = document.getElementById('goods-category-hint');
+    if (hint) {
+      hint.textContent = definition
+        ? definition.note
+        : 'Choose a category to see the details that help neighbors find this item.';
+    }
+
+    mount.replaceChildren();
+    if (!definition) return;
+
+    const grid = createEl('div', 'form-grid');
+    grid.appendChild(makePostSelect('Condition *', 'post-condition', 'condition',
+      Object.keys(GOOD_CONDITIONS).map((key) => [key, GOOD_CONDITIONS[key]]),
+      'Choose a condition', true));
+
+    if (definition.color) {
+      grid.appendChild(makePostSelect('Color', 'post-color', 'color',
+        GOOD_COLORS.map((color) => [color, color]), 'Choose a color (optional)', false));
+    }
+    if (definition.brand) {
+      const field = createEl('div', 'field');
+      const label = createEl('label', '', 'Brand or maker (optional)');
+      label.htmlFor = 'post-brand';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.id = 'post-brand';
+      input.name = 'brand';
+      input.maxLength = 60;
+      input.placeholder = 'e.g., Dell, handmade, unknown';
+      field.append(label, input);
+      grid.appendChild(field);
+    }
+    definition.facets.forEach((key) => {
+      const facet = GOOD_FACETS[key];
+      if (!facet) return;
+      const field = makePostSelect(`${facet.label} (optional)`, `post-facet-${key}`, `facet-${key}`,
+        facet.options.map((option) => [option, option]),
+        `Choose ${facet.label.toLowerCase()} (optional)`, false);
+      $('select', field).dataset.postFacet = key;
+      grid.appendChild(field);
+    });
+    mount.appendChild(grid);
+
+    Object.keys(previous).forEach((key) => {
+      const control = key.indexOf('facet:') === 0
+        ? $(`[data-post-facet="${key.slice(6)}"]`, mount)
+        : document.getElementById(key);
+      if (control) control.value = previous[key];
+    });
+  }
+
   function initPostForm() {
     const form = document.getElementById('post-form');
     if (!form) return;
@@ -1586,6 +2519,48 @@
     // instead of asking them to type it again.
     const fillProviderName = () => fillOwnNameField(document.getElementById('post-provider'));
     fillProviderName();
+    buildGoodsPostFields(true);
+
+    const postCategory = document.getElementById('post-category');
+    if (postCategory) postCategory.addEventListener('change', () => buildGoodsPostFields(false));
+
+    // Photos are prepared when selected, so submitting can stay synchronous.
+    postPhotoDrafts.set(form, []);
+    postPhotoPending.set(form, false);
+    const photoInput = document.getElementById('post-photos');
+    const photoPreview = document.getElementById('post-photos-preview');
+    const postStatus = document.getElementById('post-status');
+    const defaultStatus = postStatus ? postStatus.textContent : '';
+
+    if (photoInput) {
+      photoInput.addEventListener('change', async () => {
+        const files = Array.from(photoInput.files || []).slice(0, POST_PHOTOS.maxItems);
+        const submitButton = $('button[type="submit"]', form);
+        postPhotoPending.set(form, true);
+        if (submitButton) submitButton.disabled = true;
+        if (postStatus) postStatus.textContent = files.length ? 'Resizing photos for local storage…' : defaultStatus;
+        const photos = await preparePostPhotos(files);
+        postPhotoDrafts.set(form, photos);
+        renderPostPhotos(form, photos);
+        postPhotoPending.set(form, false);
+        if (submitButton) submitButton.disabled = false;
+        if (postStatus && files.length) {
+          postStatus.textContent = `${photos.length} photo${photos.length === 1 ? '' : 's'} ready. Stored only on this device; nothing is transmitted.`;
+        }
+      });
+    }
+    if (photoPreview) {
+      photoPreview.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-remove-post-photo]');
+        if (!button) return;
+        const photos = postPhotoDrafts.get(form) || [];
+        photos.splice(Number(button.dataset.removePostPhoto), 1);
+        if (photoInput) photoInput.value = '';
+        renderPostPhotos(form, photos);
+        if (postStatus) postStatus.textContent = defaultStatus;
+      });
+    }
+    renderPostPhotos(form, []);
 
     $$('[data-post-trigger]').forEach((trigger) => {
       trigger.addEventListener('click', (event) => {
@@ -1597,6 +2572,7 @@
 
     form.addEventListener('submit', (event) => {
       event.preventDefault();
+      if (postPhotoPending.get(form)) return;
       if (!requireFullAccess('Full access is paused during your reflection period. Posting is unavailable until you complete the reflection and treatment requirements.')) return;
       if (!form.reportValidity()) return;
 
@@ -1622,13 +2598,29 @@
       const exchange = pillar === 'goods' ? 'free' : String(data.get('exchange') || '');
       const category = pillar === 'goods' ? String(data.get('category') || '') : '';
       const scope = String(data.get('scope') || '');
+      const condition = pillar === 'goods' ? String(data.get('condition') || '') : '';
+      const color = pillar === 'goods' ? String(data.get('color') || '') : '';
+      const brand = pillar === 'goods' ? cleanString(data.get('brand'), 60) : '';
+      const attributes = {};
+      if (pillar === 'goods' && hasOwn(GOODS_CATEGORIES, category)) {
+        GOODS_CATEGORIES[category].facets.forEach((key) => {
+          const value = cleanString(data.get(`facet-${key}`), 60);
+          if (value) attributes[key] = value;
+        });
+      }
+
+      if (pillar === 'goods' && !hasOwn(GOOD_CONDITIONS, condition)) {
+        flagInvalidField(document.getElementById('post-condition'), 'Choose a condition for this item.');
+        return;
+      }
+      if (pillar === 'goods' && color && !GOOD_COLORS.includes(color)) return;
 
       if (!/^[A-Z]{2}$/.test(stateCode)) {
-        flagInvalidField(stateInput, 'Use the two-letter state code, such as NC.');
+        flagInvalidField(stateInput, 'Use the two-letter state code, such as PA.');
         return;
       }
       if (!/^\d{5}(?:-\d{4})?$/.test(zip)) {
-        flagInvalidField(zipInput, 'Use a 5-digit ZIP code, or ZIP+4 such as 12345-6789.');
+        flagInvalidField(zipInput, 'Use a 5-digit ZIP code, or ZIP+4 such as 18360-1234.');
         return;
       }
 
@@ -1640,17 +2632,23 @@
       if (pillar === 'goods' && !hasOwn(GOODS_CATEGORIES, category)) return;
       if (scope && !hasOwn(SCOPE_LABELS, scope)) return;
 
+      const photos = cleanPostPhotos(postPhotoDrafts.get(form) || []);
       const listing = {
         id: makeId('user-listing'),
         memberId: state.pledge.memberId,
         title,
         provider,
         location,
+        city,
+        state: stateCode,
+        zip,
         description,
         pillar,
         exchange,
         category,
         scope,
+        ...(pillar === 'goods' ? { condition, color, brand, attributes } : {}),
+        photos,
         details: [
           { label: 'Where', value: location },
           ...(pillar === 'goods' ? [{ label: 'Category', value: GOODS_CATEGORIES[category].label }] : []),
@@ -1669,6 +2667,10 @@
       resetFilters();
       form.reset();
       fillProviderName();
+      buildGoodsPostFields(false);
+      postPhotoDrafts.set(form, []);
+      if (photoInput) photoInput.value = '';
+      renderPostPhotos(form, []);
       closeDialog(dialog, { restoreFocus: false });
       const postStatus = document.getElementById('post-status');
       if (postStatus) {
@@ -1787,7 +2789,7 @@
           </div>
           <div class="field">
             <label for="labor-state">State / region <span class="required-mark" aria-hidden="true">*</span></label>
-            <input type="text" id="labor-state" name="stateRegion" maxlength="40" required placeholder="CA, NY, Ontario...">
+            <input type="text" id="labor-state" name="stateRegion" maxlength="40" required placeholder="PA, Pocono region...">
           </div>
           <div class="field">
             <label for="labor-rate">Avg hourly wage (USD) <span class="required-mark" aria-hidden="true">*</span></label>

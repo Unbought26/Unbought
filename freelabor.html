@@ -323,15 +323,15 @@
                 <div class="form-grid form-grid--location">
                   <div class="field location-city">
                     <label for="post-city">City <span class="required-mark" aria-hidden="true">*</span></label>
-                    <input type="text" id="post-city" name="city" maxlength="60" autocomplete="address-level2" required placeholder="City">
+                    <input type="text" id="post-city" name="city" maxlength="60" autocomplete="address-level2" required placeholder="East Stroudsburg">
                   </div>
                   <div class="field location-state">
                     <label for="post-state">State <span class="required-mark" aria-hidden="true">*</span></label>
-                    <input type="text" id="post-state" name="state" maxlength="2" autocomplete="address-level1" required placeholder="NC">
+                    <input type="text" id="post-state" name="state" maxlength="2" autocomplete="address-level1" required placeholder="PA">
                   </div>
                   <div class="field location-zip">
                     <label for="post-zip">ZIP code <span class="required-mark" aria-hidden="true">*</span></label>
-                    <input type="text" id="post-zip" name="zip" maxlength="10" inputmode="numeric" autocomplete="postal-code" required placeholder="12345">
+                    <input type="text" id="post-zip" name="zip" maxlength="10" inputmode="numeric" autocomplete="postal-code" required placeholder="18301">
                   </div>
                 </div>
                 <input type="hidden" id="post-location" name="location">
@@ -340,6 +340,13 @@
                 <label for="post-description">Description <span class="required-mark" aria-hidden="true">*</span></label>
                 <textarea id="post-description" name="description" rows="4" maxlength="400" required placeholder="What are you offering? Include what you can safely do, what materials may be needed, and how you will agree on scope."></textarea>
                 <p class="field-hint" id="post-description-hint">Up to 400 characters. Be clear about scope and consent.</p>
+              </div>
+              <div class="field field--wide post-photo-field">
+                <label for="post-photos">Photos <span class="optional">(optional, up to 3)</span></label>
+                <input type="file" id="post-photos" name="photos" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+                <p class="field-hint">Resized and stored in this browser only. Nothing is uploaded or transmitted.</p>
+                <div class="post-photos-preview" id="post-photos-preview"></div>
+                <p class="field-hint" id="post-photo-count">0 of 3 photos selected.</p>
               </div>
             </div>
 
