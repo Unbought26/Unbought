@@ -205,10 +205,10 @@
             <p class="eyebrow">Free labor directory</p>
             <h2 id="services-title">The commons, in plain sight.</h2>
           </div>
-          <p class="section-head-aside">Every listing is an offer, not an advertisement. Labor is always free. Filter by the Five Pillars of Society or by whether a project may need materials, then request a connection with mutual consent.</p>
+          <p class="section-head-aside">Every listing is an offer, not an advertisement. Labor is always free. Search by title or neighbor, choose a pillar and its service titles, narrow by location or online format, sort the results, then request a connection with mutual consent.</p>
         </div>
 
-        <div class="filter-bar" aria-labelledby="filter-title">
+        <div class="filter-bar labor-filters" aria-labelledby="filter-title">
           <div class="filter-head">
             <h3 id="filter-title">Filter the directory</h3>
             <div class="filter-head-actions">
@@ -219,6 +219,10 @@
             </div>
           </div>
           <div class="filter-grid">
+            <div class="field">
+              <label for="search-filter">Search services</label>
+              <input type="search" id="search-filter" name="search" placeholder="Title, skill, or neighbor" autocomplete="off" aria-label="Search free labor listings">
+            </div>
             <div class="field">
               <label for="pillar-filter">Five Pillars of Society</label>
               <select id="pillar-filter" name="pillarFilter">
@@ -240,12 +244,55 @@
                 <option value="atcost">Requester may cover materials</option>
               </select>
             </div>
+          </div>
+          <div class="facet-groups labor-facet-groups">
+            <fieldset class="facet-group">
+              <legend id="labor-job-filter-title">Service titles by pillar</legend>
+              <div class="facet-list" id="labor-job-options"></div>
+              <p class="field-hint">Titles change with the pillar. New titles written in by members appear here too.</p>
+            </fieldset>
+            <fieldset class="facet-group">
+              <legend>How it happens</legend>
+              <div class="facet-list" id="labor-format-options">
+                <label class="facet-check"><input type="checkbox" value="inperson" data-filter-format> In person</label>
+                <label class="facet-check"><input type="checkbox" value="online" data-filter-format> Online</label>
+                <label class="facet-check"><input type="checkbox" value="hybrid" data-filter-format> In person + online</label>
+              </div>
+            </fieldset>
+            <fieldset class="facet-group">
+              <legend>Location</legend>
+              <div class="location-filters">
+                <input type="search" id="city-filter" name="city" placeholder="Stroudsburg" autocomplete="address-level2" aria-label="Filter by city">
+                <input type="text" id="state-filter" name="state" maxlength="2" placeholder="PA" autocomplete="address-level1" aria-label="Filter by two-letter state code">
+                <input type="search" id="zip-filter" name="zip" maxlength="5" inputmode="numeric" placeholder="183" autocomplete="postal-code" aria-label="Filter by ZIP code prefix">
+              </div>
+              <p class="field-hint">ZIP filters by prefix. Use “Sort near ZIP” for a local proximity approximation.</p>
+            </fieldset>
+            <fieldset class="facet-group">
+              <legend>Sort results</legend>
+              <div class="market-sort">
+                <label for="sort-filter">Sort by</label>
+                <select id="sort-filter" name="sort">
+                  <option value="featured">Featured</option>
+                  <option value="newest">Newest first</option>
+                  <option value="title">Title A–Z</option>
+                  <option value="service">Service title</option>
+                  <option value="location">Location (state · city)</option>
+                  <option value="distance">Nearest to sort ZIP</option>
+                </select>
+              </div>
+              <div class="market-sort market-sort--distance">
+                <label for="distance-zip">Sort near ZIP</label>
+                <input type="text" id="distance-zip" name="nearZip" maxlength="5" inputmode="numeric" placeholder="18360" autocomplete="postal-code">
+              </div>
+            </fieldset>
             <div class="filter-note">
               <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg>
               <p>Labor is never charged. If supplies cannot be found free, the requester pays their exact receipt price. No markup. Ever.</p>
             </div>
           </div>
           <p class="results-status" id="results-status" role="status" aria-live="polite" aria-atomic="true">Showing all offerings.</p>
+          <div class="active-filters" id="active-filters" hidden></div>
         </div>
 
         <div class="directory-guardrails" role="note" aria-labelledby="guardrails-title">
@@ -287,6 +334,16 @@
                 <input type="text" id="post-title-input" name="title" maxlength="80" required placeholder="e.g., Free bike tune-ups this Saturday">
               </div>
               <div class="field">
+                <label for="post-job-title">Service / job title <span class="required-mark" aria-hidden="true">*</span></label>
+                <select id="post-job-title" name="jobTitle" required></select>
+                <p class="field-hint">Titles follow the pillar. Choose “Write my own title” if yours is missing.</p>
+              </div>
+              <div class="field field--wide" id="post-custom-title-field" hidden>
+                <label for="post-job-title-custom">Your service title <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="post-job-title-custom" name="customJobTitle" maxlength="80" placeholder="e.g., Bicycle wheel rebuilding">
+                <p class="field-hint">In a live site this is delivered to the site maintainer so the title list can grow. Here it is saved locally in Dashboard → Suggestions; nothing is transmitted.</p>
+              </div>
+              <div class="field">
                 <label for="post-pillar">Pillar <span class="required-mark" aria-hidden="true">*</span></label>
                 <select id="post-pillar" name="pillar" required>
                   <option value="">Choose a pillar</option>
@@ -320,20 +377,30 @@
               </div>
               <fieldset class="field field--wide location-fields">
                 <legend>Location <span class="required-mark" aria-hidden="true">*</span></legend>
+                <div class="field location-mode-field">
+                  <label for="post-location-mode">Where can neighbors find this service?</label>
+                  <select id="post-location-mode" name="locationMode">
+                    <option value="cityStateZip">City, state &amp; ZIP</option>
+                    <option value="cityState">City &amp; state</option>
+                    <option value="zip">ZIP code only</option>
+                    <option value="online">Online</option>
+                  </select>
+                </div>
                 <div class="form-grid form-grid--location">
-                  <div class="field location-city">
+                  <div class="field location-city" id="post-location-city-field">
                     <label for="post-city">City <span class="required-mark" aria-hidden="true">*</span></label>
                     <input type="text" id="post-city" name="city" maxlength="60" autocomplete="address-level2" required placeholder="East Stroudsburg">
                   </div>
-                  <div class="field location-state">
+                  <div class="field location-state" id="post-location-state-field">
                     <label for="post-state">State <span class="required-mark" aria-hidden="true">*</span></label>
                     <input type="text" id="post-state" name="state" maxlength="2" autocomplete="address-level1" required placeholder="PA">
                   </div>
-                  <div class="field location-zip">
+                  <div class="field location-zip" id="post-location-zip-field">
                     <label for="post-zip">ZIP code <span class="required-mark" aria-hidden="true">*</span></label>
                     <input type="text" id="post-zip" name="zip" maxlength="10" inputmode="numeric" autocomplete="postal-code" required placeholder="18301">
                   </div>
                 </div>
+                <p class="field-hint" id="post-location-hint">Neighbors can filter by city, two-letter state, or ZIP prefix. Online offers do not need a street-level location.</p>
                 <input type="hidden" id="post-location" name="location">
               </fieldset>
               <div class="field field--wide">

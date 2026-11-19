@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Your Unbought member dashboard: newsboard, account, settings, the commons, messages, review board, and suggestions.">
+  <meta name="description" content="Your Unbought member dashboard: newsboard, notifications, friends and groups, account, settings, the commons, messages, review board, and suggestions.">
   <meta name="theme-color" content="#1E3A8A">
   <title>Dashboard — Unbought</title>
   <link rel="icon" type="image/png" href="assets/logo.png">
@@ -32,6 +32,8 @@
     <symbol id="icon-basket" viewBox="0 0 24 24"><path d="M3 9h18l-2 11H5L3 9Zm4 0 3-6m7 6-3-6M8 13v3m4-3v3m4-3v3"/></symbol>
     <symbol id="icon-scale" viewBox="0 0 24 24"><path d="M12 3v18M5 6h14M5 6 2 14h6L5 6Zm14 0-3 8h6l-3-8ZM8 21h8"/></symbol>
     <symbol id="icon-spark" viewBox="0 0 24 24"><path d="M12 2c.7 5.3 4 8.6 9 9-5 1.4-8.3 4.7-9 10-.7-5.3-4-8.6-9-10 5-.4 8.3-3.7 9-9Z"/></symbol>
+    <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/></symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
     <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 8.8 8 11 4.6-2.2 8-6 8-11V5l-8-3Z"/><path d="m8.5 11.5 2.5 2.5 4.5-5"/></symbol>
     <symbol id="icon-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9a7 7 0 0 1 11.6-2L20 12M4 12l2.3 5a7 7 0 0 0 11.6-2"/></symbol>
   </svg>
@@ -81,7 +83,7 @@
             <p class="eyebrow">Your space in the commons</p>
             <h1 id="dashboard-title">Member dashboard.</h1>
           </div>
-          <p class="section-head-aside">Everything connected to your membership in one place: the newsboard, your contributions, account and settings, the commons, exchange confirmations, messages, the review board, and a suggestion box. Browsing the public site stays open to everyone; these tools are for pledged members.</p>
+          <p class="section-head-aside">Everything connected to your membership in one place: the newsboard, notifications, friends and groups, your contributions, account and settings, the commons, exchange confirmations, messages, the review board, and a suggestion box. Browsing the public site stays open to everyone; these tools are for pledged members.</p>
         </div>
 
         <div class="dashboard-gate" id="dashboard-gate" role="status">
@@ -107,6 +109,14 @@
               <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg>
               <span>Exchanges</span>
             </button>
+            <button class="dashboard-menu-item" type="button" data-menu-tab="notifications">
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-bell"></use></svg>
+              <span>Notifications</span>
+            </button>
+            <button class="dashboard-menu-item" type="button" data-menu-tab="social">
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-users"></use></svg>
+              <span>Friends &amp; Groups</span>
+            </button>
             <button class="dashboard-menu-item" type="button" data-menu-tab="review">
               <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-scale"></use></svg>
               <span>Review Board</span>
@@ -124,6 +134,8 @@
             <button type="button" role="tab" id="dash-tab-settings" aria-controls="dash-panel-settings" aria-selected="false" tabindex="-1" data-dashboard-tab="settings">Settings</button>
             <button type="button" role="tab" id="dash-tab-commons" aria-controls="dash-panel-commons" aria-selected="false" tabindex="-1" data-dashboard-tab="commons">The Commons</button>
             <button type="button" role="tab" id="dash-tab-exchanges" aria-controls="dash-panel-exchanges" aria-selected="false" tabindex="-1" data-dashboard-tab="exchanges">Exchanges</button>
+            <button type="button" role="tab" id="dash-tab-notifications" aria-controls="dash-panel-notifications" aria-selected="false" tabindex="-1" data-dashboard-tab="notifications">Notifications</button>
+            <button type="button" role="tab" id="dash-tab-social" aria-controls="dash-panel-social" aria-selected="false" tabindex="-1" data-dashboard-tab="social">Friends &amp; Groups</button>
             <button type="button" role="tab" id="dash-tab-messages" aria-controls="dash-panel-messages" aria-selected="false" tabindex="-1" data-dashboard-tab="messages">Messages</button>
             <button type="button" role="tab" id="dash-tab-review" aria-controls="dash-panel-review" aria-selected="false" tabindex="-1" data-dashboard-tab="review">Review Board</button>
             <button type="button" role="tab" id="dash-tab-suggestions" aria-controls="dash-panel-suggestions" aria-selected="false" tabindex="-1" data-dashboard-tab="suggestions">Suggestions</button>
@@ -160,6 +172,12 @@
             </div>
             <div role="tabpanel" id="dash-panel-exchanges" aria-labelledby="dash-tab-exchanges" data-dashboard-panel="exchanges" hidden>
               <div id="exchanges-panel" class="dashboard-render"></div>
+            </div>
+            <div role="tabpanel" id="dash-panel-notifications" aria-labelledby="dash-tab-notifications" data-dashboard-panel="notifications" hidden>
+              <div id="notifications-panel" class="dashboard-render"></div>
+            </div>
+            <div role="tabpanel" id="dash-panel-social" aria-labelledby="dash-tab-social" data-dashboard-panel="social" hidden>
+              <div id="social-panel" class="dashboard-render"></div>
             </div>
             <div role="tabpanel" id="dash-panel-messages" aria-labelledby="dash-tab-messages" data-dashboard-panel="messages" hidden>
               <div id="messages-panel" class="dashboard-render"></div>

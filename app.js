@@ -38,107 +38,72 @@
     {
       date: '2026-11-19',
       label: 'Nov 19, 2026',
+      tag: 'Rollout update',
+      title: 'Where Unbought stands, and what comes next',
+      body: 'We are finalizing some structuring in the site and the concept of the Unbought movement. Once finalized, we will connect the site to a temporary donation fund, connect to a server, blog service, and mailing service so we can roll out the beta version starting in the Poconos. If you live in the Poconos, you will be free to use Unbought and be asked to submit feedback and send in pictures for the social media campaign. we will be rolling out the full site on the Vernal Equinox, March 20th @4:25pm.'
+    },
+    {
+      date: '2026-11-18',
+      label: 'Nov 18, 2026',
+      tag: 'The beta',
+      title: 'Why we are beginning in the Poconos',
+      body: 'Unbought will begin where neighbors can meet, trade skills, share goods, and tell us plainly what is working. The beta is a chance to learn together before the full rollout, not a finished product. Poconos neighbors will be invited to use it freely, send feedback, and share photos for the social media campaign.'
+    },
+    {
+      date: '2026-11-17',
+      label: 'Nov 17, 2026',
+      tag: 'The fund',
+      title: 'What the Unbound donation fund is for',
+      body: 'The temporary donation fund is meant to hold every cent that comes to the initiative: donations, Academy tuition where it applies, and fixed non-member prices for goods or labor. Members always receive the commons free. No money moves in this prototype; the fund is part of the plan for the live beta.'
+    },
+    {
+      date: '2026-11-16',
+      label: 'Nov 16, 2026',
       tag: 'Membership',
-      title: 'Seed thanks, and a festival to look toward',
-      body: 'Seed members now see a locally generated thank-you draft in the dashboard, with ideas for getting the ball rolling and word of the possible equinox festival. We hope to partner with an organization for a big gathering somewhere in the United States on March 20, 2027 at 4:25pm Eastern, celebrating the movement and its seed and founding members. Nothing is booked, and the draft is never emailed from this browser.'
+      title: 'Membership begins with a pledge',
+      body: 'Unbought is built on consent. The pledge is how neighbors choose to join, offer what they can, and ask for help without turning survival into a transaction. Browsing stays open to everyone; participation in the commons belongs to pledged members.'
     },
     {
-      date: '2026-11-19',
-      label: 'Nov 19, 2026',
-      tag: 'Free Stuff',
-      title: 'Providers set the non-member price; the fund gets every cent',
-      body: 'Goods and labor stay free for pledged members. Providers can now opt in to a fixed non-member price on their own listings; guests see that price, cannot change it, and every cent is recorded locally for the Unbound donation fund. No payment is processed and nothing is transmitted.'
+      date: '2026-11-15',
+      label: 'Nov 15, 2026',
+      tag: 'Membership',
+      title: 'Seed and founding members',
+      body: 'The first person of a profession to sign up in a ZIP code is a seed member. Seed members who join during the first year are founding members. Membership years begin at the northern vernal equinox, and the labels stay pending until rollout so the first year can be counted honestly.'
     },
     {
-      date: '2026-11-19',
-      label: 'Nov 19, 2026',
+      date: '2026-11-14',
+      label: 'Nov 14, 2026',
       tag: 'Academy',
-      title: 'Free for members, with a path for young apprentices',
-      body: 'The Academy is free for pledged members, and every cent of non-member tuition goes to the Unbound donation fund. Neighbors 15 and older can learn free with basic-necessities-only access, then work part time for Unbought for a year after completing the program — finished before their 25th birthday. An unfinished program brings a tuition obligation. Nothing is enrolled or charged in the prototype.'
+      title: 'Learning now, giving back later',
+      body: 'The Academy is free for pledged members. Neighbors 15 and older who are not already working in the commons may learn with basic-necessities-only access, promising part-time work for Unbought for one year after finishing — before their 25th birthday. Non-member tuition and any tuition obligation go to the Unbound donation fund.'
     },
     {
-      date: '2026-11-19',
-      label: 'Nov 19, 2026',
+      date: '2026-11-13',
+      label: 'Nov 13, 2026',
       tag: 'Community',
-      title: 'Community guidelines and consequences, in plain sight',
-      body: 'A new guidelines page sets out the Ten Consent Commandments and the review path: monthly pledge checks, the care circle, access limits, local evidence and therapy where needed, majority votes for revocation, and a community-decided reflection period before reapplying. Every case is reviewed by community members in this local prototype.'
-    },
-    {
-      date: '2026-11-19',
-      label: 'Nov 19, 2026',
-      tag: 'Membership',
-      title: 'Seed and founding member labels, counted by the equinox',
-      body: 'The first person of a profession in a ZIP code becomes a seed member. Seed members who joined during the first year are founding members. Membership years begin at the exact vernal equinox; Unbought’s first year ends March 20, 2027 at 4:25pm Eastern, which is also the rollout moment. Labels show as pending until then.'
-    },
-    {
-      date: '2026-11-19',
-      label: 'Nov 19, 2026',
-      tag: 'Site',
-      title: 'A FAQ and a question mark that follows you',
-      body: 'There is now a plain-language FAQ linked in the site map, plus a small question mark button on every page. It covers membership, privacy, local-only data, member labels, the Poconos rollout, and what is and is not possible in this prototype.'
-    },
-    {
-      date: '2026-11-19',
-      label: 'Nov 19, 2026',
-      tag: 'Free Stuff',
-      title: 'Filter by city, state, and ZIP',
-      body: 'The goods catalog can now narrow offers by city, two-letter state, and ZIP prefix. Sort by location or by nearest ZIP using the sort ZIP control. New posts save those fields separately, and older posts keep working from their readable location label. Everything still stays in this browser.'
-    },
-    {
-      date: '2026-11-19',
-      label: 'Nov 19, 2026',
-      tag: 'Member posts',
-      title: 'Add photos to your goods and labor posts',
-      body: 'Members can attach up to three photos to an offer. Images are resized and kept in this browser only, then shown as thumbnails on the listing. Each photo has a storage-reference field ready for a future database; nothing is uploaded now.'
-    },
-    {
-      date: '2026-11-19',
-      label: 'Nov 19, 2026',
-      tag: 'Free Stuff',
-      title: 'Find it by category, condition, color, and brand',
-      body: 'The goods directory now has a filter sidebar and a product-style catalog. You can gift or find groceries, furniture, tech, tools, solar gear, raw materials, cars, gift cards for independent businesses, and more. Everything stays free for members and local-only in this prototype.'
-    },
-    {
-      date: '2026-11-19',
-      label: 'Nov 19, 2026',
-      tag: 'Member tools',
-      title: 'Your chosen name follows you',
-      body: 'Signed-in members no longer retype their name on listing posts, volunteer offers, donation intents, or the waiting list. Only your chosen name is carried over; the pledge still asks for your full legal name, and you can change your chosen name in Settings.'
-    },
-    {
-      date: '2026-11-19',
-      label: 'Nov 19, 2026',
-      tag: 'Safety & accountability',
-      title: 'Contextual reports with local evidence',
-      body: 'Reports now open from the listing, message, chat, or profile where an interaction happened. The person is carried into the form instead of typed, and reporters can attach images, message files, or file details that stay in this browser.'
-    },
-    {
-      date: '2026-11-18',
-      label: 'Nov 18, 2026',
-      tag: 'Member profile',
-      title: 'Public resumes are ready to preview',
-      body: 'Members can now see a filtered public resume with a chosen first name, City/State, skills, commons totals, availability, and an optional phone. Legal name, street address, ZIP, housing status, and birthdate stay private.'
-    },
-    {
-      date: '2026-11-18',
-      label: 'Nov 18, 2026',
-      tag: 'Site update',
-      title: 'Unbought moves to GitHub Pages',
-      body: 'The prototype now has a public home. Source, updates, and the provenance note live in one public repository; the site itself still stores all demo activity in your browser.'
+      title: 'Guidelines keep consent at the center',
+      body: 'The Ten Consent Commandments set the tone: clear agreement, honest scope, and the right to stop. Concerns move through monthly review, care-circle support where it fits, and community decisions that never treat one person as judge and jury. Basic necessities stay protected, and serious or repeated harm can lead to exile and revocation after a member vote.'
     },
     {
       date: '2026-11-12',
       label: 'Nov 12, 2026',
-      tag: 'Community tools',
-      title: 'Post forms moved into dialogs',
-      body: 'Labor and goods forms now open in keyboard-friendly dialogs instead of blocking the page. Location is entered as city, state, and ZIP, then composed into one listing label.'
+      tag: 'The equinox',
+      title: 'A gathering we hope to build',
+      body: 'We hope to partner with an organization for a large United States festival on March 20, 2027 at 4:25pm Eastern, celebrating movement, seed members, and founding members. It is an intention, not a booked event. The moment matters because it is the full-site rollout and the close of Unbought’s first membership year.'
     },
     {
-      date: '2026-11-05',
-      label: 'Nov 5, 2026',
-      tag: 'Member dashboard',
-      title: 'Exchange confirmations are ready to test',
-      body: 'Members can confirm a completed service or a delivered product in Dashboard. The thank-you note appears only after a confirmation, and nothing is transmitted.'
+      date: '2026-11-11',
+      label: 'Nov 11, 2026',
+      tag: 'Privacy',
+      title: 'Personal details stay private',
+      body: 'The pledge asks for the information a real community needs to know its members, but the public resume shows only chosen details. Legal name, addresses, birthdate, housing status, group, and report count are not part of that public picture. Until the live services are connected, this prototype keeps everything on the device.'
+    },
+    {
+      date: '2026-11-10',
+      label: 'Nov 10, 2026',
+      tag: 'Getting involved',
+      title: 'How neighbors can help before rollout',
+      body: 'Talk to people in your profession, volunteer a skill, help find donated space or supplies, or simply tell neighbors what Unbought is trying to do. The first communities will be shaped by the people who show up early and stay honest with feedback.'
     }
   ]);
 
@@ -309,6 +274,45 @@
     businessType: { label: 'Business', options: ['Independent small business', 'Local co-op', 'Neighbor-run'] }
   });
 
+  // Labor uses the five pillars as its umbrella categories. Each pillar has its
+  // own listed service titles; members can write in a title that is missing and
+  // the prototype queues it locally for the site maintainer.
+  const LABOR_CATEGORIES = Object.freeze({
+    building: {
+      short: 'Building & Repair',
+      titles: ['Home repair', 'Carpentry', 'Plumbing help', 'Electrical help', 'Auto repair', 'Appliance repair', 'Painting', 'Moving & hauling', 'Tool sharing']
+    },
+    health: {
+      short: 'Health & Care',
+      titles: ['Peer wellness support', 'First aid education', 'Movement & exercise', 'Caregiving support', 'Hygiene & grooming help', 'Accessibility help', 'Medication reminder support']
+    },
+    daily: {
+      short: 'Daily Life',
+      titles: ['Childcare', 'Cooking & meal prep', 'Cleaning', 'Laundry', 'Gardening', 'Pet care', 'Rides & errands', 'Home organization']
+    },
+    arts: {
+      short: 'Arts & Education',
+      titles: ['Music instruction', 'Dance & movement', 'Visual art', 'Tutoring', 'Writing & editing', 'Photography', 'Language practice']
+    },
+    civic: {
+      short: 'Civic & Digital',
+      titles: ['Web design & coding', 'Graphic design', 'Legal literacy', 'Benefits & paperwork help', 'Tenant rights education', 'Digital access help', 'Community organizing']
+    }
+  });
+
+  const SERVICE_FORMATS = Object.freeze({
+    inperson: 'In person',
+    online: 'Online',
+    hybrid: 'In person + online'
+  });
+
+  const LOCATION_MODES = Object.freeze({
+    cityStateZip: { label: 'City, state & ZIP', format: 'inperson' },
+    cityState: { label: 'City & state', format: 'inperson' },
+    zip: { label: 'ZIP code only', format: 'inperson' },
+    online: { label: 'Online', format: 'online' }
+  });
+
   // Small product-style thumbnails and color chips for the goods directory.
   // These are decorative: the text details always carry the same information.
   const GOODS_CATEGORY_ICONS = Object.freeze({
@@ -371,10 +375,15 @@
       exchange: 'free',
       title: 'Community Dance & Movement Workshops',
       provider: 'Amara Okafor',
-      location: 'Eastside Community Hall + online',
+      location: 'Stroudsburg · community hall + online',
+      city: 'Stroudsburg',
+      state: 'PA',
+      zip: '18360',
+      jobTitle: 'Dance & movement',
+      format: 'hybrid',
       description: 'A joyful, all-bodies movement circle for people who danced once, never danced, or just want to move without being watched. No experience, no mirrors, no performance pressure. Paid-level facilitation, offered freely.',
       details: [
-        { label: 'Where', value: 'Eastside Community Hall + online' },
+        { label: 'Where', value: 'Stroudsburg · community hall + online' },
         { label: 'Rhythm', value: '2nd & 4th Saturday · 90 min' },
         { label: 'Access', value: 'Chairs · scent-free room · captions' }
       ],
@@ -386,10 +395,15 @@
       exchange: 'free',
       title: 'Web Coding & Graphic Design Studio Hours',
       provider: 'Devin Reyes',
-      location: 'Remote + Tuesday library drop-in',
+      location: 'East Stroudsburg · remote + library drop-in',
+      city: 'East Stroudsburg',
+      state: 'PA',
+      zip: '18301',
+      jobTitle: 'Web design & coding',
+      format: 'hybrid',
       description: 'Two-hour studio for neighbors, small nonprofits, and co-ops. Bring a website, a flyer, an accessibility question, or just curiosity. We work on semantic HTML, CSS, vanilla JavaScript, and print design together—no hourly invoice.',
       details: [
-        { label: 'Format', value: 'Remote + Tuesday library drop-in' },
+        { label: 'Format', value: 'East Stroudsburg · remote + library drop-in' },
         { label: 'Good for', value: 'Neighbors & small community groups' },
         { label: 'Bring', value: 'A project or a question' }
       ],
@@ -401,7 +415,12 @@
       exchange: 'atcost',
       title: 'Free Auto Brake Repair — You Cover the Parts',
       provider: 'Marcus Bell',
-      location: 'Northside garage · by appointment',
+      location: 'Stroudsburg · garage by appointment',
+      city: 'Stroudsburg',
+      state: 'PA',
+      zip: '18360',
+      jobTitle: 'Auto repair',
+      format: 'inperson',
       description: 'Brake pads, rotors, fluid checks, and honest safety inspections. The labor is free for both of us. If the parts cannot be found free on Unbought, you buy them at the exact receipt price, or I order them and show you the receipt. Zero markup, ever. I will say no when a job is outside my scope or needs a licensed specialist.',
       details: [
         { label: 'Rhythm', value: 'Weekends · 2–4 hrs' },
@@ -416,7 +435,12 @@
       exchange: 'atcost',
       title: 'Organic Backyard Gardening & Seed Share',
       provider: 'Rosa Jiménez',
-      location: 'Maple Street plots + home visits',
+      location: 'Mount Pocono · garden plots + home visits',
+      city: 'Mount Pocono',
+      state: 'PA',
+      zip: '18344',
+      jobTitle: 'Gardening',
+      format: 'inperson',
       description: 'Garden planning, planting, pruning, compost setup, and seasonal coaching. The teaching and labor are free. Seedlings and compost are free when the share has them; if they must be bought, the person requesting the work covers the exact receipt price, never a markup. Harvest is shared with everyone who tends the plot.',
       details: [
         { label: 'Season', value: 'Spring–fall · flexible' },
@@ -431,7 +455,12 @@
       exchange: 'free',
       title: 'Childcare & Laundry Support',
       provider: 'Nia Brooks',
-      location: 'Westside neighborhood',
+      location: 'East Stroudsburg · neighborhood',
+      city: 'East Stroudsburg',
+      state: 'PA',
+      zip: '18301',
+      jobTitle: 'Childcare',
+      format: 'inperson',
       description: 'After-school care, bedtime routines, laundry folding, and pickup help for families in a hard week. Free and consent-based. We meet first, references are available, and a background check can be requested. Parents are always welcome to stay.',
       details: [
         { label: 'Rhythm', value: 'Weekday afternoons' },
@@ -446,10 +475,16 @@
       exchange: 'free',
       title: 'Peer Legal Literacy Circles',
       provider: 'Samir Haddad',
-      location: 'Online + downtown library',
+      location: 'Stroudsburg · online + library',
+      city: 'Stroudsburg',
+      state: 'PA',
+      zip: '18360',
+      jobTitle: 'Legal literacy',
+      format: 'hybrid',
       description: 'Plain-language sessions on tenants’ rights, small claims, benefits appeals, and how to find a licensed lawyer. This is peer education, not legal representation or individualized advice. We clarify scope at the start of every circle.',
       details: [
         { label: 'Rhythm', value: 'First Thursday · 60 min' },
+        { label: 'Where', value: 'Stroudsburg · online + library' },
         { label: 'Scope', value: 'General Peer Education' },
         { label: 'Not', value: 'Legal representation or advice' }
       ],
@@ -726,6 +761,13 @@
     accepted: 'image/jpeg,image/png,image/webp,image/gif'
   });
 
+  // Local social circles mirror a future membership cap. Nothing is sent to
+  // other people in this prototype; the cap is enforced on stored records.
+  const SOCIAL_LIMITS = Object.freeze({
+    friends: 150,
+    groupMembers: 150
+  });
+
   const REFLECTION_OPTIONS = Object.freeze([30, 90, 180]);
   const TREATMENT_STEPS = Object.freeze([
     { key: 'evaluation', label: 'Therapeutic evaluation completed (inside or outside Unbought)' },
@@ -747,12 +789,17 @@
       track: null,
       trackDetails: {},
       listings: [],
+      listingComments: {},
       requests: [],
       inquiries: [],
       donationIntents: [],
       contributions: [],
       volunteerInterests: [],
       reports: [],
+      notifications: [],
+      friends: [],
+      groups: [],
+      socialChats: [],
       settings: {
         compactDashboard: false,
         showPrototypeNotices: true
@@ -913,7 +960,7 @@
       <summary>See your seed-member thank-you message</summary>
       <div class="seed-email-body">
         <p class="seed-email-note">Prototype: in a live system this message would be emailed to you automatically as soon as you became a seed member. It is generated here only as a draft. Nothing is sent or transmitted.</p>
-        <p><strong>To:</strong> ${e(cleanString(member.email, 120) || 'your contact on file')}<br><strong>Subject:</strong> ${e(`Thank you for starting Unbought, ${firstName}`)}</p>
+        <p><strong>To:</strong> ${e(firstName)} (chosen name; no email is collected)<br><strong>Subject:</strong> ${e(`Thank you for starting Unbought, ${firstName}`)}</p>
         <p>Hi ${e(firstName)},</p>
         <p>Thank you for helping to start the movement. You are the first ${e(profession)} to sign up for Unbought in ZIP ${e(zip || 'your area')} — a seed member. ${founding ? 'Because you signed during the first equinox year, you are also a founding member.' : ''} Seed members are the people who prove a new trade can take root in a place; the whole commons begins with someone willing to go first.</p>
         <p>Your labels stay pending until the exact 2027 vernal equinox, March 20 at 4:25pm Eastern — the end of Unbought's first year. If we are successful, we hope to partner with an organization and throw a huge festival somewhere in the United States on that equinox to celebrate the movement and its seed and founding members. Nothing is booked or confirmed yet, but as a seed member you will hear about it first.</p>
@@ -1297,6 +1344,22 @@
       .filter(Boolean);
   }
 
+  // Listing conversations use the same small comment shape as case files. A
+  // reply is just a comment whose text starts with @Name.
+  function cleanThreadComments(items) {
+    return (Array.isArray(items) ? items : [])
+      .slice(-200)
+      .filter((item) => item && typeof item === 'object')
+      .map((item) => ({
+        id: cleanString(item.id, 100) || makeId('comment'),
+        memberId: cleanString(item.memberId, 100),
+        name: cleanString(item.name, 60) || 'Member',
+        text: cleanString(item.text, 800),
+        createdAt: cleanString(item.createdAt, 40)
+      }))
+      .filter((item) => item.text);
+  }
+
   function readFileAsDataUrl(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -1490,6 +1553,11 @@
       pillar: item.pillar,
       exchange: item.exchange,
       category,
+      ...(isGoods ? {} : {
+        jobTitle: cleanString(item.jobTitle, 80),
+        format: hasOwn(SERVICE_FORMATS, item.format) ? item.format : 'inperson',
+        locationMode: hasOwn(LOCATION_MODES, item.locationMode) ? item.locationMode : 'cityStateZip'
+      }),
       ...(isGoods ? {
         condition,
         color: GOOD_COLORS.includes(item.color) ? item.color : '',
@@ -1497,6 +1565,7 @@
         attributes
       } : {}),
       photos: cleanPostPhotos(item.photos),
+      comments: cleanThreadComments(item.comments),
       nonmemberPurchase: normalizeNonmemberPurchase(item.nonmemberPurchase),
       provider: cleanString(item.provider, 60),
       location: cleanString(item.location, 80),
@@ -1915,6 +1984,81 @@
         }));
     }
 
+    // Seed listings are static, so their conversations are stored by listing
+    // id instead of on the listing object itself.
+    if (raw.listingComments && typeof raw.listingComments === 'object') {
+      fallback.listingComments = {};
+      Object.keys(raw.listingComments).slice(0, 200).forEach((id) => {
+        const comments = cleanThreadComments(raw.listingComments[id]);
+        if (comments.length) fallback.listingComments[cleanString(id, 100)] = comments;
+      });
+    }
+
+    if (Array.isArray(raw.notifications)) {
+      fallback.notifications = raw.notifications
+        .filter((item) => item && typeof item === 'object')
+        .slice(0, 200)
+        .map((item) => ({
+          id: cleanString(item.id, 100) || makeId('notice'),
+          type: cleanString(item.type, 30) || 'activity',
+          title: cleanString(item.title, 120),
+          body: cleanString(item.body, 300),
+          tab: cleanString(item.tab, 30),
+          sourceId: cleanString(item.sourceId, 100),
+          createdAt: cleanString(item.createdAt, 40),
+          read: Boolean(item.read)
+        }))
+        .filter((item) => item.title);
+    }
+
+    if (Array.isArray(raw.friends)) {
+      fallback.friends = raw.friends
+        .filter((item) => item && typeof item === 'object')
+        .slice(0, SOCIAL_LIMITS.friends)
+        .map((item) => ({
+          id: cleanString(item.id, 100) || makeId('friend'),
+          memberId: cleanString(item.memberId, 100),
+          name: cleanString(item.name, 60),
+          createdAt: cleanString(item.createdAt, 40)
+        }))
+        .filter((item) => item.name);
+    }
+
+    if (Array.isArray(raw.groups)) {
+      fallback.groups = raw.groups
+        .filter((item) => item && typeof item === 'object')
+        .slice(0, 100)
+        .map((item) => {
+          const kind = item.kind === 'joined' ? 'joined' : 'own';
+          const count = cleanCount(item.memberCount) || 1;
+          return {
+            id: cleanString(item.id, 100) || makeId('group'),
+            kind,
+            name: cleanString(item.name, 80),
+            purpose: cleanString(item.purpose, 200),
+            memberCount: Math.min(SOCIAL_LIMITS.groupMembers, Math.max(1, count)),
+            createdAt: cleanString(item.createdAt, 40)
+          };
+        })
+        .filter((item) => item.name);
+    }
+
+    if (Array.isArray(raw.socialChats)) {
+      fallback.socialChats = raw.socialChats
+        .filter((item) => item && typeof item === 'object')
+        .slice(-300)
+        .map((item) => ({
+          id: cleanString(item.id, 100) || makeId('social-chat'),
+          memberId: cleanString(item.memberId, 100),
+          name: cleanString(item.name, 60),
+          audience: cleanString(item.audience, 40) || 'friends',
+          audienceLabel: cleanString(item.audienceLabel, 80) || 'Friends',
+          body: cleanString(item.body, 1200),
+          createdAt: cleanString(item.createdAt, 40)
+        }))
+        .filter((item) => item.body);
+    }
+
     if (raw.severanceFund && typeof raw.severanceFund === 'object') {
       fallback.severanceFund = {
         balance: Number.isFinite(Number(raw.severanceFund.balance)) ? Math.max(0, Number(raw.severanceFund.balance)) : 0,
@@ -1952,6 +2096,29 @@
         showToast('Local storage is full or blocked. Changes will last only for this visit.');
       }
     }
+  }
+
+  // Notifications are local drafts of what a live service would deliver. They
+  // are created only by the signed-in member's own actions in this prototype.
+  function addNotification(type, title, body, options = {}) {
+    if (!isMember()) return;
+    state.notifications = Array.isArray(state.notifications) ? state.notifications : [];
+    state.notifications.unshift({
+      id: makeId('notice'),
+      type: cleanString(type, 30) || 'activity',
+      title: cleanString(title, 120),
+      body: cleanString(body, 300),
+      tab: cleanString(options.tab, 30),
+      sourceId: cleanString(options.sourceId, 100),
+      createdAt: new Date().toISOString(),
+      read: false
+    });
+    state.notifications = state.notifications.slice(0, 200);
+  }
+
+  function unreadNotificationCount() {
+    return (Array.isArray(state.notifications) ? state.notifications : [])
+      .filter((item) => item && !item.read).length;
   }
 
   const $ = (selector, root = document) => root.querySelector(selector);
@@ -2048,6 +2215,16 @@
     return getAllListings().find((listing) => listing.id === id) || null;
   }
 
+  // Comments on static seed listings cannot live on the seed object, so the
+  // local map is the source of truth whenever it has entries for a listing.
+  function getListingComments(listing) {
+    if (!listing) return [];
+    const map = state.listingComments && typeof state.listingComments === 'object'
+      ? state.listingComments : {};
+    const stored = cleanThreadComments(map[listing.id]);
+    return stored.length ? stored : cleanThreadComments(listing.comments);
+  }
+
   function focusListingTitle(id, preventScroll = false) {
     const card = document.getElementById(`listing-${domId(id)}`);
     const title = card ? $('.listing-title', card) : null;
@@ -2077,7 +2254,10 @@
       category: $('#category-filter') ? $('#category-filter').value : 'all',
       conditions: checkedFilterValues('[data-filter-condition]:checked'),
       colors: checkedFilterValues('[data-filter-color]:checked'),
+      jobTitles: checkedFilterValues('[data-filter-job-title]:checked'),
+      formats: checkedFilterValues('[data-filter-format]:checked'),
       brand: $('#brand-filter') ? $('#brand-filter').value.trim() : '',
+      query: $('#search-filter') ? $('#search-filter').value.trim().toLowerCase() : '',
       city: $('#city-filter') ? $('#city-filter').value.trim() : '',
       state: $('#state-filter') ? $('#state-filter').value.trim().toUpperCase() : '',
       zip: $('#zip-filter') ? $('#zip-filter').value.replace(/\D/g, '').slice(0, 5) : '',
@@ -2103,9 +2283,21 @@
     return { city, state, zip, text };
   }
 
+  function formatOf(listing) {
+    return hasOwn(SERVICE_FORMATS, listing && listing.format) ? listing.format : 'inperson';
+  }
+
   function listingMatchesFilters(listing, values, scope) {
     if (values.pillar !== 'all' && listing.pillar !== values.pillar) return false;
     if (values.exchange !== 'all' && listing.exchange !== values.exchange) return false;
+
+    if (values.query) {
+      const haystack = [
+        listing.title, listing.description, listing.provider, listing.location,
+        listing.jobTitle, listing.brand, listing.category
+      ].filter(Boolean).join(' ').toLowerCase();
+      if (!haystack.includes(values.query)) return false;
+    }
 
     const place = locationOf(listing);
     if (values.city) {
@@ -2115,7 +2307,11 @@
     if (values.state && place.state !== values.state) return false;
     if (values.zip && !place.zip.replace(/\D/g, '').startsWith(values.zip)) return false;
 
-    if (scope !== 'goods') return true;
+    if (scope !== 'goods') {
+      if (values.jobTitles.length && !values.jobTitles.includes(cleanString(listing.jobTitle, 80))) return false;
+      if (values.formats.length && !values.formats.includes(formatOf(listing))) return false;
+      return true;
+    }
 
     if (values.category !== 'all' && listing.category !== values.category) return false;
     if (values.conditions.length && !values.conditions.includes(listing.condition)) return false;
@@ -2136,14 +2332,15 @@
     const values = getFilterValues();
     const scope = getDirectoryScope();
     const filtered = getAllListings().filter((listing) => listingMatchesFilters(listing, values, scope));
-    if (scope !== 'goods') return filtered;
-
     const sorted = [...filtered];
     if (values.sort === 'title') {
       sorted.sort((a, b) => String(a.title).localeCompare(String(b.title)));
     } else if (values.sort === 'newest') {
       sorted.sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
-    } else if (values.sort === 'category') {
+    } else if (values.sort === 'service') {
+      sorted.sort((a, b) => String(a.jobTitle || '').localeCompare(String(b.jobTitle || ''))
+        || String(a.title).localeCompare(String(b.title)));
+    } else if (scope === 'goods' && values.sort === 'category') {
       sorted.sort((a, b) => goodsCategoryShort(a).localeCompare(goodsCategoryShort(b)) || String(a.title).localeCompare(String(b.title)));
     } else if (values.sort === 'location') {
       sorted.sort((a, b) => {
@@ -2180,6 +2377,7 @@
     if (listing.isUser) card.classList.add('is-user');
 
     const photos = cleanPostPhotos(listing.photos);
+    const listingNonmemberPrice = getNonmemberPrice(listing);
 
     // On the goods page each offer gets a product-style thumbnail and a
     // prominent free price, a small nod to a familiar catalog layout.
@@ -2202,15 +2400,14 @@
       }
       card.appendChild(media);
       const price = createEl('div', 'product-price');
-      const cardNonmemberPrice = getNonmemberPrice(listing);
-      if (!isMember() && cardNonmemberPrice) {
+      if (!isMember() && listingNonmemberPrice) {
         price.classList.add('product-price--nonmember');
-        price.appendChild(createEl('span', 'product-price-value', formatMoney(cardNonmemberPrice)));
+        price.appendChild(createEl('span', 'product-price-value', formatMoney(listingNonmemberPrice)));
         price.appendChild(createEl('span', 'product-price-note', 'Non-member price · all of it to the Unbound donation fund · free for members'));
       } else {
         price.appendChild(createEl('span', 'product-price-value', 'FREE'));
-        price.appendChild(createEl('span', 'product-price-note', cardNonmemberPrice
-          ? `Free for you · non-members pay ${formatMoney(cardNonmemberPrice)} to the fund`
+        price.appendChild(createEl('span', 'product-price-note', listingNonmemberPrice
+          ? `Free for you · non-members pay ${formatMoney(listingNonmemberPrice)} to the fund`
           : goodsCategoryShort(listing)));
       }
       card.appendChild(price);
@@ -2238,15 +2435,16 @@
       addBadge(badges, 'badge--soft', GOODS_CATEGORIES[listing.category].label);
     }
     if (isGoods || listing.exchange === 'free') {
-      addBadge(badges, 'badge--free', isGoods ? '100% Free' : '100% Free · no materials');
+      addBadge(badges, 'badge--free', isGoods
+        ? (listingNonmemberPrice ? 'Free for members' : '100% Free')
+        : '100% Free · no materials');
     } else {
       addBadge(badges, 'badge--atcost', 'Labor free · requester covers materials');
     }
     if (listing.isUser) addBadge(badges, 'badge--soft', 'Posted by you');
     if (hasOwn(SCOPE_LABELS, listing.scope)) addBadge(badges, 'badge--soft', SCOPE_LABELS[listing.scope]);
-    const badgeNonmemberPrice = getNonmemberPrice(listing);
-    if (badgeNonmemberPrice) {
-      addBadge(badges, 'badge--fund', `Non-members ${formatMoney(badgeNonmemberPrice)} → Unbound donation fund`);
+    if (listingNonmemberPrice) {
+      addBadge(badges, 'badge--fund', `Non-members ${formatMoney(listingNonmemberPrice)} → Unbound donation fund`);
     }
     card.appendChild(badges);
 
@@ -2268,6 +2466,13 @@
     const details = Array.isArray(listing.details) && listing.details.length
       ? [...listing.details]
       : [{ label: 'Where', value: listing.location }];
+
+    if (!isProductCard && listing.pillar !== 'goods') {
+      if (listing.jobTitle) details.push({ label: 'Service', value: listing.jobTitle });
+      if (hasOwn(SERVICE_FORMATS, listing.format)) {
+        details.push({ label: 'Format', value: SERVICE_FORMATS[listing.format] });
+      }
+    }
 
     if (isProductCard) {
       if (hasOwn(GOOD_CONDITIONS, listing.condition)) {
@@ -2365,6 +2570,79 @@
     }
 
     card.appendChild(actions);
+
+    // Listing conversations stay local. Replies simply quote the prior name,
+    // and every comment carries its own contextual report trigger.
+    const comments = getListingComments(listing);
+    const commentWrap = createEl('div', 'listing-comments');
+    const commentToggle = createEl(
+      'button',
+      'button button--ghost button--small comment-toggle',
+      `${comments.length} comment${comments.length === 1 ? '' : 's'}`
+    );
+    commentToggle.type = 'button';
+    commentToggle.dataset.toggleComments = listing.id;
+    commentToggle.setAttribute('aria-expanded', 'false');
+    commentToggle.setAttribute('aria-controls', `comment-thread-${domId(listing.id)}`);
+    commentWrap.appendChild(commentToggle);
+
+    const thread = createEl('div', 'comment-thread');
+    thread.id = `comment-thread-${domId(listing.id)}`;
+    thread.hidden = true;
+    thread.dataset.commentThread = listing.id;
+    if (comments.length) {
+      const list = createEl('ul', 'comment-list');
+      comments.forEach((comment) => {
+        const item = createEl('li', 'comment-item');
+        item.appendChild(createEl('p', 'contribution-meta', `${comment.name || 'Member'} · ${formatDate(comment.createdAt)}`));
+        item.appendChild(createEl('p', '', comment.text));
+        const commentActions = createEl('div', 'comment-actions');
+        if (isMember()) {
+          const reply = createEl('button', 'button button--ghost button--tiny', 'Reply');
+          reply.type = 'button';
+          reply.dataset.replyComment = comment.name || 'Member';
+          commentActions.appendChild(reply);
+        }
+        const report = createEl('button', 'button button--ghost button--tiny button--report', 'Report');
+        report.type = 'button';
+        report.dataset.reportContext = '';
+        report.dataset.reportArea = getDirectoryScope() === 'goods' ? 'Free Stuff listing comment' : 'Free Labor listing comment';
+        report.dataset.reportDetail = `${listing.title} · ${comment.name || 'Member'}`;
+        report.dataset.reportName = comment.name || 'Member';
+        report.dataset.reportMemberId = comment.memberId || '';
+        report.dataset.reportSourceId = comment.id;
+        report.setAttribute('aria-label', `Report a concern about a comment from ${comment.name || 'Member'}`);
+        commentActions.appendChild(report);
+        item.appendChild(commentActions);
+        list.appendChild(item);
+      });
+      thread.appendChild(list);
+    } else {
+      thread.appendChild(createEl('p', 'account-note', 'No comments yet. Ask a question or leave a note.'));
+    }
+
+    if (isMember()) {
+      const form = createEl('form', 'account-form listing-comment-form');
+      form.dataset.listingCommentForm = listing.id;
+      const label = createEl('label', '', 'Add a comment');
+      label.htmlFor = `listing-comment-${domId(listing.id)}`;
+      const input = createEl('textarea');
+      input.id = `listing-comment-${domId(listing.id)}`;
+      input.name = 'text';
+      input.rows = 2;
+      input.maxLength = 800;
+      input.required = true;
+      input.placeholder = 'Ask a question or reply to a neighbor…';
+      const submit = createEl('button', 'button button--outline button--small', 'Post comment');
+      submit.type = 'submit';
+      form.append(label, input, submit);
+      thread.appendChild(form);
+    } else {
+      thread.appendChild(createEl('p', 'account-note', 'Sign the pledge to join the conversation.'));
+    }
+    commentWrap.appendChild(thread);
+    card.appendChild(commentWrap);
+
     return card;
   }
 
@@ -2376,7 +2654,9 @@
     if (!listings.length) {
       const empty = createEl('div', 'no-results');
       empty.appendChild(createEl('h3', '', 'No offerings match those filters yet.'));
-      empty.appendChild(createEl('p', '', 'Try another category, condition, color, brand, or item detail—or post the first free offer here.'));
+      empty.appendChild(createEl('p', '', getDirectoryScope() === 'goods'
+        ? 'Try another category, condition, color, brand, or item detail—or post the first free offer here.'
+        : 'Try another pillar, service title, format, search term, or location—or post the first free offer here.'));
       const reset = createEl('button', 'button button--outline button--small', 'Reset filters');
       reset.type = 'button';
       reset.dataset.clearFilters = '';
@@ -2399,6 +2679,17 @@
     const detail = [];
     if (values.pillar !== 'all' && hasOwn(PILLARS, values.pillar)) detail.push(PILLARS[values.pillar].label);
     if (values.exchange !== 'all' && hasOwn(EXCHANGES, values.exchange)) detail.push(EXCHANGES[values.exchange].label);
+    if (values.query) detail.push(`Search: ${values.query}`);
+    if (values.city) detail.push(`City: ${values.city}`);
+    if (values.state) detail.push(`State: ${values.state}`);
+    if (values.zip) detail.push(`ZIP near: ${values.zip}`);
+    if (values.nearZip) detail.push(`Near ${values.nearZip}`);
+    if (scope !== 'goods') {
+      values.jobTitles.forEach((title) => detail.push(title));
+      values.formats.forEach((value) => {
+        if (hasOwn(SERVICE_FORMATS, value)) detail.push(SERVICE_FORMATS[value]);
+      });
+    }
     if (scope === 'goods') {
       if (values.category !== 'all' && hasOwn(GOODS_CATEGORIES, values.category)) {
         detail.push(GOODS_CATEGORIES[values.category].label);
@@ -2432,9 +2723,11 @@
     const chips = [];
     const addChip = (label, attrs) => chips.push({ label, attrs });
 
+    if (values.query) addChip(`Search: ${values.query}`, { clearFilter: 'query' });
     if (values.city) addChip(`City: ${values.city}`, { clearFilter: 'city' });
     if (values.state) addChip(`State: ${values.state}`, { clearFilter: 'state' });
     if (values.zip) addChip(`ZIP near: ${values.zip}`, { clearFilter: 'zip' });
+    if (values.nearZip) addChip(`Near ZIP: ${values.nearZip}`, { clearFilter: 'nearZip' });
 
     if (getDirectoryScope() === 'goods') {
       if (values.category !== 'all' && hasOwn(GOODS_CATEGORIES, values.category)) {
@@ -2462,6 +2755,12 @@
       if (values.exchange !== 'all' && hasOwn(EXCHANGES, values.exchange)) {
         addChip(EXCHANGES[values.exchange].label, { clearFilter: 'exchange' });
       }
+      values.jobTitles.forEach((title) => addChip(title, { clearFilter: 'jobTitle', clearValue: title }));
+      values.formats.forEach((value) => {
+        if (hasOwn(SERVICE_FORMATS, value)) {
+          addChip(SERVICE_FORMATS[value], { clearFilter: 'format', clearValue: value });
+        }
+      });
     }
 
     container.replaceChildren();
@@ -2495,20 +2794,27 @@
       return;
     }
     if (kind === 'category' || kind === 'brand' || kind === 'pillar' || kind === 'exchange'
-      || kind === 'city' || kind === 'state' || kind === 'zip') {
+      || kind === 'query' || kind === 'city' || kind === 'state' || kind === 'zip'
+      || kind === 'nearZip') {
       const idMap = {
         category: 'category-filter',
         brand: 'brand-filter',
         pillar: 'pillar-filter',
         exchange: 'exchange-filter',
+        query: 'search-filter',
         city: 'city-filter',
         state: 'state-filter',
-        zip: 'zip-filter'
+        zip: 'zip-filter',
+        nearZip: 'distance-zip'
       };
       const control = document.getElementById(idMap[kind]);
-      if (control) control.value = kind === 'brand' || kind === 'city' || kind === 'state' || kind === 'zip' ? '' : 'all';
-    } else if (kind === 'condition' || kind === 'color' || kind === 'facet') {
-      const attr = kind === 'condition' ? 'data-filter-condition' : kind === 'color' ? 'data-filter-color' : 'data-filter-facet';
+      if (control) control.value = ['brand', 'query', 'city', 'state', 'zip', 'nearZip'].includes(kind) ? '' : 'all';
+      if (kind === 'pillar') renderLaborFacets();
+    } else if (kind === 'condition' || kind === 'color' || kind === 'facet' || kind === 'jobTitle' || kind === 'format') {
+      const attr = kind === 'condition' ? 'data-filter-condition'
+        : kind === 'color' ? 'data-filter-color'
+          : kind === 'facet' ? 'data-filter-facet'
+            : kind === 'jobTitle' ? 'data-filter-job-title' : 'data-filter-format';
       const key = kind === 'facet' && button.dataset.clearKey
         ? `[data-filter-facet="${button.dataset.clearKey}"]`
         : `[${attr}]`;
@@ -2627,6 +2933,69 @@
     });
   }
 
+  // Service titles follow the chosen pillar. Member-written titles from local
+  // posts are included so a title can be filtered even before it joins the list.
+  function renderLaborFacets() {
+    const container = document.getElementById('labor-job-options');
+    const title = document.getElementById('labor-job-filter-title');
+    if (!container) return;
+
+    const pillar = $('#pillar-filter') ? $('#pillar-filter').value : 'all';
+    const checked = checkedFilterValues('[data-filter-job-title]:checked');
+    const groups = [];
+    const customTitlesFor = (key) => Array.from(new Set(getAllListings()
+      .filter((listing) => listing.pillar === key && listing.jobTitle)
+      .map((listing) => cleanString(listing.jobTitle, 80))
+      .filter((value) => value && !LABOR_CATEGORIES[key].titles.includes(value)))).sort();
+
+    if (pillar === 'all') {
+      Object.keys(LABOR_CATEGORIES).forEach((key) => {
+        const extras = customTitlesFor(key);
+        groups.push({
+          label: LABOR_CATEGORIES[key].short,
+          titles: extras.length ? [...LABOR_CATEGORIES[key].titles, ...extras] : LABOR_CATEGORIES[key].titles
+        });
+      });
+    } else if (hasOwn(LABOR_CATEGORIES, pillar)) {
+      const definition = LABOR_CATEGORIES[pillar];
+      const extras = customTitlesFor(pillar);
+      groups.push({
+        label: definition.short,
+        titles: extras.length ? [...definition.titles, ...extras] : definition.titles
+      });
+    }
+
+    if (title) {
+      title.textContent = pillar === 'all'
+        ? 'Service titles by pillar'
+        : `Service titles · ${LABOR_CATEGORIES[pillar] ? LABOR_CATEGORIES[pillar].short : 'all pillars'}`;
+    }
+
+    container.replaceChildren();
+    if (!groups.length) {
+      container.appendChild(createEl('p', 'field-hint', 'Choose a pillar to see its listed service titles.'));
+      return;
+    }
+
+    groups.forEach((group) => {
+      const row = createEl('div', 'facet-row');
+      row.appendChild(createEl('span', 'facet-row-label', group.label));
+      const options = createEl('div', 'facet-list');
+      group.titles.forEach((value) => {
+        const label = createEl('label', 'facet-check');
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = value;
+        input.dataset.filterJobTitle = '';
+        input.checked = checked.includes(value);
+        label.append(input, document.createTextNode(value));
+        options.appendChild(label);
+      });
+      row.appendChild(options);
+      container.appendChild(row);
+    });
+  }
+
   function applyFilters() {
     const all = getAllListings();
     const filtered = getFilteredListings();
@@ -2641,16 +3010,17 @@
       const control = document.getElementById(id);
       if (control) control.value = 'all';
     });
-    ['brand-filter', 'city-filter', 'state-filter', 'zip-filter', 'distance-zip'].forEach((id) => {
+    ['search-filter', 'brand-filter', 'city-filter', 'state-filter', 'zip-filter', 'distance-zip'].forEach((id) => {
       const control = document.getElementById(id);
       if (control) control.value = '';
     });
     const sortFilter = document.getElementById('sort-filter');
     if (sortFilter) sortFilter.value = 'featured';
-    $$('[data-filter-condition], [data-filter-color], [data-filter-facet]').forEach((input) => {
+    $$('[data-filter-condition], [data-filter-color], [data-filter-facet], [data-filter-job-title], [data-filter-format]').forEach((input) => {
       input.checked = false;
     });
     renderCategoryFacets();
+    renderLaborFacets();
     applyFilters();
   }
 
@@ -2659,6 +3029,7 @@
     const exchangeFilter = document.getElementById('exchange-filter');
     const categoryFilter = document.getElementById('category-filter');
     const brandFilter = document.getElementById('brand-filter');
+    const searchFilter = document.getElementById('search-filter');
     const cityFilter = document.getElementById('city-filter');
     const stateFilter = document.getElementById('state-filter');
     const zipFilter = document.getElementById('zip-filter');
@@ -2668,9 +3039,9 @@
     const grid = document.getElementById('listings-grid');
     const activeFilters = document.getElementById('active-filters');
 
-    if (pillarFilter) pillarFilter.addEventListener('change', applyFilters);
     if (exchangeFilter) exchangeFilter.addEventListener('change', applyFilters);
     if (brandFilter) brandFilter.addEventListener('input', applyFilters);
+    if (searchFilter) searchFilter.addEventListener('input', applyFilters);
     if (cityFilter) cityFilter.addEventListener('input', applyFilters);
     if (stateFilter) stateFilter.addEventListener('input', applyFilters);
     if (zipFilter) zipFilter.addEventListener('input', applyFilters);
@@ -2682,9 +3053,15 @@
         applyFilters();
       });
     }
+    if (pillarFilter) {
+      pillarFilter.addEventListener('change', () => {
+        renderLaborFacets();
+        applyFilters();
+      });
+    }
     if (clearButton) clearButton.addEventListener('click', resetFilters);
 
-    ['condition-options', 'color-options', 'facet-options'].forEach((id) => {
+    ['condition-options', 'color-options', 'facet-options', 'labor-job-options', 'labor-format-options'].forEach((id) => {
       const box = document.getElementById(id);
       if (box) box.addEventListener('change', applyFilters);
     });
@@ -2697,6 +3074,30 @@
 
     if (grid) {
       grid.addEventListener('click', (event) => {
+        const commentButton = event.target.closest('[data-toggle-comments]');
+        if (commentButton) {
+          const card = commentButton.closest('.listing-card');
+          const thread = card && card.querySelector('.comment-thread');
+          if (!thread) return;
+          thread.hidden = !thread.hidden;
+          commentButton.setAttribute('aria-expanded', String(!thread.hidden));
+          if (!thread.hidden) {
+            const input = thread.querySelector('textarea');
+            if (input) input.focus({ preventScroll: true });
+          }
+          return;
+        }
+
+        const replyButton = event.target.closest('[data-reply-comment]');
+        if (replyButton) {
+          const thread = replyButton.closest('.comment-thread');
+          const input = thread && thread.querySelector('textarea');
+          if (!input) return;
+          input.value = `@${replyButton.dataset.replyComment} `;
+          input.focus({ preventScroll: true });
+          return;
+        }
+
         const requestButton = event.target.closest('[data-request-listing]');
         if (requestButton) {
           openConsentDialog(requestButton.dataset.requestListing, requestButton);
@@ -2712,10 +3113,46 @@
         const resetButton = event.target.closest('[data-clear-filters]');
         if (resetButton) resetFilters();
       });
+
+      grid.addEventListener('submit', (event) => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement) || !form.matches('[data-listing-comment-form]')) return;
+        event.preventDefault();
+        if (!requireMembership()) return;
+        if (!form.reportValidity()) return;
+        const listing = findListing(form.dataset.listingCommentForm);
+        if (!listing) return;
+        const text = cleanString(new FormData(form).get('text'), 800);
+        if (!text) return;
+        const comment = {
+          id: makeId('comment'),
+          memberId: state.pledge.memberId,
+          name: state.pledge.name,
+          text,
+          createdAt: new Date().toISOString()
+        };
+        const comments = getListingComments(listing);
+        comments.push(comment);
+        const savedComments = cleanThreadComments(comments);
+        state.listingComments = state.listingComments && typeof state.listingComments === 'object'
+          ? state.listingComments : {};
+        state.listingComments[listing.id] = savedComments;
+        if (Array.isArray(state.listings) && state.listings.includes(listing)) {
+          listing.comments = savedComments;
+        }
+        addNotification('comment', `Comment on ${listing.title}`,
+          `Added locally to ${listing.provider}'s post. Comments stay on the Free Labor or Free Stuff listing; nothing was transmitted.`,
+          { sourceId: comment.id });
+        saveState();
+        applyFilters();
+        announce('Your comment was added locally.');
+        showToast('Comment saved in this browser. Nothing was transmitted.', false);
+      });
     }
 
     renderStaticFilterOptions();
     renderCategoryFacets();
+    renderLaborFacets();
     applyFilters();
   }
 
@@ -2800,6 +3237,84 @@
     });
     field.appendChild(select);
     return field;
+  }
+
+  function buildLaborJobTitleOptions() {
+    const select = document.getElementById('post-job-title');
+    const pillarSelect = document.getElementById('post-pillar');
+    if (!select || !pillarSelect) return;
+
+    const pillar = pillarSelect.value;
+    const previous = select.value;
+    const definition = hasOwn(LABOR_CATEGORIES, pillar) ? LABOR_CATEGORIES[pillar] : null;
+    select.replaceChildren();
+
+    const empty = document.createElement('option');
+    empty.value = '';
+    empty.textContent = definition ? 'Choose a service title' : 'Choose a pillar first';
+    select.appendChild(empty);
+
+    if (definition) {
+      definition.titles.forEach((title) => {
+        const option = document.createElement('option');
+        option.value = title;
+        option.textContent = title;
+        select.appendChild(option);
+      });
+    }
+    const custom = document.createElement('option');
+    custom.value = '__custom';
+    custom.textContent = 'Write my own title';
+    select.appendChild(custom);
+
+    if (previous && Array.from(select.options).some((option) => option.value === previous)) {
+      select.value = previous;
+    }
+    syncCustomJobTitleField();
+  }
+
+  function syncCustomJobTitleField() {
+    const select = document.getElementById('post-job-title');
+    const field = document.getElementById('post-custom-title-field');
+    const input = document.getElementById('post-job-title-custom');
+    if (!select || !field || !input) return;
+    const custom = select.value === '__custom';
+    field.hidden = !custom;
+    input.required = custom;
+    if (!custom) input.value = '';
+  }
+
+  function syncPostLocationMode() {
+    const modeSelect = document.getElementById('post-location-mode');
+    const form = document.getElementById('post-form');
+    if (!modeSelect || !form) return;
+
+    const mode = hasOwn(LOCATION_MODES, modeSelect.value) ? modeSelect.value : 'cityStateZip';
+    const cityField = document.getElementById('post-location-city-field');
+    const stateField = document.getElementById('post-location-state-field');
+    const zipField = document.getElementById('post-location-zip-field');
+    const city = document.getElementById('post-city');
+    const state = document.getElementById('post-state');
+    const zip = document.getElementById('post-zip');
+    const hint = document.getElementById('post-location-hint');
+    const showCity = mode === 'cityStateZip' || mode === 'cityState';
+    const showState = showCity;
+    const showZip = mode === 'cityStateZip' || mode === 'zip';
+
+    if (cityField) cityField.hidden = !showCity;
+    if (stateField) stateField.hidden = !showState;
+    if (zipField) zipField.hidden = !showZip;
+    if (city) city.required = showCity;
+    if (state) state.required = showState;
+    if (zip) zip.required = showZip;
+
+    const messages = {
+      cityStateZip: 'Neighbors can filter by city, two-letter state, or ZIP prefix. Online offers do not need a street-level location.',
+      cityState: 'City and state are enough for nearby neighbors. ZIP filtering will not apply to this offer.',
+      zip: 'A ZIP code is enough for nearby neighbors. City and state filtering will not apply to this offer.',
+      online: 'This service is online only. No city, state, or ZIP is needed, and the listing will appear in Online filters.'
+    };
+    if (hint) hint.textContent = messages[mode];
   }
 
   // Goods get structured attributes (condition, color, brand, and a few
@@ -2896,6 +3411,15 @@
     const fillProviderName = () => fillOwnNameField(document.getElementById('post-provider'));
     fillProviderName();
     buildGoodsPostFields(true);
+    buildLaborJobTitleOptions();
+    syncPostLocationMode();
+
+    const postPillar = document.getElementById('post-pillar');
+    if (postPillar) postPillar.addEventListener('change', buildLaborJobTitleOptions);
+    const postJobTitle = document.getElementById('post-job-title');
+    if (postJobTitle) postJobTitle.addEventListener('change', syncCustomJobTitleField);
+    const postLocationMode = document.getElementById('post-location-mode');
+    if (postLocationMode) postLocationMode.addEventListener('change', syncPostLocationMode);
 
     // A provider decides whether non-members may buy, and sets the price.
     // Members always receive the same listing free through mutual consent.
@@ -2974,22 +3498,32 @@
       const stateInput = document.getElementById('post-state');
       const zipInput = document.getElementById('post-zip');
       const descriptionInput = document.getElementById('post-description');
+      const modeSelect = document.getElementById('post-location-mode');
+      const locationMode = hasOwn(LOCATION_MODES, modeSelect && modeSelect.value) ? modeSelect.value : 'cityStateZip';
+      const wantsCity = locationMode === 'cityStateZip' || locationMode === 'cityState';
+      const wantsState = wantsCity;
+      const wantsZip = locationMode === 'cityStateZip' || locationMode === 'zip';
 
-      if (![titleInput, providerInput, cityInput, stateInput, zipInput, descriptionInput].every(requireNonBlank)) {
-        return;
-      }
+      const requiredFields = [titleInput, providerInput, descriptionInput];
+      if (wantsCity) requiredFields.push(cityInput);
+      if (wantsState) requiredFields.push(stateInput);
+      if (wantsZip) requiredFields.push(zipInput);
+      if (!requiredFields.every(requireNonBlank)) return;
 
       const data = new FormData(form);
       const title = cleanString(data.get('title'), 80);
       const provider = cleanString(data.get('provider'), 60);
-      const city = cleanString(data.get('city'), 60);
-      const stateCode = cleanString(data.get('state'), 2).toUpperCase();
-      const zip = cleanString(data.get('zip'), 10);
+      const city = wantsCity ? cleanString(data.get('city'), 60) : '';
+      const stateCode = wantsState ? cleanString(data.get('state'), 2).toUpperCase() : '';
+      const zip = wantsZip ? cleanString(data.get('zip'), 10) : '';
       const description = cleanString(data.get('description'), 400);
       const pillar = getDirectoryScope() === 'goods' ? 'goods' : String(data.get('pillar') || '');
       const exchange = pillar === 'goods' ? 'free' : String(data.get('exchange') || '');
       const category = pillar === 'goods' ? String(data.get('category') || '') : '';
       const scope = String(data.get('scope') || '');
+      const jobTitleChoice = pillar === 'goods' ? '' : String(data.get('jobTitle') || '');
+      const customJobTitle = cleanString(data.get('customJobTitle'), 80);
+      const jobTitle = jobTitleChoice === '__custom' ? customJobTitle : jobTitleChoice;
       const condition = pillar === 'goods' ? String(data.get('condition') || '') : '';
       const color = pillar === 'goods' ? String(data.get('color') || '') : '';
       const brand = pillar === 'goods' ? cleanString(data.get('brand'), 60) : '';
@@ -3006,12 +3540,20 @@
         return;
       }
       if (pillar === 'goods' && color && !GOOD_COLORS.includes(color)) return;
+      if (pillar !== 'goods' && !jobTitle) {
+        flagInvalidField(document.getElementById('post-job-title'), 'Choose a listed service title or write your own.');
+        return;
+      }
+      if (pillar !== 'goods' && jobTitleChoice === '__custom' && !customJobTitle) {
+        flagInvalidField(document.getElementById('post-job-title-custom'), 'Write the service title you want the maintainer to see.');
+        return;
+      }
 
-      if (!/^[A-Z]{2}$/.test(stateCode)) {
+      if (wantsState && !/^[A-Z]{2}$/.test(stateCode)) {
         flagInvalidField(stateInput, 'Use the two-letter state code, such as PA.');
         return;
       }
-      if (!/^\d{5}(?:-\d{4})?$/.test(zip)) {
+      if (wantsZip && !/^\d{5}(?:-\d{4})?$/.test(zip)) {
         flagInvalidField(zipInput, 'Use a 5-digit ZIP code, or ZIP+4 such as 18360-1234.');
         return;
       }
@@ -3023,12 +3565,19 @@
         return;
       }
 
-      const location = `${city}, ${stateCode} ${zip}`;
+      const location = locationMode === 'online'
+        ? 'Online'
+        : locationMode === 'zip'
+          ? zip
+          : `${city}, ${stateCode}${zip ? ` ${zip}` : ''}`;
+      const format = LOCATION_MODES[locationMode].format;
       const locationInput = document.getElementById('post-location');
       if (locationInput) locationInput.value = location;
 
       if (!hasOwn(PILLARS, pillar) || !hasOwn(EXCHANGES, exchange)) return;
       if (pillar === 'goods' && !hasOwn(GOODS_CATEGORIES, category)) return;
+      if (pillar !== 'goods' && !hasOwn(LABOR_CATEGORIES, pillar)) return;
+      if (pillar !== 'goods' && !hasOwn(SERVICE_FORMATS, format)) return;
       if (scope && !hasOwn(SCOPE_LABELS, scope)) return;
 
       const photos = cleanPostPhotos(postPhotoDrafts.get(form) || []);
@@ -3046,8 +3595,9 @@
         exchange,
         category,
         scope,
-        ...(pillar === 'goods' ? { condition, color, brand, attributes } : {}),
+        ...(pillar === 'goods' ? { condition, color, brand, attributes } : { jobTitle, format, locationMode }),
         photos,
+        comments: [],
         nonmemberPurchase: { enabled: purchaseEnabled, price: purchaseEnabled ? purchasePrice : 0 },
         details: [
           { label: 'Where', value: location },
@@ -3066,6 +3616,27 @@
         status: 'active'
       };
 
+      // A written-in title is a note for whoever maintains the live site. The
+      // prototype cannot send it anywhere, so it lands in the local suggestion
+      // box with the context needed to add the title to the list later.
+      const customTitleForMaintainer = pillar !== 'goods' && jobTitleChoice === '__custom';
+      if (customTitleForMaintainer) {
+        state.suggestions = Array.isArray(state.suggestions) ? state.suggestions : [];
+        state.suggestions.unshift({
+          id: makeId('suggestion'),
+          memberId: state.pledge.memberId,
+          name: state.pledge.name,
+          category: 'Job title',
+          text: `Add “${jobTitle}” to the Free Labor list for ${PILLARS[pillar].label}. Listing: ${title}. Location: ${location}. In a live site this note goes to the site maintainer; the prototype saved it locally only.`,
+          createdAt: new Date().toISOString(),
+          status: 'for site maintainer'
+        });
+        state.suggestions = state.suggestions.slice(0, 200);
+        addNotification('suggestion', 'Custom job title saved for the maintainer',
+          `“${jobTitle}” was saved in Dashboard → Suggestions locally. In a live site it would be delivered to the site maintainer; nothing was transmitted.`,
+          { tab: 'suggestions', sourceId: listing.id });
+      }
+
       state.listings.unshift(listing);
       saveState();
 
@@ -3073,6 +3644,9 @@
       form.reset();
       fillProviderName();
       buildGoodsPostFields(false);
+      buildLaborJobTitleOptions();
+      syncCustomJobTitleField();
+      syncPostLocationMode();
       syncPurchaseFields();
       postPhotoDrafts.set(form, []);
       if (photoInput) photoInput.value = '';
@@ -3080,9 +3654,13 @@
       closeDialog(dialog, { restoreFocus: false });
       const postStatus = document.getElementById('post-status');
       if (postStatus) {
-        postStatus.textContent = 'Published. Your listing is now in the directory above.';
+        postStatus.textContent = customTitleForMaintainer
+          ? 'Published. Your custom title was saved locally in Dashboard → Suggestions for the site maintainer. Nothing was transmitted.'
+          : 'Published. Your listing is now in the directory above.';
       }
-      showToast('Listing published to this browser.', false);
+      showToast(customTitleForMaintainer
+        ? 'Listing published; custom title saved locally for the maintainer.'
+        : 'Listing published to this browser.', false);
       announce(`Your listing “${listing.title}” was published. It is at the top of the directory.`);
       focusListingTitle(listing.id);
     });
@@ -3769,6 +4347,9 @@
   function renderSharedMemberViews() {
     renderMemberAccount();
     renderProfile();
+    // The dashboard's account panel shows confirmed hours, which change when
+    // an exchange is logged or a review vote resolves it.
+    renderAccountInfo();
   }
 
   function getExchangeType(request) {
@@ -3914,10 +4495,6 @@
     return logMutualHours(request, hours, 'review');
   }
 
-  function isConfirmedExchange(request) {
-    return Boolean(request && (request.status === 'service_completed' || request.status === 'product_delivered'));
-  }
-
   function renderExchanges() {
     const panel = document.getElementById('exchanges-panel');
     if (!panel || !isMember()) return;
@@ -3998,11 +4575,9 @@
       const type = getExchangeType(request);
       const badge = stateName === 'logged' || stateName === 'resolved'
         ? `<span class="badge badge--green">${e(cleanHours(request.loggedHours))} hr logged</span>`
-        : stateName === 'agreed'
-          ? '<span class="badge badge--green">Hours match · ready to log</span>'
-          : stateName === 'disputed'
-            ? '<span class="badge badge--amber">Hours differ · in review</span>'
-            : `<span class="badge badge--soft">${e(roleLabel(role))}</span>`;
+        : stateName === 'disputed'
+          ? '<span class="badge badge--amber">Hours differ · in review</span>'
+          : `<span class="badge badge--soft">${e(roleLabel(role))}</span>`;
       const bothSides = (['worker', 'receiver'].map((side) => sideMarkup(request, side)).join(''));
       const dispute = stateName === 'disputed' || stateName === 'resolved' ? `<div class="hour-dispute">
         <p class="contribution-meta">Worker ${e(cleanHours(request.workerHours))} hr · receiver ${e(cleanHours(request.receiverHours))} hr</p>
@@ -4122,6 +4697,126 @@
     </section>`;
   }
 
+  function renderNotifications() {
+    const panel = document.getElementById('notifications-panel');
+    if (!panel || !isMember()) return;
+    const e = escapeHtml;
+    const items = (Array.isArray(state.notifications) ? state.notifications : []).slice(0, 50);
+    const unread = unreadNotificationCount();
+    const menuLabel = document.querySelector('[data-menu-tab="notifications"] span');
+    if (menuLabel) menuLabel.textContent = `Notifications${unread ? ` (${unread})` : ''}`;
+
+    panel.innerHTML = `<section class="account-card">
+      <p class="eyebrow">Activity</p>
+      <h3>Notifications</h3>
+      <p class="account-note">Local drafts only. These notices are created by your own actions here; nothing is delivered to another person or device. A live system would notify neighbors about messages, requests, and comments.</p>
+      <div class="notification-summary">
+        <strong>${unread} unread</strong>
+        <button class="button button--ghost button--small" type="button" data-mark-notifications ${unread ? '' : 'disabled'}>Mark all read</button>
+      </div>
+      ${items.length ? `<ul class="notification-list">${items.map((item) => `<li class="notification-item ${item.read ? '' : 'is-unread'}">
+        <div>
+          <p class="contribution-meta"><strong>${e(item.title)}</strong> · ${e(formatDate(item.createdAt))}</p>
+          <p>${e(item.body)}</p>
+        </div>
+        <div class="notification-actions">
+          ${item.tab ? `<button class="button button--ghost button--tiny" type="button" data-notification-tab="${e(item.tab)}">Open</button>` : ''}
+          ${item.read ? '' : `<button class="button button--ghost button--tiny" type="button" data-mark-notification="${e(item.id)}">Mark read</button>`}
+        </div>
+      </li>`).join('')}</ul>` : '<p class="account-note">No local notifications yet. Messages, requests, and comments you record will appear here.</p>'}
+    </section>`;
+  }
+
+  function socialAudienceOptions(friends, groups) {
+    const e = escapeHtml;
+    const options = [`<option value="friends">Friends (${friends.length}/${SOCIAL_LIMITS.friends})</option>`];
+    groups.forEach((group) => {
+      const label = group.kind === 'own' ? 'Your group' : 'Group';
+      options.push(`<option value="${e(group.kind)}:${e(group.id)}">${label}: ${e(group.name)} (${group.memberCount}/${SOCIAL_LIMITS.groupMembers})</option>`);
+    });
+    return options.join('');
+  }
+
+  function renderSocial() {
+    const panel = document.getElementById('social-panel');
+    if (!panel || !isMember()) return;
+    const e = escapeHtml;
+    const friends = (Array.isArray(state.friends) ? state.friends : []).slice(0, SOCIAL_LIMITS.friends);
+    const groups = (Array.isArray(state.groups) ? state.groups : []).slice(0, 100);
+    const chats = (Array.isArray(state.socialChats) ? state.socialChats : []).slice(-12).reverse();
+    const canAddFriend = friends.length < SOCIAL_LIMITS.friends;
+    const hasOwnGroup = (Array.isArray(state.groups) ? state.groups : [])
+      .some((group) => group && group.kind === 'own');
+
+    panel.innerHTML = `<section class="account-card">
+      <p class="eyebrow">Social circles</p>
+      <h3>Friends &amp; groups</h3>
+      <p class="account-note">This prototype has one local account. Friends, groups, and chat audiences are saved on this device only; no invitations or messages are sent, and every group is capped at ${SOCIAL_LIMITS.groupMembers} people.</p>
+      <div class="social-grid">
+        <div class="account-block">
+          <h4>Friends (${friends.length}/${SOCIAL_LIMITS.friends})</h4>
+          ${friends.length ? `<ul class="social-list">${friends.map((friend) => `<li class="social-item"><strong>${e(friend.name)}</strong><span class="contribution-meta">${e(formatDate(friend.createdAt))} · local only</span></li>`).join('')}</ul>` : '<p class="account-note">No friends added yet.</p>'}
+          ${canAddFriend ? `<form class="account-form" data-friend-form>
+            <div class="field">
+              <label for="friend-name">Add a friend by chosen name</label>
+              <input type="text" id="friend-name" name="name" maxlength="60" required placeholder="Neighbor's chosen name">
+              <p class="field-hint">No account lookup happens in this prototype.</p>
+            </div>
+            <button type="submit" class="button button--outline button--small">Add friend locally</button>
+          </form>` : `<p class="account-note">The local friend cap of ${SOCIAL_LIMITS.friends} has been reached.</p>`}
+        </div>
+        <div class="account-block">
+          <h4>Groups (max ${SOCIAL_LIMITS.groupMembers} each)</h4>
+          ${groups.length ? `<ul class="social-list">${groups.map((group) => `<li class="social-item"><strong>${e(group.name)}</strong><span class="contribution-meta">${group.kind === 'own' ? 'Your group' : 'Joined group'} · ${group.memberCount}/${SOCIAL_LIMITS.groupMembers} people</span>${group.purpose ? `<span>${e(group.purpose)}</span>` : ''}</li>`).join('')}</ul>` : '<p class="account-note">No groups yet. Create your own or record one you joined.</p>'}
+          <form class="account-form" data-group-form>
+            <div class="form-row">
+              <div class="field">
+                <label for="group-name">Group name</label>
+                <input type="text" id="group-name" name="name" maxlength="80" required placeholder="Crew, circle, or class">
+              </div>
+              <div class="field">
+                <label for="group-kind">Type</label>
+                <select id="group-kind" name="kind">
+                  <option value="joined">Group I joined</option>
+                  <option value="own" ${hasOwnGroup ? 'disabled' : ''}>My own group</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="group-count">People (including you)</label>
+                <input type="number" id="group-count" name="memberCount" min="1" max="${SOCIAL_LIMITS.groupMembers}" step="1" value="1" required>
+              </div>
+            </div>
+            <div class="field">
+              <label for="group-purpose">Purpose <span class="optional">(optional)</span></label>
+              <input type="text" id="group-purpose" name="purpose" maxlength="200" placeholder="What this group is for">
+            </div>
+            <button type="submit" class="button button--outline button--small">Save group locally</button>
+          </form>
+        </div>
+      </div>
+      <div class="account-block">
+        <h4>Social chat</h4>
+        <p class="account-note">Choose friends, your own group, or a group you joined. Each message is a local draft with the audience written on it; nothing is delivered.</p>
+        <ul class="chat-list social-chat-list">
+          ${chats.length ? chats.map((chat) => `<li class="chat-message"><p class="contribution-meta"><strong>${e(chat.name)}</strong> → ${e(chat.audienceLabel)} · ${e(formatDate(chat.createdAt))}</p><p>${e(chat.body)}</p><button class="button button--ghost button--small button--report" type="button" data-report-context data-report-area="Social chat" data-report-detail="${e(chat.audienceLabel)}" data-report-name="${e(chat.name)}" data-report-source-id="${e(chat.id)}" aria-label="Report a concern about a social chat message from ${e(chat.name)}">Report</button></li>`).join('') : '<li class="account-note">No social chat drafts yet.</li>'}
+        </ul>
+        <form class="account-form" data-social-chat-form>
+          <div class="form-row">
+            <div class="field">
+              <label for="social-audience">Audience</label>
+              <select id="social-audience" name="audience">${socialAudienceOptions(friends, groups)}</select>
+            </div>
+            <div class="field">
+              <label for="social-body">Message</label>
+              <input type="text" id="social-body" name="body" maxlength="1200" required placeholder="Write a local chat draft…">
+            </div>
+          </div>
+          <button type="submit" class="button button--primary button--small">Record chat draft</button>
+        </form>
+      </div>
+    </section>`;
+  }
+
   function renderSuggestions() {
     const panel = document.getElementById('suggestions-panel');
     if (!panel || !isMember()) return;
@@ -4163,6 +4858,8 @@
     renderCommons();
     renderExchanges();
     renderMessages();
+    renderNotifications();
+    renderSocial();
     renderSuggestions();
   }
 
@@ -4170,6 +4867,34 @@
     const dash = document.getElementById('member-dashboard');
     if (!dash) return;
     initDashboardTabs();
+
+    dash.addEventListener('click', (event) => {
+      const openTab = event.target.closest('[data-notification-tab]');
+      if (openTab) {
+        setDashboardTab(openTab.dataset.notificationTab);
+        return;
+      }
+      const markOne = event.target.closest('[data-mark-notification]');
+      if (markOne) {
+        const notice = (Array.isArray(state.notifications) ? state.notifications : [])
+          .find((item) => item && item.id === markOne.dataset.markNotification);
+        if (!notice) return;
+        notice.read = true;
+        saveState();
+        renderNotifications();
+        announce('Notification marked as read.');
+        return;
+      }
+      const markAll = event.target.closest('[data-mark-notifications]');
+      if (markAll) {
+        (Array.isArray(state.notifications) ? state.notifications : []).forEach((item) => {
+          if (item) item.read = true;
+        });
+        saveState();
+        renderNotifications();
+        announce('All notifications marked as read.');
+      }
+    });
 
     dash.addEventListener('submit', async (event) => {
       const form = event.target;
@@ -4234,7 +4959,6 @@
         request.evidence = cleanEvidenceItems(items);
         saveState();
         renderExchanges();
-        form.reset();
         announce('Evidence note attached locally.');
         showToast('Evidence note saved in this browser.', false);
         return;
@@ -4327,17 +5051,22 @@
         const body = cleanString(data.get('body'), 1200);
         if (!body) return;
         state.chats = Array.isArray(state.chats) ? state.chats : [];
-        state.chats.push({
+        const chat = {
           id: makeId('chat'),
           memberId: state.pledge.memberId,
           name: state.pledge.name,
           channel: cleanString(data.get('channel'), 40) || 'general',
           body,
           createdAt: now
-        });
+        };
+        state.chats.push(chat);
         state.chats = state.chats.slice(-300);
+        addNotification('comment', 'Community chat message recorded',
+          `Your message in ${chat.channel} is stored locally. In a live system channel members would be notified; nothing was transmitted.`,
+          { tab: 'commons', sourceId: chat.id });
         saveState();
         renderCommons();
+        renderNotifications();
         form.reset();
         announce('Your message was posted to the local community chat.');
         showToast('Chat message saved locally.', false);
@@ -4347,7 +5076,7 @@
         const toName = cleanString(data.get('toName'), 80);
         if (!body || !toName) return;
         state.messages = Array.isArray(state.messages) ? state.messages : [];
-        state.messages.push({
+        const message = {
           id: makeId('message'),
           memberId: state.pledge.memberId,
           name: state.pledge.name,
@@ -4355,13 +5084,109 @@
           body,
           createdAt: now,
           status: 'recorded'
-        });
+        };
+        state.messages.push(message);
+        addNotification('message', `Message recorded to ${toName}`,
+          'Saved locally as a draft. In a live system the recipient would be notified; no message was delivered.',
+          { tab: 'messages', sourceId: message.id });
         state.messages = state.messages.slice(-300);
         saveState();
         renderMessages();
+        renderNotifications();
         form.reset();
         announce('Your message was recorded in this browser.');
         showToast('Message recorded locally.', false);
+      } else if (form.matches('[data-friend-form]')) {
+        event.preventDefault();
+        const name = cleanString(data.get('name'), 60);
+        if (!name) return;
+        state.friends = Array.isArray(state.friends) ? state.friends : [];
+        if (state.friends.length >= SOCIAL_LIMITS.friends) {
+          showToast(`The local friend cap is ${SOCIAL_LIMITS.friends}.`, false);
+          return;
+        }
+        const friend = {
+          id: makeId('friend'),
+          memberId: '',
+          name,
+          createdAt: now
+        };
+        state.friends.push(friend);
+        addNotification('social', `Friend added: ${name}`,
+          'Saved locally by chosen name. In a live system this would become a friend request; no account was looked up and nothing was sent.',
+          { tab: 'social', sourceId: friend.id });
+        saveState();
+        renderSocial();
+        renderNotifications();
+        form.reset();
+        announce(`${name} was added to your local friend list.`);
+        showToast('Friend added locally. No invitation was sent.', false);
+      } else if (form.matches('[data-group-form]')) {
+        event.preventDefault();
+        const name = cleanString(data.get('name'), 80);
+        const kind = data.get('kind') === 'own' ? 'own' : 'joined';
+        const memberCount = cleanCount(data.get('memberCount'));
+        const purpose = cleanString(data.get('purpose'), 200);
+        if (!name || !memberCount) return;
+        if (memberCount > SOCIAL_LIMITS.groupMembers) {
+          showToast(`A group can hold up to ${SOCIAL_LIMITS.groupMembers} people.`, false);
+          return;
+        }
+        state.groups = Array.isArray(state.groups) ? state.groups : [];
+        if (kind === 'own' && state.groups.some((group) => group && group.kind === 'own')) {
+          showToast('You can keep one local group as your own.', false);
+          return;
+        }
+        const group = {
+          id: makeId('group'),
+          kind,
+          name,
+          purpose,
+          memberCount,
+          createdAt: now
+        };
+        state.groups.push(group);
+        addNotification('social', `${kind === 'own' ? 'Your group' : 'Group'} saved: ${name}`,
+          `Recorded locally with ${memberCount} of ${SOCIAL_LIMITS.groupMembers} people. No invitations or membership changes were sent.`,
+          { tab: 'social', sourceId: group.id });
+        saveState();
+        renderSocial();
+        renderNotifications();
+        form.reset();
+        announce(`${name} was saved locally.`);
+        showToast('Group saved locally with the 150-person cap.', false);
+      } else if (form.matches('[data-social-chat-form]')) {
+        event.preventDefault();
+        const body = cleanString(data.get('body'), 1200);
+        const audience = cleanString(data.get('audience'), 40) || 'friends';
+        if (!body) return;
+        let audienceLabel = `Friends (${(Array.isArray(state.friends) ? state.friends : []).length}/${SOCIAL_LIMITS.friends})`;
+        if (audience.startsWith('own:') || audience.startsWith('joined:')) {
+          const groupId = audience.slice(audience.indexOf(':') + 1);
+          const group = (Array.isArray(state.groups) ? state.groups : [])
+            .find((item) => item && item.id === groupId);
+          if (group) audienceLabel = `${group.kind === 'own' ? 'Your group' : 'Group'}: ${group.name}`;
+        }
+        const chat = {
+          id: makeId('social-chat'),
+          memberId: state.pledge.memberId,
+          name: state.pledge.name,
+          audience,
+          audienceLabel,
+          body,
+          createdAt: now
+        };
+        state.socialChats = Array.isArray(state.socialChats) ? state.socialChats : [];
+        state.socialChats.push(chat);
+        state.socialChats = state.socialChats.slice(-300);
+        addNotification('comment', 'Social chat draft recorded',
+          `Saved locally for ${audienceLabel}. In a live system the audience would be notified; nothing was delivered.`,
+          { tab: 'social', sourceId: chat.id });
+        saveState();
+        renderSocial();
+        renderNotifications();
+        announce('Your social chat draft was recorded locally.');
+        showToast('Chat draft saved locally. Nothing was delivered.', false);
       } else if (form.matches('[data-suggestion-form]')) {
         event.preventDefault();
         const text = cleanString(data.get('text'), 1200);
@@ -4878,8 +5703,12 @@
       createdAt: new Date().toISOString()
     });
     report.comments = report.comments.slice(0, 200);
+    addNotification('comment', 'Case file comment recorded',
+      `Your comment on ${report.title || 'a review case'} is stored locally. In a live system the case participants would be notified; nothing was transmitted.`,
+      { tab: 'review', sourceId: report.comments[0] && report.comments[0].id });
     saveState();
     renderAccountability();
+    renderNotifications();
     announce('Your comment was added to the case file.');
     showToast('Comment added locally.', false);
   }
@@ -6452,6 +7281,9 @@
         state.severanceFund.contributions.unshift(contribution.id);
         state.severanceFund.contributions = state.severanceFund.contributions.slice(0, 500);
 
+        addNotification('request', `Purchase intent: ${listing.title}`,
+          `Recorded locally at ${formatMoney(amount)} for the Unbound donation fund. In a live system the provider would be notified; nothing was transmitted.`,
+          { tab: 'exchanges', sourceId: request.id });
         saveState();
         closeDialog(dialog, { restoreFocus: false });
         currentListingId = null;
@@ -6480,7 +7312,7 @@
         return;
       }
 
-      state.requests.unshift({
+      const request = {
         id: makeId('request'),
         type: 'mutual_aid_request',
         memberId: state.pledge.memberId,
@@ -6502,8 +7334,12 @@
         note: cleanString(data.get('note'), 280),
         requestedAt: new Date().toISOString(),
         status: 'requested'
-      });
+      };
+      state.requests.unshift(request);
       state.requests = state.requests.slice(0, 100);
+      addNotification('request', `Request: ${listing.title}`,
+        `Recorded locally for ${listing.provider}. In a live system they would be notified; nothing was transmitted.`,
+        { tab: 'exchanges', sourceId: request.id });
       saveState();
 
       closeDialog(dialog, { restoreFocus: false });
@@ -6696,7 +7532,7 @@
     resetButton.addEventListener('click', () => {
       showConfirm({
         title: 'Demo Reset / Clear Local Data',
-        message: 'This removes your pledge and membership, account credentials, track, listings, requests, inquiries, donation intents, contributions, Unbound donation fund records, volunteer offers, reports and votes, messages, suggestions, waiting-list entry, and settings from this browser. It cannot be undone.',
+        message: 'This removes your pledge and membership, account credentials, track, listings and listing comments, requests, inquiries, donation intents, contributions, Unbound donation fund records, volunteer offers, reports and votes, notifications, friends, groups, social chat drafts, messages, suggestions, waiting-list entry, and settings from this browser. It cannot be undone.',
         confirmLabel: 'Clear local data',
         tone: 'danger',
         onConfirm: () => {

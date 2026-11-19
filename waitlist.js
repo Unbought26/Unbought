@@ -10,6 +10,7 @@
     academy: 'Unbought Academy',
     land: 'Land trust & housing',
     donations: 'Donations & trust formation',
+    festival: 'Equinox festival interest',
     labor: 'Free labor & services',
     goods: 'Free goods'
   };

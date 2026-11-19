@@ -300,6 +300,7 @@
       id: `contrib-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
       memberId: intent.memberId,
       type: 'donation',
+      fund: 'unbought',
       amount,
       hours: 0,
       profession: '',

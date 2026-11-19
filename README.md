@@ -7,6 +7,9 @@ The current site is a front-end prototype. It uses `localStorage` for demonstrat
 data, and no account, pledge, exchange, donation, or waiting-list information is
 transmitted to a server.
 
+The sample Newsboard posts are general updates about the movement and rollout
+process, not a coding changelog. A future blog service will replace them.
+
 ## Pages
 
 - `index.html` — How It Works, with the Newsboard near the top
@@ -104,7 +107,7 @@ first year runs from March 20, 2026 at 14:46 UTC to March 20, 2027 at 20:25 UTC
 — 4:25pm Eastern. That 2027 equinox is also the label rollout moment. Before
 then the dashboard shows the labels as pending rather than presenting them as
 live. Published equinox instants for 2026–2031 are kept in `VERNAL_EQUINOXES`;
-ZIP and profession stay private and never appear on the public resume.
+ZIP stays private and never appears on the public resume; profession is shown.
 
 ## Equinox festival and seed-member thank-you
 
@@ -159,6 +162,26 @@ Poconos rollout. It is linked from every footer site map, and `app.js` adds a
 small fixed question-mark button to every page so the FAQ is always one tap
 away. The FAQ uses native `<details>` accordions and needs no extra script.
 
+## Free Labor directory and service titles
+
+The labor directory uses the five pillars as umbrella categories. Each pillar
+has its own listed service titles, and the title choices in the filter sidebar
+change when a different pillar is selected. Members can search by listing title,
+description, provider, or service title; filter by city, two-letter state, ZIP
+prefix, and in-person/online format; and sort by featured, newest, title,
+service title, location, or nearest to a ZIP entered in the sort controls.
+Active filters can be removed one at a time. Custom titles written in by members
+also appear as filter choices.
+
+The post form follows the same structure. A member chooses a pillar, then a
+listed service title, or writes a new one. Location can be city/state/ZIP, city
+and state only, ZIP only, or online; the chosen mode decides which fields are
+required and what is stored on the listing. When a title is not on the list, the
+prototype saves a maintainer note in Dashboard → Suggestions with the title,
+pillar, listing title, and location. In a live site that note would be delivered
+to whoever maintains the site; this prototype sends nothing and displays that
+boundary in the form and the saved note.
+
 ## Free Stuff catalog and filters
 
 The goods directory has a filter sidebar and a compact product grid: category,
@@ -206,15 +229,37 @@ placeholder `dataUrl` can be dropped without changing the listing or card code.
 ## Safety reporting and evidence
 
 Reports are opened from the place where the interaction happened: a Free Labor or
-Free Stuff listing, a dashboard message or community chat, a member profile, or the
-accountability panel. The report form never asks the reporter to type the reported
-person’s name; the listing, message, or profile supplies it. Reporters are still
-identified by their own member record.
+Free Stuff listing, a comment on a listing, a dashboard message, community or social
+chat, a member profile, or the accountability panel. The report form never asks the
+reporter to type the reported person’s name; the listing, comment, message, or profile
+supplies it. Reporters are still identified by their own member record.
 
 A report can include local multimedia evidence: images are resized and previewed,
 text or message files are copied, and other files are recorded by name, type, and
 size only. Evidence is stored in the same browser with the case file. No file,
 message, or report is uploaded or transmitted by this prototype.
+
+## Notifications, social circles, and listing conversations
+
+Dashboard → Notifications holds local drafts created by the signed-in member’s own
+actions: messages, requests, comments, and social chat drafts. Notices can be marked
+read individually or all at once, and the Open action switches to the related
+dashboard tab when there is one. Listing-comment notices have no dashboard panel
+and point back to the comment on Free Labor or Free Stuff instead. A live system
+would notify neighbors about messages, requests, and comments on their posts;
+this prototype delivers nothing.
+
+Dashboard → Friends & Groups stores friends by chosen name, one group of your own,
+groups you have joined, and social chat drafts addressed to friends or one of those
+groups. Each chat record carries its audience label. There is a single local account,
+so there are no invitations, account lookups, or changes to another person’s data.
+Friend lists are capped at 150 people and every group at 150 people.
+
+Free Labor and Free Stuff listings have local comment threads with replies (a reply
+simply quotes the earlier chosen name). Comments on the static seed listings are
+stored in `state.listingComments` by listing id so they survive a reload; comments
+on member-created listings are also kept on the listing record. Every comment has
+its own contextual report trigger. Nothing is published or transmitted.
 
 ## Hosting
 
