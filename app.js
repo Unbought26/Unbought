@@ -26,10 +26,20 @@
      ------------------------------------------------------------------------ */
   const STORAGE_KEY = 'unbought:v1';
   const SVG_NS = 'http://www.w3.org/2000/svg';
+  const reportEvidenceDrafts = new WeakMap();
+  const reportEvidencePending = new WeakMap();
+  let reportDialog = null;
 
   // Sample newsboard posts shared by the public site and the member dashboard.
   // A blog service will replace this list in the live site.
   const NEWS_POSTS = Object.freeze([
+    {
+      date: '2026-11-19',
+      label: 'Nov 19, 2026',
+      tag: 'Safety & accountability',
+      title: 'Contextual reports with local evidence',
+      body: 'Reports now open from the listing, message, chat, or profile where an interaction happened. The person is carried into the form instead of typed, and reporters can attach images, message files, or file details that stay in this browser.'
+    },
     {
       date: '2026-11-18',
       label: 'Nov 18, 2026',
@@ -335,6 +345,15 @@
     document: 'Document link'
   });
 
+  const REPORT_EVIDENCE = Object.freeze({
+    maxItems: 4,
+    maxFileBytes: 8 * 1024 * 1024,
+    maxDataLength: 500000,
+    maxTextLength: 20000,
+    imageTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+    accepted: 'image/jpeg,image/png,image/webp,image/gif,text/*,.txt,.csv,.json,.md,.log,.pdf,audio/*,video/*'
+  });
+
   const REFLECTION_OPTIONS = Object.freeze([30, 90, 180]);
   const TREATMENT_STEPS = Object.freeze([
     { key: 'evaluation', label: 'Therapeutic evaluation completed (inside or outside Unbought)' },
@@ -619,6 +638,94 @@
     return /^https?:\/\//i.test(url) ? url : '';
   }
 
+  // Evidence images are stored as small local data URLs. SVG and other
+  // scriptable formats are rejected so case files cannot execute markup.
+  function safeEvidenceImageUrl(value) {
+    const url = cleanString(value, REPORT_EVIDENCE.maxDataLength);
+    return /^data:image\/(?:jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(url) ? url : '';
+  }
+
+  function formatBytes(bytes) {
+    const value = Number(bytes);
+    if (!Number.isFinite(value) || value <= 0) return '0 KB';
+    if (value < 1024 * 1024) return `${Math.max(1, Math.round(value / 1024))} KB`;
+    return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function cleanEvidenceItem(item) {
+    if (!item || typeof item !== 'object') return null;
+    const kind = cleanString(item.kind, 20);
+    const name = cleanString(item.name, 120) || 'Evidence';
+    const mime = cleanString(item.mime, 80);
+    const size = Number.isFinite(Number(item.size)) ? Math.max(0, Number(item.size)) : 0;
+    const caption = cleanString(item.caption, 200);
+
+    if (kind === 'image') {
+      const dataUrl = safeEvidenceImageUrl(item.dataUrl);
+      if (!dataUrl) return null;
+      return { kind, name, mime, size, caption, dataUrl };
+    }
+    if (kind === 'text') {
+      const text = cleanString(item.text, REPORT_EVIDENCE.maxTextLength);
+      if (!text) return null;
+      return { kind, name, mime: mime || 'text/plain', size, caption, text };
+    }
+    if (kind === 'file') {
+      return { kind, name, mime, size, caption };
+    }
+    return null;
+  }
+
+  function cleanEvidenceItems(items) {
+    return (Array.isArray(items) ? items : [])
+      .slice(0, REPORT_EVIDENCE.maxItems)
+      .map(cleanEvidenceItem)
+      .filter(Boolean);
+  }
+
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('read-failed'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('read-failed'));
+      reader.readAsText(file);
+    });
+  }
+
+  function getReportContextSummary(report) {
+    const area = cleanString(report && report.contextArea, 80) || 'Dashboard';
+    const detail = cleanString(report && report.contextDetail, 160);
+    const target = cleanString(report && report.respondentName, 80);
+    const parts = [area];
+    if (target) parts.push(`about ${target}`);
+    if (detail) parts.push(detail);
+    return parts.join(' · ');
+  }
+
+  function renderEvidenceList(items, e) {
+    const evidence = cleanEvidenceItems(items);
+    if (!evidence.length) return `<p class="account-note">No uploaded evidence was attached.</p>`;
+    return `<ul class="evidence-list">${evidence.map((item) => {
+      if (item.kind === 'image' && item.dataUrl) {
+        return `<li class="evidence-item evidence-item--image"><figure><img src="${item.dataUrl}" alt="${e(item.caption || item.name)}" loading="lazy"><figcaption><strong>${e(item.name)}</strong>${item.caption ? ` · ${e(item.caption)}` : ''}<span class="contribution-meta">${e(formatBytes(item.size))} · stored locally as an image preview</span></figcaption></figure></li>`;
+      }
+      if (item.kind === 'text' && item.text) {
+        const preview = item.text.length > 1200 ? `${item.text.slice(0, 1200)}\n…` : item.text;
+        return `<li class="evidence-item"><strong>${e(item.name)}</strong>${item.caption ? `<p>${e(item.caption)}</p>` : ''}<p class="contribution-meta">${e(formatBytes(item.size))} · text stored locally in this browser</p><pre class="evidence-text">${e(preview)}</pre></li>`;
+      }
+      return `<li class="evidence-item"><strong>${e(item.name)}</strong>${item.caption ? `<p>${e(item.caption)}</p>` : ''}<p class="contribution-meta">${e([item.mime, formatBytes(item.size)].filter(Boolean).join(' · '))} · file selected from this device; this prototype stored details only, not the file contents or transmission.</p></li>`;
+    }).join('')}</ul>`;
+  }
+
   // Only accept keys that belong to the object itself. This keeps stray
   // prototype names (for example "constructor") from passing as valid data.
   function hasOwn(object, key) {
@@ -862,6 +969,10 @@
           route: item.route === 'criminal' ? 'criminal' : 'board',
           description: cleanString(item.description, 1200),
           occurredAt: cleanString(item.occurredAt, 20),
+          contextArea: cleanString(item.contextArea, 80) || 'Dashboard',
+          contextDetail: cleanString(item.contextDetail, 160),
+          sourceId: cleanString(item.sourceId, 100),
+          evidence: Array.isArray(item.evidence) ? item.evidence.slice(0, REPORT_EVIDENCE.maxItems).map(cleanEvidenceItem).filter(Boolean) : [],
           createdAt: cleanString(item.createdAt, 40),
           status: ['response_period', 'board_review', 'police_referral', 'restriction_active', 'not_guilty', 'access_restored'].includes(item.status) ? item.status : 'board_review',
           responseDeadlineAt: cleanString(item.responseDeadlineAt, 40),
@@ -1029,7 +1140,7 @@
     } catch (error) {
       if (!storageWarningShown) {
         storageWarningShown = true;
-        showToast('Local storage is blocked. Changes will last only for this visit.');
+        showToast('Local storage is full or blocked. Changes will last only for this visit.');
       }
     }
   }
@@ -1260,6 +1371,17 @@
       requestButton.setAttribute('aria-label', `Request with Mutual Consent: ${listing.title}`);
     }
     actions.appendChild(requestButton);
+
+    const reportButton = createEl('button', 'button button--ghost button--small button--report', 'Report');
+    reportButton.type = 'button';
+    reportButton.dataset.reportContext = '';
+    reportButton.dataset.reportArea = getDirectoryScope() === 'goods' ? 'Free Stuff listing' : 'Free Labor listing';
+    reportButton.dataset.reportDetail = listing.title;
+    reportButton.dataset.reportName = listing.provider;
+    reportButton.dataset.reportMemberId = listing.memberId || '';
+    reportButton.dataset.reportSourceId = listing.id;
+    reportButton.setAttribute('aria-label', `Report a concern about ${listing.provider}'s listing: ${listing.title}`);
+    actions.appendChild(reportButton);
 
     if (listing.isUser) {
       const removeWrap = createEl('div', 'listing-remove');
@@ -2154,6 +2276,7 @@
           ${resume.phone ? `<p class="resume-phone">Public phone: ${e(resume.phone)}</p>` : ''}
         </div>
         <span class="resume-availability ${resume.available ? 'is-available' : ''}">${resume.available ? 'Available' : 'Not available right now'}</span>
+        ${isMember() ? `<button class="button button--ghost button--small button--report" type="button" data-report-context data-report-area="Member profile" data-report-detail="Public resume" data-report-name="${e(resume.displayName)}" data-report-member-id="${e(m.memberId || '')}" data-report-source-id="${e(m.memberId || 'profile')}" aria-label="Report a concern from ${e(resume.displayName)}'s profile">Report from this profile</button>` : ''}
       </div>
       <div class="resume-section">
         <h3>Career / paid skills</h3>
@@ -2170,6 +2293,7 @@
         </dl>
       </div>
       <p class="account-note">This resume shows only the first name, City/State, skills, commons totals, availability, and an optional public phone. Legal name, street address, ZIP, housing status, and birthdate are never included.</p>
+      ${isMember() ? `<p class="field-hint">This prototype stores one local member profile. Opening the report fills the name from this resume; you do not type it.</p>` : ''}
     </section>`;
 
     if (!privatePanel) return;
@@ -2302,7 +2426,7 @@
         <h4>Community chats</h4>
         <p class="account-note">Local-only channels for this prototype. Nothing is sent to other people.</p>
         <div class="chat-list">
-          ${chats.length ? chats.map((chat) => `<div class="chat-message"><p class="contribution-meta"><strong>${e(chat.name)}</strong> · ${e(chat.channel)} · ${e(formatDate(chat.createdAt))}</p><p>${e(chat.body)}</p></div>`).join('') : `<p class="account-note">No chat messages yet.</p>`}
+          ${chats.length ? chats.map((chat) => `<div class="chat-message"><p class="contribution-meta"><strong>${e(chat.name)}</strong> · ${e(chat.channel)} · ${e(formatDate(chat.createdAt))}</p><p>${e(chat.body)}</p><button class="button button--ghost button--small button--report" type="button" data-report-context data-report-area="Community chat" data-report-detail="${e(chat.channel)} channel" data-report-name="${e(chat.name)}" data-report-source-id="${e(chat.id)}" aria-label="Report a concern about a message from ${e(chat.name)}">Report</button></div>`).join('') : `<p class="account-note">No chat messages yet.</p>`}
         </div>
         <form class="account-form" data-chat-form>
           <div class="form-row">
@@ -2334,7 +2458,7 @@
       <p class="eyebrow">Messaging</p>
       <h3>Your messages</h3>
       <p class="account-note">Consent-based requests and replies would gather here in a live system. In this prototype, messages stay on this device.</p>
-      ${messages.length ? `<ul class="contribution-list">${messages.map((message) => `<li class="contribution-item"><strong>${e(message.name)}${message.toName ? ` → ${e(message.toName)}` : ''}</strong><span>${e(message.body)}</span><span class="contribution-meta">${e(formatDate(message.createdAt))} · ${e(message.status || 'recorded')}</span></li>`).join('')}</ul>` : `<p class="account-note">No messages recorded yet.</p>`}
+      ${messages.length ? `<ul class="contribution-list">${messages.map((message) => `<li class="contribution-item"><strong>${e(message.name)}${message.toName ? ` → ${e(message.toName)}` : ''}</strong><span>${e(message.body)}</span><span class="contribution-meta">${e(formatDate(message.createdAt))} · ${e(message.status || 'recorded')}</span>${message.toName ? `<button class="button button--ghost button--small button--report" type="button" data-report-context data-report-area="Dashboard messages" data-report-detail="Message to ${e(message.toName)}" data-report-name="${e(message.toName)}" data-report-source-id="${e(message.id)}" aria-label="Report a concern about the message to ${e(message.toName)}">Report</button>` : ''}</li>`).join('')}</ul>` : `<p class="account-note">No messages recorded yet.</p>`}
       <form class="account-form" data-message-form>
         <div class="field">
           <label for="message-to">To (chosen name)</label>
@@ -2592,7 +2716,119 @@
     showToast('Voting closed and case resolved locally.', false);
   }
 
-  function fileAccountabilityReport(form) {
+  async function prepareReportEvidence(file) {
+    const base = {
+      id: makeId('evidence'),
+      name: cleanString(file.name, 120) || 'Evidence',
+      mime: cleanString(file.type, 80),
+      size: Number(file.size) || 0,
+      caption: '',
+      addedAt: new Date().toISOString(),
+      kind: 'file'
+    };
+
+    if (base.size > REPORT_EVIDENCE.maxFileBytes) {
+      return { ...base, note: 'Too large to store locally; details only.' };
+    }
+
+    if (REPORT_EVIDENCE.imageTypes.includes(file.type)) {
+      try {
+        const sourceUrl = await readFileAsDataUrl(file);
+        const image = await new Promise((resolve, reject) => {
+          const element = new Image();
+          element.onload = () => resolve(element);
+          element.onerror = () => reject(new Error('image-failed'));
+          element.src = sourceUrl;
+        });
+        const width = image.naturalWidth || image.width;
+        const height = image.naturalHeight || image.height;
+        if (!width || !height) return { ...base, note: 'Image could not be previewed; details only.' };
+        const scale = Math.min(1, 1200 / Math.max(width, height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(width * scale));
+        canvas.height = Math.max(1, Math.round(height * scale));
+        const context = canvas.getContext('2d');
+        if (!context) return { ...base, note: 'Image preview unavailable; details only.' };
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+        if (dataUrl.length > REPORT_EVIDENCE.maxDataLength) {
+          return { ...base, note: 'Image too large after resizing; details only.' };
+        }
+        return { ...base, kind: 'image', mime: 'image/jpeg', dataUrl };
+      } catch (error) {
+        return { ...base, note: 'Image could not be read; details only.' };
+      }
+    }
+
+    const isText = file.type.startsWith('text/') || /\.(txt|csv|json|jsonl|md|log|xml)$/i.test(file.name);
+    if (isText) {
+      try {
+        const slice = typeof file.slice === 'function'
+          ? file.slice(0, REPORT_EVIDENCE.maxTextLength * 2)
+          : file;
+        const text = cleanString(await readFileAsText(slice), REPORT_EVIDENCE.maxTextLength);
+        if (!text) return { ...base, note: 'Text file was empty; details only.' };
+        return { ...base, kind: 'text', mime: file.type || 'text/plain', text };
+      } catch (error) {
+        return { ...base, note: 'Text file could not be read; details only.' };
+      }
+    }
+
+    return { ...base, note: 'File selected locally; this prototype stores details only, not the file itself.' };
+  }
+
+  function renderEvidenceDraft(form) {
+    const list = form && form.querySelector('[data-report-evidence-list]');
+    if (!list) return;
+    const entries = reportEvidenceDrafts.get(form) || [];
+    const e = escapeHtml;
+
+    if (!entries.length) {
+      list.innerHTML = '';
+      return;
+    }
+    list.innerHTML = `<ul class="evidence-list evidence-list--draft">${entries.map((item) => `
+      <li class="evidence-item">
+        ${item.kind === 'image' && item.dataUrl ? `<img class="evidence-thumb" src="${item.dataUrl}" alt="Preview of ${e(item.name)}">` : ''}
+        <strong>${e(item.name)}</strong>
+        <span class="contribution-meta">${e([item.kind === 'image' ? 'Image' : item.kind === 'text' ? 'Text / messages' : 'File details', formatBytes(item.size)].join(' · '))}${item.note ? ` · ${e(item.note)}` : ''}</span>
+        <button type="button" class="button button--ghost button--small" data-action="remove-report-evidence" data-evidence-id="${e(item.id)}" aria-label="Remove ${e(item.name)}">Remove</button>
+      </li>`).join('')}</ul>`;
+  }
+
+  async function addReportEvidence(form, files, session) {
+    if (!form || !files || !files.length) return;
+    const status = form.querySelector('[data-report-evidence-status]');
+    const existing = reportEvidenceDrafts.get(form) || [];
+    const room = REPORT_EVIDENCE.maxItems - existing.length;
+    if (room <= 0) {
+      if (status) status.textContent = `You can attach up to ${REPORT_EVIDENCE.maxItems} items.`;
+      return;
+    }
+
+    const selected = Array.from(files).slice(0, room);
+    if (status) status.textContent = `Reading ${selected.length} item${selected.length === 1 ? '' : 's'} locally…`;
+    const prepared = await Promise.all(selected.map(prepareReportEvidence));
+    if (session && form.dataset.reportSession !== session) return;
+    const next = [...existing, ...prepared];
+    reportEvidenceDrafts.set(form, next);
+    renderEvidenceDraft(form);
+
+    const skipped = files.length - selected.length;
+    const parts = [`Added ${prepared.length} local evidence item${prepared.length === 1 ? '' : 's'}.`];
+    if (skipped > 0) parts.push(`Only ${REPORT_EVIDENCE.maxItems} items can be attached.`);
+    parts.push('Nothing was transmitted.');
+    const message = parts.join(' ');
+    if (status) status.textContent = message;
+    announce(message);
+  }
+
+  async function fileAccountabilityReport(form) {
+    const pending = reportEvidencePending.get(form);
+    if (pending) await pending;
+
     const data = new FormData(form);
     const type = cleanString(data.get('type'), 40);
     const meta = hasOwn(REPORT_TYPES, type) ? REPORT_TYPES[type] : null;
@@ -2606,7 +2842,11 @@
       reporterMemberId: state.pledge.memberId,
       reporterName: state.pledge.name,
       respondentName: cleanString(data.get('respondentName'), 80),
-      respondentMemberId: '',
+      respondentMemberId: cleanString(data.get('respondentMemberId'), 100),
+      contextArea: cleanString(data.get('contextArea'), 80) || 'Dashboard',
+      contextDetail: cleanString(data.get('contextDetail'), 160),
+      sourceId: cleanString(data.get('sourceId'), 100),
+      evidence: cleanEvidenceItems(reportEvidenceDrafts.get(form) || []),
       type,
       typeLabel: meta.label,
       route: meta.route,
@@ -2636,12 +2876,200 @@
     state.reports.unshift(report);
     state.reports = state.reports.slice(0, 200);
     saveState();
+    reportEvidenceDrafts.delete(form);
     form.reset();
+    renderEvidenceDraft(form);
     renderAccountability();
+    if (reportDialog && reportDialog.open) closeDialog(reportDialog);
     announce(isCriminal
       ? 'Criminal matter recorded as a police referral. In a live system it would be referred to police for investigation. Nothing was transmitted in this prototype.'
-      : `Report filed. The reported member has ${RESPONSE_DAYS} days to gather evidence and respond before a ${VOTING_DAYS}-day member vote opens.`);
+      : `Report filed from ${report.contextArea}. Evidence stayed in this browser. The response period is open.`);
     showToast(isCriminal ? 'Police referral recorded (prototype only).' : 'Report filed. Response period is open.', false);
+  }
+
+  // One report form is shared by every contextual trigger. The person being
+  // reported is supplied by the page (listing, message, or profile), never by
+  // a free-text name field in the report itself.
+  function buildReportDialog() {
+    if (reportDialog) return reportDialog;
+
+    const dialog = document.createElement('dialog');
+    dialog.className = 'dialog dialog--report';
+    dialog.id = 'report-dialog';
+    dialog.setAttribute('aria-labelledby', 'report-dialog-title');
+    dialog.setAttribute('aria-describedby', 'report-dialog-intro');
+    dialog.innerHTML = `
+      <div class="dialog-shell">
+        <div class="dialog-top">
+          <p class="eyebrow">Safety &amp; accountability</p>
+          <button class="icon-button" type="button" data-dialog-close aria-label="Close the report form">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+          </button>
+        </div>
+        <div class="dialog-content">
+          <h2 id="report-dialog-title">Report a concern</h2>
+          <p id="report-dialog-intro">This report is tied to your member record. The person is carried over from the listing, message, or profile where you opened this form—you do not type their name.</p>
+          <p class="dialog-note" data-report-context-summary role="status"></p>
+          <form class="account-form report-form" data-report-form>
+            <input type="hidden" name="respondentName" value="">
+            <input type="hidden" name="respondentMemberId" value="">
+            <input type="hidden" name="contextArea" value="Dashboard">
+            <input type="hidden" name="contextDetail" value="">
+            <input type="hidden" name="sourceId" value="">
+            <div class="field">
+              <label for="report-dialog-type">What are you reporting? <span class="required-mark" aria-hidden="true">*</span></label>
+              <select id="report-dialog-type" name="type" required>
+                <option value="">Choose a type…</option>
+                <optgroup label="Reviewed by members (not a crime)">
+                  ${Object.keys(REPORT_TYPES).filter((key) => REPORT_TYPES[key].route === 'board').map((key) => `<option value="${escapeHtml(key)}">${escapeHtml(REPORT_TYPES[key].label)}</option>`).join('')}
+                </optgroup>
+                <optgroup label="Criminal matter — police referral">
+                  ${Object.keys(REPORT_TYPES).filter((key) => REPORT_TYPES[key].route === 'criminal').map((key) => `<option value="${escapeHtml(key)}">${escapeHtml(REPORT_TYPES[key].label)}</option>`).join('')}
+                </optgroup>
+              </select>
+            </div>
+            <div class="field">
+              <label for="report-dialog-when">When did it happen? <span class="optional">(optional)</span></label>
+              <input type="date" id="report-dialog-when" name="occurredAt">
+            </div>
+            <div class="field">
+              <label for="report-dialog-description">What happened? <span class="required-mark" aria-hidden="true">*</span></label>
+              <textarea id="report-dialog-description" name="description" rows="4" maxlength="1200" required placeholder="Describe what happened and where. The person or listing is already attached above."></textarea>
+              <p class="field-hint">Up to 1200 characters. Stored with your member record in this browser only.</p>
+            </div>
+            <fieldset class="evidence-fieldset">
+              <legend>Local evidence <span class="optional">(optional)</span></legend>
+              <p class="field-hint">Select images, text or message files, or other files from this device. Images are resized and saved locally; text files are copied locally; other files are recorded by name and size only. Up to ${REPORT_EVIDENCE.maxItems} items, 8 MB each. Nothing is uploaded or transmitted.</p>
+              <input type="file" id="report-evidence-input" name="evidenceFiles" multiple accept="${REPORT_EVIDENCE.accepted}">
+              <p class="evidence-status" data-report-evidence-status role="status"></p>
+              <div data-report-evidence-list></div>
+            </fieldset>
+            <label class="checkbox">
+              <input type="checkbox" name="goodFaith" required>
+              <span>I confirm this report is made in good faith and is true to the best of my knowledge.</span>
+            </label>
+            <div class="account-form-actions">
+              <button type="submit" class="button button--primary button--small">File report</button>
+              <button type="button" class="button button--ghost button--small" data-dialog-close>Cancel</button>
+              <p class="form-hint">Named reporter · local evidence only · nothing transmitted</p>
+            </div>
+          </form>
+        </div>
+      </div>`;
+
+    document.body.appendChild(dialog);
+    reportDialog = dialog;
+
+    const form = dialog.querySelector('[data-report-form]');
+    const fileInput = dialog.querySelector('#report-evidence-input');
+    const status = dialog.querySelector('[data-report-evidence-status]');
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!requireMembership()) return;
+      if (!form.reportValidity()) return;
+      fileAccountabilityReport(form);
+    });
+
+    form.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-action="remove-report-evidence"]');
+      if (!button || !form.contains(button)) return;
+      const id = cleanString(button.dataset.evidenceId, 60);
+      const entries = reportEvidenceDrafts.get(form) || [];
+      const removed = entries.find((item) => item.id === id);
+      reportEvidenceDrafts.set(form, entries.filter((item) => item.id !== id));
+      renderEvidenceDraft(form);
+      if (status) status.textContent = removed ? `Removed ${removed.name}. Nothing was transmitted.` : '';
+    });
+
+    if (fileInput) {
+      fileInput.addEventListener('change', () => {
+        if (!fileInput.files || !fileInput.files.length) return;
+        if (!form.dataset.reportSession) form.dataset.reportSession = makeId('report-session');
+        const session = form.dataset.reportSession;
+        const task = addReportEvidence(form, fileInput.files, session);
+        reportEvidencePending.set(form, task);
+        task.finally(() => {
+          if (reportEvidencePending.get(form) === task) reportEvidencePending.delete(form);
+          fileInput.value = '';
+        });
+      });
+    }
+
+    dialog.querySelectorAll('[data-dialog-close]').forEach((button) => {
+      button.addEventListener('click', () => closeDialog(dialog));
+    });
+
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) closeDialog(dialog);
+    });
+
+    dialog.addEventListener('close', () => {
+      form.dataset.reportSession = makeId('report-session');
+      reportEvidenceDrafts.delete(form);
+      reportEvidencePending.delete(form);
+      form.reset();
+      renderEvidenceDraft(form);
+      if (status) status.textContent = '';
+    });
+
+    return dialog;
+  }
+
+  function openReportDialog(context, trigger) {
+    if (!requireMembership()) return;
+    const dialog = buildReportDialog();
+    const form = dialog.querySelector('[data-report-form]');
+    const summary = dialog.querySelector('[data-report-context-summary]');
+
+    const area = cleanString(context && context.area, 80) || 'Dashboard';
+    const detail = cleanString(context && context.detail, 160);
+    const name = cleanString(context && context.name, 80);
+    const memberId = cleanString(context && context.memberId, 100);
+    const sourceId = cleanString(context && context.sourceId, 100);
+
+    const setField = (fieldName, value) => {
+      const input = form.querySelector(`[name="${fieldName}"]`);
+      if (input) input.value = value;
+    };
+
+    form.dataset.reportSession = makeId('report-session');
+    form.reset();
+    reportEvidenceDrafts.delete(form);
+    reportEvidencePending.delete(form);
+    renderEvidenceDraft(form);
+    const status = form.querySelector('[data-report-evidence-status]');
+    if (status) status.textContent = '';
+
+    setField('respondentName', name);
+    setField('respondentMemberId', memberId);
+    setField('contextArea', area);
+    setField('contextDetail', detail);
+    setField('sourceId', sourceId);
+
+    const parts = [`Reporting from ${area}`];
+    if (detail) parts.push(detail);
+    if (name) parts.push(`about ${name}`);
+    else parts.push('about a general concern');
+    if (summary) summary.textContent = `${parts.join(' · ')}. The name was filled from this page, not typed by you.`;
+
+    dialog._returnFocus = trigger instanceof HTMLElement ? trigger : null;
+    openDialog(dialog);
+  }
+
+  function initReportDialog() {
+    document.addEventListener('click', (event) => {
+      const trigger = event.target.closest('[data-report-context]');
+      if (!trigger) return;
+      event.preventDefault();
+      openReportDialog({
+        area: trigger.dataset.reportArea,
+        detail: trigger.dataset.reportDetail,
+        name: trigger.dataset.reportName,
+        memberId: trigger.dataset.reportMemberId,
+        sourceId: trigger.dataset.reportSourceId
+      }, trigger);
+    });
   }
 
   function castAccountabilityVote(reportId, data) {
@@ -2747,11 +3175,14 @@
         <div><dt>Report type</dt><dd>${e(report.typeLabel || report.type)}</dd></div>
         <div><dt>Filed by</dt><dd>${e(report.reporterName || 'Member')}${report.reporterMemberId ? ` · ${e(report.reporterMemberId)}` : ''}</dd></div>
         <div><dt>Reported member</dt><dd>${e(report.respondentName || 'not specified')}</dd></div>
+        <div><dt>Reported from</dt><dd>${e(getReportContextSummary(report))}</dd></div>
         ${report.occurredAt ? `<div><dt>When it happened</dt><dd>${e(report.occurredAt)}</dd></div>` : ''}
         <div><dt>Filed on</dt><dd>${e(formatDate(report.createdAt))}</dd></div>
       </dl>
       <p class="case-file-section-title">What was reported</p>
       <p class="case-file-text">${e(report.description)}</p>
+      <p class="case-file-section-title">Evidence from the person reporting</p>
+      ${renderEvidenceList(report.evidence, e)}
       <p class="case-file-section-title">Response from the reported member</p>`;
 
     if (response && response.plea) {
@@ -2796,7 +3227,7 @@
   function renderResponseForm(report, e) {
     const id = e(domId(report.id));
     return `<form class="account-form response-form" data-response-form data-id="${e(report.id)}">
-      <p class="account-note">You are the reported member. You may plead guilty or not guilty, explain why if you choose, and add links to evidence. In a live system this would accept direct video, audio, and image uploads; this prototype records links and text only.</p>
+      <p class="account-note">You are the reported member. You may plead guilty or not guilty, explain why if you choose, and add links to evidence. In a live system this would accept direct video, audio, and image uploads; this prototype records links and text only. The person reporting can attach local evidence in the report form; nothing is transmitted.</p>
       <fieldset class="vote-fieldset"><legend>1. Your plea</legend>
         <label class="radio-choice"><input type="radio" name="plea" value="guilty" required> Guilty</label>
         <label class="radio-choice"><input type="radio" name="plea" value="not_guilty" required> Not guilty</label>
@@ -2848,7 +3279,7 @@
     let html = `<section class="account-card accountability-card" aria-labelledby="accountability-title">
       <p class="eyebrow">Member dashboard · Safety</p>
       <h3 id="accountability-title">Safety &amp; accountability</h3>
-      <p class="account-note">Members file named reports. Criminal matters are recorded as police referrals for investigation under local and federal law; they are never decided by a member vote. For non-criminal matters, the reported member gets ${RESPONSE_DAYS} days to gather evidence and plead guilty or not guilty with an explanation and multimedia links. Then all members get ${VOTING_DAYS} days to read the complete case file, comment, and vote on guilt, on the reflection period if guilty, and on a reason for their vote. Everything is visible on this dashboard. This prototype records it all locally—nothing is transmitted.</p>`;
+      <p class="account-note">Members file reports tied to their own member record; the person being reported is taken from the interaction, not typed by the reporter. Criminal matters are recorded as police referrals for investigation under local and federal law; they are never decided by a member vote. For non-criminal matters, the reported member gets ${RESPONSE_DAYS} days to gather evidence and plead guilty or not guilty with an explanation and multimedia links. Then all members get ${VOTING_DAYS} days to read the complete case file, comment, and vote on guilt, on the reflection period if guilty, and on a reason for their vote. Everything is visible on this dashboard. This prototype records it all locally—nothing is transmitted.</p>`;
 
     if (restriction) {
       const complete = isRestrictionComplete(restriction);
@@ -2877,42 +3308,9 @@
     html += `
       <div class="account-block">
         <h4>File a report</h4>
-        <p class="account-note">Filed under ${e(member.name)} (member ID ${e(member.memberId)}). Reports are named; anonymous reports are not accepted.</p>
-        <form class="account-form report-form" data-report-form>
-          <div class="field">
-            <label for="report-type">What are you reporting? <span class="required-mark" aria-hidden="true">*</span></label>
-            <select id="report-type" name="type" required>
-              <option value="">Choose a type…</option>
-              <optgroup label="Reviewed by members (not a crime)">
-                ${Object.keys(REPORT_TYPES).filter((key) => REPORT_TYPES[key].route === 'board').map((key) => `<option value="${e(key)}">${e(REPORT_TYPES[key].label)}</option>`).join('')}
-              </optgroup>
-              <optgroup label="Criminal matter — police referral">
-                ${Object.keys(REPORT_TYPES).filter((key) => REPORT_TYPES[key].route === 'criminal').map((key) => `<option value="${e(key)}">${e(REPORT_TYPES[key].label)}</option>`).join('')}
-              </optgroup>
-            </select>
-          </div>
-          <div class="field">
-            <label for="report-respondent">Member this report is about <span class="optional">(chosen name or member ID)</span></label>
-            <input type="text" id="report-respondent" name="respondentName" maxlength="80" placeholder="Chosen name or member ID">
-            <p class="field-hint">To explore the full review flow locally, you can enter your own chosen name here.</p>
-          </div>
-          <div class="field">
-            <label for="report-when">When did it happen? <span class="optional">(optional)</span></label>
-            <input type="date" id="report-when" name="occurredAt">
-          </div>
-          <div class="field">
-            <label for="report-description">What happened? <span class="required-mark" aria-hidden="true">*</span></label>
-            <textarea id="report-description" name="description" rows="4" maxlength="1200" required placeholder="Describe what happened, where, and who was involved."></textarea>
-          </div>
-          <label class="checkbox">
-            <input type="checkbox" name="goodFaith" required>
-            <span>I confirm this report is made in good faith and is true to the best of my knowledge.</span>
-          </label>
-          <div class="account-form-actions">
-            <button type="submit" class="button button--primary button--small">File report</button>
-            <p class="form-hint">Named reports only · stored in this browser</p>
-          </div>
-        </form>
+        <p class="account-note">Filed under ${e(member.name)} (member ID ${e(member.memberId)}). You do not type the person's name: open <strong>Report</strong> from the listing, message, or profile where the interaction happened. The context is carried into the form automatically.</p>
+        <button class="button button--outline button--small" type="button" data-report-context data-report-area="Dashboard" data-report-detail="Accountability panel" data-report-source-id="dashboard">Report a concern</button>
+        <p class="field-hint">You can attach local images, message files, or other file details in the form. Nothing is uploaded or transmitted.</p>
       </div>`;
 
     html += `<div class="account-block"><h4>Your reports</h4>`;
@@ -2924,7 +3322,7 @@
         const isCriminal = report.route === 'criminal';
         html += `<li class="case-item">
           <div class="case-item-head"><strong>${e(report.typeLabel || report.type)}</strong><span class="case-status ${isCriminal ? 'case-status--criminal' : ''}">${e(reportStatusLabel(report.status))}</span></div>
-          <p class="contribution-meta">${e(formatDate(report.createdAt))} · about ${e(report.respondentName || 'not specified')}${report.id ? ' · ' + e(report.id) : ''}</p>
+          <p class="contribution-meta">${e(formatDate(report.createdAt))} · ${e(getReportContextSummary(report))}${report.id ? ' · ' + e(report.id) : ''}</p>
           <details><summary>What was reported</summary><p>${e(report.description)}</p></details>
           ${isCriminal ? `<p class="case-referral"><strong>Police referral recorded.</strong> ${e(report.policeReferral && report.policeReferral.note ? report.policeReferral.note : 'In a live system this would be sent to local police for investigation. This prototype does not contact authorities.')}</p>` : ''}
         </li>`;
@@ -2948,7 +3346,7 @@
         const canVote = !isResponsePhase && !alreadyVoted && (!report.votingEndsAt || Date.now() <= Date.parse(report.votingEndsAt)) && !report.demoVotingClosed;
         html += `<li class="case-item case-item--review">
           <div class="case-item-head"><strong>${e(report.typeLabel || report.type)}</strong><span class="case-status ${isResponsePhase ? 'case-status--response' : ''}">${e(reportStatusLabel(report.status))}</span></div>
-          <p class="contribution-meta">Filed ${e(formatDate(report.createdAt))} · about ${e(report.respondentName || 'not specified')} · ${e(isResponsePhase ? responseRemaining(report) : votingRemaining(report))} · ${votes.length} vote${votes.length === 1 ? '' : 's'}</p>
+          <p class="contribution-meta">Filed ${e(formatDate(report.createdAt))} · ${e(getReportContextSummary(report))} · ${e(isResponsePhase ? responseRemaining(report) : votingRemaining(report))} · ${votes.length} vote${votes.length === 1 ? '' : 's'}</p>
           ${renderCaseFile(report, e)}
           ${isResponsePhase
             ? (isRespondent(report) ? renderResponseForm(report, e) : `<p class="account-note">The reported member has ${RESPONSE_DAYS} days to gather evidence and plead before voting opens. You can read the full case file and leave a comment now.</p>`)
@@ -2991,7 +3389,7 @@
       resolved.forEach((report) => {
         html += `<li class="case-item">
           <div class="case-item-head"><strong>${e(report.typeLabel || report.type)}</strong><span class="case-status">${e(reportStatusLabel(report.status))}</span></div>
-          <p class="contribution-meta">${e(formatDate(report.resolutionAt || report.createdAt))} · about ${e(report.respondentName || 'not specified')}${report.reflectionDays ? ' · ' + report.reflectionDays + ' days' : ''}</p>
+          <p class="contribution-meta">${e(formatDate(report.resolutionAt || report.createdAt))} · ${e(getReportContextSummary(report))}${report.reflectionDays ? ' · ' + report.reflectionDays + ' days' : ''}</p>
           <p class="contribution-meta">${(report.votes || []).length} member vote${(report.votes || []).length === 1 ? '' : 's'}${report.status === 'not_guilty' ? ' · no restriction applied' : ''}</p>
           <details><summary>Full case file and response</summary>${renderCaseFile(report, e)}</details>
           ${(report.votes || []).length ? `<details><summary>How members voted and why</summary><ul class="vote-reasons">${report.votes.map((vote) => `
@@ -4570,6 +4968,7 @@
 
   function initDialogs() {
     initDialogBasics();
+    initReportDialog();
     initConsentDialog();
     initInquiryDialog();
     initConfirmDialog();

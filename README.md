@@ -45,6 +45,19 @@ City/State from the member-selected mailing or physical address, both skill list
 commons totals, availability, and a phone number only when the member opts in. It
 never includes the legal name, street address, ZIP, housing status, or birthdate.
 
+## Safety reporting and evidence
+
+Reports are opened from the place where the interaction happened: a Free Labor or
+Free Stuff listing, a dashboard message or community chat, a member profile, or the
+accountability panel. The report form never asks the reporter to type the reported
+person’s name; the listing, message, or profile supplies it. Reporters are still
+identified by their own member record.
+
+A report can include local multimedia evidence: images are resized and previewed,
+text or message files are copied, and other files are recorded by name, type, and
+size only. Evidence is stored in the same browser with the case file. No file,
+message, or report is uploaded or transmitted by this prototype.
+
 ## Hosting
 
 The project is hosted at <https://github.com/Unbought26/Unbought>. The published
