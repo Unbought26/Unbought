@@ -38,6 +38,13 @@
     {
       date: '2026-11-19',
       label: 'Nov 19, 2026',
+      tag: 'Membership',
+      title: 'Seed and founding member labels, counted by the equinox',
+      body: 'The first person of a profession in a ZIP code becomes a seed member. Seed members who joined during the first year are founding members. Membership years begin at the exact vernal equinox; Unbought’s first year ends March 20, 2027 at 4:25pm Eastern, which is also the rollout moment. Labels show as pending until then.'
+    },
+    {
+      date: '2026-11-19',
+      label: 'Nov 19, 2026',
       tag: 'Site',
       title: 'A FAQ and a question mark that follows you',
       body: 'There is now a plain-language FAQ linked in the site map, plus a small question mark button on every page. It covers membership, privacy, local-only data, member labels, the Poconos rollout, and what is and is not possible in this prototype.'
@@ -642,6 +649,26 @@
   const VOTING_DAYS = 3;     // time for all members to review the case file and vote
   const DAY_MS = 24 * 60 * 60 * 1000;
 
+  // Membership years start at the exact moment of the northern vernal
+  // equinox, not on January 1. Times are published UTC instants, rounded to
+  // the minute. The 2027 equinox (20:25 UTC / 4:25pm Eastern) is both the end
+  // of Unbought's first year and the label rollout moment.
+  const VERNAL_EQUINOXES = Object.freeze([
+    { year: 2026, at: '2026-03-20T14:46:00.000Z' },
+    { year: 2027, at: '2027-03-20T20:25:00.000Z' },
+    { year: 2028, at: '2028-03-20T02:17:00.000Z' },
+    { year: 2029, at: '2029-03-20T08:02:00.000Z' },
+    { year: 2030, at: '2030-03-20T13:52:00.000Z' },
+    { year: 2031, at: '2031-03-20T19:41:00.000Z' }
+  ]);
+  const FIRST_YEAR_START = VERNAL_EQUINOXES[0].at;
+  const FIRST_YEAR_END = VERNAL_EQUINOXES[1].at;
+  const LABEL_ROLLOUT_AT = VERNAL_EQUINOXES[1].at;
+  const MEMBER_LABELS = Object.freeze({
+    seed: 'Seed member',
+    founding: 'Founding member'
+  });
+
   const MEDIA_TYPES = Object.freeze({
     video: 'Video link',
     audio: 'Audio link',
@@ -683,6 +710,7 @@
   function createDefaultState() {
     return {
       pledge: null,
+      memberRoster: [],
       auth: {
         credential: null,
         session: { signedIn: false, signedInAt: null }
@@ -734,6 +762,107 @@
     if (!input || cleanString(input.value, 120)) return;
     const name = memberChosenName();
     if (name) input.value = name;
+  }
+
+  function normalizeProfession(value) {
+    return cleanString(value, 80).replace(/\s+/g, ' ').trim();
+  }
+
+  function normalizeZip(value) {
+    const digits = String(value || '').replace(/\D/g, '');
+    return digits.length >= 5 ? digits.slice(0, 5) : '';
+  }
+
+  function zipFromAddress(address) {
+    return normalizeZip((String(address || '').match(/\b\d{5}(?:-\d{4})?\b/) || [''])[0]);
+  }
+
+  function getMemberRoster() {
+    if (!Array.isArray(state.memberRoster)) state.memberRoster = [];
+    return state.memberRoster;
+  }
+
+  function addMemberToRoster(pledge) {
+    if (!pledge || !pledge.memberId) return;
+    const roster = getMemberRoster();
+    const profession = normalizeProfession(pledge.profession
+      || String(pledge.paidSkills || '').split(/[\n,;]/)[0]);
+    const zip = normalizeZip(pledge.zip || zipFromAddress(pledge.mailingAddress));
+    const entry = {
+      memberId: pledge.memberId,
+      profession,
+      professionKey: profession.toLowerCase(),
+      zip,
+      signedAt: cleanString(pledge.signedAt, 40)
+    };
+    const index = roster.findIndex((item) => item && item.memberId === entry.memberId);
+    if (index >= 0) roster[index] = entry;
+    else roster.push(entry);
+    state.memberRoster = roster.slice(0, 500);
+  }
+
+  function labelsLive() {
+    return Date.now() >= Date.parse(LABEL_ROLLOUT_AT);
+  }
+
+  function membershipYearAt(value) {
+    const when = Date.parse(value);
+    if (Number.isNaN(when)) return null;
+    let year = VERNAL_EQUINOXES[0].year - 1;
+    for (const equinox of VERNAL_EQUINOXES) {
+      if (when < Date.parse(equinox.at)) break;
+      year = equinox.year;
+    }
+    return year;
+  }
+
+  function isSeedMember(member) {
+    if (!member || !member.memberId) return false;
+    const profession = normalizeProfession(member.profession
+      || String(member.paidSkills || '').split(/[\n,;]/)[0]).toLowerCase();
+    const zip = normalizeZip(member.zip || zipFromAddress(member.mailingAddress));
+    if (!profession || !zip) return false;
+    const first = getMemberRoster()
+      .filter((item) => item && item.professionKey === profession && item.zip === zip)
+      .sort((a, b) => String(a.signedAt).localeCompare(String(b.signedAt))
+        || String(a.memberId).localeCompare(String(b.memberId)))[0];
+    return Boolean(first && first.memberId === member.memberId);
+  }
+
+  function isFoundingMember(member) {
+    if (!isSeedMember(member)) return false;
+    const when = Date.parse(member.signedAt);
+    return !Number.isNaN(when) && when >= Date.parse(FIRST_YEAR_START) && when < Date.parse(FIRST_YEAR_END);
+  }
+
+  function getMemberLabels(member) {
+    const labels = [];
+    if (isSeedMember(member)) {
+      labels.push({
+        key: 'seed',
+        name: MEMBER_LABELS.seed,
+        detail: `First ${normalizeProfession(member.profession) || 'profession'} in ZIP ${normalizeZip(member.zip || zipFromAddress(member.mailingAddress))} in this browser.`
+      });
+    }
+    if (isFoundingMember(member)) {
+      labels.push({
+        key: 'founding',
+        name: MEMBER_LABELS.founding,
+        detail: `Signed during the first equinox year, ${formatDate(FIRST_YEAR_START)} to ${formatDate(FIRST_YEAR_END)}.`
+      });
+    }
+    return labels;
+  }
+
+  function renderMemberLabelsHtml(member) {
+    const labels = getMemberLabels(member);
+    if (!labels.length) return '';
+    const live = labelsLive();
+    const badges = labels.map((label) => `<span class="member-label member-label--${label.key}${live ? '' : ' is-pending'}">${escapeHtml(label.name)}</span>`).join('');
+    const note = live
+      ? labels.map((label) => escapeHtml(label.detail)).join(' ')
+      : `Pending rollout on ${escapeHtml(formatDate(LABEL_ROLLOUT_AT))} at 4:25pm Eastern (the exact 2027 vernal equinox). ${labels.map((label) => escapeHtml(label.detail)).join(' ')}`;
+    return `<div class="member-labels" role="note"><div class="member-label-list">${badges}</div><p>${note}</p></div>`;
   }
 
   function normalizeUsername(value) {
@@ -1264,6 +1393,9 @@
           housingStatus: normalizeHousingStatus(raw.pledge.housingStatus),
           phone: cleanString(raw.pledge.phone, 40),
           dob: cleanString(raw.pledge.dob, 10),
+          profession: normalizeProfession(raw.pledge.profession
+            || String(raw.pledge.paidSkills || '').split(/[\n,;]/)[0]),
+          zip: normalizeZip(raw.pledge.zip || zipFromAddress(raw.pledge.mailingAddress)),
           paidSkills: cleanString(raw.pledge.paidSkills, 400),
           unpaidSkills: cleanString(raw.pledge.unpaidSkills, 400),
           donationCount: cleanCount(raw.pledge.donationCount),
@@ -1279,6 +1411,22 @@
           status: 'active'
         };
       }
+    }
+
+    if (Array.isArray(raw.memberRoster)) {
+      fallback.memberRoster = raw.memberRoster
+        .filter((item) => item && typeof item === 'object' && cleanString(item.memberId, 100))
+        .map((item) => {
+          const profession = normalizeProfession(item.profession);
+          return {
+            memberId: cleanString(item.memberId, 100),
+            profession,
+            professionKey: profession.toLowerCase(),
+            zip: normalizeZip(item.zip),
+            signedAt: cleanString(item.signedAt, 40)
+          };
+        })
+        .slice(0, 500);
     }
 
     const rawAuth = raw.auth && typeof raw.auth === 'object' ? raw.auth : null;
@@ -1588,6 +1736,9 @@
   }
 
   let state = loadState();
+  // Older local pledges predate the roster. Keep them in the in-memory list so
+  // seed-member checks still work without forcing a storage write on load.
+  if (state.pledge) addMemberToRoster(state.pledge);
   let storageWarningShown = false;
   let toastTimer = null;
   let currentListingId = null;
@@ -3147,6 +3298,7 @@
     panel.innerHTML = `<section class="account-card">
       <p class="eyebrow">Account</p>
       <h3>Your membership</h3>
+      ${renderMemberLabelsHtml(m)}
       <dl class="account-details">
         <div><dt>Full legal name</dt><dd>${e(m.fullName || 'Not shared')}</dd></div>
         <div><dt>Chosen name</dt><dd>${e(m.name)}</dd></div>
@@ -3159,6 +3311,9 @@
         <div><dt>Housing status</dt><dd>${e(hasOwn(HOUSING_STATUSES, m.housingStatus) ? HOUSING_STATUSES[m.housingStatus] : 'Not shared')}</dd></div>
         <div><dt>Phone number</dt><dd>${e(m.phone || 'Not shared')}</dd></div>
         <div><dt>Date of birth</dt><dd>${e(m.dob || 'Not shared')}</dd></div>
+        <div><dt>Primary profession or trade</dt><dd>${e(m.profession || 'Not shared')}</dd></div>
+        <div><dt>ZIP code</dt><dd>${e(m.zip || 'Not shared')}</dd></div>
+        <div><dt>Membership year (equinox)</dt><dd>${e(String(membershipYearAt(m.signedAt) ?? 'Unknown'))}</dd></div>
         <div><dt>Career / paid skills</dt><dd>${e(m.paidSkills || 'Not listed')}</dd></div>
         <div><dt>Unpaid skills</dt><dd>${e(m.unpaidSkills || 'Not listed')}</dd></div>
         <div><dt>Donation count</dt><dd>${cleanCount(m.donationCount)}</dd></div>
@@ -3356,6 +3511,9 @@
         <div><dt>Housing status</dt><dd>${e(hasOwn(HOUSING_STATUSES, m.housingStatus) ? HOUSING_STATUSES[m.housingStatus] : 'Not shared')}</dd></div>
         <div><dt>Phone number</dt><dd>${e(m.phone || 'Not shared')}</dd></div>
         <div><dt>Date of birth</dt><dd>${e(m.dob || 'Not shared')}</dd></div>
+        <div><dt>Primary profession or trade</dt><dd>${e(m.profession || 'Not shared')}</dd></div>
+        <div><dt>ZIP code</dt><dd>${e(m.zip || 'Not shared')}</dd></div>
+        <div><dt>Membership year (equinox)</dt><dd>${e(String(membershipYearAt(m.signedAt) ?? 'Unknown'))}</dd></div>
         <div><dt>Career / paid skills</dt><dd>${e(m.paidSkills || 'Not listed')}</dd></div>
         <div><dt>Unpaid skills</dt><dd>${e(m.unpaidSkills || 'Not listed')}</dd></div>
         <div><dt>Donation count</dt><dd>${cleanCount(m.donationCount)}</dd></div>
@@ -4688,6 +4846,8 @@
           : cleanString(data.get('physicalAddress'), 240);
         const phone = cleanString(data.get('phone'), 40);
         const dob = cleanString(data.get('dob'), 10);
+        const profession = normalizeProfession(data.get('profession'));
+        const zip = normalizeZip(data.get('zip'));
         const housingStatus = normalizeHousingStatus(data.get('housingStatus'));
         const paidSkills = cleanString(data.get('paidSkills'), 400);
         const unpaidSkills = cleanString(data.get('unpaidSkills'), 400);
@@ -4722,6 +4882,14 @@
         }
         if (!hasOwn(HOUSING_STATUSES, housingStatus)) {
           showPledgeError('Please choose your housing status.', 'pledge-housing');
+          return;
+        }
+        if (!profession) {
+          showPledgeError('Please enter your primary profession or trade.', 'pledge-profession');
+          return;
+        }
+        if (!zip) {
+          showPledgeError('Please enter a 5-digit ZIP code, such as 18360.', 'pledge-zip');
           return;
         }
 
@@ -4764,6 +4932,8 @@
           housingStatus,
           phone,
           dob,
+          profession,
+          zip,
           paidSkills,
           unpaidSkills,
           donationCount: 0,
@@ -4778,6 +4948,7 @@
           signedAt: new Date().toISOString(),
           status: 'active'
         };
+        addMemberToRoster(state.pledge);
         const salt = makeId('salt');
         state.auth = {
           credential: { username, salt, passwordHash: hashPassword(password, salt) },

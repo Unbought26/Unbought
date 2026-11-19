@@ -55,6 +55,20 @@ for the full legal name and a chosen name, and the chosen-name setting in the
 Dashboard stays editable. Legal name, address, birthdate, housing status, and phone
 are never auto-filled elsewhere.
 
+## Member labels and equinox years
+
+The sign-up form collects a primary profession and ZIP code. A seed member is
+the first person of a profession to sign up in a ZIP code; the local roster
+stores one entry per member and resolves ties by signup time and member ID.
+Founding members are seed members whose signup falls in Unbought's first year.
+
+Membership years begin at the exact moment of the northern vernal equinox. The
+first year runs from March 20, 2026 at 14:46 UTC to March 20, 2027 at 20:25 UTC
+— 4:25pm Eastern. That 2027 equinox is also the label rollout moment. Before
+then the dashboard shows the labels as pending rather than presenting them as
+live. Published equinox instants for 2026–2031 are kept in `VERNAL_EQUINOXES`;
+ZIP and profession stay private and never appear on the public resume.
+
 ## FAQ and help button
 
 `faq.html` answers common questions about membership, privacy, local-only

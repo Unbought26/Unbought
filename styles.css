@@ -7376,3 +7376,53 @@ body[data-directory-scope="goods"] .goods-attributes .form-grid {
     font-size: 1.5rem;
   }
 }
+
+/* --------------------------------------------------------------------------
+   22. Member labels and equinox-year standing
+   -------------------------------------------------------------------------- */
+.member-labels {
+  margin: 0.5rem 0 1.2rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--amber-light);
+  border-radius: 8px;
+  background: var(--amber-soft);
+}
+
+.member-label-list {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.member-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.member-label--seed {
+  background: var(--blue-deep);
+  color: #fff;
+}
+
+.member-label--founding {
+  background: var(--amber);
+  color: var(--ink);
+}
+
+.member-label.is-pending {
+  border: 1px dashed var(--amber-deep);
+  opacity: 0.82;
+}
+
+.member-labels p {
+  margin: 0;
+  color: var(--muted-dark);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}

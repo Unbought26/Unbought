@@ -308,6 +308,19 @@
               <textarea id="pledge-physical" name="physicalAddress" rows="2" maxlength="240" required placeholder="East Stroudsburg, PA 18301, if different from mailing"></textarea>
             </div>
 
+            <div class="form-row">
+              <div class="field field--on-blue">
+                <label for="pledge-zip">ZIP code <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="pledge-zip" name="zip" maxlength="10" inputmode="numeric" autocomplete="postal-code" required placeholder="18360">
+                <p class="form-hint">Private. Used only to determine member labels.</p>
+              </div>
+              <div class="field field--on-blue">
+                <label for="pledge-profession">Primary profession or trade <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="pledge-profession" name="profession" maxlength="80" required placeholder="Carpenter, nurse, teacher, farmer...">
+                <p class="form-hint">Private. The first signup of a profession in a ZIP becomes a seed member.</p>
+              </div>
+            </div>
+
             <div class="field field--on-blue">
               <label for="pledge-housing">Housing status <span class="required-mark" aria-hidden="true">*</span></label>
               <select id="pledge-housing" name="housingStatus" required>
