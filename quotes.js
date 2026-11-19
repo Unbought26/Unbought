@@ -64,10 +64,16 @@
       note: 'If money is the fuel, mutual aid is the off switch. Every need met without a price is a little less power for the machine.'
     }),
     Object.freeze({
-      text: 'Fellowship is heaven, and lack of fellowship is hell.',
-      author: 'William Morris',
-      source: 'A Dream of John Ball, 1888',
-      note: 'Belonging is the first form of wealth. Unbought measures itself by how well it keeps people connected.'
+      text: 'I am not free while any woman is unfree, even when her shackles are very different from my own.',
+      author: 'Audre Lorde',
+      source: 'The Uses of Anger, 1981',
+      note: 'Freedom is shared or it is not freedom. Unbought treats the most vulnerable neighbor as the measure of the commons.'
+    }),
+    Object.freeze({
+      text: 'Power concedes nothing without a demand. It never did and it never will.',
+      author: 'Frederick Douglass',
+      source: 'West India Emancipation speech, 1857',
+      note: 'The commons will not appear because the old system feels generous. Neighbors have to build it and claim it together.'
     }),
     Object.freeze({
       text: 'While there is a lower class, I am in it; while there is a criminal element, I am of it; while there is a soul in prison, I am not free.',

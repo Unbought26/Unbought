@@ -83,7 +83,7 @@
             <p class="eyebrow">Your space in the commons</p>
             <h1 id="dashboard-title">Member dashboard.</h1>
           </div>
-          <p class="section-head-aside">Everything connected to your membership in one place: the newsboard, notifications, friends and groups, your contributions, account and settings, the commons, exchange confirmations, messages, the review board, and a suggestion box. Browsing the public site stays open to everyone; these tools are for pledged members.</p>
+          <p class="section-head-aside">Your member tools, local records, and updates in one place. The public site stays open to everyone; these tools are for pledged members.</p>
         </div>
 
         <div class="dashboard-gate" id="dashboard-gate" role="status">
@@ -128,7 +128,6 @@
           </nav>
 
           <nav class="dashboard-tabs" role="tablist" aria-label="Dashboard sections">
-            <button type="button" role="tab" id="dash-tab-newsboard" aria-controls="dash-panel-newsboard" aria-selected="true" tabindex="0" data-dashboard-tab="newsboard">Newsboard</button>
             <button type="button" role="tab" id="dash-tab-overview" aria-controls="dash-panel-overview" aria-selected="false" tabindex="-1" data-dashboard-tab="overview">Overview</button>
             <button type="button" role="tab" id="dash-tab-account" aria-controls="dash-panel-account" aria-selected="false" tabindex="-1" data-dashboard-tab="account">Account</button>
             <button type="button" role="tab" id="dash-tab-settings" aria-controls="dash-panel-settings" aria-selected="false" tabindex="-1" data-dashboard-tab="settings">Settings</button>
@@ -142,14 +141,14 @@
           </nav>
 
           <div class="dashboard-panels">
-            <div role="tabpanel" id="dash-panel-newsboard" aria-labelledby="dash-tab-newsboard" data-dashboard-panel="newsboard">
+            <div role="region" id="dash-panel-newsboard" aria-labelledby="dashboard-newsboard-title" data-dashboard-panel="newsboard">
               <div class="dashboard-newsboard">
                 <div class="section-head section-head--split">
                   <div>
                     <p class="eyebrow">Above-board transparency</p>
-                    <h2>The newsboard.</h2>
+                    <h2 id="dashboard-newsboard-title">The newsboard.</h2>
                   </div>
-                  <p class="section-head-aside">Your landing page. Day-to-day notes from the commons: what we are building, what changed, and where the work stands. In the live site, updates will come from a blog service.</p>
+                  <p class="section-head-aside">Your landing page. General updates about the movement and rollout, shared across the site. In the live site, posts will come from a blog service.</p>
                 </div>
                 <div class="newsboard-feed" data-news-feed></div>
                 <div class="newsboard-connect">

@@ -6257,7 +6257,7 @@ em {
   }
 }
 
-/* Member account, contributions, stock, Unbound donation fund (prototype) */
+/* Member account, contributions, stock, Unbought donation fund (prototype) */
 .member-account { margin-top: 1.5rem; }
 .account-card {
   background: var(--card);
@@ -6342,6 +6342,11 @@ em {
 
 /* Volunteers / operating team */
 .volunteer-gate {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: center;
+  justify-content: space-between;
   margin: 0 0 1.25rem;
   padding: 0.75rem 1rem;
   border: 1px solid var(--border);
@@ -6350,6 +6355,14 @@ em {
   background: var(--card);
   color: var(--muted-dark);
 }
+.volunteer-gate p { margin: 0; }
+.volunteer-gate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+.volunteer-gate-actions .volunteer-join-status { margin-top: 0; }
 .volunteer-gate.is-signed { border-left-color: var(--green); }
 
 .volunteer-grid {
@@ -6410,18 +6423,6 @@ em {
 .volunteer-callout h3 { margin: 0 0 0.35rem; color: var(--amber-deep); }
 .volunteer-callout p { margin: 0; color: var(--muted-dark); }
 
-.volunteer-join {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-  padding: 1.5rem;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: var(--card);
-}
-.volunteer-join-copy h3 { margin: 0.2rem 0 0.5rem; }
-.volunteer-join-copy p { color: var(--muted); }
 .volunteer-join-status {
   margin-top: 1rem;
   padding: 0.75rem;
@@ -6454,7 +6455,6 @@ em {
 
 @media (max-width: 900px) {
   .volunteer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .volunteer-join { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 600px) {
@@ -6585,6 +6585,21 @@ em {
 }
 .dashboard-gate p { margin: 0; max-width: 60ch; color: var(--muted-dark); }
 .dashboard { margin-top: 1.25rem; }
+#dashboard > .container > .section-head--split {
+  margin-bottom: 0.9rem;
+  gap: 1rem 2rem;
+  align-items: start;
+}
+#dashboard > .container > .section-head--split h1 {
+  margin: 0.2rem 0 0;
+  font-size: clamp(1.7rem, 2.6vw, 2.2rem);
+}
+#dashboard > .container > .section-head--split .section-head-aside {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  max-width: 54ch;
+}
 .dashboard-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -6619,7 +6634,7 @@ em {
   border-radius: 0 0 16px 16px;
   background: var(--blue-mist);
 }
-.dashboard-panels [role="tabpanel"]:not([hidden]) { animation: dash-fade 0.15s ease-in; }
+.dashboard-panels [data-dashboard-panel]:not([hidden]) { animation: dash-fade 0.15s ease-in; }
 @keyframes dash-fade { from { opacity: 0.4; } to { opacity: 1; } }
 .dashboard-render .account-card { box-shadow: none; }
 
@@ -7887,7 +7902,7 @@ body[data-directory-scope="goods"] .goods-attributes .form-grid {
 }
 
 /* --------------------------------------------------------------------------
-   25. Member-set non-member prices and the Unbound donation fund
+   25. Member-set non-member prices and the Unbought donation fund
    -------------------------------------------------------------------------- */
 .badge--fund {
   border-color: var(--amber-light);

@@ -40,7 +40,7 @@
       label: 'Nov 19, 2026',
       tag: 'Rollout update',
       title: 'Where Unbought stands, and what comes next',
-      body: 'We are finalizing some structuring in the site and the concept of the Unbought movement. Once finalized, we will connect the site to a temporary donation fund, connect to a server, blog service, and mailing service so we can roll out the beta version starting in the Poconos. If you live in the Poconos, you will be free to use Unbought and be asked to submit feedback and send in pictures for the social media campaign. we will be rolling out the full site on the Vernal Equinox, March 20th @4:25pm.'
+      body: 'We are finalizing the structure of Unbought and the way the movement will work. Once that is settled, we will set up the Unbought donation fund, server, blog service, and mailing service so we can roll out the beta version starting in the Poconos. If you live in the Poconos, you will be free to use Unbought and will be asked to submit feedback and send pictures for the social media campaign. We will roll out the full site on the vernal equinox, March 20, 2027, at 4:25pm.'
     },
     {
       date: '2026-11-18',
@@ -53,8 +53,8 @@
       date: '2026-11-17',
       label: 'Nov 17, 2026',
       tag: 'The fund',
-      title: 'What the Unbound donation fund is for',
-      body: 'The temporary donation fund is meant to hold every cent that comes to the initiative: donations, Academy tuition where it applies, and fixed non-member prices for goods or labor. Members always receive the commons free. No money moves in this prototype; the fund is part of the plan for the live beta.'
+      title: 'What the Unbought donation fund is for',
+      body: 'The Unbought donation fund is meant to hold every cent that comes to the initiative: donations, Academy tuition where it applies, and fixed non-member prices for goods or labor. Members always receive the commons free. No money moves in this prototype; the fund is part of the plan for the live beta.'
     },
     {
       date: '2026-11-16',
@@ -75,7 +75,7 @@
       label: 'Nov 14, 2026',
       tag: 'Academy',
       title: 'Learning now, giving back later',
-      body: 'The Academy is free for pledged members. Neighbors 15 and older who are not already working in the commons may learn with basic-necessities-only access, promising part-time work for Unbought for one year after finishing — before their 25th birthday. Non-member tuition and any tuition obligation go to the Unbound donation fund.'
+      body: 'The Academy is free for pledged members. Neighbors 15 and older who are not already working in the commons may learn with basic-necessities-only access, promising part-time work for Unbought for one year after finishing — before their 25th birthday. Non-member tuition and any tuition obligation go to the Unbought donation fund.'
     },
     {
       date: '2026-11-13',
@@ -89,7 +89,7 @@
       label: 'Nov 12, 2026',
       tag: 'The equinox',
       title: 'A gathering we hope to build',
-      body: 'We hope to partner with an organization for a large United States festival on March 20, 2027 at 4:25pm Eastern, celebrating movement, seed members, and founding members. It is an intention, not a booked event. The moment matters because it is the full-site rollout and the close of Unbought’s first membership year.'
+      body: 'We hope to partner with an organization for a large festival somewhere in the United States on March 20, 2028, at 4:25pm Eastern, celebrating the movement and its seed and founding members. It is an intention, not a booked event. The moment matters because we will have been fully rolled out for a full year, meaning something must be working.'
     },
     {
       date: '2026-11-11',
@@ -576,7 +576,7 @@
       title: 'Solid Wood Bookshelves & Side Tables',
       provider: 'Rosa Jiménez',
       location: 'Maple Street · porch pickup',
-      description: 'Sturdy solid-wood shelves and side tables, cleaned and sanded. Pickup from the porch, or delivery within a few miles if we can arrange it. Free for pledged members—no payment or swap. Non-members may record a $25 purchase intent, which goes entirely to the Unbound donation fund.',
+      description: 'Sturdy solid-wood shelves and side tables, cleaned and sanded. Pickup from the porch, or delivery within a few miles if we can arrange it. Free for pledged members—no payment or swap. Non-members may record a $25 purchase intent, which goes entirely to the Unbought donation fund.',
       details: [
         { label: 'Pickup', value: 'Porch pickup · local delivery possible' },
         { label: 'Cost', value: 'Free for members · non-members $25 to the fund' },
@@ -963,7 +963,7 @@
         <p><strong>To:</strong> ${e(firstName)} (chosen name; no email is collected)<br><strong>Subject:</strong> ${e(`Thank you for starting Unbought, ${firstName}`)}</p>
         <p>Hi ${e(firstName)},</p>
         <p>Thank you for helping to start the movement. You are the first ${e(profession)} to sign up for Unbought in ZIP ${e(zip || 'your area')} — a seed member. ${founding ? 'Because you signed during the first equinox year, you are also a founding member.' : ''} Seed members are the people who prove a new trade can take root in a place; the whole commons begins with someone willing to go first.</p>
-        <p>Your labels stay pending until the exact 2027 vernal equinox, March 20 at 4:25pm Eastern — the end of Unbought's first year. If we are successful, we hope to partner with an organization and throw a huge festival somewhere in the United States on that equinox to celebrate the movement and its seed and founding members. Nothing is booked or confirmed yet, but as a seed member you will hear about it first.</p>
+        <p>Your labels stay pending until the exact 2027 vernal equinox, March 20 at 4:25pm Eastern — the end of Unbought's first year. If we are successful, we hope to partner with an organization and throw a huge festival somewhere in the United States on the following equinox, March 20, 2028 — one full year after rollout — to celebrate the movement and its seed and founding members. Nothing is booked or confirmed yet, but as a seed member you will hear about it first.</p>
         <p>Ways to get the ball rolling:</p>
         <ul>
           <li>Talk to other professionals in your area and invite them to take the pledge.</li>
@@ -1106,7 +1106,7 @@
 
   function getSeveranceSummary() {
     // `severanceFund` is the legacy local-storage key. It now holds the
-    // Unbound donation fund balance; the severance figure is the member's
+    // Unbought donation fund balance; the severance figure is the member's
     // proportional entitled share of that balance, calculated locally.
     const contributions = Array.isArray(state.contributions) ? state.contributions : [];
     const donations = contributions.filter((c) => c && c.type === 'donation');
@@ -2403,7 +2403,7 @@
       if (!isMember() && listingNonmemberPrice) {
         price.classList.add('product-price--nonmember');
         price.appendChild(createEl('span', 'product-price-value', formatMoney(listingNonmemberPrice)));
-        price.appendChild(createEl('span', 'product-price-note', 'Non-member price · all of it to the Unbound donation fund · free for members'));
+        price.appendChild(createEl('span', 'product-price-note', 'Non-member price · all of it to the Unbought donation fund · free for members'));
       } else {
         price.appendChild(createEl('span', 'product-price-value', 'FREE'));
         price.appendChild(createEl('span', 'product-price-note', listingNonmemberPrice
@@ -2444,7 +2444,7 @@
     if (listing.isUser) addBadge(badges, 'badge--soft', 'Posted by you');
     if (hasOwn(SCOPE_LABELS, listing.scope)) addBadge(badges, 'badge--soft', SCOPE_LABELS[listing.scope]);
     if (listingNonmemberPrice) {
-      addBadge(badges, 'badge--fund', `Non-members ${formatMoney(listingNonmemberPrice)} → Unbound donation fund`);
+      addBadge(badges, 'badge--fund', `Non-members ${formatMoney(listingNonmemberPrice)} → Unbought donation fund`);
     }
     card.appendChild(badges);
 
@@ -2535,9 +2535,9 @@
       } else {
         const buttonPrice = formatMoney(getNonmemberPrice(listing));
         requestButton.classList.add('button--outline');
-        requestButton.textContent = `Buy for ${buttonPrice} → Unbound donation fund`;
+        requestButton.textContent = `Buy for ${buttonPrice} → Unbought donation fund`;
         requestButton.dataset.requestMode = 'purchase';
-        requestButton.setAttribute('aria-label', `Buy ${listing.title} as a non-member for ${buttonPrice}. The full amount is recorded locally for the Unbound donation fund; no payment is processed.`);
+        requestButton.setAttribute('aria-label', `Buy ${listing.title} as a non-member for ${buttonPrice}. The full amount is recorded locally for the Unbought donation fund; no payment is processed.`);
       }
     } else {
       requestButton.dataset.requestMode = 'mutual';
@@ -3605,7 +3605,7 @@
           {
             label: pillar === 'goods' ? 'Cost' : 'Materials',
             value: purchaseEnabled
-              ? `Free for members · non-members ${formatMoney(purchasePrice)} to the Unbound donation fund`
+              ? `Free for members · non-members ${formatMoney(purchasePrice)} to the Unbought donation fund`
               : EXCHANGES[exchange].label
           },
           { label: 'Contact', value: 'Through a consent request' }
@@ -3696,7 +3696,7 @@
   }
 
   /* ------------------------------------------------------------------------
-     05. Member account, contributions, stock & Unbound donation fund (prototype)
+     05. Member account, contributions, stock & Unbought donation fund (prototype)
      ------------------------------------------------------------------------ */
   function renderMemberAccount() {
     const container = document.getElementById('member-account');
@@ -3711,12 +3711,12 @@
 
     const card = createEl('section', 'account-card');
     const head = createEl('div', 'account-head');
-    head.appendChild(createEl('p', 'eyebrow', signedIn ? 'Your account' : 'Participation & Unbound donation fund'));
+    head.appendChild(createEl('p', 'eyebrow', signedIn ? 'Your account' : 'Participation & Unbought donation fund'));
     head.appendChild(createEl('h3', '', signedIn ? 'Your hours, giving, and fund share' : 'Members join by pledge; non-members may record purchase intents'));
     card.appendChild(head);
 
     if (!signedIn) {
-      const intro = createEl('p', '', 'Anyone can browse. To participate in the commons (post offers/needs, request mutual-aid connections, and manage your track), sign the Unbought Pledge to become a member. Where a provider has opted in, people who do not take the pledge can record a purchase intent at the provider’s price; every cent is tracked locally for the Unbound donation fund and no real payment is processed. Members receive those same offers free.');
+      const intro = createEl('p', '', 'Anyone can browse. To participate in the commons (post offers/needs, request mutual-aid connections, and manage your track), sign the Unbought Pledge to become a member. Where a provider has opted in, people who do not take the pledge can record a purchase intent at the provider’s price; every cent is tracked locally for the Unbought donation fund and no real payment is processed. Members receive those same offers free.');
       card.appendChild(intro);
     } else {
       const meta = createEl('p', 'account-meta', `${state.pledge.name} · ${state.pledge.location || 'Location not shared'} · Member ID ${state.pledge.memberId}`);
@@ -3729,10 +3729,10 @@
     const statDefs = signedIn ? [
       ['Hours worked', hourPeriods],
       ['Donated', giftPeriods],
-      ['Severance fund (your entitled share)', formatMoney(fund.entitled)],
-      ['Unbound donation fund (current balance)', formatMoney(fund.balance)]
+      ['Your share of the fund', formatMoney(fund.entitled)],
+      ['Unbought donation fund (current balance)', formatMoney(fund.balance)]
     ] : [
-      ['Unbound donation fund (current balance)', formatMoney(fund.balance)],
+      ['Unbought donation fund (current balance)', formatMoney(fund.balance)],
       ['Recorded non-member purchase intents', String(fund.count)],
       ['Member benefit', 'Mutual-aid access by pledge (no purchase)'],
       ['Fund income', 'Donations, academy tuition, and non-member purchases']
@@ -3746,8 +3746,8 @@
     card.appendChild(stats);
 
     const model = createEl('p', 'account-note', signedIn
-      ? 'Prototype model (local only): your hours are shown only after both you and the receiver confirm the work, or after a three-member review vote resolves a disagreement. You cannot enter hours yourself. Giving is shown by week, month, year, and all time. Your severance figure is a local, proportional estimate of the Unbound donation fund based on recorded contributions; it is not a payout, debt, or legal claim. Every cent of donations, academy tuition, and non-member purchases goes to the Unbound donation fund. Nothing is transmitted.'
-      : 'Prototype model (local only): the Unbound donation fund holds locally recorded donations and non-member purchase intents. Academy tuition would join it in a live system. No money moves, no payouts are made, and nothing is transmitted.');
+      ? 'Prototype model (local only): your hours are shown only after both you and the receiver confirm the work, or after a three-member review vote resolves a disagreement. You cannot enter hours yourself. Giving is shown by week, month, year, and all time. Your share is a local, proportional estimate based on recorded contributions; it is not a payout, debt, or legal claim. Every cent of donations, academy tuition, and non-member purchases goes to the Unbought donation fund. Nothing is transmitted.'
+      : 'Prototype model (local only): the Unbought donation fund holds locally recorded donations and non-member purchase intents. Academy tuition would join it in a live system. No money moves, no payouts are made, and nothing is transmitted.');
     card.appendChild(model);
 
     if (signedIn) {
@@ -3820,7 +3820,9 @@
         <div class="dialog-content">
           <h2 id="volunteer-dialog-title">Join the operating team.</h2>
           <p id="volunteer-dialog-intro">Tell us where you can help. In this prototype your offer is recorded in this browser only—nothing is sent to a coordinator and no real onboarding happens yet.</p>
-          <p class="volunteer-gate" id="volunteer-dialog-gate" data-volunteer-gate role="status"></p>
+          <div class="volunteer-gate" id="volunteer-dialog-gate" data-volunteer-gate role="status">
+            <p data-volunteer-gate-text></p>
+          </div>
           <div class="volunteer-guest-note" id="volunteer-guest-note" hidden>
             <p><strong>Members only.</strong> Sign the Unbought Pledge to become a member before recording a volunteer offer. Browsing the roles is open to everyone.</p>
             <a class="button button--primary button--small" href="pledge.html">Take the Pledge <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
@@ -3871,8 +3873,10 @@
       ? `Signed in as ${memberName}. Record a volunteer offer in this pop-up—stored in this browser only.`
       : 'Browsing these roles is open to everyone. Sign the Unbought Pledge to become a member and record a volunteer offer.';
 
+    $$('[data-volunteer-gate-text]').forEach((node) => {
+      node.textContent = gateText;
+    });
     $$('[data-volunteer-gate], #volunteer-gate').forEach((gate) => {
-      gate.textContent = gateText;
       gate.classList.toggle('is-signed', signedIn);
     });
 
@@ -3976,7 +3980,9 @@
     const tabs = Array.from(document.querySelectorAll('[data-dashboard-tab]'));
     const panels = Array.from(document.querySelectorAll('[data-dashboard-panel]'));
     const tab = tabs.find((item) => item.dataset.dashboardTab === name);
-    if (!tab) return;
+
+    // Newsboard is the landing region and has no tab button. Its menu button
+    // still needs to work, so a missing tab is not an error here.
     tabs.forEach((item) => {
       const active = item === tab;
       item.setAttribute('aria-selected', String(active));
@@ -3986,14 +3992,17 @@
       panel.hidden = panel.dataset.dashboardPanel !== name;
     });
 
-    document.querySelectorAll('[data-menu-tab]').forEach((item) => {
-      const active = item.dataset.menuTab === name;
+    const menuItems = Array.from(document.querySelectorAll('[data-menu-tab]'));
+    const menuItem = menuItems.find((item) => item.dataset.menuTab === name);
+    menuItems.forEach((item) => {
+      const active = item === menuItem;
       item.classList.toggle('is-active', active);
       if (active) item.setAttribute('aria-current', 'page');
       else item.removeAttribute('aria-current');
     });
 
-    tab.focus({ preventScroll: true });
+    const focusTarget = tab || menuItem;
+    if (focusTarget) focusTarget.focus({ preventScroll: true });
   }
 
   function initDashboardMenu() {
@@ -7147,7 +7156,7 @@
     form.reset();
 
     // The price belongs to the provider, not the non-member. Lock the field so
-    // the intent records the member-set amount for the Unbound donation fund.
+    // the intent records the member-set amount for the Unbought donation fund.
     const nonmemberPrice = getNonmemberPrice(listing);
     const amountInput = document.getElementById('purchase-amount');
     if (amountInput) {
@@ -7160,7 +7169,7 @@
     }
     const priceHint = document.getElementById('purchase-price-hint');
     if (priceHint) {
-      priceHint.textContent = `Set by the provider. Every cent goes to the Unbound donation fund; no payment is processed here. Members get this free.`;
+      priceHint.textContent = `Set by the provider. Every cent goes to the Unbought donation fund; no payment is processed here. Members get this free.`;
     }
 
     // Members use mutual-aid mode so the purchase fields are hidden for them,
@@ -7191,7 +7200,7 @@
     if (title) title.textContent = currentRequestMode === 'purchase' ? 'Buy as a non-member' : 'Request with mutual consent';
     if (description) {
       description.textContent = currentRequestMode === 'purchase'
-        ? `In this prototype, non-members can record a purchase intent at the provider's set price of ${formatMoney(nonmemberPrice)}. Every cent is recorded locally for the Unbound donation fund; no real payment is processed and nothing is transmitted. Members receive the same offer free through mutual aid.`
+        ? `In this prototype, non-members can record a purchase intent at the provider's set price of ${formatMoney(nonmemberPrice)}. Every cent is recorded locally for the Unbought donation fund; no real payment is processed and nothing is transmitted. Members receive the same offer free through mutual aid.`
         : 'A request starts a conversation. It does not create a sale, a deposit, or a guarantee that an item is still available.';
     }
 
@@ -7282,15 +7291,15 @@
         state.severanceFund.contributions = state.severanceFund.contributions.slice(0, 500);
 
         addNotification('request', `Purchase intent: ${listing.title}`,
-          `Recorded locally at ${formatMoney(amount)} for the Unbound donation fund. In a live system the provider would be notified; nothing was transmitted.`,
+          `Recorded locally at ${formatMoney(amount)} for the Unbought donation fund. In a live system the provider would be notified; nothing was transmitted.`,
           { tab: 'exchanges', sourceId: request.id });
         saveState();
         closeDialog(dialog, { restoreFocus: false });
         currentListingId = null;
         applyFilters();
         focusListingTitle(listing.id);
-        announce(`Purchase intent recorded for ${listing.title}. ${formatMoney(amount)} is recorded locally for the Unbound donation fund in this prototype.`);
-        showToast('Purchase intent recorded locally for the Unbound donation fund. No payment was processed and nothing was transmitted.', false);
+        announce(`Purchase intent recorded for ${listing.title}. ${formatMoney(amount)} is recorded locally for the Unbought donation fund in this prototype.`);
+        showToast('Purchase intent recorded locally for the Unbought donation fund. No payment was processed and nothing was transmitted.', false);
         return;
       }
 
@@ -7532,7 +7541,7 @@
     resetButton.addEventListener('click', () => {
       showConfirm({
         title: 'Demo Reset / Clear Local Data',
-        message: 'This removes your pledge and membership, account credentials, track, listings and listing comments, requests, inquiries, donation intents, contributions, Unbound donation fund records, volunteer offers, reports and votes, notifications, friends, groups, social chat drafts, messages, suggestions, waiting-list entry, and settings from this browser. It cannot be undone.',
+        message: 'This removes your pledge and membership, account credentials, track, listings and listing comments, requests, inquiries, donation intents, contributions, Unbought donation fund records, volunteer offers, reports and votes, notifications, friends, groups, social chat drafts, messages, suggestions, waiting-list entry, and settings from this browser. It cannot be undone.',
         confirmLabel: 'Clear local data',
         tone: 'danger',
         onConfirm: () => {

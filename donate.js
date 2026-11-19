@@ -7,7 +7,7 @@
    donors can provide an email for a future thank-you message (recorded locally).
    Contributions are also recorded in a DB-ready equity/contribution ledger shape
    with fund: 'unbought', matching academy tuition and non-member purchases.
-   Every cent is catalogued for the Unbound donation fund; nothing here moves money.
+   Every cent is catalogued for the Unbought donation fund; nothing here moves money.
    ========================================================================== */
 (() => {
   'use strict';
@@ -165,8 +165,8 @@
     if (memberNote) {
       memberNote.hidden = false;
       memberNote.textContent = member
-        ? `Signed in as ${member.name}. Your donation intents will be tracked in your account and recorded for the Unbound donation fund, with contribution and stock value in this prototype. Academy tuition and non-member purchases go to the same fund.`
-        : 'Donating without an account is welcome. Your intent is recorded locally for the Unbound donation fund. If you provide an email, it is kept locally for a future thank-you note; no email is sent in this prototype.';
+        ? `Signed in as ${member.name}. Your donation intents will be tracked in your account and recorded for the Unbought donation fund, with contribution and stock value in this prototype. Academy tuition and non-member purchases go to the same fund.`
+        : 'Donating without an account is welcome. Your intent is recorded locally for the Unbought donation fund. If you provide an email, it is kept locally for a future thank-you note; no email is sent in this prototype.';
     }
     if (member && nameInput && !nameInput.value.trim()) {
       nameInput.value = member.name || '';
@@ -193,7 +193,7 @@
     }
     const total = intents.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
     const scope = getMember() ? 'tracked in your account' : 'saved in this browser';
-    statusBox.textContent = `${intents.length} donation intent${intents.length === 1 ? '' : 's'} ${scope} · ${formatAmount(total)} intended for the Unbound donation fund. No money has moved.`;
+    statusBox.textContent = `${intents.length} donation intent${intents.length === 1 ? '' : 's'} ${scope} · ${formatAmount(total)} intended for the Unbought donation fund. No money has moved.`;
   }
 
   function showReceipt(intent, shouldFocus) {

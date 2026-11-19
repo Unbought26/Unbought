@@ -62,8 +62,8 @@ students, observers, and either party are excluded. Only matching or review-deci
 hours count toward the member's totals.
 
 The member account panel is the only place that shows hours worked and amounts
-donated by week, month, year, and all time, the member's entitled severance share,
-and the current Unbound donation fund balance. The stored `severanceFund` key and
+donated by week, month, year, and all time, the current Unbought donation fund
+balance, and the member's share of it. The stored `severanceFund` key and
 `severance_purchase` contribution type are retained only for older local data. No
 payout, stock issuance, or payment occurs, and nothing is transmitted.
 
@@ -90,10 +90,10 @@ labor post forms a provider can opt in to a fixed whole-dollar price for
 non-members, who see that price on the card and in the locked purchase dialog.
 Guests cannot type their own amount: the submit handler reads the provider's
 stored price and records a `nonmember_purchase` request plus a contribution in
-the local Unbound donation fund. Listings without an opt-in are shown as member-only and
+the local Unbought donation fund. Listings without an opt-in are shown as member-only and
 cannot be purchased. Internally the fund still uses the legacy `severanceFund`
 key and `severance_purchase` contribution type so older local data loads, but
-all visible copy calls it the Unbound donation fund, which also holds academy tuition.
+all visible copy calls it the Unbought donation fund, which also holds academy tuition.
 
 ## Member labels and equinox years
 
@@ -112,10 +112,12 @@ ZIP stays private and never appears on the public resume; profession is shown.
 ## Equinox festival and seed-member thank-you
 
 `future.html#festival` describes the hope of partnering with an organization
-for a large festival somewhere in the United States on the 2027 vernal equinox,
-March 20 at 4:25pm Eastern — the end of the first year and the label rollout —
-to celebrate the movement and its seed and founding members. It is explicitly a
-planning intention: no venue, partner, or ticket exists.
+for a large festival somewhere in the United States on the 2028 vernal equinox,
+March 20 at 4:25pm Eastern — one full year after the 2027 rollout — celebrating
+the movement and its seed and founding members. The moment matters because the
+movement will have been fully rolled out for a full year, meaning something must
+be working. It is explicitly a planning intention: no venue, partner, or ticket
+exists.
 
 Seed members see a locally generated thank-you draft in the dashboard
 (`renderSeedThankYou`). A live deployment would email it automatically. The
@@ -142,7 +144,7 @@ agreement, and the member account panel.
 ## Academy access and tuition
 
 The Academy is free for pledged members. Non-members may enroll at the
-standard tuition set by a guild; every cent goes to the Unbound donation fund, and this
+standard tuition set by a guild; every cent goes to the Unbought donation fund, and this
 prototype processes no payments. Neighbors aged 15 and older who are not
 already working in the commons can learn free by promising to work for Unbought
 part time (the community's 1–15 hours per week rhythm) for one year upon
