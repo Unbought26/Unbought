@@ -7639,3 +7639,77 @@ body[data-directory-scope="goods"] .goods-attributes .form-grid {
     margin-bottom: 0.5rem;
   }
 }
+
+/* --------------------------------------------------------------------------
+   24. Academy access and tuition
+   -------------------------------------------------------------------------- */
+.academy-access {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.academy-access h3 {
+  margin: 0 0 1rem;
+  color: #fff;
+  font-family: var(--serif);
+  font-size: 1.4rem;
+}
+
+.academy-access-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.access-card {
+  padding: 1rem 1.1rem;
+  border-top: 3px solid var(--amber-light);
+  border-radius: 8px;
+  background: rgba(12, 27, 62, 0.35);
+}
+
+.access-card--member {
+  border-top-color: #fff;
+}
+
+.access-card--young {
+  border-top-color: var(--amber);
+}
+
+.access-card h4 {
+  margin: 0 0 0.4rem;
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.access-card p {
+  margin: 0;
+  color: #DCE6F5;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.academy-access-foot {
+  margin: 1rem 0 0;
+  color: #DCE6F5;
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.academy-access-foot a {
+  color: var(--amber-light);
+  font-weight: 700;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+@media (max-width: 560px) {
+  .academy-access {
+    padding: 1.1rem;
+  }
+}

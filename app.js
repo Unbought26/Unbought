@@ -38,6 +38,13 @@
     {
       date: '2026-11-19',
       label: 'Nov 19, 2026',
+      tag: 'Academy',
+      title: 'Free for members, with a path for young apprentices',
+      body: 'The Academy is free for pledged members. Non-members would pay the guild’s standard tuition, while neighbors 15 and older can learn free by promising a year of part-time participation in Unbought, completed before their 25th birthday. Nothing is enrolled or charged in the prototype.'
+    },
+    {
+      date: '2026-11-19',
+      label: 'Nov 19, 2026',
       tag: 'Community',
       title: 'Community guidelines and consequences, in plain sight',
       body: 'A new guidelines page sets out the Ten Consent Commandments and the review path: monthly pledge checks, the care circle, access limits, local evidence and therapy where needed, majority votes for revocation, and a community-decided reflection period before reapplying. Every case is reviewed by community members in this local prototype.'

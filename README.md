@@ -83,6 +83,18 @@ and proof of treatment. Nothing is enforced outside this browser prototype.
 The guidelines are linked from every footer site map, the FAQ, the pledge
 agreement, and the member account panel.
 
+## Academy access and tuition
+
+The Academy is free for pledged members. Non-members may enroll at the
+standard tuition set by a guild, but this prototype processes no payments.
+Neighbors aged 15 and older can learn free by promising to take part in
+Unbought part time (the community's 1–15 hours per week rhythm) for one full
+year, completed before their 25th birthday. If that year is not finished in
+time, they become liable for the same tuition offered to non-members. This is a
+community commitment reviewed under the guidelines, not a legal contract, and
+full membership still opens at 18. The rules live in the Academy section of
+`future.html` and in `faq.html`.
+
 ## FAQ and help button
 
 `faq.html` answers common questions about membership, privacy, local-only
