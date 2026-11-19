@@ -38,6 +38,26 @@
     return typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
   }
 
+  // Signed-in members should not retype their chosen name on the waiting list.
+  // Only the chosen name is reused; no private member field is read here.
+  function signedInMemberName() {
+    try {
+      const raw = localStorage.getItem('unbought:v1');
+      const data = raw ? JSON.parse(raw) : null;
+      if (!data || !data.auth || !data.auth.session || !data.auth.session.signedIn) return '';
+      if (!data.pledge || !data.pledge.memberId) return '';
+      return clean(data.pledge.name, 60);
+    } catch (error) {
+      return '';
+    }
+  }
+
+  function fillMemberName() {
+    if (!form.elements.name) return;
+    const name = signedInMemberName();
+    if (name && !clean(form.elements.name.value, 120)) form.elements.name.value = name;
+  }
+
   function loadSaved() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -142,7 +162,11 @@
     if (receipt) receipt.hidden = true;
     form.hidden = false;
 
-    if (saved && options.fill !== false) fillForm(saved);
+    if (saved && options.fill !== false) {
+      fillForm(saved);
+    } else {
+      fillMemberName();
+    }
 
     if (options.focus && dialog && dialog.open) focusDialog();
   }

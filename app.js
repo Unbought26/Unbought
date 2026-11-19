@@ -36,6 +36,13 @@
     {
       date: '2026-11-19',
       label: 'Nov 19, 2026',
+      tag: 'Member tools',
+      title: 'Your chosen name follows you',
+      body: 'Signed-in members no longer retype their name on listing posts, volunteer offers, donation intents, or the waiting list. Only your chosen name is carried over; the pledge still asks for your full legal name, and you can change your chosen name in Settings.'
+    },
+    {
+      date: '2026-11-19',
+      label: 'Nov 19, 2026',
       tag: 'Safety & accountability',
       title: 'Contextual reports with local evidence',
       body: 'Reports now open from the listing, message, chat, or profile where an interaction happened. The person is carried into the form instead of typed, and reporters can attach images, message files, or file details that stay in this browser.'
@@ -404,6 +411,20 @@
 
   function isMember() {
     return isSignedIn() && Boolean(state.pledge && state.pledge.memberId);
+  }
+
+  // Non-intake forms reuse the signed-in member's chosen name so people do not
+  // have to retype it. The initial intake (pledge.html) still asks for the full
+  // legal name, and the chosen-name setting stays editable in the dashboard.
+  // Private fields (legal name, address, DOB, housing, phone) are never used here.
+  function memberChosenName() {
+    return isMember() ? cleanString(state.pledge.name, 60) : '';
+  }
+
+  function fillOwnNameField(input) {
+    if (!input || cleanString(input.value, 120)) return;
+    const name = memberChosenName();
+    if (name) input.value = name;
   }
 
   function normalizeUsername(value) {
@@ -1561,9 +1582,15 @@
     if (!form) return;
     const dialog = buildPostDialog(form);
 
+    // The provider is the signed-in member, so carry their chosen name over
+    // instead of asking them to type it again.
+    const fillProviderName = () => fillOwnNameField(document.getElementById('post-provider'));
+    fillProviderName();
+
     $$('[data-post-trigger]').forEach((trigger) => {
       trigger.addEventListener('click', (event) => {
         event.preventDefault();
+        fillProviderName();
         openDialog(dialog);
       });
     });
@@ -1641,6 +1668,7 @@
 
       resetFilters();
       form.reset();
+      fillProviderName();
       closeDialog(dialog, { restoreFocus: false });
       const postStatus = document.getElementById('post-status');
       if (postStatus) {
@@ -1652,6 +1680,7 @@
     });
 
     if (window.location.hash === '#post-trigger' || window.location.hash === '#post-form') {
+      fillProviderName();
       openDialog(dialog);
     }
   }
@@ -4566,6 +4595,10 @@
     currentRequestMode = isMember() ? 'mutual' : 'purchase';
     currentListingId = listing.id;
     form.reset();
+
+    // Members use mutual-aid mode so the purchase fields are hidden for them,
+    // but fill the name field too: no non-intake form asks a member to retype it.
+    fillOwnNameField(document.getElementById('purchase-name'));
 
     // Toggle purchase/member fields if present
     const mutualFields = document.getElementById('consent-mutual-fields');

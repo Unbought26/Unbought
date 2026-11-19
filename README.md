@@ -45,6 +45,16 @@ City/State from the member-selected mailing or physical address, both skill list
 commons totals, availability, and a phone number only when the member opts in. It
 never includes the legal name, street address, ZIP, housing status, or birthdate.
 
+## Chosen name in other forms
+
+Signed-in members do not retype their name outside the initial intake. The chosen
+name is filled automatically on listing posts, volunteer offers, donation intents,
+and the waiting list. The non-member purchase form is shown only to guests, who type
+their own name there. Only the chosen name is reused. The pledge intake still asks
+for the full legal name and a chosen name, and the chosen-name setting in the
+Dashboard stays editable. Legal name, address, birthdate, housing status, and phone
+are never auto-filled elsewhere.
+
 ## Safety reporting and evidence
 
 Reports are opened from the place where the interaction happened: a Free Labor or

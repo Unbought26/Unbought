@@ -117,7 +117,11 @@
   }
 
   function getMember() {
-    return state.pledge && state.pledge.memberId ? state.pledge : null;
+    // Match the app's member check: a stored pledge alone is not enough, the
+    // visitor must be signed in. This keeps auto-filled names and tracking
+    // consistent when someone signs out on this device.
+    const signedIn = Boolean(state.auth && state.auth.session && state.auth.session.signedIn);
+    return signedIn && state.pledge && state.pledge.memberId ? state.pledge : null;
   }
 
   function visibleIntents() {
