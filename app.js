@@ -38,9 +38,23 @@
     {
       date: '2026-11-19',
       label: 'Nov 19, 2026',
+      tag: 'Membership',
+      title: 'Seed thanks, and a festival to look toward',
+      body: 'Seed members now see a locally generated thank-you draft in the dashboard, with ideas for getting the ball rolling and word of the possible equinox festival. We hope to partner with an organization for a big gathering somewhere in the United States on March 20, 2027 at 4:25pm Eastern, celebrating the movement and its seed and founding members. Nothing is booked, and the draft is never emailed from this browser.'
+    },
+    {
+      date: '2026-11-19',
+      label: 'Nov 19, 2026',
+      tag: 'Free Stuff',
+      title: 'Providers set the non-member price; the fund gets every cent',
+      body: 'Goods and labor stay free for pledged members. Providers can now opt in to a fixed non-member price on their own listings; guests see that price, cannot change it, and every cent is recorded locally for the Unbound donation fund. No payment is processed and nothing is transmitted.'
+    },
+    {
+      date: '2026-11-19',
+      label: 'Nov 19, 2026',
       tag: 'Academy',
       title: 'Free for members, with a path for young apprentices',
-      body: 'The Academy is free for pledged members. Non-members would pay the guild’s standard tuition, while neighbors 15 and older can learn free by promising a year of part-time participation in Unbought, completed before their 25th birthday. Nothing is enrolled or charged in the prototype.'
+      body: 'The Academy is free for pledged members, and every cent of non-member tuition goes to the Unbound donation fund. Neighbors 15 and older can learn free with basic-necessities-only access, then work part time for Unbought for a year after completing the program — finished before their 25th birthday. An unfinished program brings a tuition obligation. Nothing is enrolled or charged in the prototype.'
     },
     {
       date: '2026-11-19',
@@ -527,13 +541,14 @@
       title: 'Solid Wood Bookshelves & Side Tables',
       provider: 'Rosa Jiménez',
       location: 'Maple Street · porch pickup',
-      description: 'Sturdy solid-wood shelves and side tables, cleaned and sanded. Pickup from the porch, or delivery within a few miles if we can arrange it. No payment, no swap—just give them a good home.',
+      description: 'Sturdy solid-wood shelves and side tables, cleaned and sanded. Pickup from the porch, or delivery within a few miles if we can arrange it. Free for pledged members—no payment or swap. Non-members may record a $25 purchase intent, which goes entirely to the Unbound donation fund.',
       details: [
         { label: 'Pickup', value: 'Porch pickup · local delivery possible' },
-        { label: 'Cost', value: 'Free · no swap required' },
+        { label: 'Cost', value: 'Free for members · non-members $25 to the fund' },
         { label: 'Condition', value: 'Clean, sturdy, gently used' }
       ],
-      note: 'Furniture is free. You arrange transport.'
+      note: 'Furniture is free to members. You arrange transport.',
+      nonmemberPurchase: { enabled: true, price: 25 }
     },
     {
       id: 'seed-laptop',
@@ -807,7 +822,9 @@
       profession,
       professionKey: profession.toLowerCase(),
       zip,
-      signedAt: cleanString(pledge.signedAt, 40)
+      signedAt: cleanString(pledge.signedAt, 40),
+      standing: cleanString(pledge.status, 30) || 'active',
+      track: cleanString(state.track, 30)
     };
     const index = roster.findIndex((item) => item && item.memberId === entry.memberId);
     if (index >= 0) roster[index] = entry;
@@ -880,6 +897,40 @@
       ? labels.map((label) => escapeHtml(label.detail)).join(' ')
       : `Pending rollout on ${escapeHtml(formatDate(LABEL_ROLLOUT_AT))} at 4:25pm Eastern (the exact 2027 vernal equinox). ${labels.map((label) => escapeHtml(label.detail)).join(' ')}`;
     return `<div class="member-labels" role="note"><div class="member-label-list">${badges}</div><p>${note}</p>${guidelinesLink}</div>`;
+  }
+
+  // In a live system this would be emailed automatically when someone became a
+  // seed member. Here it is generated locally and shown as a draft only: no
+  // email address is collected for it and nothing is transmitted.
+  function renderSeedThankYou(member) {
+    if (!isSeedMember(member)) return '';
+    const e = escapeHtml;
+    const firstName = cleanString(member.name, 60).trim().split(/\s+/)[0] || 'neighbor';
+    const profession = normalizeProfession(member.profession) || 'your trade';
+    const zip = normalizeZip(member.zip || zipFromAddress(member.mailingAddress));
+    const founding = isFoundingMember(member);
+    return `<details class="seed-email">
+      <summary>See your seed-member thank-you message</summary>
+      <div class="seed-email-body">
+        <p class="seed-email-note">Prototype: in a live system this message would be emailed to you automatically as soon as you became a seed member. It is generated here only as a draft. Nothing is sent or transmitted.</p>
+        <p><strong>To:</strong> ${e(cleanString(member.email, 120) || 'your contact on file')}<br><strong>Subject:</strong> ${e(`Thank you for starting Unbought, ${firstName}`)}</p>
+        <p>Hi ${e(firstName)},</p>
+        <p>Thank you for helping to start the movement. You are the first ${e(profession)} to sign up for Unbought in ZIP ${e(zip || 'your area')} — a seed member. ${founding ? 'Because you signed during the first equinox year, you are also a founding member.' : ''} Seed members are the people who prove a new trade can take root in a place; the whole commons begins with someone willing to go first.</p>
+        <p>Your labels stay pending until the exact 2027 vernal equinox, March 20 at 4:25pm Eastern — the end of Unbought's first year. If we are successful, we hope to partner with an organization and throw a huge festival somewhere in the United States on that equinox to celebrate the movement and its seed and founding members. Nothing is booked or confirmed yet, but as a seed member you will hear about it first.</p>
+        <p>Ways to get the ball rolling:</p>
+        <ul>
+          <li>Talk to other professionals in your area and invite them to take the pledge.</li>
+          <li>Post on social media about why a currency-free commons is worth trying.</li>
+          <li>Scout for cheap or donated housing and bring leads to the land circle.</li>
+          <li>Start an Unbought business whose revenue is donated to the commons.</li>
+          <li>Donate what you can, and point other donors toward the trust.</li>
+          <li>Volunteer your services to help develop the community — organizing, outreach, repairs, mentoring, or whatever your trade can offer.</li>
+          <li>Offer your skill on Free Labor, list goods on Free Stuff, or mentor in the Academy.</li>
+        </ul>
+        <p>We can only grow if people get involved. None of this is a demand — it is an invitation to help something small become something real. Thank you again for going first.</p>
+        <p>With gratitude,<br>The Unbought commons</p>
+      </div>
+    </details>`;
   }
 
   function normalizeUsername(value) {
@@ -966,12 +1017,91 @@
     return (Array.isArray(state.donationIntents) ? state.donationIntents : []).filter((item) => item && item.memberId === state.pledge.memberId);
   }
 
+  function getPeriodTotals(entries, dateField, valueFn) {
+    const now = new Date();
+    const dayIndex = (now.getDay() + 6) % 7; // Monday-based week
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayIndex).getTime();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    const yearStart = new Date(now.getFullYear(), 0, 1).getTime();
+    const result = { week: 0, month: 0, year: 0, all: 0 };
+    (Array.isArray(entries) ? entries : []).forEach((entry) => {
+      const value = valueFn(entry);
+      if (!(value > 0)) return;
+      result.all += value;
+      const when = Date.parse(entry && entry[dateField]);
+      if (Number.isNaN(when)) return;
+      if (when >= weekStart) result.week += value;
+      if (when >= monthStart) result.month += value;
+      if (when >= yearStart) result.year += value;
+    });
+    Object.keys(result).forEach((key) => { result[key] = Math.round(result[key] * 100) / 100; });
+    return result;
+  }
+
+  // Only hours logged through a mutual worker + receiver confirmation (or the
+  // three-member review vote) count. Members cannot enter hours by hand.
+  function getHourTotals(memberId) {
+    const id = memberId || (isMember() ? state.pledge.memberId : '');
+    if (!id) return { week: 0, month: 0, year: 0, all: 0 };
+    const entries = (Array.isArray(state.contributions) ? state.contributions : [])
+      .filter((c) => c && c.memberId === id && c.type === 'labor' && c.mutualConfirmation === true);
+    return getPeriodTotals(entries, 'createdAt', (c) => cleanHours(c.hours));
+  }
+
+  function getDonationTotals() {
+    const contributions = getMemberContributions().filter((c) => c && c.type === 'donation');
+    const linked = new Set(contributions.map((c) => c.sourceId));
+    const extras = getMemberDonationIntents()
+      .filter((intent) => intent && !linked.has(intent.id))
+      .map((intent) => ({ createdAt: intent.savedAt, amount: Number(intent.amount) || 0 }));
+    return getPeriodTotals([...contributions, ...extras], 'createdAt', (item) => Number(item.amount) || 0);
+  }
+
   function getSeveranceSummary() {
-    const fund = state.severanceFund || { balance: 0, contributions: [] };
-    const balance = Number(fund.balance) || 0;
-    const purchases = (Array.isArray(state.contributions) ? state.contributions : []).filter((c) => c && c.type === 'severance_purchase');
-    const computed = purchases.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
-    return { balance: Math.max(balance, computed), count: purchases.length };
+    // `severanceFund` is the legacy local-storage key. It now holds the
+    // Unbound donation fund balance; the severance figure is the member's
+    // proportional entitled share of that balance, calculated locally.
+    const contributions = Array.isArray(state.contributions) ? state.contributions : [];
+    const donations = contributions.filter((c) => c && c.type === 'donation');
+    const purchases = contributions.filter((c) => c && c.type === 'severance_purchase');
+    const stored = Number(state.severanceFund && state.severanceFund.balance) || 0;
+    const purchaseTotal = purchases.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+    const donationTotal = donations.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+    // Older browsers may carry a stored balance that predates the ledger;
+    // treat only the part not already explained by purchases as legacy cash.
+    const legacy = Math.max(0, stored - purchaseTotal);
+    const balance = Math.round((legacy + purchaseTotal + donationTotal) * 100) / 100;
+    const valueOf = (c) => (c && c.type === 'labor' ? Number(c.stockValue) || 0 : Number(c.amount) || 0);
+    const memberValue = getMemberContributions().reduce((sum, c) => sum + valueOf(c), 0);
+    const totalValue = contributions.reduce((sum, c) => sum + valueOf(c), 0);
+    const entitled = totalValue > 0 ? Math.round(balance * (memberValue / totalValue) * 100) / 100 : 0;
+    return {
+      balance,
+      entitled,
+      donationTotal,
+      purchaseTotal,
+      donationCount: donations.length,
+      purchaseCount: purchases.length,
+      count: donations.length + purchases.length
+    };
+  }
+
+  // Members always receive listings free. Providers may opt in to a fixed
+  // non-member price; the whole amount is recorded locally for the Unbought
+  // fund. Non-members never enter their own price.
+  function normalizeNonmemberPurchase(value) {
+    if (!value || typeof value !== 'object') return { enabled: false, price: 0 };
+    const price = Math.max(0, Math.round(Number(value.price) || 0));
+    const enabled = Boolean(value.enabled) && price > 0;
+    return { enabled, price: enabled ? price : 0 };
+  }
+
+  function getNonmemberPrice(listing) {
+    return normalizeNonmemberPurchase(listing && listing.nonmemberPurchase).price;
+  }
+
+  function canPurchaseAsNonmember(listing) {
+    return getNonmemberPrice(listing) > 0;
   }
 
   function allReports() {
@@ -1121,6 +1251,13 @@
     return /^data:image\/(?:jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(url) ? url : '';
   }
 
+  // Profile pictures use the same local-only, resized data URL shape as post
+  // photos. Nothing is uploaded in the prototype.
+  function safeProfileImageUrl(value) {
+    const url = cleanString(value, POST_PHOTOS.maxDataLength);
+    return /^data:image\/(?:jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(url) ? url : '';
+  }
+
   function formatBytes(bytes) {
     const value = Number(bytes);
     if (!Number.isFinite(value) || value <= 0) return '0 KB';
@@ -1135,19 +1272,20 @@
     const mime = cleanString(item.mime, 80);
     const size = Number.isFinite(Number(item.size)) ? Math.max(0, Number(item.size)) : 0;
     const caption = cleanString(item.caption, 200);
+    const submittedBy = cleanString(item.submittedBy, 60);
 
     if (kind === 'image') {
       const dataUrl = safeEvidenceImageUrl(item.dataUrl);
       if (!dataUrl) return null;
-      return { kind, name, mime, size, caption, dataUrl };
+      return { kind, name, mime, size, caption, submittedBy, dataUrl };
     }
     if (kind === 'text') {
       const text = cleanString(item.text, REPORT_EVIDENCE.maxTextLength);
       if (!text) return null;
-      return { kind, name, mime: mime || 'text/plain', size, caption, text };
+      return { kind, name, mime: mime || 'text/plain', size, caption, submittedBy, text };
     }
     if (kind === 'file') {
-      return { kind, name, mime, size, caption };
+      return { kind, name, mime, size, caption, submittedBy };
     }
     return null;
   }
@@ -1359,6 +1497,7 @@
         attributes
       } : {}),
       photos: cleanPostPhotos(item.photos),
+      nonmemberPurchase: normalizeNonmemberPurchase(item.nonmemberPurchase),
       provider: cleanString(item.provider, 60),
       location: cleanString(item.location, 80),
       city: place.city,
@@ -1415,6 +1554,10 @@
           zip: normalizeZip(raw.pledge.zip || zipFromAddress(raw.pledge.mailingAddress)),
           paidSkills: cleanString(raw.pledge.paidSkills, 400),
           unpaidSkills: cleanString(raw.pledge.unpaidSkills, 400),
+          bio: cleanString(raw.pledge.bio, 600),
+          picture: safeProfileImageUrl(raw.pledge.picture),
+          tagline: cleanString(raw.pledge.tagline, 90),
+          group: cleanString(raw.pledge.group, 80),
           donationCount: cleanCount(raw.pledge.donationCount),
           hoursCompleted: cleanHours(raw.pledge.hoursCompleted),
           hoursUsed: cleanHours(raw.pledge.hoursUsed),
@@ -1440,7 +1583,9 @@
             profession,
             professionKey: profession.toLowerCase(),
             zip: normalizeZip(item.zip),
-            signedAt: cleanString(item.signedAt, 40)
+            signedAt: cleanString(item.signedAt, 40),
+            standing: cleanString(item.standing, 30) || 'active',
+            track: cleanString(item.track, 30)
           };
         })
         .slice(0, 500);
@@ -1495,8 +1640,41 @@
           listingId: cleanString(request.listingId, 100),
           listingTitle: cleanString(request.listingTitle, 80),
           provider: cleanString(request.provider, 60),
+          memberName: cleanString(request.memberName, 60),
           note: cleanString(request.note, 280),
           pillar: cleanString(request.pillar, 40),
+          workerId: cleanString(request.workerId, 100),
+          workerHours: cleanHours(request.workerHours),
+          workerConfirmedAt: cleanString(request.workerConfirmedAt, 40),
+          receiverHours: cleanHours(request.receiverHours),
+          receiverConfirmedAt: cleanString(request.receiverConfirmedAt, 40),
+          loggedHours: cleanHours(request.loggedHours),
+          logSource: cleanString(request.logSource, 20),
+          loggedAt: cleanString(request.loggedAt, 40),
+          evidence: cleanEvidenceItems(request.evidence),
+          review: request.review && typeof request.review === 'object' && !Array.isArray(request.review)
+            ? {
+                panel: (Array.isArray(request.review.panel) ? request.review.panel : [])
+                  .filter((seat) => seat && typeof seat === 'object')
+                  .slice(0, 3)
+                  .map((seat) => ({
+                    memberId: cleanString(seat.memberId, 100),
+                    name: cleanString(seat.name, 60)
+                  })),
+                votes: (Array.isArray(request.review.votes) ? request.review.votes : [])
+                  .filter((vote) => vote && typeof vote === 'object')
+                  .slice(0, 3)
+                  .map((vote) => ({
+                    memberId: cleanString(vote.memberId, 100),
+                    name: cleanString(vote.name, 60),
+                    hours: cleanHours(vote.hours),
+                    reason: cleanString(vote.reason, 240),
+                    votedAt: cleanString(vote.votedAt, 40)
+                  })),
+                resolvedHours: cleanHours(request.review.resolvedHours),
+                resolvedAt: cleanString(request.review.resolvedAt, 40)
+              }
+            : null,
           requestedAt: cleanString(request.requestedAt, 40),
           confirmedAt: cleanString(request.confirmedAt, 40),
           status: cleanString(request.status, 30) || 'requested'
@@ -1654,6 +1832,7 @@
           id: cleanString(item.id, 100) || makeId('contribution'),
           memberId: cleanString(item.memberId, 100),
           type: cleanString(item.type, 30), // donation | labor | severance_purchase
+          fund: cleanString(item.fund, 30) || (item.type === 'donation' || item.type === 'severance_purchase' ? 'unbought' : ''),
           amount: Number.isFinite(Number(item.amount)) ? Math.max(0, Number(item.amount)) : 0,
           hours: Number.isFinite(Number(item.hours)) ? Math.max(0, Number(item.hours)) : 0,
           profession: cleanString(item.profession, 80),
@@ -1661,6 +1840,7 @@
           hourlyRate: Number.isFinite(Number(item.hourlyRate)) ? Math.max(0, Number(item.hourlyRate)) : 0,
           stockValue: Number.isFinite(Number(item.stockValue)) ? Math.max(0, Number(item.stockValue)) : 0,
           sourceId: cleanString(item.sourceId, 100),
+          mutualConfirmation: Boolean(item.mutualConfirmation),
           note: cleanString(item.note, 280),
           createdAt: cleanString(item.createdAt, 40),
           status: cleanString(item.status, 30) || 'recorded',
@@ -1678,7 +1858,7 @@
       if (!raw.pledge || !hasOwn(raw.pledge, 'hoursCompleted')) {
         fallback.pledge.hoursCompleted = cleanHours(
           fallback.contributions
-            .filter((item) => item.type === 'labor')
+            .filter((item) => item.type === 'labor' && item.mutualConfirmation === true)
             .reduce((sum, item) => sum + (Number(item.hours) || 0), 0)
         );
       }
@@ -2022,8 +2202,17 @@
       }
       card.appendChild(media);
       const price = createEl('div', 'product-price');
-      price.appendChild(createEl('span', 'product-price-value', 'FREE'));
-      price.appendChild(createEl('span', 'product-price-note', goodsCategoryShort(listing)));
+      const cardNonmemberPrice = getNonmemberPrice(listing);
+      if (!isMember() && cardNonmemberPrice) {
+        price.classList.add('product-price--nonmember');
+        price.appendChild(createEl('span', 'product-price-value', formatMoney(cardNonmemberPrice)));
+        price.appendChild(createEl('span', 'product-price-note', 'Non-member price · all of it to the Unbound donation fund · free for members'));
+      } else {
+        price.appendChild(createEl('span', 'product-price-value', 'FREE'));
+        price.appendChild(createEl('span', 'product-price-note', cardNonmemberPrice
+          ? `Free for you · non-members pay ${formatMoney(cardNonmemberPrice)} to the fund`
+          : goodsCategoryShort(listing)));
+      }
       card.appendChild(price);
     } else if (photos.length) {
       const strip = createEl('div', 'listing-photos');
@@ -2055,6 +2244,10 @@
     }
     if (listing.isUser) addBadge(badges, 'badge--soft', 'Posted by you');
     if (hasOwn(SCOPE_LABELS, listing.scope)) addBadge(badges, 'badge--soft', SCOPE_LABELS[listing.scope]);
+    const badgeNonmemberPrice = getNonmemberPrice(listing);
+    if (badgeNonmemberPrice) {
+      addBadge(badges, 'badge--fund', `Non-members ${formatMoney(badgeNonmemberPrice)} → Unbound donation fund`);
+    }
     card.appendChild(badges);
 
     const title = createEl('h3', 'listing-title', listing.title);
@@ -2107,7 +2300,9 @@
         ? 'Request saved locally · consent first'
         : hasPurchaseIntent
           ? 'Purchase intent recorded locally · no payment processed'
-          : listing.note || 'Peer offer · consent first'
+          : !isMember() && !canPurchaseAsNonmember(listing)
+            ? 'Free for pledged members · non-member purchase is not enabled for this offer'
+            : listing.note || 'Peer offer · consent first'
     );
     note.prepend(createIcon('check'));
     actions.appendChild(note);
@@ -2122,16 +2317,22 @@
       requestButton.append(createIcon('check'), document.createTextNode('Request recorded'));
       requestButton.setAttribute('aria-label', `Request recorded: ${listing.title}`);
     } else if (!isMember()) {
-      if (hasPurchaseIntent) {
+      if (!canPurchaseAsNonmember(listing)) {
+        requestButton.classList.add('button--ghost');
+        requestButton.disabled = true;
+        requestButton.append(createIcon('check'), document.createTextNode('For pledged members'));
+        requestButton.setAttribute('aria-label', `Pledged members can request ${listing.title} free. Non-member purchase is not enabled for this offer.`);
+      } else if (hasPurchaseIntent) {
         requestButton.classList.add('button--ghost');
         requestButton.disabled = true;
         requestButton.append(createIcon('check'), document.createTextNode('Purchase intent recorded'));
         requestButton.setAttribute('aria-label', `Purchase intent recorded locally for ${listing.title}`);
       } else {
+        const buttonPrice = formatMoney(getNonmemberPrice(listing));
         requestButton.classList.add('button--outline');
-        requestButton.textContent = 'Buy as non-member';
+        requestButton.textContent = `Buy for ${buttonPrice} → Unbound donation fund`;
         requestButton.dataset.requestMode = 'purchase';
-        requestButton.setAttribute('aria-label', `Buy ${listing.title} as a non-member (supports severance fund)`);
+        requestButton.setAttribute('aria-label', `Buy ${listing.title} as a non-member for ${buttonPrice}. The full amount is recorded locally for the Unbound donation fund; no payment is processed.`);
       }
     } else {
       requestButton.dataset.requestMode = 'mutual';
@@ -2696,6 +2897,22 @@
     fillProviderName();
     buildGoodsPostFields(true);
 
+    // A provider decides whether non-members may buy, and sets the price.
+    // Members always receive the same listing free through mutual consent.
+    const purchaseToggle = document.getElementById('post-nonmember-enabled');
+    const purchasePriceField = document.getElementById('post-nonmember-price-field');
+    const purchasePriceInput = document.getElementById('post-nonmember-price');
+    const syncPurchaseFields = () => {
+      const enabled = Boolean(purchaseToggle && purchaseToggle.checked);
+      if (purchasePriceField) purchasePriceField.hidden = !enabled;
+      if (purchasePriceInput) {
+        purchasePriceInput.disabled = !enabled;
+        purchasePriceInput.required = enabled;
+      }
+    };
+    if (purchaseToggle) purchaseToggle.addEventListener('change', syncPurchaseFields);
+    syncPurchaseFields();
+
     const postCategory = document.getElementById('post-category');
     if (postCategory) postCategory.addEventListener('change', () => buildGoodsPostFields(false));
 
@@ -2799,6 +3016,13 @@
         return;
       }
 
+      const purchaseEnabled = Boolean(data.get('nonmemberPurchaseEnabled'));
+      const purchasePrice = Math.max(0, Math.round(Number(data.get('nonmemberPurchasePrice') || 0)));
+      if (purchaseEnabled && !(purchasePrice > 0)) {
+        flagInvalidField(document.getElementById('post-nonmember-price'), 'Set a whole-dollar price for non-members, or turn the option off.');
+        return;
+      }
+
       const location = `${city}, ${stateCode} ${zip}`;
       const locationInput = document.getElementById('post-location');
       if (locationInput) locationInput.value = location;
@@ -2824,10 +3048,16 @@
         scope,
         ...(pillar === 'goods' ? { condition, color, brand, attributes } : {}),
         photos,
+        nonmemberPurchase: { enabled: purchaseEnabled, price: purchaseEnabled ? purchasePrice : 0 },
         details: [
           { label: 'Where', value: location },
           ...(pillar === 'goods' ? [{ label: 'Category', value: GOODS_CATEGORIES[category].label }] : []),
-          { label: pillar === 'goods' ? 'Cost' : 'Materials', value: EXCHANGES[exchange].label },
+          {
+            label: pillar === 'goods' ? 'Cost' : 'Materials',
+            value: purchaseEnabled
+              ? `Free for members · non-members ${formatMoney(purchasePrice)} to the Unbound donation fund`
+              : EXCHANGES[exchange].label
+          },
           { label: 'Contact', value: 'Through a consent request' }
         ],
         note: 'Posted by a member · consent first',
@@ -2843,6 +3073,7 @@
       form.reset();
       fillProviderName();
       buildGoodsPostFields(false);
+      syncPurchaseFields();
       postPhotoDrafts.set(form, []);
       if (photoInput) photoInput.value = '';
       renderPostPhotos(form, []);
@@ -2887,33 +3118,27 @@
   }
 
   /* ------------------------------------------------------------------------
-     05. Member account, contributions, stock & severance (prototype)
+     05. Member account, contributions, stock & Unbound donation fund (prototype)
      ------------------------------------------------------------------------ */
   function renderMemberAccount() {
     const container = document.getElementById('member-account');
     if (!container) return;
 
     const signedIn = isMember();
-    const memberContribs = getMemberContributions();
-    const memberDonations = getMemberDonationIntents();
-    const donationTotal = memberDonations.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
-    const laborEntries = memberContribs.filter((c) => c.type === 'labor');
-    const laborHours = laborEntries.reduce((sum, c) => sum + (Number(c.hours) || 0), 0);
-    const laborValue = laborEntries.reduce((sum, c) => sum + (Number(c.stockValue) || 0), 0);
-    const donationStock = memberContribs.filter((c) => c.type === 'donation').reduce((sum, c) => sum + (Number(c.stockValue) || 0), 0);
-    const totalStock = memberContribs.reduce((sum, c) => sum + (Number(c.stockValue) || 0), 0);
-    const severance = getSeveranceSummary();
+    const fund = getSeveranceSummary();
+    const hours = getHourTotals();
+    const donated = getDonationTotals();
 
     container.replaceChildren();
 
     const card = createEl('section', 'account-card');
     const head = createEl('div', 'account-head');
-    head.appendChild(createEl('p', 'eyebrow', signedIn ? 'Your account' : 'Participation & severance'));
-    head.appendChild(createEl('h3', '', signedIn ? 'Contributions, work, and stock' : 'Members join by pledge; non-members may record purchase intents'));
+    head.appendChild(createEl('p', 'eyebrow', signedIn ? 'Your account' : 'Participation & Unbound donation fund'));
+    head.appendChild(createEl('h3', '', signedIn ? 'Your hours, giving, and fund share' : 'Members join by pledge; non-members may record purchase intents'));
     card.appendChild(head);
 
     if (!signedIn) {
-      const intro = createEl('p', '', 'Anyone can browse. To participate in the commons (post offers/needs, request mutual-aid connections, and manage your track), sign the Unbought Pledge to become a member. People who do not take the pledge can record a purchase intent for goods or services in this prototype; the amount is tracked locally for the severance fund and no real payment is processed.');
+      const intro = createEl('p', '', 'Anyone can browse. To participate in the commons (post offers/needs, request mutual-aid connections, and manage your track), sign the Unbought Pledge to become a member. Where a provider has opted in, people who do not take the pledge can record a purchase intent at the provider’s price; every cent is tracked locally for the Unbound donation fund and no real payment is processed. Members receive those same offers free.');
       card.appendChild(intro);
     } else {
       const meta = createEl('p', 'account-meta', `${state.pledge.name} · ${state.pledge.location || 'Location not shared'} · Member ID ${state.pledge.memberId}`);
@@ -2921,17 +3146,18 @@
     }
 
     const stats = createEl('div', 'account-stats');
+    const hourPeriods = `Week ${hours.week} hr · month ${hours.month} hr · year ${hours.year} hr · all time ${hours.all} hr`;
+    const giftPeriods = `Week ${formatMoney(donated.week)} · month ${formatMoney(donated.month)} · year ${formatMoney(donated.year)} · all time ${formatMoney(donated.all)}`;
     const statDefs = signedIn ? [
-      ['Donations tracked', `${memberDonations.length} intent${memberDonations.length === 1 ? '' : 's'} · ${formatMoney(donationTotal)}`],
-      ['Work logged', `${laborHours.toLocaleString()} hr · ${formatMoney(laborValue)} stock value`],
-      ['Volunteer roles offered', String(getMemberVolunteerInterests().length)],
-      ['Your stock value (prototype)', formatMoney(totalStock)],
-      ['Severance fund (non-member purchase intents)', `${formatMoney(severance.balance)} · ${severance.count} recorded`]
+      ['Hours worked', hourPeriods],
+      ['Donated', giftPeriods],
+      ['Severance fund (your entitled share)', formatMoney(fund.entitled)],
+      ['Unbound donation fund (current balance)', formatMoney(fund.balance)]
     ] : [
-      ['Severance fund (non-member purchase intents)', formatMoney(severance.balance)],
-      ['Recorded non-member purchase intents', String(severance.count)],
+      ['Unbound donation fund (current balance)', formatMoney(fund.balance)],
+      ['Recorded non-member purchase intents', String(fund.count)],
       ['Member benefit', 'Mutual-aid access by pledge (no purchase)'],
-      ['Stock model', 'Donations and logged work hours create stock value for members']
+      ['Fund income', 'Donations, academy tuition, and non-member purchases']
     ];
     statDefs.forEach(([label, value]) => {
       const s = createEl('div', 'account-stat');
@@ -2941,88 +3167,23 @@
     });
     card.appendChild(stats);
 
-    const model = createEl('p', 'account-note', 'Prototype model (local only): every donation intent or logged hour gives stock value in the commons. Hours are valued at the average hourly wage you enter for your profession and state or region; a future system may calculate this automatically. Non-members who record contributions may be eligible for a severance share based on contribution percentage; no payouts are made and nothing is transmitted in this prototype.');
+    const model = createEl('p', 'account-note', signedIn
+      ? 'Prototype model (local only): your hours are shown only after both you and the receiver confirm the work, or after a three-member review vote resolves a disagreement. You cannot enter hours yourself. Giving is shown by week, month, year, and all time. Your severance figure is a local, proportional estimate of the Unbound donation fund based on recorded contributions; it is not a payout, debt, or legal claim. Every cent of donations, academy tuition, and non-member purchases goes to the Unbound donation fund. Nothing is transmitted.'
+      : 'Prototype model (local only): the Unbound donation fund holds locally recorded donations and non-member purchase intents. Academy tuition would join it in a live system. No money moves, no payouts are made, and nothing is transmitted.');
     card.appendChild(model);
 
     if (signedIn) {
-      // Labor logging form
-      const formWrap = createEl('div', 'account-block');
-      formWrap.appendChild(createEl('h4', '', 'Log work hours (stock value)'));
-      formWrap.appendChild(createEl('p', 'account-note', 'Record hours you worked for the commons. Stock value = hours × average hourly wage for your profession in your state/region. This is stored locally in this prototype.'));
-      const form = document.createElement('form');
-      form.className = 'account-form';
-      form.id = 'labor-log-form';
-      form.innerHTML = `
-        <div class="form-grid">
-          <div class="field">
-            <label for="labor-hours">Hours worked <span class="required-mark" aria-hidden="true">*</span></label>
-            <input type="number" id="labor-hours" name="hours" min="0.25" step="0.25" required placeholder="2">
-          </div>
-          <div class="field">
-            <label for="labor-profession">Profession / role <span class="required-mark" aria-hidden="true">*</span></label>
-            <input type="text" id="labor-profession" name="profession" maxlength="80" required placeholder="Carpenter, tutor, caregiver...">
-          </div>
-          <div class="field">
-            <label for="labor-state">State / region <span class="required-mark" aria-hidden="true">*</span></label>
-            <input type="text" id="labor-state" name="stateRegion" maxlength="40" required placeholder="PA, Pocono region...">
-          </div>
-          <div class="field">
-            <label for="labor-rate">Avg hourly wage (USD) <span class="required-mark" aria-hidden="true">*</span></label>
-            <input type="number" id="labor-rate" name="hourlyRate" min="1" step="0.01" required placeholder="28.50">
-            <p class="field-hint">Enter the average hourly wage for this profession in your state now. Future versions may auto-calculate.</p>
-          </div>
-        </div>
-        <div class="field">
-          <label for="labor-note">Note <span class="optional">(optional)</span></label>
-          <input type="text" id="labor-note" name="note" maxlength="200" placeholder="What work was done?">
-        </div>
-        <div class="account-form-actions">
-          <button class="button button--primary button--small" type="submit">Record hours as stock value</button>
-          <p class="form-hint" id="labor-log-status" aria-live="polite"></p>
-        </div>`;
-      form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        if (!isMember()) return;
-        if (!form.reportValidity()) return;
-        const data = new FormData(form);
-        const hours = Math.max(0, Number(data.get('hours') || 0));
-        const hourlyRate = Math.max(0, Number(data.get('hourlyRate') || 0));
-        const profession = cleanString(data.get('profession'), 80);
-        const stateRegion = cleanString(data.get('stateRegion'), 40);
-        const note = cleanString(data.get('note'), 200);
-        if (!(hours > 0) || !(hourlyRate > 0) || !profession || !stateRegion) return;
-        const stockValue = Math.round(hours * hourlyRate * 100) / 100;
-        const entry = {
-          id: makeId('contribution'),
-          memberId: state.pledge.memberId,
-          type: 'labor',
-          amount: 0,
-          hours,
-          profession,
-          stateRegion,
-          hourlyRate,
-          stockValue,
-          sourceId: '',
-          note,
-          createdAt: new Date().toISOString(),
-          status: 'recorded'
-        };
-        state.contributions = Array.isArray(state.contributions) ? state.contributions : [];
-        state.contributions.unshift(entry);
-        state.contributions = state.contributions.slice(0, 200);
-        saveState();
-        announce(`Recorded ${hours} hour${hours === 1 ? '' : 's'} as ${formatMoney(stockValue)} in stock value.`);
-        showToast('Work hours recorded as contribution/stock value (prototype).', false);
-        renderSharedMemberViews();
-      });
-      formWrap.appendChild(form);
-      card.appendChild(formWrap);
+      const hoursNote = createEl('div', 'account-block');
+      hoursNote.appendChild(createEl('h4', '', 'How work hours are logged'));
+      hoursNote.appendChild(createEl('p', 'account-note', 'You cannot log your own hours. A service or delivered product is confirmed by both the worker and the receiver, each entering the hours they believe were worked. When the two numbers match, the hours are logged. If they differ, the evidence goes to the review board and three randomly drawn active members — never care circle, students, or observers — vote on the hours to log. Use the Exchanges panel to confirm an exchange.'));
+      card.appendChild(hoursNote);
 
       // Ledger
+      const memberContribs = getMemberContributions();
       const ledger = createEl('div', 'account-block');
       ledger.appendChild(createEl('h4', '', 'Contribution ledger'));
       if (!memberContribs.length) {
-        ledger.appendChild(createEl('p', 'account-note', 'No contributions recorded yet. Donations you make while signed in and logged work hours will appear here.'));
+        ledger.appendChild(createEl('p', 'account-note', 'No contributions recorded yet. Donations you make while signed in and hours confirmed by both sides will appear here.'));
       } else {
         const list = createEl('ul', 'contribution-list');
         memberContribs.slice(0, 10).forEach((c) => {
@@ -3309,6 +3470,8 @@
     const m = state.pledge;
     const e = escapeHtml;
     const credential = getCredential();
+    const confirmedHours = getHourTotals().all;
+    const reportsAgainst = reportsAboutMember().length;
     const notice = state.settings && state.settings.showPrototypeNotices
       ? `<p class="prototype-note">Prototype: account details, your username, and a salted password hash are stored only on this device. There is no real authentication or server, and nothing is transmitted.</p>`
       : '';
@@ -3316,28 +3479,36 @@
       <p class="eyebrow">Account</p>
       <h3>Your membership</h3>
       ${renderMemberLabelsHtml(m)}
+      ${renderSeedThankYou(m)}
       <dl class="account-details">
+        <div><dt>Picture</dt><dd>${m.picture ? `<img class="profile-photo" src="${m.picture}" alt="Your profile picture">` : 'Not added'}</dd></div>
         <div><dt>Full legal name</dt><dd>${e(m.fullName || 'Not shared')}</dd></div>
         <div><dt>Chosen name</dt><dd>${e(m.name)}</dd></div>
+        <div><dt>Tag line</dt><dd>${e(m.tagline || 'Not set')}</dd></div>
         <div><dt>Username</dt><dd>${e(credential && credential.username ? credential.username : 'Not set')}</dd></div>
         <div><dt>Password hash (local prototype)</dt><dd>${e(credential && credential.passwordHash ? credential.passwordHash : 'Not set')}</dd></div>
         <div><dt>Password salt (local prototype)</dt><dd>${e(credential && credential.salt ? credential.salt : 'Not set')}</dd></div>
         <div><dt>General location</dt><dd>${e(m.location || 'Not shared')}</dd></div>
         <div><dt>Mailing address</dt><dd>${e(m.mailingAddress || 'Not shared')}</dd></div>
         <div><dt>Physical address</dt><dd>${e(m.physicalAddress || 'Not shared')}</dd></div>
+        <div><dt>City</dt><dd>${e(parseCityState(m.publicAddressSource === 'physical' ? m.physicalAddress : m.mailingAddress)?.split(',')[0] || 'Not shared')}</dd></div>
+        <div><dt>State</dt><dd>${e((parseCityState(m.publicAddressSource === 'physical' ? m.physicalAddress : m.mailingAddress)?.split(',')[1] || '').trim() || 'Not shared')}</dd></div>
+        <div><dt>ZIP code</dt><dd>${e(m.zip || 'Not shared')}</dd></div>
         <div><dt>Housing status</dt><dd>${e(hasOwn(HOUSING_STATUSES, m.housingStatus) ? HOUSING_STATUSES[m.housingStatus] : 'Not shared')}</dd></div>
         <div><dt>Phone number</dt><dd>${e(m.phone || 'Not shared')}</dd></div>
         <div><dt>Date of birth</dt><dd>${e(m.dob || 'Not shared')}</dd></div>
         <div><dt>Primary profession or trade</dt><dd>${e(m.profession || 'Not shared')}</dd></div>
-        <div><dt>ZIP code</dt><dd>${e(m.zip || 'Not shared')}</dd></div>
         <div><dt>Membership year (equinox)</dt><dd>${e(String(membershipYearAt(m.signedAt) ?? 'Unknown'))}</dd></div>
         <div><dt>Career / paid skills</dt><dd>${e(m.paidSkills || 'Not listed')}</dd></div>
         <div><dt>Unpaid skills</dt><dd>${e(m.unpaidSkills || 'Not listed')}</dd></div>
+        <div><dt>Bio</dt><dd>${e(m.bio || 'Not added')}</dd></div>
+        <div><dt>Group / crew</dt><dd>${e(m.group || 'Not set')}</dd></div>
         <div><dt>Donation count</dt><dd>${cleanCount(m.donationCount)}</dd></div>
-        <div><dt>Hours completed on Unbought</dt><dd>${cleanHours(m.hoursCompleted)}</dd></div>
+        <div><dt>Hours worked (confirmed)</dt><dd>${confirmedHours}</dd></div>
         <div><dt>Hours used on Unbought</dt><dd>${cleanHours(m.hoursUsed)}</dd></div>
         <div><dt>Items gifted</dt><dd>${cleanCount(m.itemsGifted)}</dd></div>
         <div><dt>Items taken</dt><dd>${cleanCount(m.itemsTaken)}</dd></div>
+        <div><dt>Reports made against you</dt><dd>${reportsAgainst}</dd></div>
         <div><dt>Availability</dt><dd>${m.available === false ? 'Not available right now' : 'Available'}</dd></div>
         <div><dt>Public City, State from</dt><dd>${m.publicAddressSource === 'physical' ? 'Physical address' : 'Mailing address'}</dd></div>
         <div><dt>Public phone</dt><dd>${m.publicPhone ? 'Shown on resume' : 'Hidden from resume'}</dd></div>
@@ -3384,8 +3555,29 @@
           </div>
         </div>
         <div class="form-row">
+          <div class="field">
+            <label for="account-tagline">Tag line</label>
+            <input type="text" id="account-tagline" name="tagline" maxlength="90" value="${e(m.tagline || '')}" placeholder="A few words neighbors will see">
+          </div>
+          <div class="field">
+            <label for="account-group">Group / crew</label>
+            <input type="text" id="account-group" name="group" maxlength="80" value="${e(m.group || '')}" placeholder="Private to you">
+          </div>
+        </div>
+        <div class="field">
+          <label for="account-bio">Bio</label>
+          <textarea id="account-bio" name="bio" rows="3" maxlength="600" placeholder="What you enjoy sharing with neighbors">${e(m.bio || '')}</textarea>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="account-picture">Profile picture <span class="optional">(local only)</span></label>
+            <input type="file" id="account-picture" name="picture" accept="image/jpeg,image/png,image/webp,image/gif">
+            <p class="field-hint">Resized in this browser and never uploaded.</p>
+            <label class="checkbox"><input type="checkbox" name="removePicture"> <span>Remove current picture</span></label>
+          </div>
+        </div>
+        <div class="form-row">
           <div class="field"><label for="account-donations">Donation count</label><input type="number" id="account-donations" name="donationCount" min="0" step="1" value="${cleanCount(m.donationCount)}"></div>
-          <div class="field"><label for="account-hours-completed">Hours completed</label><input type="number" id="account-hours-completed" name="hoursCompleted" min="0" step="0.25" value="${cleanHours(m.hoursCompleted)}"></div>
           <div class="field"><label for="account-hours-used">Hours used</label><input type="number" id="account-hours-used" name="hoursUsed" min="0" step="0.25" value="${cleanHours(m.hoursUsed)}"></div>
           <div class="field"><label for="account-items-gifted">Items gifted</label><input type="number" id="account-items-gifted" name="itemsGifted" min="0" step="1" value="${cleanCount(m.itemsGifted)}"></div>
           <div class="field"><label for="account-items-taken">Items taken</label><input type="number" id="account-items-taken" name="itemsTaken" min="0" step="1" value="${cleanCount(m.itemsTaken)}"></div>
@@ -3400,7 +3592,7 @@
         </div>
       </form>
       ${notice}
-      <p class="account-note">Only you can see this full record on this device. Your public resume hides your legal name, street address, ZIP, housing status, and birthdate. To withdraw your membership, use the button in the pledge section.</p>
+      <p class="account-note">Only you can see this full record on this device. Your public resume hides your legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and phone unless you opt in to show the phone. Hours worked are never typed here; they appear only after mutual confirmation or review. To withdraw your membership, use the button in the pledge section.</p>
     </section>`;
   }
 
@@ -3424,13 +3616,19 @@
 
   function getPublicResume(member) {
     const address = member.publicAddressSource === 'physical' ? member.physicalAddress : member.mailingAddress;
+    const hoursWorked = getHourTotals(member.memberId).all;
     return {
       displayName: firstName(member.name),
       cityState: parseCityState(address) || parseCityState(member.location) || 'City not shared',
+      picture: safeProfileImageUrl(member.picture),
+      tagline: cleanString(member.tagline, 90),
+      bio: cleanString(member.bio, 600),
+      profession: cleanString(member.profession, 80),
       paidSkills: cleanString(member.paidSkills, 400),
       unpaidSkills: cleanString(member.unpaidSkills, 400),
       donationCount: cleanCount(member.donationCount),
-      hoursCompleted: cleanHours(member.hoursCompleted),
+      hoursWorked,
+      hoursCompleted: hoursWorked,
       hoursUsed: cleanHours(member.hoursUsed),
       itemsGifted: cleanCount(member.itemsGifted),
       itemsTaken: cleanCount(member.itemsTaken),
@@ -3447,6 +3645,8 @@
     const e = escapeHtml;
     const m = state.pledge;
     const credential = getCredential();
+    const confirmedHours = getHourTotals(m && m.memberId).all;
+    const reportsAgainst = reportsAboutMember().length;
 
     if (!m) {
       publicPanel.innerHTML = `<section class="resume-card">
@@ -3471,7 +3671,7 @@
     };
     const metrics = [
       ['Donation count', resume.donationCount],
-      ['Hours completed', resume.hoursCompleted],
+      ['Hours worked', resume.hoursWorked],
       ['Hours used', resume.hoursUsed],
       ['Items gifted', resume.itemsGifted],
       ['Items taken', resume.itemsTaken]
@@ -3479,15 +3679,22 @@
 
     publicPanel.innerHTML = `<section class="resume-card" aria-labelledby="resume-name">
       <div class="resume-head">
+        ${resume.picture ? `<img class="resume-photo" src="${resume.picture}" alt="${e(resume.displayName || 'Member')}'s profile picture">` : ''}
         <div>
           <p class="eyebrow">Public resume</p>
           <h2 id="resume-name">${e(resume.displayName || 'Member')}</h2>
+          ${resume.tagline ? `<p class="resume-tagline">${e(resume.tagline)}</p>` : ''}
+          ${resume.profession ? `<p class="resume-profession">${e(resume.profession)}</p>` : ''}
           <p class="resume-location"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-pin"></use></svg> ${e(resume.cityState)}</p>
           ${resume.phone ? `<p class="resume-phone">Public phone: ${e(resume.phone)}</p>` : ''}
         </div>
         <span class="resume-availability ${resume.available ? 'is-available' : ''}">${resume.available ? 'Available' : 'Not available right now'}</span>
         ${isMember() ? `<button class="button button--ghost button--small button--report" type="button" data-report-context data-report-area="Member profile" data-report-detail="Public resume" data-report-name="${e(resume.displayName)}" data-report-member-id="${e(m.memberId || '')}" data-report-source-id="${e(m.memberId || 'profile')}" aria-label="Report a concern from ${e(resume.displayName)}'s profile">Report from this profile</button>` : ''}
       </div>
+      ${resume.bio ? `<div class="resume-section">
+        <h3>About</h3>
+        <p class="resume-bio">${e(resume.bio)}</p>
+      </div>` : ''}
       <div class="resume-section">
         <h3>Career / paid skills</h3>
         ${skillList(resume.paidSkills)}
@@ -3502,7 +3709,7 @@
           ${metrics.map(([label, value]) => `<div><dt>${e(label)}</dt><dd>${e(value)}</dd></div>`).join('')}
         </dl>
       </div>
-      <p class="account-note">This resume shows only the first name, City/State, skills, commons totals, availability, and an optional public phone. Legal name, street address, ZIP, housing status, and birthdate are never included.</p>
+      <p class="account-note">This resume shows only the chosen first name, picture, tag line, bio, profession, City/State, skills, commons totals, availability, and an optional public phone. Legal name, street and mailing addresses, ZIP, housing status, birthdate, group, and report count are never included.</p>
       ${isMember() ? `<p class="field-hint">This prototype stores one local member profile. Opening the report fills the name from this resume; you do not type it.</p>` : ''}
     </section>`;
 
@@ -3515,29 +3722,36 @@
     privatePanel.innerHTML = `<section class="account-card private-profile" aria-labelledby="private-profile-title">
       <p class="eyebrow">Private to you</p>
       <h2 id="private-profile-title">Your full member record</h2>
-      <p class="account-note">This section appears only in your signed-in browser. It is not part of the public resume.</p>
+      <p class="account-note">This section appears only in your signed-in browser. It is not part of the public resume. City, State, ZIP, birthdate, group, report count, and every sensitive record stay here.</p>
       <dl class="account-details">
+        <div><dt>Picture</dt><dd>${m.picture ? `<img class="profile-photo" src="${m.picture}" alt="Your profile picture">` : 'Not added'}</dd></div>
         <div><dt>Full legal name</dt><dd>${e(m.fullName || 'Not shared')}</dd></div>
         <div><dt>Chosen name</dt><dd>${e(m.name)}</dd></div>
+        <div><dt>Tag line</dt><dd>${e(m.tagline || 'Not set')}</dd></div>
         <div><dt>Username</dt><dd>${e(credential && credential.username ? credential.username : 'Not set')}</dd></div>
         <div><dt>Password hash (local prototype)</dt><dd>${e(credential && credential.passwordHash ? credential.passwordHash : 'Not set')}</dd></div>
         <div><dt>Password salt (local prototype)</dt><dd>${e(credential && credential.salt ? credential.salt : 'Not set')}</dd></div>
         <div><dt>General location</dt><dd>${e(m.location || 'Not shared')}</dd></div>
         <div><dt>Mailing address</dt><dd>${e(m.mailingAddress || 'Not shared')}</dd></div>
         <div><dt>Physical address</dt><dd>${e(m.physicalAddress || 'Not shared')}</dd></div>
+        <div><dt>City</dt><dd>${e(parseCityState(m.publicAddressSource === 'physical' ? m.physicalAddress : m.mailingAddress)?.split(',')[0] || 'Not shared')}</dd></div>
+        <div><dt>State</dt><dd>${e((parseCityState(m.publicAddressSource === 'physical' ? m.physicalAddress : m.mailingAddress)?.split(',')[1] || '').trim() || 'Not shared')}</dd></div>
+        <div><dt>ZIP code</dt><dd>${e(m.zip || 'Not shared')}</dd></div>
         <div><dt>Housing status</dt><dd>${e(hasOwn(HOUSING_STATUSES, m.housingStatus) ? HOUSING_STATUSES[m.housingStatus] : 'Not shared')}</dd></div>
         <div><dt>Phone number</dt><dd>${e(m.phone || 'Not shared')}</dd></div>
         <div><dt>Date of birth</dt><dd>${e(m.dob || 'Not shared')}</dd></div>
         <div><dt>Primary profession or trade</dt><dd>${e(m.profession || 'Not shared')}</dd></div>
-        <div><dt>ZIP code</dt><dd>${e(m.zip || 'Not shared')}</dd></div>
         <div><dt>Membership year (equinox)</dt><dd>${e(String(membershipYearAt(m.signedAt) ?? 'Unknown'))}</dd></div>
         <div><dt>Career / paid skills</dt><dd>${e(m.paidSkills || 'Not listed')}</dd></div>
         <div><dt>Unpaid skills</dt><dd>${e(m.unpaidSkills || 'Not listed')}</dd></div>
+        <div><dt>Bio</dt><dd>${e(m.bio || 'Not added')}</dd></div>
+        <div><dt>Group / crew</dt><dd>${e(m.group || 'Not set')}</dd></div>
         <div><dt>Donation count</dt><dd>${cleanCount(m.donationCount)}</dd></div>
-        <div><dt>Hours completed on Unbought</dt><dd>${cleanHours(m.hoursCompleted)}</dd></div>
+        <div><dt>Hours worked (confirmed)</dt><dd>${confirmedHours}</dd></div>
         <div><dt>Hours used on Unbought</dt><dd>${cleanHours(m.hoursUsed)}</dd></div>
         <div><dt>Items gifted</dt><dd>${cleanCount(m.itemsGifted)}</dd></div>
         <div><dt>Items taken</dt><dd>${cleanCount(m.itemsTaken)}</dd></div>
+        <div><dt>Reports made against you</dt><dd>${reportsAgainst}</dd></div>
         <div><dt>Availability</dt><dd>${m.available === false ? 'Not available right now' : 'Available'}</dd></div>
         <div><dt>Public City, State from</dt><dd>${m.publicAddressSource === 'physical' ? 'Physical address' : 'Mailing address'}</dd></div>
         <div><dt>Public phone</dt><dd>${m.publicPhone ? 'Shown on resume' : 'Hidden from resume'}</dd></div>
@@ -3563,6 +3777,143 @@
     return pillar === 'goods' ? 'product' : 'service';
   }
 
+  const HOUR_REVIEWER_COUNT = 3;
+
+  // A request has two sides: the member who received it and the member who
+  // provided it. Only those two may confirm the work and the hours.
+  function requestRole(request) {
+    if (!isMember() || !request) return 'none';
+    const id = state.pledge.memberId;
+    if (request.memberId === id) return 'receiver';
+    if (request.workerId === id) return 'worker';
+    const listing = findListing(request.listingId);
+    if (listing && listing.isUser && listing.memberId === id) return 'worker';
+    return 'none';
+  }
+
+  function workerIdFor(request) {
+    if (!request) return '';
+    if (request.workerId) return request.workerId;
+    const listing = findListing(request.listingId);
+    return listing && listing.isUser ? cleanString(listing.memberId, 100) : '';
+  }
+
+  // Reviewers are drawn from active neighbors who are not parties to the
+  // exchange. They need to see the dispute in their own Exchanges panel.
+  function isHourReviewer(request) {
+    if (!isMember() || !request || requestRole(request) !== 'none') return false;
+    const panel = request.review && Array.isArray(request.review.panel) && request.review.panel.length
+      ? request.review.panel
+      : getEligibleHourReviewers(request);
+    return panel.some((seat) => seat && seat.memberId === state.pledge.memberId);
+  }
+
+  function getHourState(request) {
+    if (!request) return 'pending';
+    if (cleanHours(request.loggedHours) > 0) return 'logged';
+    const worker = cleanHours(request.workerHours);
+    const receiver = cleanHours(request.receiverHours);
+    const both = Boolean(request.workerConfirmedAt && request.receiverConfirmedAt && worker > 0 && receiver > 0);
+    if (!both) return 'pending';
+    if (Math.abs(worker - receiver) < 0.001) return 'agreed';
+    if (cleanHours(request.review && request.review.resolvedHours) > 0) return 'resolved';
+    return 'disputed';
+  }
+
+  // Three randomly drawn active members decide a disputed hour count. Care
+  // circle members, students, observers, and either party are never eligible.
+  function getEligibleHourReviewers(request) {
+    const excluded = new Set([request && request.memberId, workerIdFor(request)].filter(Boolean));
+    const blocked = ['student', 'care', 'observer', 'limited', 'exiled', 'inactive', 'observe_only'];
+    const pool = getMemberRoster().filter((entry) => {
+      if (!entry || !entry.memberId || excluded.has(entry.memberId)) return false;
+      const standing = cleanString(entry.standing, 30).toLowerCase();
+      const track = cleanString(entry.track, 30).toLowerCase();
+      return !blocked.includes(standing) && !blocked.includes(track) && track !== 'apprentice';
+    });
+    const seed = String(request && request.id || '').split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    return pool
+      .map((entry, index) => ({ entry, order: ((seed + 1) * (index + 7) * 2654435761) >>> 0 }))
+      .sort((a, b) => a.order - b.order)
+      .slice(0, HOUR_REVIEWER_COUNT)
+      .map((item) => ({
+        memberId: item.entry.memberId,
+        name: cleanString(item.entry.name, 60) || cleanString(item.entry.profession, 60) || 'Neighbor'
+      }));
+  }
+
+  function ensureHourReview(request) {
+    if (!request || typeof request !== 'object') return null;
+    if (!request.review || typeof request.review !== 'object') {
+      request.review = { panel: [], votes: [], resolvedHours: 0, resolvedAt: '' };
+    }
+    if (!Array.isArray(request.review.panel) || !request.review.panel.length) {
+      request.review.panel = getEligibleHourReviewers(request);
+    }
+    if (!Array.isArray(request.review.votes)) request.review.votes = [];
+    return request.review;
+  }
+
+  function pickMajorityHours(values) {
+    const valid = values.filter((value) => Number.isFinite(Number(value)) && Number(value) > 0).map(Number);
+    if (!valid.length) return 0;
+    const counts = {};
+    valid.forEach((value) => { counts[value] = (counts[value] || 0) + 1; });
+    return Object.keys(counts).map(Number).sort((a, b) => a - b)
+      .reduce((best, value) => (counts[value] > counts[best] ? value : best));
+  }
+
+  function logMutualHours(request, hours, source) {
+    const amount = cleanHours(hours);
+    if (!(amount > 0) || cleanHours(request.loggedHours) > 0) return false;
+    const workerId = workerIdFor(request);
+    const listing = findListing(request.listingId);
+    const rosterMember = getMemberRoster().find((m) => m && m.memberId === workerId);
+    const member = workerId === state.pledge.memberId ? state.pledge : rosterMember;
+    const profession = cleanString((member && member.profession)
+      || (listing && listing.category) || 'Commons work', 80);
+    const zip = normalizeZip((member && member.zip)
+      || (member && zipFromAddress(member.mailingAddress))
+      || (state.pledge && state.pledge.zip));
+    const entry = {
+      id: makeId('contribution'),
+      memberId: workerId,
+      type: 'labor',
+      amount: 0,
+      hours: amount,
+      profession,
+      stateRegion: zip,
+      hourlyRate: 0,
+      stockValue: 0,
+      sourceId: request.id,
+      note: `${getExchangeType(request) === 'product' ? 'Product' : 'Service'} confirmed by worker and receiver${source === 'review' ? ' · three-member review vote' : ''}: ${cleanString(request.listingTitle, 80)}`,
+      createdAt: new Date().toISOString(),
+      status: 'recorded',
+      mutualConfirmation: true,
+      fund: ''
+    };
+    state.contributions = Array.isArray(state.contributions) ? state.contributions : [];
+    state.contributions.unshift(entry);
+    state.contributions = state.contributions.slice(0, 200);
+    request.loggedHours = amount;
+    request.logSource = source;
+    request.loggedAt = entry.createdAt;
+    request.status = getExchangeType(request) === 'product' ? 'product_delivered' : 'service_completed';
+    request.confirmedAt = entry.createdAt;
+    return true;
+  }
+
+  function finalizeHourReview(request) {
+    const review = request.review;
+    if (!review || !Array.isArray(review.panel) || !Array.isArray(review.votes)) return false;
+    if (review.panel.length < HOUR_REVIEWER_COUNT || review.votes.length < HOUR_REVIEWER_COUNT) return false;
+    const hours = pickMajorityHours(review.votes.map((vote) => vote.hours));
+    if (!(hours > 0)) return false;
+    review.resolvedHours = hours;
+    review.resolvedAt = new Date().toISOString();
+    return logMutualHours(request, hours, 'review');
+  }
+
   function isConfirmedExchange(request) {
     return Boolean(request && (request.status === 'service_completed' || request.status === 'product_delivered'));
   }
@@ -3572,40 +3923,125 @@
     if (!panel || !isMember()) return;
     const e = escapeHtml;
     const requests = (Array.isArray(state.requests) ? state.requests : [])
-      .filter((request) => request && request.memberId === state.pledge.memberId && request.type === 'mutual_aid_request')
+      .filter((request) => request && request.type === 'mutual_aid_request'
+        && (requestRole(request) !== 'none' || isHourReviewer(request)))
       .slice(0, 30);
-    const open = requests.filter((request) => !isConfirmedExchange(request));
-    const confirmed = requests.filter(isConfirmedExchange);
+    const byState = (stateName) => requests.filter((request) => getHourState(request) === stateName);
+    const pending = byState('pending');
+    const agreed = requests.filter((request) => ['agreed', 'logged', 'resolved'].includes(getHourState(request)));
+    const logged = requests.filter((request) => ['logged', 'resolved'].includes(getHourState(request)));
+    const disputed = byState('disputed');
 
-    const itemMarkup = (request, done) => {
+    const roleLabel = (role) => role === 'worker' ? 'You provided this' : 'You received this';
+
+    const sideMarkup = (request, role) => {
+      const hoursKey = role === 'worker' ? 'workerHours' : 'receiverHours';
+      const atKey = role === 'worker' ? 'workerConfirmedAt' : 'receiverConfirmedAt';
+      const sideLabel = requestRole(request) === role ? roleLabel(role) : (role === 'worker' ? 'Worker' : 'Receiver');
+      if (request[atKey]) {
+        return `<span class="badge badge--green">${e(sideLabel)} · ${e(cleanHours(request[hoursKey]))} hr confirmed ${e(formatDate(request[atKey]))}</span>`;
+      }
+      if (requestRole(request) !== role) {
+        return `<span class="badge badge--soft">${e(sideLabel)} · waiting for confirmation</span>`;
+      }
+      return `<form class="exchange-confirm" data-confirm-hours data-id="${e(request.id)}" data-role="${e(role)}">
+        <label for="hours-${e(role)}-${e(domId(request.id))}">${e(roleLabel(role))} · hours worked</label>
+        <input type="number" id="hours-${e(role)}-${e(domId(request.id))}" name="hours" min="0.25" step="0.25" required placeholder="2">
+        <button class="button button--outline button--small" type="submit">Confirm hours</button>
+      </form>`;
+    };
+
+    const evidenceMarkup = (request) => {
+      const items = cleanEvidenceItems(request.evidence);
+      if (!items.length) return '<p class="account-note">No evidence attached yet. Both sides may add local notes or images.</p>';
+      return `<ul class="evidence-list">${items.map((item) => `<li class="evidence-item">
+        ${item.kind === 'image' && item.dataUrl ? `<img class="evidence-thumb" src="${item.dataUrl}" alt="Preview of ${e(item.name)}">` : ''}
+        <strong>${e(item.name)}</strong>
+        <span class="contribution-meta">${e(item.caption || (item.kind === 'image' ? 'Image' : item.kind === 'text' ? 'Text' : 'File details'))}${item.submittedBy ? ` · ${e(item.submittedBy)}` : ''}</span>
+      </li>`).join('')}</ul>`;
+    };
+
+    const reviewMarkup = (request) => {
+      const review = request.review && typeof request.review === 'object' ? request.review : {};
+      const panel = Array.isArray(review.panel) && review.panel.length ? review.panel : getEligibleHourReviewers(request);
+      const votes = Array.isArray(review.votes) ? review.votes : [];
+      const role = requestRole(request);
+      const mySeat = panel.find((seat) => seat.memberId === state.pledge.memberId);
+      const alreadyVoted = votes.some((vote) => vote.memberId === state.pledge.memberId);
+      const seats = Array.from({ length: HOUR_REVIEWER_COUNT }, (_, index) => {
+        const seat = panel[index];
+        const vote = seat && votes.find((v) => v.memberId === seat.memberId);
+        return `<li class="review-seat"><strong>${seat ? e(seat.name) : 'Seat pending'}</strong>
+          <span class="contribution-meta">${vote ? `${e(vote.hours)} hr · ${e(vote.reason || 'No reason given')}` : 'Not voted yet'}</span></li>`;
+      }).join('');
+      return `<div class="hour-review">
+        <p class="account-note">The numbers differ, so three randomly drawn active members decide the hours. Care circle, students, observers, and either party are excluded. In this browser-only prototype the draw uses locally stored eligible neighbors; a live system would fill all three seats.</p>
+        <ul class="review-seats">${seats}</ul>
+        ${panel.length < HOUR_REVIEWER_COUNT ? `<p class="field-hint">Only ${panel.length} eligible neighbor${panel.length === 1 ? '' : 's'} in this browser. The remaining ${HOUR_REVIEWER_COUNT - panel.length} seat${HOUR_REVIEWER_COUNT - panel.length === 1 ? '' : 's'} wait for a live draw.</p>` : ''}
+        ${mySeat && role === 'none' && !alreadyVoted ? `<form class="account-form hour-vote-form" data-hour-vote data-id="${e(request.id)}">
+          <div class="form-grid">
+            <div class="field"><label for="vote-hours-${e(domId(request.id))}">Hours to log</label>
+              <input type="number" id="vote-hours-${e(domId(request.id))}" name="hours" min="0.25" step="0.25" required></div>
+            <div class="field"><label for="vote-reason-${e(domId(request.id))}">Why</label>
+              <input type="text" id="vote-reason-${e(domId(request.id))}" name="reason" maxlength="240" required></div>
+          </div>
+          <button class="button button--primary button--small" type="submit">Cast review vote</button>
+        </form>` : ''}
+        ${role !== 'none' ? '<p class="field-hint">You are a party to this exchange and cannot vote on it.</p>' : ''}
+        ${alreadyVoted && mySeat ? '<p class="field-hint">Your vote is recorded above.</p>' : ''}
+      </div>`;
+    };
+
+    const itemMarkup = (request) => {
+      const stateName = getHourState(request);
+      const role = requestRole(request);
       const type = getExchangeType(request);
-      const label = type === 'product' ? 'Product delivered' : 'Service completed';
-      const confirmedAt = done && request.confirmedAt ? ` · confirmed ${e(formatDate(request.confirmedAt))}` : '';
-      return `<li class="exchange-item">
+      const badge = stateName === 'logged' || stateName === 'resolved'
+        ? `<span class="badge badge--green">${e(cleanHours(request.loggedHours))} hr logged</span>`
+        : stateName === 'agreed'
+          ? '<span class="badge badge--green">Hours match · ready to log</span>'
+          : stateName === 'disputed'
+            ? '<span class="badge badge--amber">Hours differ · in review</span>'
+            : `<span class="badge badge--soft">${e(roleLabel(role))}</span>`;
+      const bothSides = (['worker', 'receiver'].map((side) => sideMarkup(request, side)).join(''));
+      const dispute = stateName === 'disputed' || stateName === 'resolved' ? `<div class="hour-dispute">
+        <p class="contribution-meta">Worker ${e(cleanHours(request.workerHours))} hr · receiver ${e(cleanHours(request.receiverHours))} hr</p>
+        ${evidenceMarkup(request)}
+        <form class="account-form hour-evidence-form" data-hour-evidence data-id="${e(request.id)}">
+          <label for="evidence-note-${e(domId(request.id))}">Add an evidence note</label>
+          <input type="text" id="evidence-note-${e(domId(request.id))}" name="note" maxlength="200" placeholder="Times, messages, or receipts (stored locally)">
+          <button class="button button--ghost button--small" type="submit">Attach note</button>
+        </form>
+        ${reviewMarkup(request)}
+      </div>` : '';
+      return `<li class="exchange-item exchange-item--hours">
         <div class="exchange-copy">
           <strong>${e(request.listingTitle || 'Commons request')}</strong>
-          <span class="contribution-meta">${e(type === 'product' ? 'Product' : 'Service')} · requested ${e(formatDate(request.requestedAt))}${confirmedAt}</span>
-          ${request.provider ? `<span class="contribution-meta">Offered by ${e(request.provider)}</span>` : ''}
+          <span class="contribution-meta">${e(type === 'product' ? 'Product' : 'Service')} · ${role === 'worker' ? `for ${e(request.memberName || 'a neighbor')}` : `offered by ${e(request.provider || 'a neighbor')}`} · requested ${e(formatDate(request.requestedAt))}</span>
         </div>
-        ${done
-          ? `<span class="badge badge--green">${e(label)}</span>`
-          : `<button class="button button--outline button--small" type="button" data-confirm-exchange="${e(request.id)}">${e(label)}</button>`}
+        ${badge}
+        ${['pending', 'agreed'].includes(stateName) ? `<div class="exchange-sides">${bothSides}</div>` : ''}
+        ${dispute}
       </li>`;
     };
 
     panel.innerHTML = `<section class="account-card">
       <p class="eyebrow">Exchanges</p>
-      <h3>Confirm what you received</h3>
-      <p class="account-note">When a neighbor finishes a service or delivers a product, confirm it here. This is a local prototype record: nothing is verified by another person and nothing is transmitted.</p>
+      <h3>Confirm the work and the hours</h3>
+      <p class="account-note">Members cannot log their own hours. The worker and the receiver each confirm the work and enter the hours they believe were done. Matching numbers are logged. If they differ, the evidence goes to the review board and three randomly drawn active members vote on the hours. This is stored in this browser only.</p>
       <div class="account-block">
-        <h4>Open requests</h4>
-        ${open.length ? `<ul class="exchange-list">${open.map((request) => itemMarkup(request, false)).join('')}</ul>` : `<p class="account-note">No open requests to confirm yet. Make a request from Free Labor or Free Stuff first.</p>`}
+        <h4>Awaiting mutual confirmation</h4>
+        ${pending.length ? `<ul class="exchange-list">${pending.map(itemMarkup).join('')}</ul>` : '<p class="account-note">No exchanges are waiting for confirmation.</p>'}
       </div>
       <div class="account-block">
-        <h4>Confirmed exchanges</h4>
-        ${confirmed.length ? `<ul class="exchange-list">${confirmed.map((request) => itemMarkup(request, true)).join('')}</ul>` : `<p class="account-note">Nothing confirmed yet. The thank-you note appears after your first confirmation.</p>`}
+        <h4>Hours agreed or logged</h4>
+        ${agreed.length ? `<ul class="exchange-list">${agreed.map(itemMarkup).join('')}</ul>` : '<p class="account-note">Nothing confirmed yet. The thank-you note appears after the first logged exchange.</p>'}
       </div>
-      ${confirmed.length ? `<div class="donate-nudge donate-nudge--dashboard">
+      <div class="account-block">
+        <h4>Disagreements in review</h4>
+        ${disputed.length ? `<ul class="exchange-list">${disputed.map(itemMarkup).join('')}</ul>` : '<p class="account-note">No hour disagreements are under review.</p>'}
+      </div>
+      ${logged.length ? `<div class="donate-nudge donate-nudge--dashboard">
         <span class="donate-nudge-icon" aria-hidden="true"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-heart"></use></svg></span>
         <div>
           <p><strong>A small way to say thanks.</strong> If you have received goods or services you would have otherwise paid for, consider leaving a small donation. Every bit helps to fund this initiative.</p>
@@ -3735,39 +4171,101 @@
     if (!dash) return;
     initDashboardTabs();
 
-    dash.addEventListener('click', (event) => {
-      const button = event.target.closest('[data-confirm-exchange]');
-      if (!button || !isMember()) return;
-      event.preventDefault();
-
-      const request = state.requests.find((item) => item && item.id === button.dataset.confirmExchange
-        && item.memberId === state.pledge.memberId && item.type === 'mutual_aid_request');
-      if (!request || isConfirmedExchange(request)) return;
-
-      const type = getExchangeType(request);
-      const label = type === 'product' ? 'Product delivered' : 'Service completed';
-      showConfirm({
-        title: `${type === 'product' ? 'Product' : 'Service'} confirmed?`,
-        message: `Confirm that “${request.listingTitle || 'this exchange'}” was completed. This only records it in this browser; nothing is sent or independently verified.`,
-        confirmLabel: label,
-        onConfirm: () => {
-          request.status = type === 'product' ? 'product_delivered' : 'service_completed';
-          request.confirmedAt = new Date().toISOString();
-          saveState();
-          renderExchanges();
-          announce(`${label} recorded locally. The thank-you note is now available.`);
-          showToast('Confirmation saved locally. Thank-you note unlocked.', false);
-        }
-      });
-    });
-
-    dash.addEventListener('submit', (event) => {
+    dash.addEventListener('submit', async (event) => {
       const form = event.target;
       if (!(form instanceof HTMLFormElement)) return;
       if (!requireMembership()) return;
       if (!form.reportValidity()) return;
       const data = new FormData(form);
       const now = new Date().toISOString();
+
+      if (form.matches('[data-confirm-hours]')) {
+        event.preventDefault();
+        const request = state.requests.find((item) => item && item.id === form.dataset.id
+          && item.type === 'mutual_aid_request' && requestRole(item) !== 'none');
+        const role = form.dataset.role;
+        if (!request || requestRole(request) !== role) return;
+        const hours = cleanHours(data.get('hours'));
+        if (!(hours > 0)) return;
+        if (!request.workerId) request.workerId = workerIdFor(request);
+        if (role === 'worker') {
+          request.workerHours = hours;
+          request.workerConfirmedAt = now;
+        } else {
+          request.receiverHours = hours;
+          request.receiverConfirmedAt = now;
+        }
+        const outcome = getHourState(request);
+        if (outcome === 'agreed') logMutualHours(request, hours, 'mutual');
+        if (outcome === 'disputed') ensureHourReview(request);
+        saveState();
+        renderSharedMemberViews();
+        renderExchanges();
+        announce(outcome === 'agreed'
+          ? `${hours} hours matched and were logged locally.`
+          : outcome === 'disputed'
+            ? 'The hour amounts differ. Evidence and a three-member review are now available.'
+            : 'Your hours were saved locally. Waiting for the other side.');
+        showToast(outcome === 'disputed' ? 'Hour difference sent to local review.' : 'Confirmation saved locally.', false);
+        return;
+      }
+
+      if (form.matches('[data-hour-evidence]')) {
+        event.preventDefault();
+        const request = state.requests.find((item) => item && item.id === form.dataset.id
+          && item.type === 'mutual_aid_request' && requestRole(item) !== 'none');
+        if (!request) return;
+        const note = cleanString(data.get('note'), 200);
+        if (!note) return;
+        const items = cleanEvidenceItems(request.evidence);
+        if (items.length >= REPORT_EVIDENCE.maxItems) {
+          showToast(`You can attach up to ${REPORT_EVIDENCE.maxItems} local evidence items.`, false);
+          return;
+        }
+        items.push({
+          kind: 'text',
+          name: 'Exchange evidence note',
+          mime: 'text/plain',
+          size: note.length,
+          caption: 'Local exchange note',
+          submittedBy: state.pledge.name,
+          text: note
+        });
+        request.evidence = cleanEvidenceItems(items);
+        saveState();
+        renderExchanges();
+        form.reset();
+        announce('Evidence note attached locally.');
+        showToast('Evidence note saved in this browser.', false);
+        return;
+      }
+
+      if (form.matches('[data-hour-vote]')) {
+        event.preventDefault();
+        const request = state.requests.find((item) => item && item.id === form.dataset.id
+          && item.type === 'mutual_aid_request' && requestRole(item) === 'none');
+        if (!request) return;
+        const review = ensureHourReview(request);
+        if (!review || !review.panel.some((seat) => seat.memberId === state.pledge.memberId)) return;
+        if (review.votes.some((vote) => vote.memberId === state.pledge.memberId)) return;
+        const hours = cleanHours(data.get('hours'));
+        const reason = cleanString(data.get('reason'), 240);
+        if (!(hours > 0) || !reason) return;
+        review.votes.push({
+          memberId: state.pledge.memberId,
+          name: state.pledge.name,
+          hours,
+          reason,
+          votedAt: now
+        });
+        const finalized = finalizeHourReview(request);
+        saveState();
+        renderSharedMemberViews();
+        renderExchanges();
+        announce(finalized ? 'Three votes are in; the majority hours were logged locally.' : 'Your review vote was saved locally.');
+        showToast(finalized ? 'Review resolved and hours logged locally.' : 'Review vote saved locally.', false);
+        return;
+      }
 
       if (form.matches('[data-account-form]')) {
         event.preventDefault();
@@ -3779,14 +4277,32 @@
         state.pledge.housingStatus = normalizeHousingStatus(data.get('housingStatus'));
         state.pledge.paidSkills = cleanString(data.get('paidSkills'), 400);
         state.pledge.unpaidSkills = cleanString(data.get('unpaidSkills'), 400);
+        state.pledge.bio = cleanString(data.get('bio'), 600);
+        state.pledge.tagline = cleanString(data.get('tagline'), 90);
+        state.pledge.group = cleanString(data.get('group'), 80);
         state.pledge.donationCount = cleanCount(data.get('donationCount'));
-        state.pledge.hoursCompleted = cleanHours(data.get('hoursCompleted'));
+        // Hours are derived only from mutual confirmation or review votes.
+        state.pledge.hoursCompleted = getHourTotals().all;
         state.pledge.hoursUsed = cleanHours(data.get('hoursUsed'));
         state.pledge.itemsGifted = cleanCount(data.get('itemsGifted'));
         state.pledge.itemsTaken = cleanCount(data.get('itemsTaken'));
         state.pledge.available = Boolean(data.get('available'));
         state.pledge.publicPhone = Boolean(data.get('publicPhone'));
         state.pledge.publicAddressSource = data.get('publicAddressSource') === 'physical' ? 'physical' : 'mailing';
+        if (data.get('removePicture')) {
+          state.pledge.picture = '';
+        } else {
+          const pictureInput = form.querySelector('input[name="picture"]');
+          const pictureFile = pictureInput && pictureInput.files ? pictureInput.files[0] : null;
+          if (pictureFile) {
+            const photo = await preparePostPhoto(pictureFile);
+            if (!photo) {
+              showToast('That image could not be resized locally. Try a smaller JPEG, PNG, WebP, or GIF.', false);
+              return;
+            }
+            state.pledge.picture = safeProfileImageUrl(photo.dataUrl);
+          }
+        }
         saveState();
         renderAccountInfo();
         renderSharedMemberViews();
@@ -4953,6 +5469,10 @@
           zip,
           paidSkills,
           unpaidSkills,
+          bio: '',
+          picture: '',
+          tagline: '',
+          group: '',
           donationCount: 0,
           hoursCompleted: 0,
           hoursUsed: 0,
@@ -5790,8 +6310,29 @@
     if (!dialog || !form || !listing) return;
 
     currentRequestMode = isMember() ? 'mutual' : 'purchase';
+    if (currentRequestMode === 'purchase' && !canPurchaseAsNonmember(listing)) {
+      showToast('Non-member purchase is not enabled for this offer. Pledged members receive it free.');
+      return;
+    }
     currentListingId = listing.id;
     form.reset();
+
+    // The price belongs to the provider, not the non-member. Lock the field so
+    // the intent records the member-set amount for the Unbound donation fund.
+    const nonmemberPrice = getNonmemberPrice(listing);
+    const amountInput = document.getElementById('purchase-amount');
+    if (amountInput) {
+      amountInput.value = nonmemberPrice || '';
+      amountInput.readOnly = true;
+    }
+    const amountLabel = document.querySelector('label[for="purchase-amount"]');
+    if (amountLabel) {
+      amountLabel.innerHTML = 'Price for non-members (USD) <span class="required-mark" aria-hidden="true">*</span>';
+    }
+    const priceHint = document.getElementById('purchase-price-hint');
+    if (priceHint) {
+      priceHint.textContent = `Set by the provider. Every cent goes to the Unbound donation fund; no payment is processed here. Members get this free.`;
+    }
 
     // Members use mutual-aid mode so the purchase fields are hidden for them,
     // but fill the name field too: no non-intake form asks a member to retype it.
@@ -5821,7 +6362,7 @@
     if (title) title.textContent = currentRequestMode === 'purchase' ? 'Buy as a non-member' : 'Request with mutual consent';
     if (description) {
       description.textContent = currentRequestMode === 'purchase'
-        ? 'In this prototype, people without a pledge can record a purchase intent for goods or services. The amount is recorded locally for the severance fund; no real payment is processed and nothing is transmitted. Members access the commons through mutual aid instead.'
+        ? `In this prototype, non-members can record a purchase intent at the provider's set price of ${formatMoney(nonmemberPrice)}. Every cent is recorded locally for the Unbound donation fund; no real payment is processed and nothing is transmitted. Members receive the same offer free through mutual aid.`
         : 'A request starts a conversation. It does not create a sale, a deposit, or a guarantee that an item is still available.';
     }
 
@@ -5850,10 +6391,17 @@
       const data = new FormData(form);
 
       if (currentRequestMode === 'purchase') {
-        const amount = Math.max(0, Number(data.get('purchaseAmount') || 0));
+        if (!canPurchaseAsNonmember(listing)) {
+          closeDialog(dialog);
+          showToast('Non-member purchase is not enabled for this offer.');
+          return;
+        }
+        // Always use the provider's stored price, never a value typed in the
+        // dialog, so the recorded fund amount cannot be changed by a buyer.
+        const amount = getNonmemberPrice(listing);
         const purchaserName = cleanString(data.get('purchaseName'), 60);
         const purchaserEmail = cleanString(data.get('purchaseEmail'), 120);
-        if (!(amount > 0) || !purchaserName || !purchaserEmail) return;
+        if (!purchaserName || !purchaserEmail) return;
 
         const now = new Date().toISOString();
         const request = {
@@ -5870,7 +6418,8 @@
           amount,
           requestedAt: now,
           status: 'purchase_intent',
-          fund: 'severance'
+          fund: 'unbought',
+          unitPrice: amount
         };
         state.requests.unshift(request);
         state.requests = state.requests.slice(0, 100);
@@ -5879,6 +6428,7 @@
           id: makeId('contribution'),
           memberId: '',
           type: 'severance_purchase',
+          fund: 'unbought',
           amount,
           hours: 0,
           profession: '',
@@ -5907,8 +6457,8 @@
         currentListingId = null;
         applyFilters();
         focusListingTitle(listing.id);
-        announce(`Purchase intent recorded for ${listing.title}. ${amount.toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })} is recorded locally for the severance fund in this prototype.`);
-        showToast('Purchase intent recorded locally for the severance fund. No payment was processed and nothing was transmitted.', false);
+        announce(`Purchase intent recorded for ${listing.title}. ${formatMoney(amount)} is recorded locally for the Unbound donation fund in this prototype.`);
+        showToast('Purchase intent recorded locally for the Unbound donation fund. No payment was processed and nothing was transmitted.', false);
         return;
       }
 
@@ -5938,6 +6488,17 @@
         listingTitle: listing.title,
         provider: listing.provider,
         pillar: listing.pillar,
+        memberName: state.pledge.name,
+        workerId: listing.isUser ? cleanString(listing.memberId, 100) : '',
+        workerHours: 0,
+        workerConfirmedAt: '',
+        receiverHours: 0,
+        receiverConfirmedAt: '',
+        loggedHours: 0,
+        logSource: '',
+        loggedAt: '',
+        evidence: [],
+        review: null,
         note: cleanString(data.get('note'), 280),
         requestedAt: new Date().toISOString(),
         status: 'requested'
@@ -6135,7 +6696,7 @@
     resetButton.addEventListener('click', () => {
       showConfirm({
         title: 'Demo Reset / Clear Local Data',
-        message: 'This removes your pledge and membership, account credentials, track, listings, requests, inquiries, donation intents, contributions, severance fund records, volunteer offers, reports and votes, messages, suggestions, waiting-list entry, and settings from this browser. It cannot be undone.',
+        message: 'This removes your pledge and membership, account credentials, track, listings, requests, inquiries, donation intents, contributions, Unbound donation fund records, volunteer offers, reports and votes, messages, suggestions, waiting-list entry, and settings from this browser. It cannot be undone.',
         confirmLabel: 'Clear local data',
         tone: 'danger',
         onConfirm: () => {

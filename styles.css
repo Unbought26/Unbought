@@ -1425,7 +1425,8 @@ em {
   line-height: 1.22;
 }
 
-.origin-card blockquote footer {
+.origin-card blockquote footer,
+.origin-card blockquote .quote-cite {
   color: var(--muted);
   font-size: 0.76rem;
   line-height: 1.5;
@@ -6256,7 +6257,7 @@ em {
   }
 }
 
-/* Member account, contributions, stock, severance (prototype) */
+/* Member account, contributions, stock, Unbound donation fund (prototype) */
 .member-account { margin-top: 1.5rem; }
 .account-card {
   background: var(--card);
@@ -7711,5 +7712,325 @@ body[data-directory-scope="goods"] .goods-attributes .form-grid {
 @media (max-width: 560px) {
   .academy-access {
     padding: 1.1rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   25. Member-set non-member prices and the Unbound donation fund
+   -------------------------------------------------------------------------- */
+.badge--fund {
+  border-color: var(--amber-light);
+  background: #FFF7E6;
+  color: var(--amber-deep);
+}
+
+.purchase-optin {
+  gap: 0.7rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--sand);
+}
+
+.purchase-optin legend {
+  padding: 0 0.35rem;
+  color: var(--blue-deep);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.purchase-optin .field {
+  padding-left: 0.1rem;
+}
+
+body[data-directory-scope="goods"] .product-price-note {
+  flex: 1;
+  line-height: 1.35;
+}
+
+body[data-directory-scope="goods"] .product-price--nonmember .product-price-value {
+  color: var(--amber-deep);
+}
+
+/* --------------------------------------------------------------------------
+   26. Vernal equinox festival
+   -------------------------------------------------------------------------- */
+.festival-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr);
+  gap: 1.4rem;
+  align-items: start;
+  margin-top: 1.8rem;
+}
+
+.festival-copy h3 {
+  margin: 0 0 0.7rem;
+  font-family: var(--serif);
+  font-size: 1.45rem;
+}
+
+.festival-copy p {
+  max-width: 70ch;
+  margin: 0 0 0.9rem;
+  color: var(--muted-dark);
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.festival-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 1.2rem;
+}
+
+.festival-card {
+  padding: 1.3rem;
+  border-top: 4px solid var(--amber);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(17, 24, 39, 0.07);
+}
+
+.festival-card dl {
+  margin: 1rem 0 0;
+}
+
+.festival-card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid #E6E9EE;
+  font-size: 0.8rem;
+}
+
+.festival-card dt {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.festival-card dd {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 700;
+  text-align: right;
+}
+
+.festival-note {
+  margin: 1rem 0 0;
+  color: var(--muted-dark);
+  font-size: 0.74rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 760px) {
+  .festival-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   27. Seed-member thank-you draft (local only, never sent)
+   -------------------------------------------------------------------------- */
+.seed-email {
+  margin: 0.5rem 0 1.2rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--blue-soft);
+  border-radius: 8px;
+  background: var(--blue-soft);
+}
+
+.seed-email summary {
+  color: var(--blue-deep);
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.seed-email-body {
+  margin-top: 0.8rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--muted-dark);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.seed-email-note {
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--amber);
+  border-radius: 4px;
+  background: var(--amber-soft);
+  color: var(--muted-dark);
+}
+
+.seed-email-body p {
+  margin: 0 0 0.7rem;
+}
+
+.seed-email-body ul {
+  margin: 0 0 0.8rem;
+  padding-left: 1.2rem;
+}
+
+.seed-email-body li {
+  margin-bottom: 0.3rem;
+}
+
+/* --------------------------------------------------------------------------
+   28. Mutual hour confirmation, review, and profile details
+   -------------------------------------------------------------------------- */
+.profile-photo,
+.resume-photo {
+  width: 72px;
+  height: 72px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--sand);
+}
+
+.resume-head .resume-photo {
+  flex: 0 0 auto;
+}
+
+.resume-tagline,
+.resume-profession,
+.resume-bio {
+  margin: 0.15rem 0;
+  color: var(--muted-dark);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.resume-tagline {
+  color: var(--blue-deep);
+  font-style: italic;
+  font-weight: 700;
+}
+
+.resume-profession {
+  font-weight: 700;
+}
+
+.exchange-item--hours {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--sand);
+}
+
+.exchange-sides {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.8rem;
+}
+
+.exchange-confirm {
+  display: grid;
+  gap: 0.45rem;
+  align-content: start;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.exchange-confirm label,
+.hour-evidence-form label {
+  color: var(--blue-deep);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.exchange-confirm input,
+.hour-evidence-form input,
+.hour-vote-form input {
+  width: 100%;
+  max-width: 100%;
+}
+
+.hour-dispute,
+.hour-review {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.9rem;
+  border: 1px solid var(--amber-light);
+  border-radius: 8px;
+  background: #fffaf0;
+}
+
+.review-seats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.review-seat {
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.review-seat strong,
+.review-seat .contribution-meta {
+  display: block;
+}
+
+.hour-vote-form,
+.hour-evidence-form {
+  gap: 0.5rem;
+}
+
+.donation-record {
+  margin: 1.1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--sand);
+}
+
+.donation-record h4 {
+  margin: 0 0 0.7rem;
+  font-size: 0.95rem;
+}
+
+.donation-record dl {
+  margin: 0;
+}
+
+.donation-record dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.78rem;
+}
+
+.donation-record dt {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.donation-record dd {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 700;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .exchange-sides {
+    grid-template-columns: 1fr;
   }
 }

@@ -35,15 +35,40 @@ security and must be replaced before any production deployment.
 ## Member data and public resume
 
 The local member record stores full legal name, chosen name, mailing and physical
-addresses, housing status, birthdate, phone, career/paid skills, unpaid skills,
-donation count, hours completed, hours used, items gifted, items taken,
-availability, and public-sharing choices. The full record is visible only in the
-Dashboard and in the signed-in member profile.
+addresses, housing status, birthdate, phone, profession, career/paid skills, unpaid
+skills, bio, locally resized picture, chosen tag line, private group/crew, donation
+count, confirmed hours worked, hours used, items gifted, items taken, reports made
+against the member, availability, and public-sharing choices. The full record is
+visible only in the Dashboard and in the signed-in member profile.
 
 The public resume is a filtered projection. It shows the chosen first name,
-City/State from the member-selected mailing or physical address, both skill lists,
+picture, tag line, bio, profession, City/State from the member-selected mailing or
+physical address, both skill lists, confirmed hours worked, items gifted, other
 commons totals, availability, and a phone number only when the member opts in. It
-never includes the legal name, street address, ZIP, housing status, or birthdate.
+never includes the legal name, street or mailing addresses, ZIP, housing status,
+birthdate, group/crew, or report count.
+
+## Confirmed hours and member-only fund metrics
+
+Members cannot enter their own work hours. In Dashboard → Exchanges, the worker and
+the receiver each confirm a completed service or product and enter the hours they
+believe were worked. Matching numbers create a local `labor` contribution with
+`mutualConfirmation: true`. If the numbers differ, evidence stays on the device and
+three randomly drawn active members vote on the hours; care circle members,
+students, observers, and either party are excluded. Only matching or review-decided
+hours count toward the member's totals.
+
+The member account panel is the only place that shows hours worked and amounts
+donated by week, month, year, and all time, the member's entitled severance share,
+and the current Unbound donation fund balance. The stored `severanceFund` key and
+`severance_purchase` contribution type are retained only for older local data. No
+payout, stock issuance, or payment occurs, and nothing is transmitted.
+
+`donate.html` catalogues the same ledger: whole-dollar amount and frequency,
+optional chosen name and note, local timestamp and intent ID, member link only when
+signed in, and a guest email only for a future local thank-you. It also explains
+that donations, academy tuition, non-member purchases, and mutually confirmed
+hours share the same accounting model while sensitive profile fields stay private.
 
 ## Chosen name in other forms
 
@@ -54,6 +79,18 @@ their own name there. Only the chosen name is reused. The pledge intake still as
 for the full legal name and a chosen name, and the chosen-name setting in the
 Dashboard stays editable. Legal name, address, birthdate, housing status, and phone
 are never auto-filled elsewhere.
+
+## Member-set non-member prices
+
+Members always get goods and labor free through mutual consent. On the goods and
+labor post forms a provider can opt in to a fixed whole-dollar price for
+non-members, who see that price on the card and in the locked purchase dialog.
+Guests cannot type their own amount: the submit handler reads the provider's
+stored price and records a `nonmember_purchase` request plus a contribution in
+the local Unbound donation fund. Listings without an opt-in are shown as member-only and
+cannot be purchased. Internally the fund still uses the legacy `severanceFund`
+key and `severance_purchase` contribution type so older local data loads, but
+all visible copy calls it the Unbound donation fund, which also holds academy tuition.
 
 ## Member labels and equinox years
 
@@ -68,6 +105,22 @@ first year runs from March 20, 2026 at 14:46 UTC to March 20, 2027 at 20:25 UTC
 then the dashboard shows the labels as pending rather than presenting them as
 live. Published equinox instants for 2026–2031 are kept in `VERNAL_EQUINOXES`;
 ZIP and profession stay private and never appear on the public resume.
+
+## Equinox festival and seed-member thank-you
+
+`future.html#festival` describes the hope of partnering with an organization
+for a large festival somewhere in the United States on the 2027 vernal equinox,
+March 20 at 4:25pm Eastern — the end of the first year and the label rollout —
+to celebrate the movement and its seed and founding members. It is explicitly a
+planning intention: no venue, partner, or ticket exists.
+
+Seed members see a locally generated thank-you draft in the dashboard
+(`renderSeedThankYou`). A live deployment would email it automatically. The
+copy explains the label, mentions the possible festival, and suggests ways to
+get involved: talk to other professionals locally, post on social media, scout
+cheap or donated housing, start an Unbought business for donation revenue,
+donate, volunteer services to develop the community, and offer skills through
+Free Labor or the Academy. Nothing is sent from this prototype.
 
 ## Community guidelines
 
@@ -86,14 +139,17 @@ agreement, and the member account panel.
 ## Academy access and tuition
 
 The Academy is free for pledged members. Non-members may enroll at the
-standard tuition set by a guild, but this prototype processes no payments.
-Neighbors aged 15 and older can learn free by promising to take part in
-Unbought part time (the community's 1–15 hours per week rhythm) for one full
-year, completed before their 25th birthday. If that year is not finished in
-time, they become liable for the same tuition offered to non-members. This is a
-community commitment reviewed under the guidelines, not a legal contract, and
-full membership still opens at 18. The rules live in the Academy section of
-`future.html` and in `faq.html`.
+standard tuition set by a guild; every cent goes to the Unbound donation fund, and this
+prototype processes no payments. Neighbors aged 15 and older who are not
+already working in the commons can learn free by promising to work for Unbought
+part time (the community's 1–15 hours per week rhythm) for one year upon
+completing the program. That year must finish before their 25th birthday, or
+they become liable for the same tuition offered to non-members. Students hold a
+limited standing — basic necessities only — while enrolled, and not completing
+the program creates a tuition obligation. This is a community commitment
+reviewed under the guidelines, not a legal contract, and full membership still
+opens at 18. The rules live in the Academy section of `future.html`, in `faq.html`,
+and in the standing levels on `guidelines.html`.
 
 ## FAQ and help button
 

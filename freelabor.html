@@ -341,6 +341,18 @@
                 <textarea id="post-description" name="description" rows="4" maxlength="400" required placeholder="What are you offering? Include what you can safely do, what materials may be needed, and how you will agree on scope."></textarea>
                 <p class="field-hint" id="post-description-hint">Up to 400 characters. Be clear about scope and consent.</p>
               </div>
+              <fieldset class="field field--wide purchase-optin">
+                <legend>Non-member purchase (optional)</legend>
+                <label class="checkbox">
+                  <input type="checkbox" id="post-nonmember-enabled" name="nonmemberPurchaseEnabled">
+                  <span>Allow non-members to record a purchase intent for this service.</span>
+                </label>
+                <div class="field" id="post-nonmember-price-field" hidden>
+                  <label for="post-nonmember-price">Price for non-members (USD) <span class="required-mark" aria-hidden="true">*</span></label>
+                  <input type="number" id="post-nonmember-price" name="nonmemberPurchasePrice" min="1" step="1" inputmode="decimal" placeholder="25">
+                  <p class="field-hint">Members always get this labor free. Every cent goes to the Unbound donation fund; no payment is processed here.</p>
+                </div>
+              </fieldset>
               <div class="field field--wide post-photo-field">
                 <label for="post-photos">Photos <span class="optional">(optional, up to 3)</span></label>
                 <input type="file" id="post-photos" name="photos" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
@@ -353,7 +365,7 @@
             <div class="field field--check">
               <label class="checkbox">
                 <input type="checkbox" name="postAgreement" required>
-                <span>I confirm this offer charges nothing for labor. If materials cannot be found free, the person requesting the work covers their exact receipt price, with zero markup, and the worker never has to front the cost.</span>
+                <span>I confirm this offer charges nothing for labor to pledged members. If materials cannot be found free, the person requesting the work covers their exact receipt price, with zero markup, and the worker never has to front the cost. Any non-member price I set goes entirely to the Unbound donation fund.</span>
               </label>
               <label class="checkbox">
                 <input type="checkbox" name="postScopeAgreement" required>
@@ -680,7 +692,7 @@
           </div>
 
           <div id="consent-purchase-fields" hidden>
-            <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-scale"></use></svg> Non-members may record a purchase intent for services in this prototype. The amount is tracked locally for the severance fund. No real payment is collected and nothing is transmitted.</p>
+            <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-scale"></use></svg> Non-members may record a purchase intent for services at the price set by the provider. Every cent is tracked locally for the Unbound donation fund. No real payment is collected and nothing is transmitted.</p>
             <div class="form-grid">
               <div class="field">
                 <label for="purchase-name">Your name <span class="required-mark" aria-hidden="true">*</span></label>
@@ -691,14 +703,15 @@
                 <input type="email" id="purchase-email" name="purchaseEmail" maxlength="120" placeholder="you@example.com">
               </div>
               <div class="field">
-                <label for="purchase-amount">Offered amount (USD) <span class="required-mark" aria-hidden="true">*</span></label>
-                <input type="number" id="purchase-amount" name="purchaseAmount" min="1" step="1" inputmode="decimal" placeholder="25">
+                <label for="purchase-amount">Price for non-members (USD) <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="number" id="purchase-amount" name="purchaseAmount" min="1" step="1" inputmode="decimal" placeholder="25" readonly>
+                <p class="field-hint" id="purchase-price-hint">Set by the provider. Every cent goes to the Unbound donation fund; no payment is processed here. Members get this free.</p>
               </div>
             </div>
             <div class="field field--check">
               <label class="checkbox">
                 <input type="checkbox" name="purchaseAgreement" value="yes">
-                <span>I understand this records a non-binding purchase intent in the prototype (no payment processed now) and that the amount is tracked locally for the severance fund. I am not a pledged member for this transaction.</span>
+                <span>I understand this records a non-binding purchase intent in the prototype (no payment processed now) and that the full amount is tracked locally for the Unbound donation fund. I am not a pledged member for this transaction.</span>
               </label>
             </div>
           </div>
