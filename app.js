@@ -4051,6 +4051,118 @@
     });
   }
 
+  function accountDetail(label, value) {
+    return `<div><dt>${label}</dt><dd>${value}</dd></div>`;
+  }
+
+  function renderAccountSummary(m) {
+    const e = escapeHtml;
+    const track = state.track && hasOwn(TRACKS, state.track) ? TRACKS[state.track] : 'Not chosen';
+    const summary = [
+      ['Chosen name', e(m.name)],
+      ['Member ID', `<span class="account-id">${e(m.memberId)}</span>`],
+      ['Profession', e(m.profession || 'Not shared')],
+      ['Membership year', e(String(membershipYearAt(m.signedAt) ?? 'Unknown'))],
+      ['Track', e(track)],
+      ['Status', e(m.status || 'active')]
+    ];
+    return `<div class="account-summary" aria-label="Membership at a glance">
+      ${summary.map(([label, value]) => `<div class="account-summary-item"><span>${label}</span><strong>${value}</strong></div>`).join('')}
+    </div>`;
+  }
+
+  function renderAccountDetailGroups(m, credential, confirmedHours, reportsAgainst) {
+    const e = escapeHtml;
+    const picture = m.picture
+      ? `<img class="profile-photo" src="${e(m.picture)}" alt="Your profile picture">`
+      : 'Not added';
+    const address = m.publicAddressSource === 'physical' ? m.physicalAddress : m.mailingAddress;
+    const publicPlace = parseCityState(address);
+    const publicCity = publicPlace?.split(',')[0]?.trim() || 'Not shared';
+    const publicState = publicPlace?.split(',')[1]?.trim() || 'Not shared';
+
+    const groups = [
+      {
+        title: 'Contact & address',
+        hint: 'Private to you',
+        open: true,
+        note: 'These details support accountability and emergency contact. They never appear on your public resume.',
+        rows: [
+          accountDetail('Full legal name', e(m.fullName || 'Not shared')),
+          accountDetail('General location', e(m.location || 'Not shared')),
+          accountDetail('Mailing address', e(m.mailingAddress || 'Not shared')),
+          accountDetail('Physical address', e(m.physicalAddress || 'Not shared')),
+          accountDetail('City', e(publicCity)),
+          accountDetail('State', e(publicState)),
+          accountDetail('ZIP code', e(m.zip || 'Not shared')),
+          accountDetail('Housing status', e(hasOwn(HOUSING_STATUSES, m.housingStatus) ? HOUSING_STATUSES[m.housingStatus] : 'Not shared')),
+          accountDetail('Phone number', e(m.phone || 'Not shared')),
+          accountDetail('Date of birth', e(m.dob || 'Not shared'))
+        ]
+      },
+      {
+        title: 'Profile & skills',
+        hint: 'Public where noted',
+        open: true,
+        note: 'Picture, tag line, bio, profession, and skills can appear on your public resume. Group and private note stay here.',
+        rows: [
+          accountDetail('Picture', picture),
+          accountDetail('Tag line', e(m.tagline || 'Not set')),
+          accountDetail('Primary profession or trade', e(m.profession || 'Not shared')),
+          accountDetail('Career / paid skills', e(m.paidSkills || 'Not listed')),
+          accountDetail('Unpaid skills', e(m.unpaidSkills || 'Not listed')),
+          accountDetail('Bio', e(m.bio || 'Not added')),
+          accountDetail('Group / crew', e(m.group || 'Not set')),
+          accountDetail('Private note', e(m.note || 'Not shared'))
+        ]
+      },
+      {
+        title: 'Privacy choices',
+        hint: 'What neighbors can see',
+        open: false,
+        rows: [
+          accountDetail('Public City, State from', m.publicAddressSource === 'physical' ? 'Physical address' : 'Mailing address'),
+          accountDetail('Public phone', m.publicPhone ? 'Shown on resume' : 'Hidden from resume'),
+          accountDetail('Availability', m.available === false ? 'Not available right now' : 'Available')
+        ]
+      },
+      {
+        title: 'Commons activity',
+        hint: 'Confirmed locally',
+        open: false,
+        rows: [
+          accountDetail('Donation count', String(cleanCount(m.donationCount))),
+          accountDetail('Hours worked (confirmed)', e(String(confirmedHours))),
+          accountDetail('Hours used on Unbought', e(String(cleanHours(m.hoursUsed)))),
+          accountDetail('Items gifted', String(cleanCount(m.itemsGifted))),
+          accountDetail('Items taken', String(cleanCount(m.itemsTaken))),
+          accountDetail('Volunteer offers', String(getMemberVolunteerInterests().length)),
+          accountDetail('Reports made against you', String(reportsAgainst)),
+          accountDetail('Pledged on', e(formatDate(m.signedAt) || 'Not recorded'))
+        ]
+      },
+      {
+        title: 'Local account access',
+        hint: 'Prototype only',
+        open: false,
+        note: 'This is a local demo credential, not a real login. Nothing is transmitted.',
+        rows: [
+          accountDetail('Username', e(credential && credential.username ? credential.username : 'Not set')),
+          accountDetail('Password hash (local prototype)', e(credential && credential.passwordHash ? credential.passwordHash : 'Not set')),
+          accountDetail('Password salt (local prototype)', e(credential && credential.salt ? credential.salt : 'Not set'))
+        ]
+      }
+    ];
+
+    return groups.map((group) => `<details class="account-section"${group.open ? ' open' : ''}>
+      <summary><span>${group.title}</span><span class="account-section-hint">${group.hint}</span></summary>
+      <div class="account-section-body">
+        ${group.note ? `<p class="account-section-note">${group.note}</p>` : ''}
+        <dl class="account-details">${group.rows.join('')}</dl>
+      </div>
+    </details>`).join('');
+  }
+
   function renderAccountInfo() {
     const panel = document.getElementById('account-info-panel');
     if (!panel || !isMember()) return;
@@ -4062,123 +4174,103 @@
     const notice = state.settings && state.settings.showPrototypeNotices
       ? `<p class="prototype-note">Prototype: account details, your username, and a salted password hash are stored only on this device. There is no real authentication or server, and nothing is transmitted.</p>`
       : '';
-    panel.innerHTML = `<section class="account-card">
-      <p class="eyebrow">Account</p>
-      <h3>Your membership</h3>
+    panel.innerHTML = `<section class="account-card account-panel">
+      <header class="account-panel-head">
+        <div>
+          <p class="eyebrow">Account</p>
+          <h3>Your membership</h3>
+          <p class="account-subtitle">Your private record in the commons, grouped so you can find what matters and open the rest when you need it.</p>
+        </div>
+        <a class="button button--outline button--small" href="profile.html">View public resume</a>
+      </header>
+      ${notice}
       ${renderMemberLabelsHtml(m)}
       ${renderSeedThankYou(m)}
-      <dl class="account-details">
-        <div><dt>Picture</dt><dd>${m.picture ? `<img class="profile-photo" src="${m.picture}" alt="Your profile picture">` : 'Not added'}</dd></div>
-        <div><dt>Full legal name</dt><dd>${e(m.fullName || 'Not shared')}</dd></div>
-        <div><dt>Chosen name</dt><dd>${e(m.name)}</dd></div>
-        <div><dt>Tag line</dt><dd>${e(m.tagline || 'Not set')}</dd></div>
-        <div><dt>Username</dt><dd>${e(credential && credential.username ? credential.username : 'Not set')}</dd></div>
-        <div><dt>Password hash (local prototype)</dt><dd>${e(credential && credential.passwordHash ? credential.passwordHash : 'Not set')}</dd></div>
-        <div><dt>Password salt (local prototype)</dt><dd>${e(credential && credential.salt ? credential.salt : 'Not set')}</dd></div>
-        <div><dt>General location</dt><dd>${e(m.location || 'Not shared')}</dd></div>
-        <div><dt>Mailing address</dt><dd>${e(m.mailingAddress || 'Not shared')}</dd></div>
-        <div><dt>Physical address</dt><dd>${e(m.physicalAddress || 'Not shared')}</dd></div>
-        <div><dt>City</dt><dd>${e(parseCityState(m.publicAddressSource === 'physical' ? m.physicalAddress : m.mailingAddress)?.split(',')[0] || 'Not shared')}</dd></div>
-        <div><dt>State</dt><dd>${e((parseCityState(m.publicAddressSource === 'physical' ? m.physicalAddress : m.mailingAddress)?.split(',')[1] || '').trim() || 'Not shared')}</dd></div>
-        <div><dt>ZIP code</dt><dd>${e(m.zip || 'Not shared')}</dd></div>
-        <div><dt>Housing status</dt><dd>${e(hasOwn(HOUSING_STATUSES, m.housingStatus) ? HOUSING_STATUSES[m.housingStatus] : 'Not shared')}</dd></div>
-        <div><dt>Phone number</dt><dd>${e(m.phone || 'Not shared')}</dd></div>
-        <div><dt>Date of birth</dt><dd>${e(m.dob || 'Not shared')}</dd></div>
-        <div><dt>Primary profession or trade</dt><dd>${e(m.profession || 'Not shared')}</dd></div>
-        <div><dt>Membership year (equinox)</dt><dd>${e(String(membershipYearAt(m.signedAt) ?? 'Unknown'))}</dd></div>
-        <div><dt>Career / paid skills</dt><dd>${e(m.paidSkills || 'Not listed')}</dd></div>
-        <div><dt>Unpaid skills</dt><dd>${e(m.unpaidSkills || 'Not listed')}</dd></div>
-        <div><dt>Bio</dt><dd>${e(m.bio || 'Not added')}</dd></div>
-        <div><dt>Group / crew</dt><dd>${e(m.group || 'Not set')}</dd></div>
-        <div><dt>Donation count</dt><dd>${cleanCount(m.donationCount)}</dd></div>
-        <div><dt>Hours worked (confirmed)</dt><dd>${confirmedHours}</dd></div>
-        <div><dt>Hours used on Unbought</dt><dd>${cleanHours(m.hoursUsed)}</dd></div>
-        <div><dt>Items gifted</dt><dd>${cleanCount(m.itemsGifted)}</dd></div>
-        <div><dt>Items taken</dt><dd>${cleanCount(m.itemsTaken)}</dd></div>
-        <div><dt>Reports made against you</dt><dd>${reportsAgainst}</dd></div>
-        <div><dt>Availability</dt><dd>${m.available === false ? 'Not available right now' : 'Available'}</dd></div>
-        <div><dt>Public City, State from</dt><dd>${m.publicAddressSource === 'physical' ? 'Physical address' : 'Mailing address'}</dd></div>
-        <div><dt>Public phone</dt><dd>${m.publicPhone ? 'Shown on resume' : 'Hidden from resume'}</dd></div>
-        <div><dt>Member ID</dt><dd>${e(m.memberId)}</dd></div>
-        <div><dt>Pledged on</dt><dd>${e(formatDate(m.signedAt))}</dd></div>
-        <div><dt>Status</dt><dd>${e(m.status || 'active')}</dd></div>
-        <div><dt>Track</dt><dd>${e(state.track && hasOwn(TRACKS, state.track) ? TRACKS[state.track] : 'Not chosen')}</dd></div>
-        <div><dt>Volunteer offers</dt><dd>${getMemberVolunteerInterests().length}</dd></div>
-      </dl>
-      <form class="account-form" data-account-form>
-        <div class="form-row">
-          <div class="field">
-            <label for="account-name">Chosen name</label>
-            <input type="text" id="account-name" name="name" maxlength="60" value="${e(m.name)}" required>
+      ${renderAccountSummary(m)}
+      ${renderAccountDetailGroups(m, credential, confirmedHours, reportsAgainst)}
+      <details class="account-edit">
+        <summary><span>Edit account details</span><span class="account-section-hint">Name, profile, privacy, and counts</span></summary>
+        <form class="account-form" data-account-form>
+          <fieldset>
+            <legend>Basics</legend>
+            <div class="form-row">
+              <div class="field">
+                <label for="account-name">Chosen name</label>
+                <input type="text" id="account-name" name="name" maxlength="60" value="${e(m.name)}" required>
+              </div>
+              <div class="field">
+                <label for="account-location">General location</label>
+                <input type="text" id="account-location" name="location" maxlength="80" value="${e(m.location || '')}">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label for="account-housing">Housing status</label>
+                <select id="account-housing" name="housingStatus">
+                  ${Object.entries(HOUSING_STATUSES).map(([value, label]) => `<option value="${value}"${m.housingStatus === value ? ' selected' : ''}>${e(label)}</option>`).join('')}
+                </select>
+              </div>
+              <div class="field">
+                <label for="account-public-address">Public City, State from</label>
+                <select id="account-public-address" name="publicAddressSource">
+                  <option value="mailing"${m.publicAddressSource !== 'physical' ? ' selected' : ''}>Mailing address</option>
+                  <option value="physical"${m.publicAddressSource === 'physical' ? ' selected' : ''}>Physical address</option>
+                </select>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Profile &amp; skills</legend>
+            <div class="form-row">
+              <div class="field">
+                <label for="account-paid-skills">Career / paid skills</label>
+                <textarea id="account-paid-skills" name="paidSkills" rows="3" maxlength="400">${e(m.paidSkills || '')}</textarea>
+              </div>
+              <div class="field">
+                <label for="account-unpaid-skills">Unpaid skills</label>
+                <textarea id="account-unpaid-skills" name="unpaidSkills" rows="3" maxlength="400">${e(m.unpaidSkills || '')}</textarea>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label for="account-tagline">Tag line</label>
+                <input type="text" id="account-tagline" name="tagline" maxlength="90" value="${e(m.tagline || '')}" placeholder="A few words neighbors will see">
+              </div>
+              <div class="field">
+                <label for="account-group">Group / crew</label>
+                <input type="text" id="account-group" name="group" maxlength="80" value="${e(m.group || '')}" placeholder="Private to you">
+              </div>
+            </div>
+            <div class="field">
+              <label for="account-bio">Bio</label>
+              <textarea id="account-bio" name="bio" rows="3" maxlength="600" placeholder="What you enjoy sharing with neighbors">${e(m.bio || '')}</textarea>
+            </div>
+            <div class="field">
+              <label for="account-picture">Profile picture <span class="optional">(local only)</span></label>
+              <input type="file" id="account-picture" name="picture" accept="image/jpeg,image/png,image/webp,image/gif">
+              <p class="field-hint">Resized in this browser and never uploaded.</p>
+              <label class="checkbox"><input type="checkbox" name="removePicture"> <span>Remove current picture</span></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Activity counts</legend>
+            <div class="form-row">
+              <div class="field"><label for="account-donations">Donation count</label><input type="number" id="account-donations" name="donationCount" min="0" step="1" value="${cleanCount(m.donationCount)}"></div>
+              <div class="field"><label for="account-hours-used">Hours used</label><input type="number" id="account-hours-used" name="hoursUsed" min="0" step="0.25" value="${cleanHours(m.hoursUsed)}"></div>
+              <div class="field"><label for="account-items-gifted">Items gifted</label><input type="number" id="account-items-gifted" name="itemsGifted" min="0" step="1" value="${cleanCount(m.itemsGifted)}"></div>
+              <div class="field"><label for="account-items-taken">Items taken</label><input type="number" id="account-items-taken" name="itemsTaken" min="0" step="1" value="${cleanCount(m.itemsTaken)}"></div>
+            </div>
+          </fieldset>
+          <fieldset class="account-privacy-options">
+            <legend>Privacy</legend>
+            <label class="checkbox"><input type="checkbox" name="available"${m.available !== false ? ' checked' : ''}> <span>Available for exchanges</span></label>
+            <label class="checkbox"><input type="checkbox" name="publicPhone"${m.publicPhone ? ' checked' : ''}> <span>Show my phone number on my public resume</span></label>
+          </fieldset>
+          <div class="account-form-actions">
+            <button type="submit" class="button button--primary button--small">Save account details</button>
           </div>
-          <div class="field">
-            <label for="account-location">General location</label>
-            <input type="text" id="account-location" name="location" maxlength="80" value="${e(m.location || '')}">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="field">
-            <label for="account-housing">Housing status</label>
-            <select id="account-housing" name="housingStatus">
-              ${Object.entries(HOUSING_STATUSES).map(([value, label]) => `<option value="${value}"${m.housingStatus === value ? ' selected' : ''}>${e(label)}</option>`).join('')}
-            </select>
-          </div>
-          <div class="field">
-            <label for="account-public-address">Public City, State from</label>
-            <select id="account-public-address" name="publicAddressSource">
-              <option value="mailing"${m.publicAddressSource !== 'physical' ? ' selected' : ''}>Mailing address</option>
-              <option value="physical"${m.publicAddressSource === 'physical' ? ' selected' : ''}>Physical address</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="field">
-            <label for="account-paid-skills">Career / paid skills</label>
-            <textarea id="account-paid-skills" name="paidSkills" rows="3" maxlength="400">${e(m.paidSkills || '')}</textarea>
-          </div>
-          <div class="field">
-            <label for="account-unpaid-skills">Unpaid skills</label>
-            <textarea id="account-unpaid-skills" name="unpaidSkills" rows="3" maxlength="400">${e(m.unpaidSkills || '')}</textarea>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="field">
-            <label for="account-tagline">Tag line</label>
-            <input type="text" id="account-tagline" name="tagline" maxlength="90" value="${e(m.tagline || '')}" placeholder="A few words neighbors will see">
-          </div>
-          <div class="field">
-            <label for="account-group">Group / crew</label>
-            <input type="text" id="account-group" name="group" maxlength="80" value="${e(m.group || '')}" placeholder="Private to you">
-          </div>
-        </div>
-        <div class="field">
-          <label for="account-bio">Bio</label>
-          <textarea id="account-bio" name="bio" rows="3" maxlength="600" placeholder="What you enjoy sharing with neighbors">${e(m.bio || '')}</textarea>
-        </div>
-        <div class="form-row">
-          <div class="field">
-            <label for="account-picture">Profile picture <span class="optional">(local only)</span></label>
-            <input type="file" id="account-picture" name="picture" accept="image/jpeg,image/png,image/webp,image/gif">
-            <p class="field-hint">Resized in this browser and never uploaded.</p>
-            <label class="checkbox"><input type="checkbox" name="removePicture"> <span>Remove current picture</span></label>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="field"><label for="account-donations">Donation count</label><input type="number" id="account-donations" name="donationCount" min="0" step="1" value="${cleanCount(m.donationCount)}"></div>
-          <div class="field"><label for="account-hours-used">Hours used</label><input type="number" id="account-hours-used" name="hoursUsed" min="0" step="0.25" value="${cleanHours(m.hoursUsed)}"></div>
-          <div class="field"><label for="account-items-gifted">Items gifted</label><input type="number" id="account-items-gifted" name="itemsGifted" min="0" step="1" value="${cleanCount(m.itemsGifted)}"></div>
-          <div class="field"><label for="account-items-taken">Items taken</label><input type="number" id="account-items-taken" name="itemsTaken" min="0" step="1" value="${cleanCount(m.itemsTaken)}"></div>
-        </div>
-        <div class="account-privacy-options">
-          <label class="checkbox"><input type="checkbox" name="available"${m.available !== false ? ' checked' : ''}> <span>Available for exchanges</span></label>
-          <label class="checkbox"><input type="checkbox" name="publicPhone"${m.publicPhone ? ' checked' : ''}> <span>Show my phone number on my public resume</span></label>
-        </div>
-        <div class="account-form-actions">
-          <button type="submit" class="button button--primary button--small">Save account details</button>
-          <a class="button button--outline button--small" href="profile.html">View public resume</a>
-        </div>
-      </form>
-      ${notice}
+        </form>
+      </details>
       <p class="account-note">Only you can see this full record on this device. Your public resume hides your legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and phone unless you opt in to show the phone. Hours worked are never typed here; they appear only after mutual confirmation or review. To withdraw your membership, use the button in the pledge section.</p>
     </section>`;
   }
@@ -4307,49 +4399,17 @@
     }
 
     privatePanel.innerHTML = `<section class="account-card private-profile" aria-labelledby="private-profile-title">
-      <p class="eyebrow">Private to you</p>
-      <h2 id="private-profile-title">Your full member record</h2>
-      <p class="account-note">This section appears only in your signed-in browser. It is not part of the public resume. City, State, ZIP, birthdate, group, report count, and every sensitive record stay here.</p>
-      <dl class="account-details">
-        <div><dt>Picture</dt><dd>${m.picture ? `<img class="profile-photo" src="${m.picture}" alt="Your profile picture">` : 'Not added'}</dd></div>
-        <div><dt>Full legal name</dt><dd>${e(m.fullName || 'Not shared')}</dd></div>
-        <div><dt>Chosen name</dt><dd>${e(m.name)}</dd></div>
-        <div><dt>Tag line</dt><dd>${e(m.tagline || 'Not set')}</dd></div>
-        <div><dt>Username</dt><dd>${e(credential && credential.username ? credential.username : 'Not set')}</dd></div>
-        <div><dt>Password hash (local prototype)</dt><dd>${e(credential && credential.passwordHash ? credential.passwordHash : 'Not set')}</dd></div>
-        <div><dt>Password salt (local prototype)</dt><dd>${e(credential && credential.salt ? credential.salt : 'Not set')}</dd></div>
-        <div><dt>General location</dt><dd>${e(m.location || 'Not shared')}</dd></div>
-        <div><dt>Mailing address</dt><dd>${e(m.mailingAddress || 'Not shared')}</dd></div>
-        <div><dt>Physical address</dt><dd>${e(m.physicalAddress || 'Not shared')}</dd></div>
-        <div><dt>City</dt><dd>${e(parseCityState(m.publicAddressSource === 'physical' ? m.physicalAddress : m.mailingAddress)?.split(',')[0] || 'Not shared')}</dd></div>
-        <div><dt>State</dt><dd>${e((parseCityState(m.publicAddressSource === 'physical' ? m.physicalAddress : m.mailingAddress)?.split(',')[1] || '').trim() || 'Not shared')}</dd></div>
-        <div><dt>ZIP code</dt><dd>${e(m.zip || 'Not shared')}</dd></div>
-        <div><dt>Housing status</dt><dd>${e(hasOwn(HOUSING_STATUSES, m.housingStatus) ? HOUSING_STATUSES[m.housingStatus] : 'Not shared')}</dd></div>
-        <div><dt>Phone number</dt><dd>${e(m.phone || 'Not shared')}</dd></div>
-        <div><dt>Date of birth</dt><dd>${e(m.dob || 'Not shared')}</dd></div>
-        <div><dt>Primary profession or trade</dt><dd>${e(m.profession || 'Not shared')}</dd></div>
-        <div><dt>Membership year (equinox)</dt><dd>${e(String(membershipYearAt(m.signedAt) ?? 'Unknown'))}</dd></div>
-        <div><dt>Career / paid skills</dt><dd>${e(m.paidSkills || 'Not listed')}</dd></div>
-        <div><dt>Unpaid skills</dt><dd>${e(m.unpaidSkills || 'Not listed')}</dd></div>
-        <div><dt>Bio</dt><dd>${e(m.bio || 'Not added')}</dd></div>
-        <div><dt>Group / crew</dt><dd>${e(m.group || 'Not set')}</dd></div>
-        <div><dt>Donation count</dt><dd>${cleanCount(m.donationCount)}</dd></div>
-        <div><dt>Hours worked (confirmed)</dt><dd>${confirmedHours}</dd></div>
-        <div><dt>Hours used on Unbought</dt><dd>${cleanHours(m.hoursUsed)}</dd></div>
-        <div><dt>Items gifted</dt><dd>${cleanCount(m.itemsGifted)}</dd></div>
-        <div><dt>Items taken</dt><dd>${cleanCount(m.itemsTaken)}</dd></div>
-        <div><dt>Reports made against you</dt><dd>${reportsAgainst}</dd></div>
-        <div><dt>Availability</dt><dd>${m.available === false ? 'Not available right now' : 'Available'}</dd></div>
-        <div><dt>Public City, State from</dt><dd>${m.publicAddressSource === 'physical' ? 'Physical address' : 'Mailing address'}</dd></div>
-        <div><dt>Public phone</dt><dd>${m.publicPhone ? 'Shown on resume' : 'Hidden from resume'}</dd></div>
-        <div><dt>Member ID</dt><dd>${e(m.memberId)}</dd></div>
-        <div><dt>Pledged on</dt><dd>${e(formatDate(m.signedAt))}</dd></div>
-        <div><dt>Status</dt><dd>${e(m.status || 'active')}</dd></div>
-        <div><dt>Track</dt><dd>${e(state.track && hasOwn(TRACKS, state.track) ? TRACKS[state.track] : 'Not chosen')}</dd></div>
-        <div><dt>Volunteer offers</dt><dd>${getMemberVolunteerInterests().length}</dd></div>
-        <div><dt>Private note</dt><dd>${e(m.note || 'Not shared')}</dd></div>
-      </dl>
-      <a class="button button--outline button--small" href="dashboard.html">Edit in Dashboard</a>
+      <header class="account-panel-head">
+        <div>
+          <p class="eyebrow">Private to you</p>
+          <h2 id="private-profile-title">Your full member record</h2>
+          <p class="account-subtitle">This section appears only in your signed-in browser. It is not part of the public resume.</p>
+        </div>
+        <a class="button button--outline button--small" href="dashboard.html">Edit in Dashboard</a>
+      </header>
+      ${renderAccountSummary(m)}
+      ${renderAccountDetailGroups(m, credential, confirmedHours, reportsAgainst)}
+      <p class="account-note">City, State, ZIP, birthdate, group, report count, and every sensitive record stay here.</p>
     </section>`;
   }
 
