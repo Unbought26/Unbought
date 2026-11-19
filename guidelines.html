@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Unbought community guidelines: the Ten Consent Commandments, care circle, access limits, community review, majority votes, exile, and reapplication.">
+  <meta name="theme-color" content="#1E3A8A">
+  <title>Community Guidelines — Unbought</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body class="guidelines-page">
+
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <div id="live-region" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div id="toast" class="toast" aria-hidden="true" hidden></div>
+
+  <svg class="svg-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="icon-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="icon-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9a7 7 0 0 1 11.6-2L20 12M4 12l2.3 5a7 7 0 0 0 11.6-2"/></symbol>
+  </svg>
+
+  <header class="site-header" id="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html#top" aria-label="Unbought — public home">
+        <img src="assets/logo.png" alt="Unbought Emblem" width="48" height="48">
+        <span class="brand-text">
+          <span class="brand-name">Unbought</span>
+          <span class="brand-tagline">Free Labor. Free Goods. Free Education. Free Land.</span>
+        </span>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+        <span class="sr-only">Open navigation menu</span>
+        <svg class="icon nav-toggle-icon-open" aria-hidden="true" focusable="false"><use href="#icon-menu"></use></svg>
+        <svg class="icon nav-toggle-icon-close" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+      </button>
+
+      <nav class="primary-nav" id="primary-nav" aria-label="Primary">
+        <ul class="nav-list">
+          <li><a href="index.html">How It Works</a></li>
+          <li><a href="freelabor.html">Free Labor</a></li>
+          <li><a href="freestuff.html">Free Stuff</a></li>
+          <li><a href="donate.html">Donate</a></li>
+          <li><a href="future.html">What’s to Come</a></li>
+        </ul>
+      </nav>
+
+      <a class="nav-cta" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span></a>
+    </div>
+  </header>
+
+    <main id="main">
+    <section class="section guidelines-section" id="top" aria-labelledby="guidelines-page-title">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="badge badge--soft">Community standards</span> Guidelines &amp; consequences</p>
+          <h1 id="guidelines-page-title">The consent commandments.</h1>
+          <p>Unbought is not held together by money or management. It is held together by consent, honesty, and neighbors willing to answer for what they do. These guidelines apply to every member, in every space of the commons.</p>
+        </div>
+
+        <div class="guidelines-callout" role="note">
+          <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg>
+          <div>
+            <strong>Prototype boundary.</strong> This is a local-first model of community accountability. In this build nothing is reported to a server, no authority is contacted, and no enforcement action is carried out. Cases, reviews, and votes are recorded only in this browser.
+          </div>
+        </div>
+
+        <section class="commandments" aria-labelledby="commandments-title">
+          <h2 id="commandments-title">The Ten Consent Commandments</h2>
+          <ol class="commandment-list">
+            <li>
+              <h3>Nothing without consent.</h3>
+              <p>An offer is an invitation, never a claim on anyone. A request needs a clear yes. Silence, hesitation, or a yes given under pressure is not consent. Anyone may change their mind or withdraw at any time, and the answer is accepted without argument.</p>
+            </li>
+            <li>
+              <h3>No money changes hands between neighbors.</h3>
+              <p>Labor and goods are free. Only exact, receipt-backed material costs may change hands when supplies cannot be found free, and a vehicle recipient pays state registration and titling fees to the state, not to Unbought. No wages, tips, barter scores, payouts, or cryptocurrency.</p>
+            </li>
+            <li>
+              <h3>Tell the truth about what you offer.</h3>
+              <p>Describe the real condition of goods, the real scope of a skill, and any materials needed. Regulated work must be labeled honestly as general peer education or as licensed clinical or legal service with an active license. Never imply a qualification you do not hold.</p>
+            </li>
+            <li>
+              <h3>Private information stays private.</h3>
+              <p>A member's legal name, street address, ZIP, housing status, birthdate, and phone are never published. The public resume shows only a chosen first name, member-selected City/State, skills, counts, availability, and a phone number if that member opts in. Do not repeat or infer another person's private details.</p>
+            </li>
+            <li>
+              <h3>Keep every exchange safe.</h3>
+              <p>No weapons, medication, recalled goods, unsafe items, or gift cards for major corporations. Agree on scope, timing, and access needs before showing up. Respect scent-free rooms, chairs, captions, and boundaries. Safety reports are local, tied to the post or message, and never sent to police or any outside service in this prototype.</p>
+            </li>
+            <li>
+              <h3>No extraction, no leverage.</h3>
+              <p>Do not use someone's need against them. No guilt, pressure, unpaid obligation, grooming, favor banking, or tracking another member's every move. Mutual aid is not a transaction and care is not a debt.</p>
+            </li>
+            <li>
+              <h3>Every person has worth without work.</h3>
+              <p>Participation is not a productivity score. A neighbor who cannot work this month is still a neighbor. Tell the truth when capacity changes so the community can respond with care instead of punishment.</p>
+            </li>
+            <li>
+              <h3>Be honest in the prototype.</h3>
+              <p>There are no real accounts, payments, messages to other people, or uploads. Say plainly when an action is only recorded locally. Do not present a local note, intent, or vote as if it reached someone else or has legal force.</p>
+            </li>
+            <li>
+              <h3>Accept review and answer for harm.</h3>
+              <p>If you are reported or a guideline is broken, community members review the facts. Attach relevant local evidence when you have it, respond in your own words, and do not retaliate against a reporter, reviewer, or voter. Retaliation is its own violation.</p>
+            </li>
+            <li>
+              <h3>Protect the commons for the next person.</h3>
+              <p>Invite people in, share skills, and leave the space safer than you found it. When the community decides a limit or a revocation is needed, accept the outcome and use the reflection period to come back right, if and when the community allows it.</p>
+            </li>
+          </ol>
+        </section>
+
+        <section class="consequences" aria-labelledby="consequences-title">
+          <h2 id="consequences-title">Consequences and care, step by step</h2>
+          <p class="section-intro">Nothing here is automatic. Each step begins with a community review of the facts, and the goal is always to understand what happened before deciding what access makes sense.</p>
+
+          <div class="consequence-steps">
+            <article class="consequence-step">
+              <span class="step-number" aria-hidden="true">1</span>
+              <div>
+                <h3>Monthly pledge review</h3>
+                <p>If you do not fulfill your pledge for the month, your account becomes inactive and you can only observe until the community reviews the situation.</p>
+              </div>
+            </article>
+            <article class="consequence-step">
+              <span class="step-number" aria-hidden="true">2</span>
+              <div>
+                <h3>Why weren't you working?</h3>
+                <p>Before any limit is set, community members review why. A recent tragedy, moving, loss of ability to work, illness, caregiving, or another reason may mean you belong in the care circle instead of being treated as noncompliant.</p>
+              </div>
+            </article>
+            <article class="consequence-step">
+              <span class="step-number" aria-hidden="true">3</span>
+              <div>
+                <h3>The care circle</h3>
+                <p>In the care circle you can access basic necessities only. If you can prove with evidence that you cannot work, the community may adjust that limit. The evidence stays local in this prototype; nothing is transmitted.</p>
+              </div>
+            </article>
+            <article class="consequence-step">
+              <span class="step-number" aria-hidden="true">4</span>
+              <div>
+                <h3>Guideline or law violation</h3>
+                <p>If you violate a community guideline or a law, your account is limited to basic necessities while community members review the case. This is a safety boundary, not a declaration of guilt by the prototype.</p>
+              </div>
+            </article>
+            <article class="consequence-step">
+              <span class="step-number" aria-hidden="true">5</span>
+              <div>
+                <h3>Repeated offenses and exile</h3>
+                <p>Repeated offenses can result in “exile” — revocation of membership. Community members review every case, and a revocation requires a major vote of the majority, not a decision by one person.</p>
+              </div>
+            </article>
+            <article class="consequence-step">
+              <span class="step-number" aria-hidden="true">6</span>
+              <div>
+                <h3>Reflection and reapplication</h3>
+                <p>If your access is revoked, you enter a reflection period whose length is decided by the community. Only after that period can you apply again. Your application goes immediately to review and a vote; the majority that decides is made up of members within your area.</p>
+              </div>
+            </article>
+          </div>
+
+          <div class="therapy-note" role="note">
+            <h3>Repair, therapy, and proof of treatment</h3>
+            <p>Therapy is encouraged for anyone who has violated a guideline. In some cases the community may require a therapeutic evaluation and proof that recommended treatment was completed or sustained before full access returns. This is about repair and safety, not shame. No diagnosis or therapy record is published on a public resume; in this prototype those notes stay in the member's local record only.</p>
+          </div>
+        </section>
+
+        <section class="standing-levels" aria-labelledby="standing-title">
+          <h2 id="standing-title">What each standing means</h2>
+          <div class="standing-grid">
+            <div class="standing-card">
+              <h3>Active</h3>
+              <p>Full participation: post goods and labor, request exchanges, chat, and help review cases.</p>
+            </div>
+            <div class="standing-card">
+              <h3>Inactive · observe only</h3>
+              <p>No posting or requesting until the monthly pledge review is complete.</p>
+            </div>
+            <div class="standing-card">
+              <h3>Care circle</h3>
+              <p>Basic necessities only, with a path to adjusted access when evidence shows work is not possible.</p>
+            </div>
+            <div class="standing-card">
+              <h3>Limited</h3>
+              <p>Basic necessities only while a guideline or law violation is under community review.</p>
+            </div>
+            <div class="standing-card">
+              <h3>Exiled</h3>
+              <p>Membership revoked by majority vote, followed by a community-decided reflection period before reapplication.</p>
+            </div>
+          </div>
+        </section>
+
+        <div class="guidelines-cta">
+          <h2>Questions before you sign?</h2>
+          <p>Read the FAQ, or take the pledge when you are ready to practice these commitments.</p>
+          <div class="faq-cta-actions">
+            <a class="button button--primary" href="pledge.html">Take the Pledge</a>
+            <a class="button button--outline" href="faq.html">Read the FAQ</a>
+            <a class="button button--outline" href="dashboard.html#account-info-panel">Your membership</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+
+  <footer class="site-footer" id="footer">
+    <div class="container footer-main">
+      <div class="footer-brand">
+        <a class="brand brand--footer" href="#top" aria-label="Unbought — back to the top">
+          <img src="assets/logo.png" alt="Unbought Emblem" width="56" height="56">
+          <span class="brand-text">
+            <span class="brand-name">Unbought</span>
+            <span class="brand-tagline">Built on Consent.</span>
+          </span>
+        </a>
+        <p class="footer-tagline">Free Labor. Free Goods. Free Education. Free Land.</p>
+        <p class="footer-mission">A consent-based, currency-free mutual aid society. Every person has inherent worth, whether or not they can work.</p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Footer">
+        <div>
+          <h2>Explore</h2>
+          <ul>
+            <li><a href="index.html#top">Home</a></li>
+            <li><a href="index.html#how-it-works">How It Works</a></li>
+            <li><a href="pledge.html">The Pledge</a></li>
+            <li><a href="freelabor.html">Free Labor</a></li>
+            <li><a href="freestuff.html">Free Stuff</a></li>
+            <li><a href="donate.html">Donate</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+            <li><a href="guidelines.html" aria-current="page">Community Guidelines</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Participate</h2>
+          <ul>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="profile.html">Member profile</a></li>
+            <li><a href="index.html#tracks">Join &amp; Tracks</a></li>
+            <li><a href="index.html#volunteers">Volunteers</a></li>
+            <li><a href="future.html">What’s to Come</a></li>
+            <li><a href="future.html#waitlist">Waiting List</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Transparency</h2>
+          <ul>
+            <li><a href="index.html#newsboard">Newsboard</a></li>
+            <li><a href="pledge.html">Five commitments</a></li>
+            <li><a href="future.html#land">Phase 3 status</a></li>
+            <li><a href="donate.html">Donations &amp; trust</a></li>
+            <li><a href="index.html#accessibility">Accessibility Statement</a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+
+    <div class="container footer-utility">
+      <div class="footer-utility-copy">
+        <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
+        <p>Your pledge, track, listings, waiting-list entry, and donation intents stay in this browser.</p>
+      </div>
+      <button class="button button--ghost-light button--small" id="reset-demo" type="button">
+        <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>
+        Demo Reset / Clear Local Data
+      </button>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>© <span id="copyright-year">2026</span> Unbought. A community practice, not a product.</p>
+      <a class="footer-top-link" href="#top">Back to top <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+    </div>
+  </footer>
+
+  <dialog class="dialog dialog--small" id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+    <div class="dialog-shell">
+      <div class="dialog-top">
+        <p class="eyebrow">Please confirm</p>
+        <button class="icon-button" type="button" data-confirm-close aria-label="Close the confirmation dialog">
+          <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+        </button>
+      </div>
+      <h2 id="confirm-title">Are you sure?</h2>
+      <p id="confirm-message"></p>
+      <div class="dialog-actions">
+        <button class="button button--outline" type="button" data-confirm-cancel>Cancel</button>
+        <button class="button button--primary" type="button" data-confirm-accept>Confirm</button>
+      </div>
+    </div>
+  </dialog>
+</body>
+</html>

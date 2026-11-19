@@ -69,6 +69,20 @@ then the dashboard shows the labels as pending rather than presenting them as
 live. Published equinox instants for 2026–2031 are kept in `VERNAL_EQUINOXES`;
 ZIP and profession stay private and never appear on the public resume.
 
+## Community guidelines
+
+`guidelines.html` holds the Ten Consent Commandments and the consequence path:
+monthly pledge review with observe-only status, a care circle that allows basic
+necessities, access limits for guideline or law violations, community review of
+every case, and exile (membership revocation) only by a majority vote. A
+revoked member serves a community-decided reflection period before reapplying;
+the new application goes straight to review and a vote by members in their
+area. Therapy is encouraged, and some cases require a therapeutic evaluation
+and proof of treatment. Nothing is enforced outside this browser prototype.
+
+The guidelines are linked from every footer site map, the FAQ, the pledge
+agreement, and the member account panel.
+
 ## FAQ and help button
 
 `faq.html` answers common questions about membership, privacy, local-only

@@ -38,6 +38,13 @@
     {
       date: '2026-11-19',
       label: 'Nov 19, 2026',
+      tag: 'Community',
+      title: 'Community guidelines and consequences, in plain sight',
+      body: 'A new guidelines page sets out the Ten Consent Commandments and the review path: monthly pledge checks, the care circle, access limits, local evidence and therapy where needed, majority votes for revocation, and a community-decided reflection period before reapplying. Every case is reviewed by community members in this local prototype.'
+    },
+    {
+      date: '2026-11-19',
+      label: 'Nov 19, 2026',
       tag: 'Membership',
       title: 'Seed and founding member labels, counted by the equinox',
       body: 'The first person of a profession in a ZIP code becomes a seed member. Seed members who joined during the first year are founding members. Membership years begin at the exact vernal equinox; Unbought’s first year ends March 20, 2027 at 4:25pm Eastern, which is also the rollout moment. Labels show as pending until then.'
@@ -856,13 +863,16 @@
 
   function renderMemberLabelsHtml(member) {
     const labels = getMemberLabels(member);
-    if (!labels.length) return '';
+    const guidelinesLink = '<p class="member-label-link"><a href="guidelines.html">Community guidelines and consequences →</a></p>';
+    if (!labels.length) {
+      return `<div class="member-labels" role="note"><p>No member labels yet.</p>${guidelinesLink}</div>`;
+    }
     const live = labelsLive();
     const badges = labels.map((label) => `<span class="member-label member-label--${label.key}${live ? '' : ' is-pending'}">${escapeHtml(label.name)}</span>`).join('');
     const note = live
       ? labels.map((label) => escapeHtml(label.detail)).join(' ')
       : `Pending rollout on ${escapeHtml(formatDate(LABEL_ROLLOUT_AT))} at 4:25pm Eastern (the exact 2027 vernal equinox). ${labels.map((label) => escapeHtml(label.detail)).join(' ')}`;
-    return `<div class="member-labels" role="note"><div class="member-label-list">${badges}</div><p>${note}</p></div>`;
+    return `<div class="member-labels" role="note"><div class="member-label-list">${badges}</div><p>${note}</p>${guidelinesLink}</div>`;
   }
 
   function normalizeUsername(value) {
