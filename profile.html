@@ -22,6 +22,10 @@
     <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
     <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
     <symbol id="icon-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="icon-hammer" viewBox="0 0 24 24"><path d="m14 7 3-3 3 3-3 3m-3-3-8 8m3-3 5 5M4 20l4-4"/></symbol>
+    <symbol id="icon-spark" viewBox="0 0 24 24"><path d="M12 2c.7 5.3 4 8.6 9 9-5 1.4-8.3 4.7-9 10-.7-5.3-4-8.6-9-10 5-.4 8.3-3.7 9-9Z"/></symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 8.8 8 11 4.6-2.2 8-6 8-11V5l-8-3Z"/><path d="m8.5 11.5 2.5 2.5 4.5-5"/></symbol>
     <symbol id="icon-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9a7 7 0 0 1 11.6-2L20 12M4 12l2.3 5a7 7 0 0 0 11.6-2"/></symbol>
   </svg>
 
@@ -35,12 +39,6 @@
         </span>
       </a>
 
-      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
-        <span class="sr-only">Open navigation menu</span>
-        <svg class="icon nav-toggle-icon-open" aria-hidden="true" focusable="false"><use href="#icon-menu"></use></svg>
-        <svg class="icon nav-toggle-icon-close" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
-      </button>
-
       <nav class="primary-nav" id="primary-nav" aria-label="Primary">
         <ul class="nav-list">
           <li><a href="index.html">How It Works</a></li>
@@ -52,6 +50,11 @@
       </nav>
 
       <a class="nav-cta" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span></a>
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+        <span class="sr-only">Open navigation menu</span>
+        <svg class="icon nav-toggle-icon-open" aria-hidden="true" focusable="false"><use href="#icon-menu"></use></svg>
+        <svg class="icon nav-toggle-icon-close" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+      </button>
     </div>
   </header>
 
@@ -61,14 +64,26 @@
         <div class="section-head">
           <p class="eyebrow"><span class="badge badge--soft">Member profile</span> Your view</p>
           <h1 id="profile-page-title">Your profile in the commons.</h1>
-          <p>The public resume is what neighbors see. Below it is your private member record, which stays on this device and is never included in the public profile.</p>
+          <p>Your full member record is what you see first. Use View as: Neighbor to see the limited resume neighbors see; private details stay on this device and are never included in it.</p>
         </div>
 
-        <nav class="profile-dashboard-nav" aria-label="Dashboard menu" data-member-only hidden>
-          <a class="dashboard-menu-item" href="dashboard.html#overview">Overview</a>
-          <a class="dashboard-menu-item" href="dashboard.html#commons">The Commons</a>
-          <a class="dashboard-menu-item is-active" href="profile.html" aria-current="page">Profile</a>
-          <a class="dashboard-menu-item" href="dashboard.html#settings">Settings</a>
+        <nav class="dashboard-menu profile-dashboard-nav" aria-label="Dashboard menu" data-member-only hidden>
+          <a class="dashboard-menu-item" href="dashboard.html#overview">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-spark"></use></svg>
+            <span>Overview</span>
+          </a>
+          <a class="dashboard-menu-item" href="dashboard.html#commons">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-hammer"></use></svg>
+            <span>The Commons</span>
+          </a>
+          <a class="dashboard-menu-item is-active" href="profile.html" aria-current="page">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-users"></use></svg>
+            <span>Profile</span>
+          </a>
+          <a class="dashboard-menu-item" href="dashboard.html#settings">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg>
+            <span>Settings</span>
+          </a>
         </nav>
 
         <div class="profile-toolbar" data-member-only hidden>

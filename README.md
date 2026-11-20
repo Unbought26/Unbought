@@ -20,6 +20,7 @@ process, not a coding changelog. A future blog service will replace them.
 - `future.html` — What’s to Come, donation information, and waiting list
 - `dashboard.html` — Member dashboard, full private record, and Exchanges
 - `profile.html` — Public member resume with a private record for the signed-in member
+- `group.html?group=<id>` — Group profile with members, worker admins, chat, and offers
 
 ## Running locally
 
@@ -34,6 +35,20 @@ Then visit <http://localhost:8000/>.
 Prototype sign-in accepts a locally created username and password. Passwords are
 stored only in the browser as a salted prototype hash; this is not real account
 security and must be replaced before any production deployment.
+
+## Header and navigation
+
+Every page has the same header order: brand, primary navigation, local search,
+one call to action, the notification bell, and the mobile menu button. The primary
+navigation is exactly How It Works, Free Labor, Free Stuff, Donate, and What’s to
+Come. The blue call to action sits outside the navigation: signed-out visitors see
+Take the Pledge, and signed-in members see Dashboard. The bell is immediately to
+the right of the CTA, and the hamburger follows the bell. The bell stays in the
+DOM but is hidden when signed out.
+
+The header search is injected on every page. It searches static page titles and
+copy, Free Labor and Free Stuff listings, the member directory, and saved groups
+locally. Results are plain local links; the search sends no query to a server.
 
 ## Member data and public resume
 
@@ -57,17 +72,39 @@ picture, tag line, bio, profession, City/State from the member-selected mailing 
 physical address, both skill lists, confirmed hours worked, items gifted, other
 commons totals, availability, and a phone number only when the member opts in. It
 never includes the legal name, street or mailing addresses, ZIP, housing status,
-birthdate, group/crew, or report count.
+birthdate, group/crew, report count, amounts donated, comments, or interactions.
+Member IDs are never displayed; they remain storage and report attributes only.
+Seed and founder status appears as a public tag, with pending labels marked as
+pending before rollout.
+
+`profile.html` uses the public resume card as the visual basis for the private
+record. Signed-in members get an edit-profile action, Dashboard menu, a clear
+notice that lower content is not public, and a View as button that toggles between
+the public resume and the full private profile. Signed-out visitors only get the
+limited public resume; signed-in visitors reach another member’s public resume
+through View as. Public member profiles include an Add friend action that searches
+current members and records a local friend request. Names in member summaries,
+notifications, and group lists link to the appropriate local profile. Public and
+private profile background/content colors are editable in Settings and profile,
+stored only in `state.pledge.profileTheme`, and validated before use.
+
+Dashboard first menu is exactly Overview, The Commons, Profile, and Settings;
+account details and account settings live on the same Settings page. The Commons
+menu appears only inside The Commons, on the left with content on the right, and
+contains Free Labor, Free Stuff, Donate, Exchanges, Messages, Review Board, and
+Friends/Groups. Unbought Academy is phase-gated to Phase 2 and hidden in Phase 1.
 
 ## Confirmed hours and member-only fund metrics
 
-Members cannot enter their own work hours. In Dashboard → Exchanges, the worker and
-the receiver each confirm a completed service or product and enter the hours they
-believe were worked. Matching numbers create a local `labor` contribution with
-`mutualConfirmation: true`. If the numbers differ, evidence stays on the device and
-three randomly drawn active members vote on the hours; care circle members,
-students, observers, and either party are excluded. Only matching or review-decided
-hours count toward the member's totals.
+No one can add work hours unilaterally, and no one types hours into a counter. In
+Dashboard → Exchanges, the worker and the receiver each confirm a completed service
+or product by choosing the same agreed time from fixed options. Matching choices
+create a local `labor` contribution with `mutualConfirmation: true`. If the choices
+differ, evidence stays on the device and three randomly drawn active members choose
+one of the confirmed times; care circle members, students, observers, and either
+party are excluded. Only matching or review-decided hours count toward the member's
+totals. The same rule applies to the thank-you nudge: it appears only after a
+service or product is actually confirmed or logged in Exchanges.
 
 The member account panel is the only place that shows hours worked and amounts
 donated by week, month, year, and all time, the current Unbought donation fund
@@ -122,10 +159,12 @@ ZIP stays private and never appears on the public resume; profession is shown.
 `future.html#festival` describes the hope of partnering with an organization
 for a large festival somewhere in the United States on the 2028 vernal equinox,
 March 20 at 4:25pm Eastern — one full year after the 2027 rollout — celebrating
-the movement and its seed and founding members. The moment matters because the
-movement will have been fully rolled out for a full year, meaning something must
-be working. It is explicitly a planning intention: no venue, partner, or ticket
-exists.
+the movement and its seed and founding members. The exact sentence is: “The moment
+matters because we will have been fully rolled out for a full year, meaning something
+must be working”. It is explicitly a planning intention: no venue, partner, or
+ticket exists. The beta runs until the exact 2027 vernal equinox, March 20, 2027 at
+4:25pm, when the site rolls out; seed members remain until then, day joined is
+logged, and that date is the first day of the first official year.
 
 Seed members see a locally generated thank-you draft in the dashboard
 (`renderSeedThankYou`). A live deployment would email it automatically. The
@@ -146,8 +185,18 @@ the new application goes straight to review and a vote by members in their
 area. Therapy is encouraged, and some cases require a therapeutic evaluation
 and proof of treatment. Nothing is enforced outside this browser prototype.
 
+Track access follows the same rules: apprentices may use basic necessities only
+while enrolled, Care Circle members may use basic necessities with no labor
+obligation and limits are reviewable with evidence, and Observers may read,
+explore, and donate. Consequence steps are unnumbered.
+
 The guidelines are linked from every footer site map, the FAQ, the pledge
-agreement, and the member account panel.
+agreement, and the member account panel. Current group admins can delete group
+chat posts and replies, require an impartial review of a member, change group
+community guidelines, and run guideline votes in chat. Reports made by a temporary
+admin require evidence and a non-criminal, impartial member review; criminal
+matters are never decided by member vote. Admins record the outcome they believe
+the conversation reached: Agreed, Not agreed, or More discussion needed.
 
 ## Academy access and tuition
 
@@ -180,10 +229,13 @@ change when a different pillar is selected. Members can search by listing title,
 description, provider, or service title; filter by city, two-letter state, ZIP
 prefix, and in-person/online format; and sort by featured, newest, title,
 service title, location, or nearest to a ZIP entered in the sort controls.
-Active filters can be removed one at a time. Custom titles written in by members
-also appear as filter choices. Both directories use compact linked cards (photo,
-tags, title, description, and location); opening a card reveals the full record,
-actions, and local comments in a dialog.
+Active filters can be removed one at a time. Custom titles entered by members
+also appear as filter choices. Both directories have a required search field.
+They use compact linked cards (photo, tags, title, description, and location); the
+whole card is the link, no card text is underlined, and clicking it opens the
+details dialog with more information. Cards also support `?listing=<id>` deep links
+so an opened card can be restored from a local link. Existing tags and badges stay
+on the card.
 
 The post form follows the same structure. A member chooses a pillar, then a
 listed service title, or writes a new one. Location can be city/state/ZIP, city
@@ -251,33 +303,72 @@ text or message files are copied, and other files are recorded by name, type, an
 size only. Evidence is stored in the same browser with the case file. No file,
 message, or report is uploaded or transmitted by this prototype.
 
-## Notifications, social circles, and listing conversations
+## Notifications, social circles, and local conversations
 
 Dashboard → Notifications holds local drafts created by the signed-in member’s own
-actions: messages, requests, comments, and social chat drafts. Notices can be marked
-read individually or all at once, and the Open action switches to the related
-dashboard tab when there is one. Listing-comment notices have no dashboard panel
-and point back to the comment on Free Labor or Free Stuff instead. A live system
-would notify neighbors about messages, requests, and comments on their posts;
-this prototype delivers nothing.
+actions: messages, requests, comments, group posts, and social chat drafts. Each
+notice is one whole list-item link: clicking the item marks it read and opens its target.
+Notices can also be marked read all at once. Listing-comment notices point back to
+the comment on Free Labor or Free Stuff instead. A live system would notify
+neighbors about messages, requests, and comments on their posts; this prototype
+delivers nothing.
 
-Dashboard → Friends & Groups automatically places the member in the main group named
-after their town (for example, "Stroudsburg Group"). Other groups are social or
-support circles the member creates or joins. The member search covers a small local
-sample directory plus the current member recorded on this device; searches match
-chosen name, profession, and city/state. Sending, accepting, and declining friend
-requests changes local records only, including one sample incoming request used to
-demonstrate the flow. The panel also stores friends and social chat drafts with an
-audience, title, message, and optional locally resized picture; each chat record
-carries its audience label. There is a single local account, so no request or chat
-draft is delivered and no other person’s data changes. Friend lists are capped at
-150 people and every group at 150 people.
+Dashboard → Friends & Groups automatically places the member in the main town group
+named after their town (for example, "Stroudsburg Group I"). Other groups are social
+or support circles the member creates or joins. Town group names link to
+`group.html?group=<id>`, and group counts come from `group.members`, not a typed
+number. When a town group reaches 150 people, another Stroudsburg group is created
+with a Roman numeral ending: II, III, … XI. The first member of a new numbered group
+is not a seed member, seed/founding labels stay tied to the original profession/ZIP
+roster, and neighbors may choose Group I, II, III, XI, and so on. Joining a numbered
+group moves the member out of the previous town group. Town group profiles show the
+location below the title with city/state and ZIP.
 
-Free Labor and Free Stuff listings have local comment threads with replies (a reply
-simply quotes the earlier chosen name). Comments on the static seed listings are
-stored in `state.listingComments` by listing id so they survive a reload; comments
-on member-created listings are also kept on the listing record. Every comment has
-its own contextual report trigger. Nothing is published or transmitted.
+Seven admin seats rotate each week for workers only, on staggered one-to-seven-week
+cycles. Worker eligibility uses track, profession, skills, or confirmed exchanges;
+Care Circle, Observer, and Apprentice members cannot hold a seat or be added as a
+standing admin. Only admins can add another admin, cancel a group, delete group chat
+posts and replies, require an impartial review, change that group’s community
+guidelines, and run a guideline vote. A member can leave a non-town group when
+another admin exists. The town group cannot be left; only an admin can cancel a
+group. Guideline votes open a group chat post where replies beginning Agree or
+Disagree are tallied, and an admin records Agreed, Not agreed, or More discussion
+needed with an optional note.
+
+`group.html` headings stay exactly Members, Admins, Group chat, Offers in Free
+Stuff & Free Labor, and Group details. Group chat is made of posts with replies
+attached to the post; there are no separate group comments and no Group involvement
+block. Offers come only from that group’s members’ Free Stuff and Free Labor posts;
+scraped listing comments are not shown. Group profiles show the member list, admin
+seats, group chat, group offers, and local details only.
+
+The member search covers a small local sample directory plus the current member
+recorded on this device; searches match chosen name, profession, and city/state.
+Sending, accepting, and declining friend requests changes local records only, and
+public profiles offer the same Add friend action. The panel also stores friends and
+social chat drafts with exactly Audience, Title, Message, and picture; each chat
+record carries its audience label. There is a single local account, so no request
+or chat draft is delivered and no other person’s data changes. Friend lists and
+every group are capped at 150 people.
+
+Free Labor and Free Stuff listings have separate local comment threads with replies
+(a reply simply quotes the earlier chosen name). Comments on the static seed
+listings are stored in `state.listingComments` by listing id so they survive a
+reload; comments on member-created listings are also kept on the listing record.
+Every comment has its own contextual report trigger. Nothing is published or
+transmitted.
+
+## Prototype boundaries
+
+This build is static and local-first. There is no real authentication, payment
+processing, email delivery, wage API, stock issuance, payout, police report, server
+upload, or server transmission. Copy across the site says plainly that nothing is
+transmitted. `SITE_PHASE = 1` hides Phase 2 features such as the Unbought Academy.
+Every footer carries “Built on Consent.” exactly once. The public fund name is
+“Unbought donation fund”; internal `severanceFund`, `severance_purchase`, and
+`getSeveranceSummary()` keys remain only for older local data compatibility. The
+working name “Unbought Community Trust” appears only in `future.html`, and
+“Free Goods Fund” is donation priority #4.
 
 ## Hosting
 

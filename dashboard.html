@@ -51,12 +51,6 @@
         </span>
       </a>
 
-      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
-        <span class="sr-only">Open navigation menu</span>
-        <svg class="icon nav-toggle-icon-open" aria-hidden="true" focusable="false"><use href="#icon-menu"></use></svg>
-        <svg class="icon nav-toggle-icon-close" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
-      </button>
-
       <nav class="primary-nav" id="primary-nav" aria-label="Primary">
         <ul class="nav-list">
           <li><a href="index.html">How It Works</a></li>
@@ -68,6 +62,11 @@
       </nav>
 
       <a class="nav-cta" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span></a>
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+        <span class="sr-only">Open navigation menu</span>
+        <svg class="icon nav-toggle-icon-open" aria-hidden="true" focusable="false"><use href="#icon-menu"></use></svg>
+        <svg class="icon nav-toggle-icon-close" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+      </button>
     </div>
   </header>
 
@@ -87,7 +86,7 @@
         </div>
 
         <div class="dashboard-gate" id="dashboard-gate" role="status">
-          <p><strong>Your dashboard is waiting.</strong> Sign the Unbought Pledge to become a member and open these tools. You can still browse labor, goods, and the academy without an account.</p>
+          <p><strong>Your dashboard is waiting.</strong> Sign the Unbought Pledge to become a member and open these tools. You can still browse labor and goods without an account.</p>
           <a class="button button--primary" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span></a>
         </div>
 
@@ -122,7 +121,7 @@
               <a class="dashboard-tab-link" href="donate.html">
                 <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-heart"></use></svg><span>Donate</span>
               </a>
-              <a class="dashboard-tab-link" href="future.html#academy">
+              <a class="dashboard-tab-link" href="future.html#academy" hidden data-phase="2">
                 <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-spark"></use></svg><span>Unbought Academy</span>
               </a>
               <button type="button" role="tab" id="dash-tab-exchanges" aria-controls="dash-panel-exchanges" aria-selected="false" tabindex="-1" data-dashboard-tab="exchanges">

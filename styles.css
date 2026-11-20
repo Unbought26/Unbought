@@ -6596,13 +6596,6 @@ em {
   line-height: 1.5;
 }
 .resume-section h4 { margin: 1rem 0 0.45rem; font-size: 0.85rem; color: var(--muted); }
-.profile-page .profile-dashboard-nav {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
-  margin: 0 0 1rem;
-}
-.profile-page .profile-dashboard-nav .dashboard-menu-item { min-height: 44px; padding: 0.55rem 0.7rem; }
 .profile-page .profile-toolbar {
   display: flex;
   align-items: center;
@@ -7020,7 +7013,6 @@ body.dashboard-compact .account-block { margin-top: 0.7rem; padding-top: 0.7rem;
 }
 @media (max-width: 640px) {
   .dashboard-body.has-commons-nav { grid-template-columns: minmax(0, 1fr); }
-  .profile-page .profile-dashboard-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 700px) {
   .account-details > div { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
@@ -8598,16 +8590,24 @@ body[data-directory-scope="goods"] .product-price--nonmember .product-price-valu
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.8rem;
+  width: 100%;
   padding: 0.75rem;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: #fff;
+  color: inherit;
+  list-style: none;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .notification-item.is-unread {
   border-left: 3px solid var(--amber);
   background: #fffaf0;
 }
+
+.notification-item:hover { border-color: #B6C3DF; background: var(--blue-mist); }
+.notification-item:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 
 .notification-actions,
 .comment-actions {
@@ -8802,5 +8802,339 @@ body[data-directory-scope="goods"] .product-card .listing-title:hover {
 
   .social-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   23. Profile views, member links, and local profile themes
+   -------------------------------------------------------------------------- */
+.profile-page--member-view #public-resume { display: none !important; }
+.profile-page--public-only #private-profile,
+.profile-page--other-member #private-profile { display: none !important; }
+
+.member-link,
+.group-link,
+.post-link {
+  color: var(--blue-deep);
+  font-weight: 700;
+  text-decoration: none;
+}
+.member-link:hover,
+.group-link:hover,
+.post-link:hover { color: var(--blue); }
+
+.resume-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.resume-metrics--summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.account-derived-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.account-groups-field { gap: 0.35rem; }
+.account-group-actions { margin-top: 0.45rem !important; }
+
+.profile-post-list,
+.profile-activity-list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.profile-post-list li,
+.profile-activity-list li {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+}
+.profile-post-list p,
+.profile-activity-list p { margin: 0; }
+
+.notification-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+  color: var(--blue-deep);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.social-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+.group-member-options {
+  display: grid;
+  gap: 0.4rem;
+  max-height: 220px;
+  margin: 0.4rem 0;
+  overflow: auto;
+}
+.group-member-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+.group-kind { margin: 0.2rem 0; color: var(--muted); font-size: 0.85rem; font-weight: 700; }
+
+.profile-themed {
+  background: var(--profile-bg, #fff);
+  color: var(--profile-fg, var(--ink));
+}
+.profile-themed .resume-head h2,
+.profile-themed .resume-section h3,
+.profile-themed strong,
+.profile-themed dt,
+.profile-themed p,
+.profile-themed span,
+.profile-themed .contribution-meta { color: inherit; }
+.profile-themed .resume-availability {
+  border-color: currentColor;
+  background: transparent;
+  color: inherit;
+}
+.profile-themed .resume-metrics > div,
+.profile-themed .profile-post-list li,
+.profile-themed .profile-activity-list li,
+.profile-themed .private-notice,
+.profile-themed fieldset {
+  border-color: currentColor;
+  background: rgba(255, 255, 255, 0.35);
+}
+.profile-themed .member-link,
+.profile-themed .group-link,
+.profile-themed .post-link { color: inherit; }
+.profile-theme-form fieldset { margin: 0 0 0.8rem; padding: 0.8rem; border-radius: 10px; }
+.profile-theme-form input[type="color"] {
+  width: 100%;
+  height: 44px;
+  padding: 0.2rem;
+  cursor: pointer;
+}
+
+@media (max-width: 760px) {
+  .resume-metrics--summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .resume-metrics--summary,
+  .account-derived-metrics { grid-template-columns: 1fr; }
+  .group-member-option { align-items: flex-start; flex-direction: column; }
+}
+
+/* --------------------------------------------------------------------------
+   24. Header search, profile actions, and group chat posts
+   -------------------------------------------------------------------------- */
+.header-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: none;
+  width: 170px;
+}
+.header-search-icon {
+  position: absolute;
+  left: 0.7rem;
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.header-search input[type="search"] {
+  width: 100%;
+  height: 38px;
+  margin: 0;
+  padding: 0 0.6rem 0 2.1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
+}
+.header-search input[type="search"]:focus {
+  border-color: var(--blue);
+  background: #fff;
+  outline: 2px solid rgba(30, 58, 138, 0.16);
+  outline-offset: 1px;
+}
+.header-search-results {
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  right: 0;
+  z-index: 80;
+  width: min(340px, 88vw);
+  max-height: 360px;
+  overflow: auto;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 18px 44px rgba(16, 24, 40, 0.16);
+}
+.header-search-results[hidden] { display: none; }
+.header-search-empty {
+  margin: 0;
+  padding: 0.6rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.header-search-list {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.header-search-list a {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.header-search-list a:hover,
+.header-search-list a:focus-visible { background: var(--blue-mist); }
+.header-search-area {
+  color: var(--blue-deep);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.header-search-title { font-size: 0.9rem; font-weight: 700; }
+
+.profile-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+.profile-themed .profile-card-actions .button { white-space: nowrap; }
+
+.group-post-list {
+  display: grid;
+  gap: 0.8rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+.group-post {
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+}
+.group-post h4 { margin: 0.3rem 0; font-size: 1rem; }
+.group-post-comments {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+}
+.group-comment-form .field { flex: 1 1 240px; }
+
+.group-kind {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.group-location {
+  margin: 0.15rem 0 0.6rem;
+  color: var(--blue-deep);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+.admin-seat-list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.6rem 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+.admin-seat-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+}
+.group-guidelines {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0.75rem 0;
+  padding: 0.7rem 0.8rem;
+  border-left: 3px solid var(--blue);
+  border-radius: 8px;
+  background: var(--blue-mist);
+}
+.group-guidelines strong { color: var(--blue-deep); }
+.group-guidelines-form,
+.group-guideline-vote-form,
+.group-outcome-form {
+  margin: 0.7rem 0;
+  padding: 0.75rem;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.55);
+}
+.guideline-vote-tally {
+  color: var(--blue-deep);
+  font-weight: 700;
+}
+.guideline-outcome {
+  margin-top: 0.35rem;
+  color: var(--ink);
+  font-weight: 700;
+}
+.exchange-confirm select,
+.hour-vote-form select {
+  width: 100%;
+  min-height: 38px;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+.exchange-confirm .field-hint { margin: 0.35rem 0 0; }
+
+@media (max-width: 1120px) {
+  .header-search { width: 140px; }
+}
+@media (max-width: 640px) {
+  .header-search { width: 38px; }
+  .header-search input[type="search"] {
+    width: 38px;
+    padding-right: 0;
+    color: transparent;
+    cursor: pointer;
+  }
+  .header-search input[type="search"]:focus {
+    position: absolute;
+    right: 0;
+    z-index: 81;
+    width: min(280px, calc(100vw - 2rem));
+    padding-left: 2.1rem;
+    color: var(--ink);
+    cursor: text;
   }
 }

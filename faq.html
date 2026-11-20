@@ -35,12 +35,6 @@
         </span>
       </a>
 
-      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
-        <span class="sr-only">Open navigation menu</span>
-        <svg class="icon nav-toggle-icon-open" aria-hidden="true" focusable="false"><use href="#icon-menu"></use></svg>
-        <svg class="icon nav-toggle-icon-close" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
-      </button>
-
       <nav class="primary-nav" id="primary-nav" aria-label="Primary">
         <ul class="nav-list">
           <li><a href="index.html">How It Works</a></li>
@@ -52,6 +46,11 @@
       </nav>
 
       <a class="nav-cta" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span></a>
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+        <span class="sr-only">Open navigation menu</span>
+        <svg class="icon nav-toggle-icon-open" aria-hidden="true" focusable="false"><use href="#icon-menu"></use></svg>
+        <svg class="icon nav-toggle-icon-close" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+      </button>
     </div>
   </header>
 
@@ -80,6 +79,10 @@
               <p>Not yet. There is no shared database, no real accounts, no payment processing, and no server transmission. You can explore the full experience locally; a future backend can use the same structured records.</p>
             </details>
             <details>
+              <summary>How does site search work?</summary>
+              <p>The search in the header is on every page. It looks through page copy, Free Labor and Free Stuff listings, current members, and saved groups in this browser. Results are local links; nothing is searched or sent on a server.</p>
+            </details>
+            <details>
               <summary>Why the Poconos?</summary>
               <p>This first rollout is rooted in Pocono-area towns in Pennsylvania. The location examples across the site use places like Stroudsburg, East Stroudsburg, Mount Pocono, and Jim Thorpe. You can still enter your own location.</p>
             </details>
@@ -93,11 +96,11 @@
             </details>
             <details>
               <summary>What does my public profile show?</summary>
-              <p>Your chosen first name, locally stored picture, tag line, bio, profession, the City/State you select, your skills, confirmed hours worked, items gifted, other commons totals, your availability, and a phone number only if you opt in. It never shows your legal name, street or mailing addresses, ZIP, housing status, birthdate, group, or report count.</p>
+              <p>Your chosen first name, locally stored picture, tag line, bio, profession, the City/State you select, your skills, confirmed hours worked, items gifted, other commons totals, your availability, and a phone number only if you opt in. It may show a pending or live seed/founder tag. It never shows your legal name, street or mailing addresses, ZIP, housing status, birthdate, group, report count, amounts donated, comments, interactions, or member ID. Signed-in members can switch between the public resume and the private profile with View as, choose separate profile colors, and add friends from another member’s public profile.</p>
             </details>
             <details>
               <summary>Who can enter my work hours?</summary>
-              <p>Nobody enters them by hand — not even you. The worker and the receiver each confirm the exchange and their hour count. Matching numbers are logged. If they disagree, the evidence goes to a review board and three randomly drawn active members vote; care circle members, students, observers, and either party cannot serve. Only those confirmed hours appear in your week, month, year, and all-time totals.</p>
+              <p>No one can add hours unilaterally. The worker and the receiver each choose the same agreed time from fixed options. Matching confirmations log that time; nothing is typed into an hours counter. If the choices differ, evidence goes to a review board and three randomly drawn active members choose one of the confirmed times; care circle members, students, observers, and either party cannot serve. Only those confirmed hours appear in your week, month, year, and all-time totals.</p>
             </details>
             <details>
               <summary>Why ask for a legal name and addresses at all?</summary>
@@ -106,6 +109,10 @@
             <details>
               <summary>Can people under 18 join?</summary>
               <p>Full membership still opens at 18; the sign-up form blocks birthdates that would make someone under 18. Neighbors aged 15 and older can take part through the Academy's young-apprentice path instead: they learn free with basic-necessities-only access while enrolled, then complete one year of part-time work for Unbought after finishing. That work must be finished before their 25th birthday.</p>
+            </details>
+            <details>
+              <summary>What can each membership track access?</summary>
+              <p>Active Contributors take part in the full commons. Apprentices may use basic necessities only while enrolled. Care Circle members may use basic necessities with no labor obligation, and any limit is reviewable with evidence. Observers may read, explore, and donate. These boundaries are part of the Community Guidelines and are enforced locally in this prototype.</p>
             </details>
             <details>
               <summary>What are seed and founding members?</summary>
@@ -161,7 +168,7 @@
             <h2 id="faq-academy">The Academy</h2>
             <details>
               <summary>Does the Academy cost anything?</summary>
-              <p>It is free for pledged members: no tuition, fees, or debt. People who have not taken the pledge may enroll at the standard non-member tuition set by the guild. Every cent goes to the Unbought donation fund. That tuition is a future policy only; this prototype does not enroll anyone or process a payment.</p>
+              <p>It is free for pledged members: no tuition, fees, or debt. People who have not taken the pledge may enroll at the standard non-member tuition set by the guild. Every cent goes to the Unbought donation fund. That tuition is a future policy only; this prototype does not enroll anyone or process a payment. The Academy is Phase 2, so its Dashboard link is hidden in this Phase 1 build.</p>
             </details>
             <details>
               <summary>Can someone under 18 take Academy courses?</summary>
@@ -193,15 +200,17 @@
             </details>
             <details>
               <summary>Will friends and groups be part of this?</summary>
-              <p>Yes. Dashboard → Friends &amp; Groups automatically places you in the main group named after your town, such as the Stroudsburg Group. Every other group is a social or support circle you make or join. Search current members by chosen name, profession, or town and send a local friend request; incoming sample requests can be accepted or declined there. You can also keep one group of your own and write social chat drafts with an audience, title, message, and optional local picture addressed to friends or any of your groups. There is one local account in this prototype, so no invitations are sent and no one else’s account changes. Friend lists and groups are capped at 150 people to keep conversation human-scale.</p>
+              <p>Yes. Dashboard → Friends &amp; Groups automatically places you in the main town group, such as Stroudsburg Group I. When a town group reaches 150 people, another Stroudsburg group opens with a Roman numeral — II, III, … XI — and neighbors can choose which numbered group to join. The first member of a new numbered group is not a seed member. The town group profile shows the city, state, and ZIP below its name. Every other group is a social or support circle you make or join, and group names link to their own group profile.</p>
+              <p>Seven admin seats rotate weekly for workers only, staggered across one-to-seven-week cycles. Care Circle, Observer, and Apprentice members cannot be admins. Current admins can add another admin, cancel a group, delete group chat posts and replies, require an impartial review, change the group’s community guidelines, and start a guideline vote in chat. You can leave a non-town group when another admin exists; only an admin can cancel a group. Reports made by a temporary admin need evidence, go to an impartial review, and are never decided as criminal matters by member vote. Admin votes on guideline changes are recorded as Agreed, Not agreed, or More discussion needed.</p>
+              <p>Search current members by chosen name, profession, or town and send a local friend request; public profiles have the same Add friend action. You can keep one group of your own and write social chat drafts with exactly Audience, Title, Message, and picture. There is one local account, so no invitations are sent and no one else’s account changes. Friend lists and groups are capped at 150 people.</p>
             </details>
             <details>
               <summary>What do dashboard notifications show?</summary>
-              <p>Local drafts created by your own actions — messages, requests, comments, and social chat drafts. You can mark them read, or open the related dashboard tab when there is one. Listing comments stay with their post on Free Labor or Free Stuff. In a live system, neighbors would be notified about messages, requests, and comments on their posts. Nothing is delivered to another person or device from this prototype.</p>
+              <p>Local drafts created by your own actions — messages, requests, comments, group posts, and social chat drafts. Each notice is one whole link: clicking anywhere on the item marks it read and opens the target. Listing comments stay with their post on Free Labor or Free Stuff. In a live system, neighbors would be notified about messages, requests, and comments on their posts. Nothing is delivered to another person or device from this prototype.</p>
             </details>
             <details>
               <summary>Can I talk with neighbors on a listing?</summary>
-              <p>Yes. Each Free Labor and Free Stuff post has a comment thread with replies, and every comment has its own report button. The whole conversation is saved in this browser only and is not published online.</p>
+              <p>Yes. Each Free Labor and Free Stuff post has a comment thread with replies, and every comment has its own report button. The whole card is a link to the details dialog, and an opened card can be restored with a <code>?listing=</code> local link. Group profiles are separate: they have Members, Admins, Group chat, Offers in Free Stuff &amp; Free Labor, and Group details. Group chat replies stay attached to the post they answer; there are no separate group comments or Group involvement block, and listing comments are not copied into a group.</p>
             </details>
             <details>
               <summary>Where are the community guidelines and consequences?</summary>
@@ -217,7 +226,7 @@
             </details>
             <details>
               <summary>Does the site track me or show ads?</summary>
-              <p>No. There are no analytics, ads, external frameworks, or third-party requests. The single catalog-style layout on Free Stuff is a visual nod only, built with Unbought’s own content and colors.</p>
+              <p>No. There are no analytics, ads, tracking scripts, or external frameworks. The only third-party embed is the privacy-enhanced Alan Watts video on the pledge page. The single catalog-style layout on Free Stuff is a visual nod only, built with Unbought’s own content and colors.</p>
             </details>
             <details>
               <summary>How do I report a bug or suggest something?</summary>

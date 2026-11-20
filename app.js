@@ -768,6 +768,39 @@
     groupMembers: 150
   });
 
+  // Admin duty is shared by seven staggered seats. Seat 1 changes every week,
+  // seat 2 every two weeks, and so on, so a group with seven or more members
+  // always has seven admins with overlapping terms.
+  const GROUP_ADMIN_SEATS = 7;
+  const WEEK_MS = 7 * DAY_MS;
+
+  // Phase 1 is labor, goods, and the commons. Academy navigation stays hidden
+  // until Phase 2; the roadmap page still explains what is coming.
+  const SITE_PHASE = 1;
+
+  const PROFILE_THEME_DEFAULTS = Object.freeze({
+    public: { background: '#ffffff', content: '#1f2937' },
+    private: { background: '#f8fafc', content: '#1f2937' }
+  });
+
+  function validThemeColor(value, fallback) {
+    const color = String(value || '').trim();
+    return /^#[0-9a-f]{6}$/i.test(color) ? color : fallback;
+  }
+
+  function getProfileTheme(member, scope) {
+    const defaults = PROFILE_THEME_DEFAULTS[scope] || PROFILE_THEME_DEFAULTS.public;
+    const stored = member && member.profileTheme && member.profileTheme[scope];
+    return {
+      background: validThemeColor(stored && stored.background, defaults.background),
+      content: validThemeColor(stored && stored.content, defaults.content)
+    };
+  }
+
+  function profileThemeStyle(theme) {
+    return `--profile-bg:${theme.background};--profile-fg:${theme.content}`;
+  }
+
   // A small local sample directory so the prototype can demonstrate member
   // search and the request flow. These are not real accounts; nothing is sent.
   const LOCAL_MEMBER_DIRECTORY = Object.freeze([
@@ -800,6 +833,19 @@
       'Reading support', 'Meal sharing', 'Composting', 'Housing support', 'Grocery sharing'
     ])
   });
+
+  const HEADER_SEARCH_PAGES = Object.freeze([
+    { title: 'How It Works', area: 'Page', href: 'index.html', terms: 'home newsboard tracks volunteers consent rollout' },
+    { title: 'The Pledge', area: 'Page', href: 'pledge.html', terms: 'join sign up membership commitments' },
+    { title: 'Free Labor', area: 'Directory', href: 'freelabor.html', terms: 'services skills work offers jobs posts' },
+    { title: 'Free Stuff', area: 'Directory', href: 'freestuff.html', terms: 'goods items offers products posts' },
+    { title: 'Donate', area: 'Page', href: 'donate.html', terms: 'fund donation money contribution' },
+    { title: 'What’s to Come', area: 'Page', href: 'future.html', terms: 'roadmap academy festival land waiting list phase' },
+    { title: 'Community Guidelines', area: 'Page', href: 'guidelines.html', terms: 'consent rules standing care circle review exile' },
+    { title: 'FAQ', area: 'Page', href: 'faq.html', terms: 'help questions answers privacy' },
+    { title: 'Member Profile', area: 'Member area', href: 'profile.html', terms: 'resume public private view as colors privacy' },
+    { title: 'Dashboard', area: 'Member area', href: 'dashboard.html', terms: 'account settings notifications messages exchanges review board' }
+  ]);
 
   const REFLECTION_OPTIONS = Object.freeze([30, 90, 180]);
   const TREATMENT_STEPS = Object.freeze([
@@ -843,6 +889,7 @@
         sample: true
       }],
       groups: [],
+      groupPosts: [],
       socialChats: [],
       settings: {
         compactDashboard: false,
@@ -1174,6 +1221,15 @@
     return `<div class="member-labels" role="note"><div class="member-label-list">${badges}</div><p>${note}</p>${guidelinesLink}</div>`;
   }
 
+  // A compact status badge for the resume card. It carries no ZIP, date, or
+  // other private detail; before rollout it is visibly marked as pending.
+  function renderPublicStatusTags(member) {
+    const labels = getMemberLabels(member);
+    if (!labels.length) return '';
+    const live = labelsLive();
+    return `<div class="resume-labels" aria-label="Member status">${labels.map((label) => `<span class="member-label member-label--${label.key}${live ? '' : ' is-pending'}">${escapeHtml(label.name)}${live ? '' : ' · pending'}</span>`).join('')}</div>`;
+  }
+
   // In a live system this would be emailed automatically when someone became a
   // seed member. Here it is generated locally and shown as a draft only: no
   // email address is collected for it and nothing is transmitted.
@@ -1245,6 +1301,116 @@
     btn.setAttribute('aria-label', unread ? `Notifications, ${unread} unread` : 'Notifications');
   }
 
+  function headerSearchEntries() {
+    const entries = HEADER_SEARCH_PAGES.map((item) => ({ ...item }));
+    getAllListings().forEach((listing) => {
+      if (!listing || !listing.title) return;
+      const page = listing.pillar === 'goods' ? 'freestuff.html' : 'freelabor.html';
+      entries.push({
+        title: cleanString(listing.title, 80) || 'Untitled post',
+        area: listing.pillar === 'goods' ? 'Free Stuff' : 'Free Labor',
+        href: `${page}?listing=${encodeURIComponent(listing.id)}`,
+        terms: [listing.jobTitle, listing.description, listing.location].filter(Boolean).join(' ')
+      });
+    });
+    if (isMember()) {
+      memberDirectory().forEach((member) => {
+        if (!member || !member.name) return;
+        entries.push({
+          title: member.name,
+          area: 'Member',
+          href: memberProfileUrl(member.memberId),
+          terms: [member.profession, member.cityState].filter(Boolean).join(' ')
+        });
+      });
+      getMemberGroups().forEach((group) => {
+        if (!group || !group.name) return;
+        entries.push({
+          title: group.name,
+          area: 'Group',
+          href: groupProfileUrl(group.id),
+          terms: group.purpose || groupKindLabel(group)
+        });
+      });
+    }
+    return entries;
+  }
+
+  function renderHeaderSearchResults(input, results) {
+    if (!results) return;
+    const query = cleanString(input.value, 80).toLowerCase();
+    if (!query) {
+      results.innerHTML = '<p class="header-search-empty">Search pages, posts, members, and groups on this device.</p>';
+      results.hidden = false;
+      input.setAttribute('aria-expanded', 'true');
+      return;
+    }
+    const matches = headerSearchEntries()
+      .map((entry) => {
+        const haystack = `${entry.title} ${entry.area} ${entry.terms || ''}`.toLowerCase();
+        const title = entry.title.toLowerCase();
+        const score = title.startsWith(query) ? 0 : title.includes(query) ? 1 : haystack.includes(query) ? 2 : -1;
+        return { entry, score };
+      })
+      .filter((item) => item.score >= 0)
+      .sort((a, b) => a.score - b.score || a.entry.title.localeCompare(b.entry.title))
+      .slice(0, 8)
+      .map((item) => item.entry);
+    if (!matches.length) {
+      results.innerHTML = `<p class="header-search-empty">No local matches for “${escapeHtml(cleanString(input.value, 80))}”.</p>`;
+    } else {
+      const e = escapeHtml;
+      results.innerHTML = `<ul class="header-search-list">${matches.map((entry, index) => `<li>
+        <a href="${e(entry.href)}" data-header-search-result>
+          <span class="header-search-area">${e(entry.area)}</span>
+          <span class="header-search-title">${e(entry.title)}</span>
+        </a>
+      </li>`).join('')}</ul>`;
+    }
+    results.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+  }
+
+  function initHeaderSearch() {
+    const header = document.querySelector('.header-inner');
+    if (!header || document.getElementById('site-search-form')) return;
+    const form = document.createElement('form');
+    form.className = 'header-search';
+    form.id = 'site-search-form';
+    form.setAttribute('role', 'search');
+    form.innerHTML = `<label class="sr-only" for="site-search">Search Unbought</label>
+      <svg class="icon header-search-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg>
+      <input type="search" id="site-search" name="q" maxlength="80" autocomplete="off" placeholder="Search" aria-controls="site-search-results" aria-expanded="false">
+      <div class="header-search-results" id="site-search-results" hidden></div>`;
+    const cta = header.querySelector('[data-auth-cta]');
+    if (cta) header.insertBefore(form, cta);
+    else header.appendChild(form);
+
+    const input = form.querySelector('#site-search');
+    const results = form.querySelector('#site-search-results');
+    const hide = () => {
+      results.hidden = true;
+      input.setAttribute('aria-expanded', 'false');
+    };
+    input.addEventListener('input', () => renderHeaderSearchResults(input, results));
+    input.addEventListener('focus', () => renderHeaderSearchResults(input, results));
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') hide();
+    });
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const first = results.querySelector('[data-header-search-result]');
+      if (first) window.location.href = first.href;
+      else renderHeaderSearchResults(input, results);
+    });
+    results.addEventListener('click', (event) => {
+      if (event.target.closest('[data-header-search-result]')) hide();
+    });
+    document.addEventListener('click', (event) => {
+      if (!form.contains(event.target)) hide();
+    });
+  }
+
   function initHeaderNotifications() {
     const cta = document.querySelector('.header-inner [data-auth-cta]');
     if (!cta || document.querySelector('[data-notifications-cta]')) return;
@@ -1263,20 +1429,397 @@
     });
   }
 
+  let profilePreviewPublic = false;
+
+  function profileMemberParam() {
+    try {
+      return cleanString(new URLSearchParams(window.location.search).get('member'), 100);
+    } catch (error) {
+      return '';
+    }
+  }
+
+  // Signed-in members start in their full, private profile. The limited public
+  // resume appears only while they choose "View as: Neighbor". Signed-out
+  // visitors and links to another member always get the limited public view.
+  function applyProfileView() {
+    if (!document.body.classList.contains('profile-page')) return;
+    const param = profileMemberParam();
+    const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
+    const viewingOther = Boolean(param && param !== selfId);
+    const signedIn = isMember();
+    const publicView = viewingOther || !signedIn || profilePreviewPublic;
+
+    document.body.classList.toggle('profile-page--member-view', signedIn && !viewingOther && !publicView);
+    document.body.classList.toggle('profile-page--public-only', publicView);
+    document.body.classList.toggle('profile-page--other-member', viewingOther);
+
+    const note = document.getElementById('profile-view-note');
+    const toggle = document.getElementById('view-as-toggle');
+    const edit = document.querySelector('.profile-toolbar a[href="dashboard.html#settings"]');
+    if (viewingOther) {
+      if (note) note.textContent = 'This is a limited public resume from the local member directory. Private fields, comments, and interactions stay out of it.';
+      if (toggle) toggle.hidden = true;
+      if (edit) edit.hidden = true;
+      return;
+    }
+    if (toggle) {
+      toggle.hidden = false;
+      toggle.textContent = profilePreviewPublic ? 'View as: Member' : 'View as: Neighbor';
+      toggle.setAttribute('aria-pressed', String(profilePreviewPublic));
+    }
+    if (edit) edit.hidden = false;
+    if (note) {
+      note.textContent = profilePreviewPublic
+        ? 'Neighbor view: this is the limited public resume neighbors see. Your private record is hidden.'
+        : 'Member view: your full record is shown first. Use View as to see the limited public resume neighbors see.';
+    }
+  }
+
+  function initProfileThemeForm() {
+    document.addEventListener('submit', (event) => {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement) || !form.matches('[data-profile-theme-form]')) return;
+      event.preventDefault();
+      if (!requireMembership() || !form.reportValidity()) return;
+      const data = new FormData(form);
+      state.pledge.profileTheme = state.pledge.profileTheme || {};
+      state.pledge.profileTheme.public = {
+        background: validThemeColor(data.get('publicBackground'), PROFILE_THEME_DEFAULTS.public.background),
+        content: validThemeColor(data.get('publicContent'), PROFILE_THEME_DEFAULTS.public.content)
+      };
+      state.pledge.profileTheme.private = {
+        background: validThemeColor(data.get('privateBackground'), PROFILE_THEME_DEFAULTS.private.background),
+        content: validThemeColor(data.get('privateContent'), PROFILE_THEME_DEFAULTS.private.content)
+      };
+      saveState();
+      renderProfile();
+      announce('Profile colors saved in this browser.');
+      showToast('Profile colors saved locally.', false);
+    });
+    document.addEventListener('click', (event) => {
+      const reset = event.target.closest('[data-profile-theme-reset]');
+      if (!reset) return;
+      const form = reset.closest('form');
+      if (!form) return;
+      const values = {
+        publicBackground: PROFILE_THEME_DEFAULTS.public.background,
+        publicContent: PROFILE_THEME_DEFAULTS.public.content,
+        privateBackground: PROFILE_THEME_DEFAULTS.private.background,
+        privateContent: PROFILE_THEME_DEFAULTS.private.content
+      };
+      Object.keys(values).forEach((name) => {
+        const input = form.querySelector(`[name="${name}"]`);
+        if (input) input.value = values[name];
+      });
+      announce('Default colors selected. Save to apply them.');
+    });
+  }
+
+  function initGroupPostActions() {
+    const panel = document.getElementById('group-profile');
+    if (!panel) return;
+    panel.addEventListener('submit', async (event) => {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement)) return;
+      const submit = form.querySelector('[type="submit"]');
+      if (submit) submit.disabled = true;
+      try {
+        if (form.matches('[data-group-post-form]')) {
+          event.preventDefault();
+          if (!requireMembership() || !form.reportValidity()) return;
+          const group = getGroupById(form.dataset.groupId);
+          if (!canPostInGroup(group)) {
+            showToast('Only current members can post in this group.', false);
+            return;
+          }
+          const data = new FormData(form);
+          const body = cleanString(data.get('body'), 1200);
+          if (!body) return;
+          const pictureInput = form.querySelector('input[name="picture"]');
+          const pictureFile = pictureInput && pictureInput.files ? pictureInput.files[0] : null;
+          let picture = [];
+          if (pictureFile) {
+            const photo = await preparePostPhoto(pictureFile);
+            if (!photo) {
+              showToast('That image could not be resized locally. Try a smaller JPEG, PNG, WebP, or GIF.', false);
+              return;
+            }
+            picture = [photo];
+          }
+          state.groupPosts = Array.isArray(state.groupPosts) ? state.groupPosts : [];
+          const post = {
+            id: makeId('group-post'),
+            groupId: group.id,
+            memberId: state.pledge.memberId,
+            name: state.pledge.name || 'Member',
+            title: cleanString(data.get('title'), 90),
+            body,
+            picture,
+            createdAt: new Date().toISOString(),
+            comments: []
+          };
+          state.groupPosts.push(post);
+          state.groupPosts = state.groupPosts.slice(-500);
+          addNotification('groupPost', `Group post: ${post.title || 'Untitled'}`,
+            `Saved locally for ${groupDisplayLabel(group)}. In a live system the group would see it; nothing was delivered.`,
+            { tab: '', sourceId: group.id });
+          saveState();
+          renderGroupProfile();
+          renderNotifications();
+          announce('Your post was saved in this group locally.');
+          showToast('Group post saved locally.', false);
+          return;
+        }
+        if (form.matches('[data-group-comment-form]')) {
+          event.preventDefault();
+          if (!requireMembership() || !form.reportValidity()) return;
+          const data = new FormData(form);
+          const body = cleanString(data.get('body'), 600);
+          const post = (Array.isArray(state.groupPosts) ? state.groupPosts : [])
+            .find((item) => item && item.id === form.dataset.groupPostId);
+          if (!body || !post) return;
+          const group = getGroupById(post.groupId);
+          if (!canPostInGroup(group)) {
+            showToast('Only current members can reply in this group.', false);
+            return;
+          }
+          post.comments = Array.isArray(post.comments) ? post.comments : [];
+          post.comments.push({
+            id: makeId('group-reply'),
+            memberId: state.pledge.memberId,
+            name: state.pledge.name || 'Member',
+            body,
+            createdAt: new Date().toISOString()
+          });
+          post.comments = post.comments.slice(-100);
+          addNotification('groupComment', `Group reply: ${post.title || 'Untitled'}`,
+            `Saved locally for ${groupDisplayLabel(group)}. In a live system the group would see it; nothing was delivered.`,
+            { tab: '', sourceId: group.id });
+          saveState();
+          renderGroupProfile();
+          renderNotifications();
+          announce('Your reply was saved on this post locally.');
+          showToast('Reply saved locally.', false);
+        }
+        if (form.matches('[data-group-guidelines-form]')) {
+          event.preventDefault();
+          if (!requireMembership() || !form.reportValidity()) return;
+          const group = getGroupById(form.dataset.groupId);
+          if (!group || !isGroupAdmin(group, state.pledge.memberId)) {
+            showToast('Only a current admin can change group community guidelines.', false);
+            return;
+          }
+          group.guidelines = cleanString(new FormData(form).get('guidelines'), 1200);
+          addNotification('groupGuidelines', `Group guidelines updated: ${groupDisplayLabel(group)}`,
+            'Recorded locally by a current admin. No other device or member was changed.',
+            { tab: 'social', sourceId: group.id });
+          saveState();
+          renderGroupProfile();
+          renderNotifications();
+          announce('Group community guidelines saved locally.');
+          showToast('Guidelines saved locally.', false);
+          return;
+        }
+        if (form.matches('[data-group-guideline-vote-form]')) {
+          event.preventDefault();
+          if (!requireMembership() || !form.reportValidity()) return;
+          const group = getGroupById(form.dataset.groupId);
+          if (!group || !isGroupAdmin(group, state.pledge.memberId)) {
+            showToast('Only a current admin can run a guideline vote.', false);
+            return;
+          }
+          const proposal = cleanString(new FormData(form).get('proposal'), 800);
+          if (!proposal) return;
+          state.groupPosts = Array.isArray(state.groupPosts) ? state.groupPosts : [];
+          const vote = {
+            id: makeId('group-guideline-vote'),
+            groupId: group.id,
+            memberId: state.pledge.memberId,
+            name: state.pledge.name || 'Member',
+            title: 'Guideline vote',
+            body: `Proposed guideline: ${proposal}\n\nReply "Agree" or "Disagree" in this chat.`,
+            picture: [],
+            createdAt: new Date().toISOString(),
+            comments: [],
+            guidelineVote: true,
+            proposal
+          };
+          state.groupPosts.push(vote);
+          state.groupPosts = state.groupPosts.slice(-500);
+          addNotification('groupPost', `Guideline vote opened: ${groupDisplayLabel(group)}`,
+            'Opened in group chat locally by a current admin. Members reply on this device only.',
+            { tab: '', sourceId: group.id });
+          saveState();
+          renderGroupProfile();
+          renderNotifications();
+          form.reset();
+          announce('Guideline vote opened in group chat locally.');
+          showToast('Guideline vote opened in group chat.', false);
+          return;
+        }
+        if (form.matches('[data-group-outcome-form]')) {
+          event.preventDefault();
+          if (!requireMembership() || !form.reportValidity()) return;
+          const group = getGroupById(form.dataset.groupId);
+          const post = (Array.isArray(state.groupPosts) ? state.groupPosts : [])
+            .find((item) => item && item.id === form.dataset.groupPostId && item.guidelineVote);
+          if (!group || !post || !isGroupAdmin(group, state.pledge.memberId)) {
+            showToast('Only a current admin can record the outcome.', false);
+            return;
+          }
+          const data = new FormData(form);
+          const outcome = cleanString(data.get('outcome'), 40);
+          if (!['Agreed', 'Not agreed', 'More discussion needed'].includes(outcome)) return;
+          post.outcome = outcome;
+          post.outcomeNote = cleanString(data.get('note'), 600);
+          post.outcomeBy = state.pledge.name || 'Admin';
+          post.outcomeById = state.pledge.memberId;
+          post.outcomeAt = new Date().toISOString();
+          addNotification('groupPost', `Guideline outcome recorded: ${groupDisplayLabel(group)}`,
+            `Recorded locally as “${outcome}” by ${post.outcomeBy}.`,
+            { tab: '', sourceId: group.id });
+          saveState();
+          renderGroupProfile();
+          renderNotifications();
+          announce(`Outcome recorded locally: ${outcome}.`);
+          showToast('Outcome recorded locally.', false);
+          return;
+        }
+      } finally {
+        if (submit && submit.isConnected) submit.disabled = false;
+      }
+    });
+
+    panel.addEventListener('click', (event) => {
+      const remove = event.target.closest('[data-group-delete]');
+      if (remove) {
+        event.preventDefault();
+        deleteGroupContent(remove.dataset.groupDelete, remove.dataset.groupId,
+          remove.dataset.groupPostId, remove.dataset.groupReplyId, remove);
+        return;
+      }
+      const review = event.target.closest('[data-group-review]');
+      if (review) {
+        event.preventDefault();
+        requireGroupImpartialReview(review.dataset.groupReview, review.dataset.groupMemberId, review);
+      }
+    });
+  }
+
+  function deleteGroupContent(kind, groupId, postId, replyId, trigger) {
+    if (!requireMembership()) return;
+    const group = getGroupById(groupId);
+    if (!group || !isGroupAdmin(group, state.pledge.memberId)) {
+      showToast('Only a current admin can delete group chat comments.', false);
+      return;
+    }
+    const label = kind === 'reply' ? 'reply' : 'post';
+    showConfirm({
+      title: `Delete this group ${label}?`,
+      message: `This removes the ${label} from this browser's local record. Nothing is sent to another device and the action cannot be undone here.`,
+      confirmLabel: `Delete ${label}`,
+      tone: 'danger',
+      onConfirm: () => {
+        const post = (Array.isArray(state.groupPosts) ? state.groupPosts : [])
+          .find((item) => item && item.id === postId && item.groupId === group.id);
+        if (!post) return;
+        if (kind === 'reply') {
+          post.comments = (Array.isArray(post.comments) ? post.comments : [])
+            .filter((comment) => comment && comment.id !== replyId);
+        } else {
+          state.groupPosts = (Array.isArray(state.groupPosts) ? state.groupPosts : [])
+            .filter((item) => item && item.id !== postId);
+        }
+        addNotification('groupModeration', `Group ${label} deleted: ${groupDisplayLabel(group)}`,
+          'Removed locally by a current admin. No other member or device was changed.',
+          { tab: 'social', sourceId: group.id });
+        saveState();
+        renderGroupProfile();
+        renderNotifications();
+        announce(`Group ${label} deleted locally.`);
+        showToast(`${label === 'reply' ? 'Reply' : 'Post'} deleted locally.`, false);
+        if (trigger instanceof HTMLElement && trigger.isConnected) trigger.focus({ preventScroll: true });
+      }
+    });
+  }
+
+  function requireGroupImpartialReview(groupId, memberId, trigger) {
+    if (!requireMembership()) return;
+    const group = getGroupById(groupId);
+    if (!group || !isGroupAdmin(group, state.pledge.memberId)) {
+      showToast('Only a current admin can require an impartial review.', false);
+      return;
+    }
+    const member = (Array.isArray(group.members) ? group.members : [])
+      .find((entry) => entry && entry.memberId === memberId);
+    if (!member || memberId === state.pledge.memberId) return;
+    const rotation = groupAdminRotation(group);
+    openReportDialog({
+      area: 'Group admin review',
+      detail: `${groupDisplayLabel(group)} · ${rotation.seats.length} staggered admin seats`,
+      name: member.name,
+      memberId,
+      sourceId: group.id,
+      groupId: group.id,
+      adminReview: true,
+      temporaryAdmin: isRotationAdmin(group, state.pledge.memberId)
+    }, trigger);
+  }
+
+  function initProfileFriendActions() {
+    const panel = document.getElementById('public-resume');
+    if (!panel) return;
+    panel.addEventListener('click', (event) => {
+      const send = event.target.closest('[data-friend-request-send]');
+      if (send) {
+        event.preventDefault();
+        sendFriendRequest(send.dataset.friendRequestSend, send);
+        return;
+      }
+      const action = event.target.closest('[data-friend-request-action]');
+      if (action) {
+        event.preventDefault();
+        respondToFriendRequest(action.dataset.friendRequestId, action.dataset.friendRequestAction, action);
+      }
+    });
+  }
+
+  function initGroupAdminForm() {
+    document.addEventListener('submit', (event) => {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement) || !form.matches('[data-group-admin-form]')) return;
+      event.preventDefault();
+      if (!requireMembership() || !form.reportValidity()) return;
+      const data = new FormData(form);
+      addGroupAdmin(form.dataset.groupId, cleanString(data.get('memberId'), 100), form);
+    });
+  }
+
+  function initProfilePrivacyForm() {
+    document.addEventListener('submit', (event) => {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement) || !form.matches('[data-profile-privacy-form]')) return;
+      event.preventDefault();
+      if (!requireMembership() || !form.reportValidity()) return;
+      const data = new FormData(form);
+      state.pledge.publicAddressSource = data.get('publicAddressSource') === 'physical' ? 'physical' : 'mailing';
+      state.pledge.publicPhone = Boolean(data.get('publicPhone'));
+      state.pledge.available = Boolean(data.get('available'));
+      saveState();
+      renderSharedMemberViews();
+      announce('Privacy choices saved in this browser.');
+      showToast('Privacy choices saved locally.', false);
+    });
+  }
+
   function initProfileViewToggle() {
     const btn = document.getElementById('view-as-toggle');
     if (!btn) return;
     btn.addEventListener('click', () => {
-      const publicOnly = document.body.classList.toggle('profile-page--public-only');
-      btn.textContent = publicOnly ? 'View as: Member' : 'View as: Neighbor';
-      btn.setAttribute('aria-pressed', String(publicOnly));
-      const note = document.getElementById('profile-view-note');
-      if (note) {
-        note.textContent = publicOnly
-          ? 'Neighbor view: only the public resume is shown. Your private record is hidden.'
-          : 'Member view: your public resume and a private record only you can see. Everything in the lower card is hidden from neighbors.';
-      }
-      announce(publicOnly ? 'Viewing this profile as a neighbor.' : 'Viewing your full member profile.');
+      profilePreviewPublic = !profilePreviewPublic;
+      applyProfileView();
+      announce(profilePreviewPublic ? 'Viewing the limited public resume.' : 'Viewing your full member profile.');
     });
   }
 
@@ -1371,12 +1914,52 @@
 
   // Only hours logged through a mutual worker + receiver confirmation (or the
   // three-member review vote) count. Members cannot enter hours by hand.
-  function getHourTotals(memberId) {
-    const id = memberId || (isMember() ? state.pledge.memberId : '');
+  function getHourTotalsFrom(contributions, memberId) {
+    const id = cleanString(memberId, 100);
     if (!id) return { week: 0, month: 0, year: 0, all: 0 };
-    const entries = (Array.isArray(state.contributions) ? state.contributions : [])
+    const entries = (Array.isArray(contributions) ? contributions : [])
       .filter((c) => c && c.memberId === id && c.type === 'labor' && c.mutualConfirmation === true);
     return getPeriodTotals(entries, 'createdAt', (c) => cleanHours(c.hours));
+  }
+
+  function getHourTotals(memberId) {
+    const id = memberId || (isMember() ? state.pledge.memberId : '');
+    return getHourTotalsFrom(state.contributions, id);
+  }
+
+  // Hours used and item totals come from the same confirmed exchanges. The
+  // source argument lets loadState recompute legacy counters without reading
+  // the global state variable before it is initialized.
+  function getConfirmedExchangeTotals(memberId, source) {
+    const id = cleanString(memberId, 100);
+    const empty = { hoursWorked: 0, hoursUsed: 0, itemsGifted: 0, itemsTaken: 0 };
+    if (!id) return empty;
+    const data = source && typeof source === 'object' ? source : state;
+    const requests = Array.isArray(data.requests) ? data.requests : [];
+    const listings = Array.isArray(data.listings) ? data.listings : [];
+    const confirmed = requests.filter((request) => request
+      && request.type === 'mutual_aid_request'
+      && cleanHours(request.loggedHours) > 0
+      && (request.logSource === 'mutual' || request.logSource === 'review' || Boolean(request.confirmedAt)));
+    const findListing = (request) => listings.find((listing) => listing && listing.id === request.listingId);
+    const workerId = (request) => {
+      if (request.workerId) return cleanString(request.workerId, 100);
+      const listing = findListing(request);
+      return listing && listing.isUser ? cleanString(listing.memberId, 100) : '';
+    };
+    const isProduct = (request) => {
+      const listing = findListing(request);
+      return (request.pillar || (listing && listing.pillar)) === 'goods';
+    };
+    const hoursUsed = confirmed
+      .filter((request) => request.memberId === id)
+      .reduce((sum, request) => sum + cleanHours(request.loggedHours), 0);
+    return {
+      hoursWorked: getHourTotalsFrom(data.contributions, id).all,
+      hoursUsed: cleanHours(hoursUsed),
+      itemsGifted: confirmed.filter((request) => isProduct(request) && workerId(request) === id).length,
+      itemsTaken: confirmed.filter((request) => isProduct(request) && request.memberId === id).length
+    };
   }
 
   function getDonationTotals() {
@@ -1947,6 +2530,16 @@
           available: raw.pledge.available !== false,
           publicAddressSource: raw.pledge.publicAddressSource === 'physical' ? 'physical' : 'mailing',
           publicPhone: Boolean(raw.pledge.publicPhone),
+          profileTheme: {
+            public: {
+              background: validThemeColor(raw.pledge.profileTheme && raw.pledge.profileTheme.public && raw.pledge.profileTheme.public.background, PROFILE_THEME_DEFAULTS.public.background),
+              content: validThemeColor(raw.pledge.profileTheme && raw.pledge.profileTheme.public && raw.pledge.profileTheme.public.content, PROFILE_THEME_DEFAULTS.public.content)
+            },
+            private: {
+              background: validThemeColor(raw.pledge.profileTheme && raw.pledge.profileTheme.private && raw.pledge.profileTheme.private.background, PROFILE_THEME_DEFAULTS.private.background),
+              content: validThemeColor(raw.pledge.profileTheme && raw.pledge.profileTheme.private && raw.pledge.profileTheme.private.content, PROFILE_THEME_DEFAULTS.private.content)
+            }
+          },
           note: cleanString(raw.pledge.note, 240),
           signedAt,
           status: 'active'
@@ -2152,6 +2745,10 @@
           type: cleanString(item.type, 40),
           typeLabel: hasOwn(REPORT_TYPES, item.type) ? REPORT_TYPES[item.type].label : cleanString(item.typeLabel, 80),
           route: item.route === 'criminal' ? 'criminal' : 'board',
+          adminReview: Boolean(item.adminReview),
+          temporaryAdmin: Boolean(item.temporaryAdmin),
+          groupId: cleanString(item.groupId, 100),
+          reviewBasis: item.adminReview ? 'impartial member review' : (item.route === 'criminal' ? 'criminal' : 'board'),
           description: cleanString(item.description, 1200),
           occurredAt: cleanString(item.occurredAt, 20),
           contextArea: cleanString(item.contextArea, 80) || 'Dashboard',
@@ -2361,13 +2958,34 @@
         .slice(0, 100)
         .map((item) => {
           const kind = item.kind === 'joined' || item.kind === 'town' ? item.kind : 'own';
-          const count = cleanCount(item.memberCount) || 1;
+          const members = (Array.isArray(item.members) ? item.members : [])
+            .map((entry) => entry && typeof entry === 'object' ? {
+              memberId: cleanString(entry.memberId || entry.id, 100),
+              name: cleanString(entry.name, 60),
+              profession: cleanString(entry.profession, 80),
+              track: cleanString(entry.track, 30),
+              worker: Boolean(entry.worker)
+            } : null)
+            .filter((entry) => entry && entry.memberId)
+            .slice(0, SOCIAL_LIMITS.groupMembers);
+          const admins = (Array.isArray(item.admins) ? item.admins : [])
+            .map((entry) => cleanString(entry && typeof entry === 'object' ? (entry.memberId || entry.id) : entry, 100))
+            .filter(Boolean)
+            .slice(0, SOCIAL_LIMITS.groupMembers);
           return {
             id: cleanString(item.id, 100) || makeId('group'),
             kind,
-            name: cleanString(item.name, 80),
+            name: cleanString(item.name, 120),
+            baseName: cleanString(item.baseName, 120),
+            roman: cleanString(item.roman, 12).toUpperCase(),
+            ordinal: Number.isFinite(Number(item.ordinal)) && Number(item.ordinal) > 0 ? Math.floor(Number(item.ordinal)) : 0,
+            overflow: Boolean(item.overflow),
+            seedEligible: typeof item.seedEligible === 'boolean' ? item.seedEligible : true,
             purpose: cleanString(item.purpose, 200),
-            memberCount: Math.min(SOCIAL_LIMITS.groupMembers, Math.max(1, count)),
+            guidelines: cleanString(item.guidelines, 1200),
+            members,
+            admins,
+            left: Boolean(item.left),
             createdAt: cleanString(item.createdAt, 40)
           };
         })
@@ -2392,6 +3010,41 @@
         .filter((item) => item.body);
     }
 
+    if (Array.isArray(raw.groupPosts)) {
+      fallback.groupPosts = raw.groupPosts
+        .filter((item) => item && typeof item === 'object')
+        .slice(-500)
+        .map((item) => ({
+          id: cleanString(item.id, 100) || makeId('group-post'),
+          groupId: cleanString(item.groupId, 100),
+          memberId: cleanString(item.memberId, 100),
+          name: cleanString(item.name, 60),
+          title: cleanString(item.title, 90),
+          body: cleanString(item.body, 1200),
+          picture: cleanPostPhotos(item.picture).slice(0, 1),
+          createdAt: cleanString(item.createdAt, 40),
+          guidelineVote: Boolean(item.guidelineVote),
+          proposal: cleanString(item.proposal, 800),
+          outcome: ['Agreed', 'Not agreed', 'More discussion needed'].includes(item.outcome) ? item.outcome : '',
+          outcomeNote: cleanString(item.outcomeNote, 600),
+          outcomeBy: cleanString(item.outcomeBy, 60),
+          outcomeById: cleanString(item.outcomeById, 100),
+          outcomeAt: cleanString(item.outcomeAt, 40),
+          comments: (Array.isArray(item.comments) ? item.comments : [])
+            .filter((comment) => comment && typeof comment === 'object')
+            .slice(-100)
+            .map((comment) => ({
+              id: cleanString(comment.id, 100) || makeId('group-reply'),
+              memberId: cleanString(comment.memberId, 100),
+              name: cleanString(comment.name, 60),
+              body: cleanString(comment.body, 600),
+              createdAt: cleanString(comment.createdAt, 40)
+            }))
+            .filter((comment) => comment.body)
+        }))
+        .filter((item) => item.groupId && item.body);
+    }
+
     if (raw.severanceFund && typeof raw.severanceFund === 'object') {
       fallback.severanceFund = {
         balance: Number.isFinite(Number(raw.severanceFund.balance)) ? Math.max(0, Number(raw.severanceFund.balance)) : 0,
@@ -2404,6 +3057,16 @@
         balance: purchases.reduce((sum, c) => sum + (Number(c.amount) || 0), 0),
         contributions: purchases.map((c) => c.id)
       };
+    }
+
+    if (fallback.pledge) {
+      // Example counters and older records are never trusted for these totals.
+      // Only mutually confirmed or review-decided exchanges count.
+      const totals = getConfirmedExchangeTotals(fallback.pledge.memberId, fallback);
+      fallback.pledge.hoursCompleted = totals.hoursWorked;
+      fallback.pledge.hoursUsed = totals.hoursUsed;
+      fallback.pledge.itemsGifted = totals.itemsGifted;
+      fallback.pledge.itemsTaken = totals.itemsTaken;
     }
 
     return fallback;
@@ -2443,10 +3106,24 @@
       body: cleanString(body, 300),
       tab: cleanString(options.tab, 30),
       sourceId: cleanString(options.sourceId, 100),
+      memberId: cleanString(options.memberId, 100),
       createdAt: new Date().toISOString(),
       read: false
     });
     state.notifications = state.notifications.slice(0, 200);
+  }
+
+  // Friend notices carry a member id so the name inside the title can be a
+  // link to that member's limited public profile, just like the social panel.
+  function renderNotificationTitle(item) {
+    const raw = cleanString(item && item.title, 120);
+    const id = cleanString(item && item.memberId, 100);
+    if (!id) return escapeHtml(raw);
+    const member = findMemberById(id);
+    const name = member && cleanString(member.name, 60);
+    if (!name || !raw.includes(name)) return escapeHtml(raw);
+    const at = raw.indexOf(name);
+    return `${escapeHtml(raw.slice(0, at))}${memberNameLink(name, id)}${escapeHtml(raw.slice(at + name.length))}`;
   }
 
   function unreadNotificationCount() {
@@ -3550,6 +4227,14 @@
     renderCategoryFacets();
     renderLaborFacets();
     applyFilters();
+
+    // Links from member and group profiles open the offering directly.
+    try {
+      const listingId = cleanString(new URLSearchParams(window.location.search).get('listing'), 120);
+      if (listingId) openListingModal(listingId);
+    } catch (error) {
+      // Ignore malformed links and leave the directory in its normal state.
+    }
   }
 
   /* ------------------------------------------------------------------------
@@ -4143,14 +4828,14 @@
     card.appendChild(stats);
 
     const model = createEl('p', 'account-note', signedIn
-      ? 'Prototype model (local only): your hours are shown only after both you and the receiver confirm the work, or after a three-member review vote resolves a disagreement. You cannot enter hours yourself. Giving is shown by week, month, year, and all time. Your share is a local, proportional estimate based on recorded contributions; it is not a payout, debt, or legal claim. Every cent of donations, academy tuition, and non-member purchases goes to the Unbought donation fund. Nothing is transmitted.'
+      ? 'Prototype model (local only): your hours are shown only after both you and the receiver confirm the work, or after a three-member review vote resolves a disagreement. No one can add hours unilaterally. Giving is shown by week, month, year, and all time. Your share is a local, proportional estimate based on recorded contributions; it is not a payout, debt, or legal claim. Every cent of donations, academy tuition, and non-member purchases goes to the Unbought donation fund. Nothing is transmitted.'
       : 'Prototype model (local only): the Unbought donation fund holds locally recorded donations and non-member purchase intents. Academy tuition would join it in a live system. No money moves, no payouts are made, and nothing is transmitted.');
     card.appendChild(model);
 
     if (signedIn) {
       const hoursNote = createEl('div', 'account-block');
       hoursNote.appendChild(createEl('h4', '', 'How work hours are logged'));
-      hoursNote.appendChild(createEl('p', 'account-note', 'You cannot log your own hours. A service or delivered product is confirmed by both the worker and the receiver, each entering the hours they believe were worked. When the two numbers match, the hours are logged. If they differ, the evidence goes to the review board and three randomly drawn active members — never care circle, students, or observers — vote on the hours to log. Use the Exchanges panel to confirm an exchange.'));
+      hoursNote.appendChild(createEl('p', 'account-note', 'No one can add hours unilaterally. For a service or delivered product, the worker and the receiver each choose the same agreed time from fixed options in the Exchanges panel. Matching confirmations log that time. If the choices differ, evidence goes to a three-member review; care circle members, students, observers, and either party cannot serve. Reviewers choose one of the two confirmed times. No hours are typed into a counter.'));
       card.appendChild(hoursNote);
 
       // Ledger
@@ -4471,14 +5156,15 @@
       ['Profession', e(m.profession || 'Not shared')],
       ['Membership year', e(String(membershipYearAt(m.signedAt) ?? 'Unknown'))],
       ['Track', e(track)],
-      ['Status', e(m.status || 'active')]
+      ['Status', e(m.status || 'active')],
+      ['Pledged on', e(formatDate(m.signedAt) || 'Not recorded')]
     ];
-    return `<dl class="resume-metrics" aria-label="Membership at a glance">
+    return `<dl class="resume-metrics resume-metrics--summary" aria-label="Membership at a glance">
       ${summary.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}
     </dl>`;
   }
 
-  function renderAccountDetailGroups(m, credential, confirmedHours, guiltyReportsAgainst) {
+  function renderAccountDetailGroups(m, credential, guiltyReportsAgainst) {
     const e = escapeHtml;
     const skillChips = (value) => {
       const items = cleanString(value, 400).split(/[\n,]+/).map((item) => item.trim()).filter(Boolean);
@@ -4492,6 +5178,7 @@
     const publicPlace = parseCityState(address);
     const publicCity = publicPlace?.split(',')[0]?.trim() || 'Not shared';
     const publicState = publicPlace?.split(',')[1]?.trim() || 'Not shared';
+    const totals = getConfirmedExchangeTotals(m.memberId);
 
     return [
       section('Identity &amp; contact', rows([
@@ -4512,15 +5199,8 @@
         ${skillChips(m.paidSkills)}
         <h4>Unpaid skills</h4>
         ${skillChips(m.unpaidSkills)}
-        ${rows([
-          accountDetail('Group / crew', e(m.group || 'Not set')),
-          accountDetail('Private note', e(m.note || 'Not shared'))
-        ])}`),
-      section('Privacy choices', rows([
-        accountDetail('Public City, State from', m.publicAddressSource === 'physical' ? 'Physical address' : 'Mailing address'),
-        accountDetail('Public phone', m.publicPhone ? 'Shown on resume' : 'Hidden from resume'),
-        accountDetail('Availability', m.available === false ? 'Not available right now' : 'Available')
-      ])),
+        ${rows([accountDetail('Private note', e(m.note || 'Not shared'))])}`),
+      section('Groups', renderGroupMembership(false)),
       section('Commons activity', `<div class="resume-metric-groups">
         <dl class="resume-metrics">
           <div><dt>Pledged on</dt><dd>${e(formatDate(m.signedAt) || 'Not recorded')}</dd></div>
@@ -4529,10 +5209,10 @@
           <div><dt>Reports (Guilty)</dt><dd>${guiltyReportsAgainst}</dd></div>
         </dl>
         <dl class="resume-metrics">
-          <div><dt>Hours Worked</dt><dd>${e(String(confirmedHours))}</dd></div>
-          <div><dt>Hours Used</dt><dd>${cleanHours(m.hoursUsed)}</dd></div>
-          <div><dt>Items Gifted</dt><dd>${cleanCount(m.itemsGifted)}</dd></div>
-          <div><dt>Items Taken</dt><dd>${cleanCount(m.itemsTaken)}</dd></div>
+          <div><dt>Hours Worked</dt><dd>${e(String(totals.hoursWorked))}</dd></div>
+          <div><dt>Hours Used</dt><dd>${e(String(totals.hoursUsed))}</dd></div>
+          <div><dt>Items Gifted</dt><dd>${e(String(totals.itemsGifted))}</dd></div>
+          <div><dt>Items Taken</dt><dd>${e(String(totals.itemsTaken))}</dd></div>
         </dl>
       </div>`),
       section('Local account access', `
@@ -4547,6 +5227,7 @@
     const m = state.pledge;
     const s = state.settings || {};
     const e = escapeHtml;
+    const totals = getConfirmedExchangeTotals(m.memberId);
     const notice = state.settings && state.settings.showPrototypeNotices
       ? `<p class="prototype-note">Prototype: account details, your username, and a salted password hash are stored only on this device. There is no real authentication or server, and nothing is transmitted.</p>`
       : '';
@@ -4613,14 +5294,17 @@
                 <input type="hidden" id="account-unpaid-skills" name="unpaidSkills" value="${e(m.unpaidSkills || '')}">
               </div>
             </div>
-            <div class="form-row">
-              <div class="field">
-                <label for="account-tagline">Tag line</label>
-                <input type="text" id="account-tagline" name="tagline" maxlength="90" value="${e(m.tagline || '')}" placeholder="A few words neighbors will see">
-              </div>
-              <div class="field">
-                <label for="account-group">Group / crew</label>
-                <input type="text" id="account-group" name="group" maxlength="80" value="${e(m.group || '')}" placeholder="Private to you">
+            <div class="field">
+              <label for="account-tagline">Tag line</label>
+              <input type="text" id="account-tagline" name="tagline" maxlength="90" value="${e(m.tagline || '')}" placeholder="A few words neighbors will see">
+            </div>
+            <div class="field account-groups-field">
+              <p class="field-label">Groups</p>
+              <p class="field-hint">Set by the groups you join or start. Your town group is automatic; this field cannot be typed.</p>
+              ${renderGroupMembership(true)}
+              <div class="account-form-actions account-group-actions">
+                <button type="button" class="button button--outline button--small" data-open-group-form="joined">Join a group</button>
+                <button type="button" class="button button--primary button--small" data-open-group-form="own">Create group</button>
               </div>
             </div>
             <div class="field">
@@ -4636,12 +5320,14 @@
           </fieldset>
           <fieldset>
             <legend>Commons counts</legend>
-            <p class="account-note">Amounts donated are recorded through the donate flow and stay private; they are not entered here.</p>
-            <div class="form-row">
-              <div class="field"><label for="account-hours-used">Hours used</label><input type="number" id="account-hours-used" name="hoursUsed" min="0" step="0.25" value="${cleanHours(m.hoursUsed)}"></div>
-              <div class="field"><label for="account-items-gifted">Items gifted</label><input type="number" id="account-items-gifted" name="itemsGifted" min="0" step="1" value="${cleanCount(m.itemsGifted)}"></div>
-              <div class="field"><label for="account-items-taken">Items taken</label><input type="number" id="account-items-taken" name="itemsTaken" min="0" step="1" value="${cleanCount(m.itemsTaken)}"></div>
-            </div>
+            <p class="account-note">These counts are read-only. Amounts donated come from the donate flow; hours and item totals come only from exchanges both parties confirmed. Nothing here can be typed by hand.</p>
+            <dl class="resume-metrics account-derived-metrics">
+              <div><dt>Hours worked</dt><dd>${e(String(totals.hoursWorked))}</dd></div>
+              <div><dt>Hours used</dt><dd>${e(String(totals.hoursUsed))}</dd></div>
+              <div><dt>Items gifted</dt><dd>${e(String(totals.itemsGifted))}</dd></div>
+              <div><dt>Items taken</dt><dd>${e(String(totals.itemsTaken))}</dd></div>
+            </dl>
+            <p class="field-hint">The worker and receiver each confirm the exchange in Exchanges. Matching hour counts are logged; disagreements go to a three-member review. Product counts update only after a goods exchange is confirmed the same way.</p>
           </fieldset>
           <fieldset class="account-privacy-options">
             <legend>Privacy</legend>
@@ -4653,7 +5339,7 @@
           </div>
         </form>
       </details>
-      <p class="account-note">Changes are saved only on this device; nothing is transmitted. Your public resume hides your legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated, and shows your phone only if you opt in. Hours worked are never typed here; they appear after mutual confirmation or review. To withdraw your membership, use the button in the pledge section.</p>
+      <p class="account-note">Changes are saved only on this device; nothing is transmitted. Your resume hides your legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated, and shows your phone only if you opt in. Hours and item counts are never typed here; they appear only after mutual confirmation or review. To withdraw your membership, use the button in the pledge section.</p>
       <div class="settings-block">
         <h4>Local preferences</h4>
         <p class="account-note">These settings only change how this prototype behaves on this device. Nothing is sent anywhere.</p>
@@ -4675,7 +5361,8 @@
 
   function getPublicResume(member) {
     const address = member.publicAddressSource === 'physical' ? member.physicalAddress : member.mailingAddress;
-    const hoursWorked = getHourTotals(member.memberId).all;
+    const totals = getConfirmedExchangeTotals(member.memberId);
+    const hoursWorked = totals.hoursWorked;
     return {
       displayName: firstName(member.name),
       cityState: parseCityState(address) || parseCityState(member.location) || 'City not shared',
@@ -4687,38 +5374,180 @@
       unpaidSkills: cleanString(member.unpaidSkills, 400),
       hoursWorked,
       hoursCompleted: hoursWorked,
-      hoursUsed: cleanHours(member.hoursUsed),
-      itemsGifted: cleanCount(member.itemsGifted),
-      itemsTaken: cleanCount(member.itemsTaken),
+      hoursUsed: totals.hoursUsed,
+      itemsGifted: totals.itemsGifted,
+      itemsTaken: totals.itemsTaken,
       available: member.available !== false,
       phone: member.publicPhone ? cleanString(member.phone, 40) : ''
     };
   }
 
-  function renderProfile() {
-    const publicPanel = document.getElementById('public-resume');
-    const privatePanel = document.getElementById('private-profile');
-    if (!publicPanel) return;
+  function getMemberPosts(memberId) {
+    const id = cleanString(memberId, 100);
+    if (!id) return [];
+    return getAllListings()
+      .filter((listing) => listing && listing.memberId === id)
+      .map((listing) => ({
+        id: listing.id,
+        title: cleanString(listing.title, 80) || 'Untitled post',
+        area: listing.pillar === 'goods' ? 'Free Stuff' : 'Free Labor',
+        page: listing.pillar === 'goods' ? 'freestuff.html' : 'freelabor.html',
+        location: cleanString(listing.location, 80),
+        createdAt: cleanString(listing.createdAt, 40),
+        comments: getListingComments(listing).length
+      }));
+  }
 
+  function getMemberListingComments(memberId) {
+    const id = cleanString(memberId, 100);
+    if (!id) return [];
+    const found = new Map();
+    const add = (listing, comment) => {
+      if (!listing || !comment || comment.memberId !== id || !comment.text) return;
+      const key = comment.id || `${listing.id}-${comment.createdAt}`;
+      found.set(key, {
+        ...comment,
+        listingId: listing.id,
+        listingTitle: cleanString(listing.title, 80) || 'Untitled post'
+      });
+    };
+    const map = state.listingComments && typeof state.listingComments === 'object' ? state.listingComments : {};
+    Object.keys(map).forEach((listingId) => {
+      const listing = findListing(listingId);
+      if (listing) cleanThreadComments(map[listingId]).forEach((comment) => add(listing, comment));
+    });
+    getAllListings().filter((listing) => listing && listing.memberId === id).forEach((listing) => {
+      cleanThreadComments(listing.comments).forEach((comment) => add(listing, comment));
+    });
+    return [...found.values()]
+      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+      .slice(0, 20);
+  }
+
+  function getMemberInteractions(memberId) {
+    const id = cleanString(memberId, 100);
+    if (!id) return [];
+    const items = [];
+    (Array.isArray(state.requests) ? state.requests : []).forEach((request) => {
+      if (!request || (request.memberId !== id && workerIdFor(request) !== id)) return;
+      const role = request.memberId === id ? 'Requested' : 'Provided';
+      items.push({
+        kind: 'Exchange',
+        title: cleanString(request.listingTitle, 80) || 'Commons request',
+        detail: `${role} · ${getHourState(request) === 'logged' || getHourState(request) === 'resolved'
+          ? `${cleanHours(request.loggedHours)} hr logged`
+          : getHourState(request) === 'disputed' ? 'Hours in review' : 'Local request'}`,
+        createdAt: cleanString(request.requestedAt, 40)
+      });
+    });
+    (Array.isArray(state.socialChats) ? state.socialChats : []).forEach((chat) => {
+      if (!chat || chat.memberId !== id) return;
+      items.push({
+        kind: 'Chat draft',
+        title: cleanString(chat.title, 90) || 'Social chat draft',
+        detail: cleanString(chat.audienceLabel, 80) || 'Friends',
+        createdAt: cleanString(chat.createdAt, 40)
+      });
+    });
+    (Array.isArray(state.messages) ? state.messages : []).forEach((message) => {
+      if (!message || message.memberId !== id) return;
+      items.push({
+        kind: 'Message',
+        title: cleanString(message.toName, 80) || 'Neighbor',
+        detail: cleanString(message.body, 120),
+        createdAt: cleanString(message.createdAt, 40)
+      });
+    });
+    (Array.isArray(state.volunteerInterests) ? state.volunteerInterests : []).forEach((interest) => {
+      if (!interest || interest.memberId !== id) return;
+      items.push({
+        kind: 'Volunteer offer',
+        title: cleanString(interest.role, 80) || 'Volunteer role',
+        detail: cleanString(interest.note, 120) || 'Local offer',
+        createdAt: cleanString(interest.createdAt, 40)
+      });
+    });
+    getFriendRequests().forEach((request) => {
+      if (!request || request.memberId !== id || request.direction !== 'outgoing') return;
+      items.push({
+        kind: 'Friend request',
+        title: cleanString(request.name, 60) || 'Neighbor',
+        detail: cleanString(request.status, 30) || 'pending',
+        createdAt: cleanString(request.createdAt, 40)
+      });
+    });
+    return items
+      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+      .slice(0, 20);
+  }
+
+  function renderProfilePosts(posts) {
+    if (!posts.length) return '<p class="resume-empty">No posts yet.</p>';
     const e = escapeHtml;
-    const m = state.pledge;
-    const credential = getCredential();
-    const confirmedHours = getHourTotals(m && m.memberId).all;
-    const guiltyReportsAgainst = reportsAboutMember()
-      .filter((report) => report && ['restriction_active', 'access_restored'].includes(report.status)).length;
+    return `<ul class="profile-post-list">${posts.map((post) => {
+      const href = post.page ? `${post.page}?listing=${encodeURIComponent(post.id)}` : '#top';
+      return `<li>
+        <strong><a class="post-link" href="${e(href)}">${e(post.title)}</a></strong>
+        <span class="contribution-meta">${e(post.area)}${post.location ? ` · ${e(post.location)}` : ''} · ${e(formatDate(post.createdAt) || 'Date not recorded')}${post.comments ? ` · ${post.comments} comment${post.comments === 1 ? '' : 's'}` : ''}</span>
+      </li>`;
+    }).join('')}</ul>`;
+  }
 
-    if (!m) {
-      publicPanel.innerHTML = `<section class="resume-card">
-        <p class="eyebrow">Member profile</p>
-        <h2>No public resume yet</h2>
-        <p>When someone signs the pledge on this device, their public resume will appear here.</p>
-        <a class="button button--primary" href="pledge.html">Take the Pledge <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
-      </section>`;
-      if (privatePanel) privatePanel.innerHTML = '';
-      return;
+  function renderProfileComments(comments) {
+    if (!comments.length) return '<p class="resume-empty">No comments yet.</p>';
+    const e = escapeHtml;
+    return `<ul class="profile-activity-list">${comments.map((comment) => `<li>
+      <strong>${e(comment.listingTitle)}</strong>
+      <p>${e(comment.text)}</p>
+      <span class="contribution-meta">${e(formatDate(comment.createdAt) || 'Date not recorded')} · local comment</span>
+    </li>`).join('')}</ul>`;
+  }
+
+  function renderProfileInteractions(items) {
+    if (!items.length) return '<p class="resume-empty">No interactions yet.</p>';
+    const e = escapeHtml;
+    return `<ul class="profile-activity-list">${items.map((item) => `<li>
+      <strong>${e(item.kind)}: ${e(item.title)}</strong>
+      ${item.detail ? `<p>${e(item.detail)}</p>` : ''}
+      <span class="contribution-meta">${e(formatDate(item.createdAt) || 'Date not recorded')}</span>
+    </li>`).join('')}</ul>`;
+  }
+
+  // A neighbor's limited profile can start the same local friend request used
+  // by the Friends & Groups member search. Nothing is delivered to the neighbor.
+  function renderProfileFriendAction(member) {
+    if (!isMember() || !member || !member.memberId) return '';
+    const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
+    if (member.memberId === selfId) return '';
+    const e = escapeHtml;
+    const id = cleanString(member.memberId, 100);
+    const requests = getFriendRequests();
+    const friends = Array.isArray(state.friends) ? state.friends : [];
+    const alreadyFriend = friends.some((friend) => friend && (friend.memberId === id
+      || friend.name === cleanString(member.name, 60)));
+    const pendingOut = requests.find((request) => request && request.memberId === id
+      && request.direction === 'outgoing' && request.status === 'pending');
+    const pendingIn = requests.find((request) => request && request.memberId === id
+      && request.direction === 'incoming' && request.status === 'pending');
+    if (alreadyFriend) return '<button class="button button--outline button--tiny" type="button" disabled>Already a friend</button>';
+    if (pendingOut) return '<button class="button button--outline button--tiny" type="button" disabled>Request pending</button>';
+    if (pendingIn) {
+      return `<div class="notification-actions">
+        <button class="button button--primary button--tiny" type="button" data-friend-request-action="accept" data-friend-request-id="${e(pendingIn.id)}">Accept request</button>
+        <button class="button button--ghost button--tiny" type="button" data-friend-request-action="decline" data-friend-request-id="${e(pendingIn.id)}">Decline</button>
+      </div>`;
     }
+    return `<button class="button button--outline button--tiny" type="button" data-friend-request-send="${e(id)}" aria-label="Send a local friend request to ${e(member.name || 'this member')}">Add friend</button>`;
+  }
 
-    const resume = getPublicResume(m);
+  // The public resume is the limited projection of a member record. The same
+  // card is used for the signed-in member's "View as: Neighbor" preview and for
+  // a neighbor reached through a member link.
+  function renderPublicResumeCard(member, options = {}) {
+    const e = escapeHtml;
+    const other = Boolean(options.other);
+    const resume = getPublicResume(member);
+    const posts = getMemberPosts(member.memberId);
     const skillList = (value) => {
       const items = cleanString(value, 400)
         .split(/[\n,]+/)
@@ -4726,7 +5555,7 @@
         .filter(Boolean);
       return items.length
         ? `<ul class="resume-skills">${items.map((item) => `<li>${e(item)}</li>`).join('')}</ul>`
-        : `<p class="resume-empty">Not listed yet.</p>`;
+        : '<p class="resume-empty">Not listed yet.</p>';
     };
     const metrics = [
       ['Hours worked', resume.hoursWorked],
@@ -4734,20 +5563,26 @@
       ['Items gifted', resume.itemsGifted],
       ['Items taken', resume.itemsTaken]
     ];
+    const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
+    const canReport = isMember() && other && member.memberId !== selfId;
 
-    publicPanel.innerHTML = `<section class="resume-card" aria-labelledby="resume-name">
+    return `<section class="resume-card profile-themed" style="${e(profileThemeStyle(getProfileTheme(member, 'public')))}" aria-labelledby="resume-name">
       <div class="resume-head">
-        ${resume.picture ? `<img class="resume-photo" src="${resume.picture}" alt="${e(resume.displayName || 'Member')}'s profile picture">` : ''}
+        ${resume.picture ? `<img class="resume-photo" src="${e(resume.picture)}" alt="${e(resume.displayName || 'Member')}'s profile picture">` : ''}
         <div>
-          <p class="eyebrow">Public resume</p>
+          <p class="eyebrow">Resume</p>
           <h2 id="resume-name">${e(resume.displayName || 'Member')}</h2>
           ${resume.tagline ? `<p class="resume-tagline">${e(resume.tagline)}</p>` : ''}
           ${resume.profession ? `<p class="resume-profession">${e(resume.profession)}</p>` : ''}
           <p class="resume-location"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-pin"></use></svg> ${e(resume.cityState)}</p>
           ${resume.phone ? `<p class="resume-phone">Public phone: ${e(resume.phone)}</p>` : ''}
+          ${renderPublicStatusTags(member)}
         </div>
         <span class="resume-availability ${resume.available ? 'is-available' : ''}">${resume.available ? 'Available' : 'Not available right now'}</span>
-        ${isMember() ? `<button class="button button--ghost button--small button--report" type="button" data-report-context data-report-area="Member profile" data-report-detail="Public resume" data-report-name="${e(resume.displayName)}" data-report-member-id="${e(m.memberId || '')}" data-report-source-id="${e(m.memberId || 'profile')}" aria-label="Report a concern from ${e(resume.displayName)}'s profile">Report from this profile</button>` : ''}
+        <div class="profile-card-actions">
+          ${renderProfileFriendAction(member)}
+          ${canReport ? `<button class="button button--ghost button--small button--report" type="button" data-report-context data-report-area="Member profile" data-report-detail="Public resume" data-report-name="${e(member.name || resume.displayName)}" data-report-member-id="${e(member.memberId || '')}" data-report-source-id="${e(member.memberId || 'profile')}" aria-label="Report a concern from ${e(resume.displayName)}'s profile">Report from this profile</button>` : ''}
+        </div>
       </div>
       ${resume.bio ? `<div class="resume-section">
         <h3>About</h3>
@@ -4767,17 +5602,60 @@
           ${metrics.map(([label, value]) => `<div><dt>${e(label)}</dt><dd>${e(value)}</dd></div>`).join('')}
         </dl>
       </div>
-      <p class="account-note">This resume shows only the chosen first name, picture, tag line, bio, profession, City/State, skills, hours, item totals, availability, and an optional public phone. Legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated are never included.</p>
-      ${isMember() ? `<p class="field-hint">This prototype stores one local member profile. Opening the report fills the name from this resume; you do not type it.</p>` : ''}
+      <div class="resume-section">
+        <h3>Offers in Free Stuff &amp; Free Labor</h3>
+        ${renderProfilePosts(posts)}
+      </div>
+      <p class="account-note">${other
+        ? 'This is the limited public profile from the local directory. It shows only the chosen first name, picture, tag line, bio, profession, City/State, skills, confirmed commons totals, seed/founding status, availability, an optional public phone, and posts.'
+        : 'This resume shows only the chosen first name, picture, tag line, bio, profession, City/State, skills, confirmed hours and item totals, seed/founding status, availability, an optional public phone, and posts.'} Legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, amounts donated, comment text, and interactions are never included.</p>
     </section>`;
+  }
 
-    if (!privatePanel) return;
-    if (!isMember()) {
-      privatePanel.innerHTML = '';
+  function renderProfile() {
+    const publicPanel = document.getElementById('public-resume');
+    const privatePanel = document.getElementById('private-profile');
+    if (!publicPanel) return;
+
+    const e = escapeHtml;
+    const param = profileMemberParam();
+    const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
+    const viewingOther = Boolean(param && param !== selfId);
+    applyProfileView();
+
+    if (viewingOther) {
+      const member = findMemberById(param);
+      publicPanel.innerHTML = member
+        ? renderPublicResumeCard(member, { other: true })
+        : `<section class="resume-card"><p class="eyebrow">Member profile</p><h2>Member not found</h2><p>This member is not in the local directory saved on this device.</p><a class="button button--outline" href="dashboard.html#social">Back to Friends &amp; Groups</a></section>`;
+      if (privatePanel) privatePanel.innerHTML = '';
       return;
     }
 
-    privatePanel.innerHTML = `<section class="resume-card private-profile" aria-labelledby="private-profile-title">
+    const m = state.pledge;
+    if (!m) {
+      publicPanel.innerHTML = `<section class="resume-card">
+        <p class="eyebrow">Member profile</p>
+        <h2>No public resume yet</h2>
+        <p>When someone signs the pledge on this device, their public resume will appear here.</p>
+        <a class="button button--primary" href="pledge.html">Take the Pledge <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+      </section>`;
+      if (privatePanel) privatePanel.innerHTML = '';
+      return;
+    }
+
+    const credential = getCredential();
+    const guiltyReportsAgainst = reportsAboutMember()
+      .filter((report) => report && ['restriction_active', 'access_restored'].includes(report.status)).length;
+
+    publicPanel.innerHTML = renderPublicResumeCard(m);
+
+    if (!privatePanel || !isMember()) {
+      if (privatePanel) privatePanel.innerHTML = '';
+      return;
+    }
+
+    privatePanel.innerHTML = `<section class="resume-card private-profile profile-themed" style="${e(profileThemeStyle(getProfileTheme(m, 'private')))}" aria-labelledby="private-profile-title">
       <div class="resume-head">
         ${m.picture ? `<img class="resume-photo" src="${e(safeProfileImageUrl(m.picture))}" alt="Your profile picture">` : ''}
         <div>
@@ -4790,19 +5668,324 @@
         <span class="resume-availability ${m.available === false ? '' : 'is-available'}">${m.available === false ? 'Not available right now' : 'Available'}</span>
         <a class="button button--outline button--small" href="dashboard.html#settings">Edit profile</a>
       </div>
-      <p class="private-notice"><strong>Not your public profile.</strong> Everything below is visible only in your signed-in browser on this device. Neighbors see the public resume card above, not this record.</p>
+      <p class="private-notice"><strong>This is your full member record.</strong> Everything below stays in your signed-in browser on this device. Neighbors see only the limited public resume; use <strong>View as: Neighbor</strong> above to see exactly what they see.</p>
       <div class="resume-section">
         <h3>Membership at a glance</h3>
         ${renderAccountSummary(m)}
       </div>
-      ${renderAccountDetailGroups(m, credential, confirmedHours, guiltyReportsAgainst)}
-      <p class="account-note">City, State, ZIP, birthdate, group, report count, amounts donated, and every sensitive record stay here. Hours worked are never typed by hand; they appear only after mutual confirmation or review.</p>
+      ${renderAccountDetailGroups(m, credential, guiltyReportsAgainst)}
+      <div class="resume-section">
+        <h3>Your posts in Free Stuff &amp; Free Labor</h3>
+        ${renderProfilePosts(getMemberPosts(m.memberId))}
+      </div>
+      <div class="resume-section">
+        <h3>Comments you left</h3>
+        ${renderProfileComments(getMemberListingComments(m.memberId))}
+      </div>
+      <div class="resume-section">
+        <h3>Interactions</h3>
+        ${renderProfileInteractions(getMemberInteractions(m.memberId))}
+      </div>
+      <div class="resume-section">
+        <h3>Privacy choices</h3>
+        <p class="account-note">Choose what appears on your limited public resume. Save here or in Settings; both use the same local record.</p>
+        <form class="account-form profile-privacy-form" data-profile-privacy-form>
+          <div class="field">
+            <label for="profile-public-address">Public City, State from</label>
+            <select id="profile-public-address" name="publicAddressSource">
+              <option value="mailing"${m.publicAddressSource !== 'physical' ? ' selected' : ''}>Mailing address</option>
+              <option value="physical"${m.publicAddressSource === 'physical' ? ' selected' : ''}>Physical address</option>
+            </select>
+            <p class="field-hint">Only the city and state from that address are shown; the street and ZIP stay private.</p>
+          </div>
+          <fieldset class="account-privacy-options">
+            <legend>Show on public resume</legend>
+            <label class="checkbox"><input type="checkbox" name="publicPhone"${m.publicPhone ? ' checked' : ''}> <span>Phone number</span></label>
+            <label class="checkbox"><input type="checkbox" name="available"${m.available !== false ? ' checked' : ''}> <span>Available for exchanges</span></label>
+          </fieldset>
+          <p class="field-hint">Always private: legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, amounts donated, comment text, and interactions.</p>
+          <div class="account-form-actions">
+            <button type="submit" class="button button--primary button--small">Save privacy choices</button>
+          </div>
+        </form>
+      </div>
+      <div class="resume-section">
+        <h3>Profile colors</h3>
+        <p class="account-note">Pick a background and content color for each view. The public colors appear on your limited resume for neighbors; the private colors apply only to this full record. Nothing leaves this browser.</p>
+        <form class="account-form profile-theme-form" data-profile-theme-form>
+          <fieldset>
+            <legend>Public resume colors</legend>
+            <div class="form-row">
+              <div class="field">
+                <label for="theme-public-bg">Background</label>
+                <input type="color" id="theme-public-bg" name="publicBackground" value="${e(getProfileTheme(m, 'public').background)}">
+              </div>
+              <div class="field">
+                <label for="theme-public-fg">Content</label>
+                <input type="color" id="theme-public-fg" name="publicContent" value="${e(getProfileTheme(m, 'public').content)}">
+              </div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Private record colors</legend>
+            <div class="form-row">
+              <div class="field">
+                <label for="theme-private-bg">Background</label>
+                <input type="color" id="theme-private-bg" name="privateBackground" value="${e(getProfileTheme(m, 'private').background)}">
+              </div>
+              <div class="field">
+                <label for="theme-private-fg">Content</label>
+                <input type="color" id="theme-private-fg" name="privateContent" value="${e(getProfileTheme(m, 'private').content)}">
+              </div>
+            </div>
+          </fieldset>
+          <div class="account-form-actions">
+            <button type="submit" class="button button--primary button--small">Save profile colors</button>
+            <button type="button" class="button button--ghost button--small" data-profile-theme-reset>Reset to defaults</button>
+          </div>
+        </form>
+      </div>
+      <p class="account-note">City, State, ZIP, birthdate, group, report count, amounts donated, and every sensitive record stay here. Hours and item counts are never typed by hand; they appear only after mutual confirmation or review.</p>
+    </section>`;
+  }
+
+  function canPostInGroup(group) {
+    const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
+    return Boolean(isMember() && group && !group.left
+      && (Array.isArray(group.members) ? group.members : [])
+        .some((member) => member && member.memberId === selfId));
+  }
+
+  function getGroupPosts(groupId) {
+    const id = cleanString(groupId, 100);
+    return (Array.isArray(state.groupPosts) ? state.groupPosts : [])
+      .filter((post) => post && post.groupId === id)
+      .slice()
+      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  }
+
+  function renderGroupPosts(group, posts, canPost, canModerate) {
+    if (!posts.length) {
+      return '<p class="account-note">No group posts yet. Members can start the conversation below.</p>';
+    }
+    const e = escapeHtml;
+    return `<ul class="group-post-list">${posts.map((post) => {
+      const picture = cleanPostPhotos(post.picture)[0];
+      const comments = Array.isArray(post.comments) ? post.comments : [];
+      const agreeVotes = comments.filter((comment) => /^\s*agree\b/i.test(cleanString(comment && comment.body, 600))).length;
+      const disagreeVotes = comments.filter((comment) => /^\s*disagree\b/i.test(cleanString(comment && comment.body, 600))).length;
+      return `<li class="group-post">
+        <p class="contribution-meta"><strong>${memberNameLink(post.name, post.memberId)}</strong> · ${e(formatDate(post.createdAt) || 'Date not recorded')}</p>
+        ${post.title ? `<h4>${e(post.title)}</h4>` : ''}
+        ${picture ? `<img class="chat-picture" src="${e(safeProfileImageUrl(picture.dataUrl))}" alt="Local picture for ${e(post.title || 'this group post')}">` : ''}
+        <p>${e(post.body)}</p>
+        ${post.guidelineVote ? `<p class="contribution-meta guideline-vote-tally">Guideline vote · ${agreeVotes} agree · ${disagreeVotes} disagree · run by ${e(post.name)}</p>` : ''}
+        ${post.guidelineVote && post.outcome ? `<p class="contribution-meta guideline-outcome">Admin outcome: ${e(post.outcome)} · chosen by ${e(post.outcomeBy || 'an admin')}${post.outcomeNote ? ` · ${e(post.outcomeNote)}` : ''}</p>` : ''}
+        <div class="notification-actions">
+          <button class="button button--ghost button--tiny button--report" type="button" data-report-context data-report-area="Group chat" data-report-detail="${e(post.title ? `${post.title} · ` : '')}${e(groupDisplayLabel(group))}" data-report-name="${e(post.name)}" data-report-member-id="${e(post.memberId || '')}" data-report-source-id="${e(post.id)}" aria-label="Report a concern about a post from ${e(post.name)}">Report</button>
+          ${canModerate ? `<button class="button button--ghost button--tiny" type="button" data-group-delete="post" data-group-id="${e(group.id)}" data-group-post-id="${e(post.id)}" aria-label="Delete this group post locally">Delete post</button>` : ''}
+        </div>
+        <div class="group-post-comments">
+          <p class="contribution-meta">${comments.length} ${comments.length === 1 ? 'reply' : 'replies'} attached to this post</p>
+          ${comments.length ? `<ul class="profile-activity-list">${comments.map((comment) => `<li>
+            <strong>${memberNameLink(comment.name, comment.memberId)}</strong>
+            <p>${e(comment.body)}</p>
+            <span class="contribution-meta">${e(formatDate(comment.createdAt) || 'Date not recorded')}</span>
+            <div class="notification-actions">
+              <button class="button button--ghost button--tiny button--report" type="button" data-report-context data-report-area="Group chat reply" data-report-detail="${e(post.title ? `${post.title} · ` : '')}${e(groupDisplayLabel(group))}" data-report-name="${e(comment.name)}" data-report-member-id="${e(comment.memberId || '')}" data-report-source-id="${e(comment.id)}" aria-label="Report a concern about a reply from ${e(comment.name)}">Report</button>
+              ${canModerate ? `<button class="button button--ghost button--tiny" type="button" data-group-delete="reply" data-group-id="${e(group.id)}" data-group-post-id="${e(post.id)}" data-group-reply-id="${e(comment.id)}" aria-label="Delete this reply locally">Delete reply</button>` : ''}
+            </div>
+          </li>`).join('')}</ul>` : ''}
+          ${canPost ? `<form class="account-form group-comment-form" data-group-comment-form data-group-post-id="${e(post.id)}">
+            <div class="field">
+              <label for="group-reply-${e(domId(post.id))}">Reply to this post</label>
+              <input type="text" id="group-reply-${e(domId(post.id))}" name="body" maxlength="600" required placeholder="${post.guidelineVote ? 'Reply Agree or Disagree…' : 'Add to the conversation…'}">
+            </div>
+            <button type="submit" class="button button--ghost button--tiny">Add reply</button>
+          </form>` : ''}
+          ${post.guidelineVote && canModerate ? `<form class="account-form group-outcome-form" data-group-outcome-form data-group-id="${e(group.id)}" data-group-post-id="${e(post.id)}">
+            <div class="field">
+              <label for="group-outcome-${e(domId(post.id))}">Admin outcome of this conversation</label>
+              <select id="group-outcome-${e(domId(post.id))}" name="outcome" required>
+                <option value="">Choose an outcome…</option>
+                ${['Agreed', 'Not agreed', 'More discussion needed'].map((outcome) => `<option value="${e(outcome)}"${post.outcome === outcome ? ' selected' : ''}>${e(outcome)}</option>`).join('')}
+              </select>
+              <input type="text" name="note" maxlength="600" value="${e(post.outcomeNote || '')}" placeholder="Why this outcome? (optional)">
+              <p class="field-hint">Admins must record what they think the conversation decided. Stored locally with your name.</p>
+            </div>
+            <button type="submit" class="button button--outline button--tiny">${post.outcome ? 'Update outcome' : 'Record outcome'}</button>
+          </form>` : ''}
+          ${post.guidelineVote && !canModerate ? '<p class="account-note">The admins will record what they think the outcome of this conversation was.</p>' : ''}
+        </div>
+      </li>`;
+    }).join('')}</ul>`;
+  }
+
+  function renderGroupProfile() {
+    const panel = document.getElementById('group-profile');
+    if (!panel) return;
+    const e = escapeHtml;
+    let id = '';
+    try {
+      id = cleanString(new URLSearchParams(window.location.search).get('group'), 120);
+    } catch (error) {
+      id = '';
+    }
+    if (!isMember()) {
+      panel.innerHTML = `<section class="resume-card"><p class="eyebrow">Group profile</p><h2>Sign in to see groups</h2><p>Group profiles are part of the member area. Take the pledge on this device to see the local directory.</p><a class="button button--primary" href="pledge.html">Take the Pledge</a></section>`;
+      return;
+    }
+    const group = getGroupById(id);
+    if (!group) {
+      panel.innerHTML = `<section class="resume-card"><p class="eyebrow">Group profile</p><h2>Group not found</h2><p>This group is not saved in this browser. It may have been left, canceled, or created on another device.</p><a class="button button--outline" href="dashboard.html#social">Back to Friends &amp; Groups</a></section>`;
+      return;
+    }
+    const members = Array.isArray(group.members) ? group.members : [];
+    const memberIds = members.map((member) => member && member.memberId).filter(Boolean);
+    const postMap = new Map();
+    memberIds.forEach((memberId) => getMemberPosts(memberId).forEach((post) => postMap.set(post.id, post)));
+    const listingPosts = [...postMap.values()];
+    const groupPosts = getGroupPosts(group.id);
+    const canPost = canPostInGroup(group);
+    const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
+    const canModerate = isGroupAdmin(group, selfId);
+    const rotation = groupAdminRotation(group);
+    const location = group.kind === 'town' ? townLocationLabel() : '';
+    panel.innerHTML = `<section class="resume-card group-profile" aria-labelledby="group-profile-title">
+      <div class="resume-head">
+        <div>
+          <p class="eyebrow">Group profile</p>
+          <h2 id="group-profile-title">${e(groupDisplayLabel(group))}</h2>
+          <p class="group-kind">${e(groupKindLabel(group))}</p>
+          ${location ? `<p class="group-location">${e(location)}</p>` : ''}
+          ${group.left ? '<p class="private-notice">You left this group. It stays here only so this local record can still be opened; it is no longer in your group list.</p>' : ''}
+          ${group.purpose ? `<p class="resume-bio">${e(group.purpose)}</p>` : '<p class="resume-empty">No purpose added yet.</p>'}
+        </div>
+        <a class="button button--outline button--small" href="dashboard.html#social">Back to groups</a>
+      </div>
+      <div class="resume-section">
+        <h3>Members</h3>
+        <p class="contribution-meta">${members.length}/${SOCIAL_LIMITS.groupMembers} people · counted from the group’s member list, not typed by hand.</p>
+        <ul class="profile-post-list">${members.map((member) => {
+          const adminSeat = rotation.seats.find((seat) => seat.member && seat.member.memberId === member.memberId);
+          return `<li>
+            ${memberNameLink(member.name, member.memberId)}
+            ${member.memberId === selfId ? '<span class="badge badge--soft">You</span>' : ''}
+            ${adminSeat ? `<span class="badge badge--amber">Admin · seat ${adminSeat.seat}</span>` : ''}
+            ${canModerate && member.memberId !== selfId ? `<div class="notification-actions"><button class="button button--ghost button--tiny" type="button" data-group-review="${e(group.id)}" data-group-member-id="${e(member.memberId)}" aria-label="Require an impartial review of ${e(member.name)}">Require impartial review</button></div>` : ''}
+          </li>`;
+        }).join('')}</ul>
+      </div>
+      <div class="resume-section">
+        <h3>Admins</h3>
+        <p class="contribution-meta">Seven admin seats rotate each week for workers. Seat 1 changes every week, seat 2 every two weeks, and so on, so the group has staggered admin terms. Only workers can hold a seat or be added as a standing admin.</p>
+        ${rotation.seats.length ? `<ul class="profile-post-list admin-seat-list">${rotation.seats.map((seat) => `<li>
+          <span class="badge badge--amber">Seat ${seat.seat}</span>
+          ${memberNameLink(seat.member.name, seat.member.memberId)}
+          ${seat.member.memberId === selfId ? '<span class="badge badge--soft">You</span>' : ''}
+          <span class="contribution-meta">Rotates every ${seat.cycleWeeks} week${seat.cycleWeeks === 1 ? '' : 's'}</span>
+        </li>`).join('')}</ul>` : '<p class="account-note">No admin seats are recorded until members are added to this group.</p>'}
+        ${(() => {
+          const standing = (Array.isArray(group.admins) ? group.admins : [])
+            .filter((id) => id && !rotation.memberIds.includes(id));
+          if (!standing.length) return '';
+          return `<p class="contribution-meta">Standing admins recorded: ${standing.map((id) => {
+            const member = members.find((entry) => entry.memberId === id);
+            return member ? memberNameLink(member.name, member.memberId) : e(id);
+          }).join(', ')}</p>`;
+        })()}
+        ${group.guidelines ? `<p class="group-guidelines"><strong>Group community guidelines</strong><span>${e(group.guidelines)}</span></p>` : ''}
+        <p class="account-note">Current admins can cancel a group, delete group chat posts and replies, require an impartial review of a member, change this group’s community guidelines, and run a chat vote on a guideline. You can leave when another member is recorded in the admin rotation. Reports made by a temporary admin still require evidence and an impartial member review.</p>
+        ${canModerate ? `<form class="account-form group-guidelines-form" data-group-guidelines-form data-group-id="${e(group.id)}">
+          <div class="field">
+            <label for="group-guidelines-${e(domId(group.id))}">Group community guidelines</label>
+            <textarea id="group-guidelines-${e(domId(group.id))}" name="guidelines" rows="3" maxlength="1200" placeholder="Consent, scope, and how this group makes decisions…">${e(group.guidelines || '')}</textarea>
+            <p class="field-hint">Only current admins can change this. Stored locally in this browser; nothing is published to another device.</p>
+          </div>
+          <button type="submit" class="button button--outline button--small">Save guidelines locally</button>
+        </form>
+        <form class="account-form group-guideline-vote-form" data-group-guideline-vote-form data-group-id="${e(group.id)}">
+          <div class="field">
+            <label for="group-vote-${e(domId(group.id))}">Guideline change to vote on</label>
+            <textarea id="group-vote-${e(domId(group.id))}" name="proposal" rows="2" maxlength="800" required placeholder="Write the guideline change members should vote on…"></textarea>
+            <p class="field-hint">Opens a group chat post where members reply “Agree” or “Disagree”. The vote stays on this device.</p>
+          </div>
+          <button type="submit" class="button button--primary button--small">Start guideline vote in chat</button>
+        </form>` : '<p class="account-note">Only a current admin can change group community guidelines or run a guideline vote.</p>'}
+        ${(() => {
+          if (!canModerate) {
+            return '<p class="account-note">Only a current admin can add another standing admin.</p>';
+          }
+          const eligible = members.filter((member) => member.memberId !== selfId
+            && isGroupWorker(member)
+            && !(Array.isArray(group.admins) ? group.admins : []).includes(member.memberId));
+          if (!eligible.length) {
+            return '<p class="account-note">Only workers can be admins. Add another worker to this group first, or switch to an eligible member.</p>';
+          }
+          return `<form class="account-form group-admin-form" data-group-admin-form data-group-id="${e(group.id)}">
+            <div class="field">
+              <label for="group-admin-select">Add a standing admin</label>
+              <select id="group-admin-select" name="memberId" required>
+                ${eligible.map((member) => `<option value="${e(member.memberId)}">${e(member.name)}</option>`).join('')}
+              </select>
+              <p class="field-hint">Recorded locally in this browser. Weekly seats still rotate; no invitation or account change is sent.</p>
+            </div>
+            <div class="account-form-actions"><button type="submit" class="button button--primary button--small">Add admin locally</button></div>
+          </form>`;
+        })()}
+      </div>
+      <div class="resume-section">
+        <h3>Group chat</h3>
+        <p class="account-note">This is the place for members of this group to post and talk. Replies stay attached to the post they answer.</p>
+        ${renderGroupPosts(group, groupPosts, canPost, canModerate)}
+        ${canPost ? `<form class="account-form group-post-form" data-group-post-form data-group-id="${e(group.id)}">
+          <div class="form-row">
+            <div class="field">
+              <label for="group-post-audience">Audience</label>
+              <select id="group-post-audience" name="audience" disabled><option selected>${e(groupDisplayLabel(group))}</option></select>
+              <p class="field-hint">Only members of this group see this local draft.</p>
+            </div>
+            <div class="field">
+              <label for="group-post-title">Title <span class="optional">(optional)</span></label>
+              <input type="text" id="group-post-title" name="title" maxlength="90" placeholder="What is this about?">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label for="group-post-message">Message</label>
+              <textarea id="group-post-message" name="body" rows="3" maxlength="1200" required placeholder="Share something with this group…"></textarea>
+            </div>
+            <div class="field">
+              <label for="group-post-picture">Picture <span class="optional">(optional)</span></label>
+              <input type="file" id="group-post-picture" name="picture" accept="image/jpeg,image/png,image/webp,image/gif">
+              <p class="field-hint">Resized locally and kept only in this browser. Nothing is uploaded.</p>
+            </div>
+          </div>
+          <button type="submit" class="button button--primary button--small">Post to group</button>
+        </form>` : '<p class="account-note">Only current members can post in this group.</p>'}
+      </div>
+      <div class="resume-section">
+        <h3>Offers in Free Stuff &amp; Free Labor</h3>
+        ${renderProfilePosts(listingPosts)}
+      </div>
+      <div class="resume-section">
+        <h3>Group details</h3>
+        <dl class="resume-metrics">
+          <div><dt>Type</dt><dd>${e(groupKindLabel(group))}</dd></div>
+          <div><dt>People</dt><dd>${members.length}/${SOCIAL_LIMITS.groupMembers}</dd></div>
+          <div><dt>Admin seats</dt><dd>${rotation.seats.length}/${GROUP_ADMIN_SEATS} · staggered weekly</dd></div>
+          ${location ? `<div><dt>Location</dt><dd>${e(location)}</dd></div>` : ''}
+          <div><dt>Added</dt><dd>${e(formatDate(group.createdAt) || 'Not recorded')}</dd></div>
+        </dl>
+      </div>
+      <p class="account-note">This is a local prototype group. Membership, names, and the count are stored only in this browser; nothing was sent, and no invitations were delivered.</p>
     </section>`;
   }
 
   function renderSharedMemberViews() {
     renderMemberAccount();
     renderProfile();
+    renderGroupProfile();
     // The dashboard's account panel shows confirmed hours, which change when
     // an exchange is logged or a review vote resolves it.
     renderAccountInfo();
@@ -4815,6 +5998,30 @@
   }
 
   const HOUR_REVIEWER_COUNT = 3;
+
+  // Hours are never typed into a counter. Both sides choose the same agreed
+  // time from fixed options; a disagreement is resolved by choosing one of
+  // those confirmed options in a three-member review.
+  const HOUR_CHOICES = [0.25, 0.5, 1, 1.5, 2, 3, 4, 6, 8];
+
+  function hourChoiceLabel(value) {
+    const hours = cleanHours(value);
+    if (!hours) return 'Choose agreed time';
+    if (hours === 1) return '1 hour';
+    if (hours < 1) return `${Math.round(hours * 60)} minutes`;
+    return `${hours} hours`;
+  }
+
+  function hourChoiceOptions(values, selected, placeholder) {
+    const e = escapeHtml;
+    const options = (Array.isArray(values) ? values : HOUR_CHOICES)
+      .map(cleanHours)
+      .filter((value) => value > 0)
+      .filter((value, index, list) => list.indexOf(value) === index)
+      .sort((a, b) => a - b);
+    return `<option value="">${e(placeholder || 'Choose agreed time')}</option>`
+      + options.map((value) => `<option value="${e(value)}"${cleanHours(selected) === value ? ' selected' : ''}>${e(hourChoiceLabel(value))}</option>`).join('');
+  }
 
   // A request has two sides: the member who received it and the member who
   // provided it. Only those two may confirm the work and the hours.
@@ -4978,8 +6185,9 @@
         return `<span class="badge badge--soft">${e(sideLabel)} · waiting for confirmation</span>`;
       }
       return `<form class="exchange-confirm" data-confirm-hours data-id="${e(request.id)}" data-role="${e(role)}">
-        <label for="hours-${e(role)}-${e(domId(request.id))}">${e(roleLabel(role))} · hours worked</label>
-        <input type="number" id="hours-${e(role)}-${e(domId(request.id))}" name="hours" min="0.25" step="0.25" required placeholder="2">
+        <label for="hours-${e(role)}-${e(domId(request.id))}">${e(roleLabel(role))} · agreed time</label>
+        <select id="hours-${e(role)}-${e(domId(request.id))}" name="hours" required>${hourChoiceOptions(HOUR_CHOICES, request[hoursKey], 'Choose agreed time')}</select>
+        <p class="field-hint">No one can log hours alone. Matching confirmations record the time.</p>
         <button class="button button--outline button--small" type="submit">Confirm hours</button>
       </form>`;
     };
@@ -5008,13 +6216,13 @@
           <span class="contribution-meta">${vote ? `${e(vote.hours)} hr · ${e(vote.reason || 'No reason given')}` : 'Not voted yet'}</span></li>`;
       }).join('');
       return `<div class="hour-review">
-        <p class="account-note">The numbers differ, so three randomly drawn active members decide the hours. Care circle, students, observers, and either party are excluded. In this browser-only prototype the draw uses locally stored eligible neighbors; a live system would fill all three seats.</p>
+        <p class="account-note">The confirmed times differ, so three randomly drawn active members choose one of those times. Care circle, students, observers, and either party are excluded. In this browser-only prototype the draw uses locally stored eligible neighbors; a live system would fill all three seats.</p>
         <ul class="review-seats">${seats}</ul>
         ${panel.length < HOUR_REVIEWER_COUNT ? `<p class="field-hint">Only ${panel.length} eligible neighbor${panel.length === 1 ? '' : 's'} in this browser. The remaining ${HOUR_REVIEWER_COUNT - panel.length} seat${HOUR_REVIEWER_COUNT - panel.length === 1 ? '' : 's'} wait for a live draw.</p>` : ''}
         ${mySeat && role === 'none' && !alreadyVoted ? `<form class="account-form hour-vote-form" data-hour-vote data-id="${e(request.id)}">
           <div class="form-grid">
-            <div class="field"><label for="vote-hours-${e(domId(request.id))}">Hours to log</label>
-              <input type="number" id="vote-hours-${e(domId(request.id))}" name="hours" min="0.25" step="0.25" required></div>
+            <div class="field"><label for="vote-hours-${e(domId(request.id))}">Confirmed time to log</label>
+              <select id="vote-hours-${e(domId(request.id))}" name="hours" required>${hourChoiceOptions([request.workerHours, request.receiverHours], '', 'Choose a confirmed time')}</select></div>
             <div class="field"><label for="vote-reason-${e(domId(request.id))}">Why</label>
               <input type="text" id="vote-reason-${e(domId(request.id))}" name="reason" maxlength="240" required></div>
           </div>
@@ -5058,8 +6266,8 @@
 
     panel.innerHTML = `<section class="account-card">
       <p class="eyebrow">Exchanges</p>
-      <h3>Confirm the work and the hours</h3>
-      <p class="account-note">Members cannot log their own hours. The worker and the receiver each confirm the work and enter the hours they believe were done. Matching numbers are logged. If they differ, the evidence goes to the review board and three randomly drawn active members vote on the hours. This is stored in this browser only.</p>
+      <h3>Confirm the work and the agreed time</h3>
+      <p class="account-note">No one can add hours unilaterally. The worker and the receiver each choose the same agreed time from fixed options; matching confirmations log it. If the choices differ, evidence goes to a three-member review, and the reviewers choose one of the confirmed times. Nothing is typed into an hours counter. This is stored in this browser only.</p>
       <div class="account-block">
         <h4>Awaiting mutual confirmation</h4>
         ${pending.length ? `<ul class="exchange-list">${pending.map(itemMarkup).join('')}</ul>` : '<p class="account-note">No exchanges are waiting for confirmation.</p>'}
@@ -5203,6 +6411,25 @@
     </section>`;
   }
 
+  function notificationTarget(item) {
+    const tab = cleanString(item && item.tab, 30);
+    if (tab) return { tab, href: `dashboard.html#${encodeURIComponent(tab)}` };
+    if (item && (item.type === 'groupPost' || item.type === 'groupComment')) {
+      const groupId = cleanString(item.sourceId, 100);
+      if (groupId) return { tab: '', href: groupProfileUrl(groupId) };
+    }
+    if (item && item.type === 'comment') {
+      const sourceId = cleanString(item.sourceId, 100);
+      const listing = getAllListings().find((entry) => entry && cleanThreadComments(getListingComments(entry))
+        .some((comment) => comment.id === sourceId));
+      if (listing) {
+        const page = listing.pillar === 'goods' ? 'freestuff.html' : 'freelabor.html';
+        return { tab: '', href: `${page}#listing-${domId(listing.id)}` };
+      }
+    }
+    return { tab: 'notifications', href: 'dashboard.html#notifications' };
+  }
+
   function renderNotifications() {
     const panel = document.getElementById('notifications-panel');
     if (!panel || !isMember()) return;
@@ -5214,22 +6441,107 @@
     panel.innerHTML = `<section class="account-card">
       <p class="eyebrow">Activity</p>
       <h3>Notifications</h3>
-      <p class="account-note">Local drafts only. These notices are created by your own actions here; nothing is delivered to another person or device. A live system would notify neighbors about messages, requests, and comments.</p>
+      <p class="account-note">Local drafts only. These notices are created by your own actions here; nothing is delivered to another person or device. Click a whole notice to mark it read and open where it happened.</p>
       <div class="notification-summary">
         <strong>${unread} unread</strong>
         <button class="button button--ghost button--small" type="button" data-mark-notifications ${unread ? '' : 'disabled'}>Mark all read</button>
       </div>
-      ${items.length ? `<ul class="notification-list">${items.map((item) => `<li class="notification-item ${item.read ? '' : 'is-unread'}">
-        <div>
-          <p class="contribution-meta"><strong>${e(item.title)}</strong> · ${e(formatDate(item.createdAt))}</p>
-          <p>${e(item.body)}</p>
-        </div>
-        <div class="notification-actions">
-          ${item.tab ? `<button class="button button--ghost button--tiny" type="button" data-notification-tab="${e(item.tab)}">Open</button>` : ''}
-          ${item.read ? '' : `<button class="button button--ghost button--tiny" type="button" data-mark-notification="${e(item.id)}">Mark read</button>`}
-        </div>
-      </li>`).join('')}</ul>` : '<p class="account-note">No local notifications yet. Messages, requests, and comments you record will appear here.</p>'}
+      ${items.length ? `<ul class="notification-list">${items.map((item) => {
+        const target = notificationTarget(item);
+        return `<li class="notification-item ${item.read ? '' : 'is-unread'}" data-notification-link data-notification-id="${e(item.id)}" data-notification-href="${e(target.href)}" ${target.tab ? `data-notification-tab="${e(target.tab)}"` : ''} role="link" tabindex="0" aria-label="Open this notice and mark it read: ${e(item.title)}">
+          <div>
+            <p class="contribution-meta"><strong>${renderNotificationTitle(item)}</strong> · ${e(formatDate(item.createdAt))}</p>
+            <p>${e(item.body)}</p>
+          </div>
+          <span class="notification-open">Open <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></span>
+        </li>`;
+      }).join('')}</ul>` : '<p class="account-note">No local notifications yet. Messages, requests, and comments you record will appear here.</p>'}
     </section>`;
+  }
+
+  // Town groups are capped at 150 people. When one fills, the next group keeps
+  // the town name and gains a Roman numeral (II, III, ... XI). The first group
+  // is implicitly I; overflow groups do not create seed members.
+  function romanToInt(value) {
+    const text = cleanString(value, 12).toUpperCase();
+    if (!/^[IVXLCDM]+$/.test(text)) return 1;
+    const values = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+    let total = 0;
+    for (let index = 0; index < text.length; index += 1) {
+      const current = values[text[index]];
+      const next = values[text[index + 1]] || 0;
+      total += current < next ? -current : current;
+    }
+    return total > 0 ? total : 1;
+  }
+
+  function toRomanNumeral(value) {
+    let remaining = Math.max(1, Math.floor(Number(value) || 1));
+    const pairs = [
+      [1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'],
+      [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
+      [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
+    ];
+    let text = '';
+    pairs.forEach(([amount, numeral]) => {
+      while (remaining >= amount) {
+        text += numeral;
+        remaining -= amount;
+      }
+    });
+    return text;
+  }
+
+  function groupBaseName(group) {
+    return cleanString(group && group.name, 120).replace(/\s+[IVXLCDM]+$/, '');
+  }
+
+  function groupRoman(group) {
+    if (!group || group.kind !== 'town') return '';
+    const stored = cleanString(group.roman, 12).toUpperCase();
+    if (/^[IVXLCDM]+$/.test(stored)) return stored;
+    const match = cleanString(group.name, 120).match(/\s+([IVXLCDM]+)$/);
+    return match ? match[1].toUpperCase() : 'I';
+  }
+
+  function groupOrdinal(group) {
+    const stored = Number(group && group.ordinal);
+    return Number.isFinite(stored) && stored > 0 ? Math.floor(stored) : romanToInt(groupRoman(group));
+  }
+
+  function groupDisplayLabel(group) {
+    if (!group) return 'Group';
+    if (group.kind !== 'town') return cleanString(group.name, 120) || 'Group';
+    return `${groupBaseName(group)} ${groupRoman(group)}`.trim();
+  }
+
+  function nextTownRoman(baseName) {
+    const base = cleanString(baseName, 120).replace(/\s+[IVXLCDM]+$/, '');
+    let highest = 0;
+    (Array.isArray(state.groups) ? state.groups : []).forEach((group) => {
+      if (!group || group.kind !== 'town' || groupBaseName(group) !== base) return;
+      highest = Math.max(highest, groupOrdinal(group));
+    });
+    return toRomanNumeral(highest + 1);
+  }
+
+  function townLocationLabel() {
+    const m = state.pledge;
+    if (!m) return '';
+    const parsed = parseCityState(m.cityState) || parseCityState(m.mailingAddress);
+    const city = safeCity(m.city) || (parsed ? safeCity(parsed.split(',')[0]) : '') || safeCity(m.location);
+    const stateCode = normalizeStateCode(m.state) || (parsed && parsed.includes(',') ? parsed.split(',')[1].trim() : '');
+    const zip = normalizeZip(m.zip || zipFromAddress(m.mailingAddress));
+    if (!city && !stateCode && !zip) return '';
+    return `${[city, stateCode].filter(Boolean).join(', ')}${zip ? ` ${zip}` : ''}`;
+  }
+
+  function getAvailableTownGroups() {
+    const joinedIds = new Set(getMemberGroups().map((group) => group && group.id));
+    return (Array.isArray(state.groups) ? state.groups : [])
+      .filter((group) => group && group.kind === 'town' && !group.left && !joinedIds.has(group.id))
+      .map(normalizeGroup)
+      .sort((a, b) => groupOrdinal(a) - groupOrdinal(b));
   }
 
   function townGroupName() {
@@ -5246,24 +6558,437 @@
     const name = townGroupName();
     if (!name) return;
     state.groups = Array.isArray(state.groups) ? state.groups : [];
-    const town = state.groups.find((group) => group && group.kind === 'town');
+    const selfEntry = { memberId: state.pledge.memberId, name: state.pledge.name || 'You' };
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const towns = state.groups.filter((group) => group && group.kind === 'town' && !group.left);
+    const town = towns[0];
     if (!town) {
-      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
       state.groups.unshift({
         id: `town-${slug || 'main'}`,
         kind: 'town',
         name,
+        baseName: name,
+        roman: 'I',
+        ordinal: 1,
+        overflow: false,
+        seedEligible: true,
         purpose: 'Your main local group. Everyone in your town belongs here; other groups are social or support circles.',
+        members: [selfEntry],
         memberCount: 1,
+        admins: [selfEntry.memberId],
         createdAt: new Date().toISOString()
       });
-      saveState();
+    } else {
+      if (town.name !== name) {
+        town.name = name;
+        town.baseName = name;
+      }
+      if (!cleanString(town.roman, 12)) {
+        town.roman = 'I';
+        town.ordinal = 1;
+        town.overflow = false;
+        town.seedEligible = true;
+      }
+      let last = towns[towns.length - 1];
+      while (last && normalizeGroup(last).members.length >= SOCIAL_LIMITS.groupMembers) {
+        const roman = nextTownRoman(name);
+        const overflow = {
+          id: `town-${slug || 'main'}-${roman.toLowerCase()}`,
+          kind: 'town',
+          name: `${name} ${roman}`,
+          baseName: name,
+          roman,
+          ordinal: romanToInt(roman),
+          overflow: true,
+          seedEligible: false,
+          purpose: `Opened because ${groupDisplayLabel(last)} reached ${SOCIAL_LIMITS.groupMembers} people. Neighbors in this area can choose which numbered group to join. Seed and founding labels stay with the first group's profession and ZIP record.`,
+          members: [],
+          memberCount: 0,
+          admins: [],
+          createdAt: new Date().toISOString()
+        };
+        state.groups.push(overflow);
+        addNotification('social', `Town group opened: ${overflow.name}`,
+          `Recorded locally when ${groupDisplayLabel(last)} reached ${SOCIAL_LIMITS.groupMembers} people. No invitations or membership changes were sent.`,
+          { tab: 'social', sourceId: overflow.id });
+        last = overflow;
+      }
+    }
+    if (state.pledge) {
+      state.pledge.group = getMemberGroups().map(groupDisplayLabel).filter(Boolean).join(', ');
+    }
+    saveState();
+  }
+
+  function hasTownGroupMembership() {
+    const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
+    if (!selfId) return false;
+    return (Array.isArray(state.groups) ? state.groups : []).some((group) => group
+      && group.kind === 'town' && !group.left
+      && (Array.isArray(group.members) ? group.members : [])
+        .some((member) => member && (member.memberId || member.id) === selfId));
+  }
+
+  function normalizeGroup(group) {
+    if (!group) return group;
+    const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
+    const selfName = state.pledge && state.pledge.name ? state.pledge.name : 'You';
+    const members = [];
+    (Array.isArray(group.members) ? group.members : []).forEach((entry) => {
+      if (!entry) return;
+      const id = cleanString(entry.memberId || entry.id, 100);
+      const name = cleanString(entry.name, 60);
+      if (!id || members.some((item) => item.memberId === id)) return;
+      members.push({
+        memberId: id,
+        name: name || (id === selfId ? selfName : 'Member'),
+        profession: cleanString(entry.profession, 80),
+        track: cleanString(entry.track, 30),
+        worker: Boolean(entry.worker)
+      });
+    });
+    // Groups the member starts always include them. A town group is automatic
+    // only until the member chooses a numbered group; after that they belong
+    // to exactly one of I, II, III, XI, and so on.
+    const autoAddSelf = group.kind === 'own'
+      || (group.kind === 'town' && !group.overflow && !hasTownGroupMembership());
+    if (selfId && !group.left && autoAddSelf && !members.some((item) => item.memberId === selfId)) {
+      members.unshift({ memberId: selfId, name: selfName });
+    }
+    if (group.kind === 'town') {
+      if (!cleanString(group.roman, 12)) group.roman = 'I';
+      if (!Number.isFinite(Number(group.ordinal)) || Number(group.ordinal) <= 0) group.ordinal = romanToInt(group.roman);
+      group.seedEligible = !group.overflow;
+    }
+    group.members = members.slice(0, SOCIAL_LIMITS.groupMembers);
+    group.memberCount = group.members.length;
+    const admins = [];
+    (Array.isArray(group.admins) ? group.admins : []).forEach((entry) => {
+      const id = cleanString(entry && typeof entry === 'object' ? (entry.memberId || entry.id) : entry, 100);
+      if (id && !admins.includes(id)) admins.push(id);
+    });
+    if (!group.left && !admins.length && (group.kind === 'own' || group.kind === 'town')
+      && selfId && isGroupWorkerId(selfId) && members.some((item) => item.memberId === selfId)) admins.push(selfId);
+    group.admins = admins;
+    return group;
+  }
+
+  // Admin duty is for workers only. Care Circle, Observer, and Apprentice
+  // members may take part in group chat, but they cannot hold an admin seat or
+  // be added as a standing admin.
+  function resolveGroupMemberInfo(entry) {
+    const id = cleanString(entry && (entry.memberId || entry.id), 100);
+    if (!id) return null;
+    if (state.pledge && state.pledge.memberId === id) return state.pledge;
+    const found = findMemberById(id);
+    const entryTrack = entry && typeof entry === 'object' ? cleanString(entry.track, 30) : '';
+    if (found && entryTrack) return { ...found, track: entryTrack };
+    return found || (typeof entry === 'object' ? entry : null);
+  }
+
+  function isGroupWorker(entry) {
+    const member = resolveGroupMemberInfo(entry);
+    if (!member) return false;
+    const track = cleanString(member.track, 30).toLowerCase();
+    if (['care', 'observer', 'apprentice', 'student', 'limited', 'exiled', 'inactive', 'observe_only'].includes(track)) return false;
+    if (track === 'contributor' || member.worker === true) return true;
+    const profession = normalizeProfession(member.profession || String(member.paidSkills || '').split(/[\n,;]/)[0]);
+    const confirmed = getConfirmedExchangeTotals(member.memberId || member.id).hoursWorked > 0;
+    return Boolean(profession || confirmed || cleanString(member.unpaidSkills, 20));
+  }
+
+  function isGroupWorkerId(memberId) {
+    const id = cleanString(memberId, 100);
+    return Boolean(id && isGroupWorker({ memberId: id }));
+  }
+
+  // The seven seats change on different cycles (1–7 weeks), so admin duty is
+  // staggered instead of all changing on the same Monday.
+  function groupWeekStart(value) {
+    const date = value instanceof Date ? value : new Date();
+    const monday = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+    monday.setUTCDate(monday.getUTCDate() - ((monday.getUTCDay() + 6) % 7));
+    return monday.getTime();
+  }
+
+  function groupAdminRotation(group, value) {
+    const members = (group && Array.isArray(group.members) ? group.members : [])
+      .filter((member) => member && cleanString(member.memberId, 100) && isGroupWorker(member));
+    const start = groupWeekStart(value);
+    const weekNumber = Math.floor(start / WEEK_MS);
+    const groupId = cleanString(group && group.id, 120);
+    let hash = 0;
+    for (let index = 0; index < groupId.length; index += 1) {
+      hash = ((hash * 31) + groupId.charCodeAt(index)) | 0;
+    }
+    const seats = [];
+    const used = new Set();
+    for (let seat = 0; seat < Math.min(GROUP_ADMIN_SEATS, members.length); seat += 1) {
+      const cycleWeeks = seat + 1;
+      let index = Math.abs(Math.floor(weekNumber / cycleWeeks) + hash + seat) % members.length;
+      let attempts = 0;
+      while (used.has(index) && attempts < members.length) {
+        index = (index + 1) % members.length;
+        attempts += 1;
+      }
+      used.add(index);
+      seats.push({ seat: seat + 1, member: members[index], cycleWeeks });
+    }
+    return {
+      weekStart: new Date(start).toISOString(),
+      weekEnd: new Date(start + WEEK_MS).toISOString(),
+      seats,
+      memberIds: seats.map((seat) => cleanString(seat.member && seat.member.memberId, 100)).filter(Boolean)
+    };
+  }
+
+  function isRotationAdmin(group, memberId) {
+    const id = cleanString(memberId, 100);
+    return Boolean(id && groupAdminRotation(group).memberIds.includes(id));
+  }
+
+  function isGroupAdmin(group, memberId) {
+    const id = cleanString(memberId, 100);
+    if (!id || !group) return false;
+    const stored = Array.isArray(group.admins) && group.admins.includes(id) && isGroupWorkerId(id);
+    return Boolean(stored || isRotationAdmin(group, id));
+  }
+
+  function otherGroupAdmins(group) {
+    const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
+    const ids = new Set();
+    (group && Array.isArray(group.admins) ? group.admins : [])
+      .filter((id) => id && id !== selfId && isGroupWorkerId(id))
+      .forEach((id) => ids.add(id));
+    // Every other worker will hold one of the staggered seats, so they count
+    // as another admin for the rule that blocks a sole admin from leaving.
+    (group && Array.isArray(group.members) ? group.members : []).forEach((member) => {
+      const id = member && cleanString(member.memberId, 100);
+      if (id && id !== selfId && isGroupWorkerId(id)) ids.add(id);
+    });
+    return [...ids];
+  }
+
+  function getMemberGroups() {
+    const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
+    return (Array.isArray(state.groups) ? state.groups : [])
+      .filter((group) => group && group.name && !group.left)
+      .map(normalizeGroup)
+      .filter((group) => !selfId || group.members.some((member) => member && member.memberId === selfId));
+  }
+
+  function getGroupById(groupId) {
+    const id = cleanString(groupId, 120);
+    return (Array.isArray(state.groups) ? state.groups : [])
+      .filter((group) => group && group.name)
+      .map(normalizeGroup)
+      .find((group) => group.id === id) || null;
+  }
+
+  function groupProfileUrl(groupId) {
+    const id = cleanString(groupId, 120);
+    return id ? `group.html?group=${encodeURIComponent(id)}` : 'dashboard.html#social';
+  }
+
+  function groupNameLink(group, extraClass) {
+    const e = escapeHtml;
+    const name = e(cleanString(groupDisplayLabel(group), 120) || 'Group');
+    if (!group || !group.id) return name;
+    const className = ['group-link', extraClass].filter(Boolean).join(' ');
+    return `<a class="${e(className)}" href="${e(groupProfileUrl(group.id))}">${name}</a>`;
+  }
+
+  // The headcount is derived from the selected members, never typed. Your main
+  // town group is automatic; numbered town groups are opt-in, and every social
+  // or support circle you join or start includes you.
+  function renderGroupMemberOptions() {
+    const entries = memberDirectory();
+    if (!entries.length) {
+      return '<p class="account-note">You are the only member recorded on this device right now, so the count stays at 1.</p>';
+    }
+    const e = escapeHtml;
+    return `<div class="group-member-options">${entries.map((member) => {
+      const meta = [member.profession, member.cityState].filter(Boolean).join(' · ');
+      return `<div class="group-member-option">
+        ${memberNameLink(member.name, member.memberId)}
+        <label class="checkbox"><input type="checkbox" name="members" value="${e(member.memberId)}" data-group-member> <span>Include · ${e(meta || 'Current member')}</span></label>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function groupKindLabel(group) {
+    if (group && group.kind === 'town') {
+      return `Main group · Group ${groupRoman(group)}${group.overflow ? ' · overflow' : ''}`;
+    }
+    return group && group.kind === 'own' ? 'Your group' : 'Joined group';
+  }
+
+  function renderGroupMembership(includeActions) {
+    const joined = getMemberGroups();
+    const available = getAvailableTownGroups();
+    const groups = [...joined, ...available].sort((a, b) => {
+      if (a.kind === 'town' && b.kind === 'town') return groupOrdinal(a) - groupOrdinal(b);
+      return Number(b && b.kind === 'town') - Number(a && a.kind === 'town');
+    });
+    if (!groups.length) {
+      return '<p class="account-note">No groups yet. Join or create one in Friends &amp; Groups.</p>';
+    }
+    const e = escapeHtml;
+    const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
+    const joinedIds = new Set(joined.map((group) => group && group.id));
+    return `<ul class="social-list">${groups.map((group) => {
+      const isJoined = joinedIds.has(group.id);
+      const admin = isGroupAdmin(group, selfId);
+      const otherAdmins = otherGroupAdmins(group);
+      let action = '';
+      if (includeActions && group.kind === 'town' && !isJoined) {
+        action = `<div class="social-item-actions"><button type="button" class="button button--outline button--tiny" data-group-action="join-town" data-group-id="${e(group.id)}">Join this group</button></div>`;
+      } else if (includeActions && group.kind !== 'town') {
+        const leave = otherAdmins.length
+          ? `<button type="button" class="button button--ghost button--tiny" data-group-action="leave" data-group-id="${e(group.id)}">Leave group</button>`
+          : `<span class="contribution-meta">${admin ? 'Add another admin before leaving' : 'No other admin can take over yet'}</span>`;
+        action = `<div class="social-item-actions">
+          ${admin ? `<button type="button" class="button button--ghost button--tiny" data-group-action="cancel" data-group-id="${e(group.id)}">Cancel group</button>` : ''}
+          ${leave}
+          ${admin ? `<a class="button button--ghost button--tiny" href="${e(groupProfileUrl(group.id))}">Add admin</a>` : ''}
+        </div>`;
+      }
+      return `<li class="social-item ${group.kind === 'town' && isJoined ? 'social-item--main' : ''}">
+        <strong>${groupNameLink(group)}</strong>
+        <span class="contribution-meta">${e(groupKindLabel(group))} · ${group.memberCount}/${SOCIAL_LIMITS.groupMembers} people${isJoined ? '' : ' · available'}${admin ? ' · you are an admin' : ''}</span>
+        ${group.purpose ? `<span>${e(group.purpose)}</span>` : ''}
+        ${action}
+      </li>`;
+    }).join('')}</ul>`;
+  }
+
+  function changeGroupMembership(groupId, action, trigger) {
+    if (!requireMembership()) return;
+    const selfId = state.pledge.memberId;
+    const group = getGroupById(groupId);
+    if (!group) return;
+    let title;
+    if (action === 'join-town') {
+      if (group.kind !== 'town' || !group.overflow) {
+        showToast('Your main town group is already added. Choose a numbered group.', false);
+        return;
+      }
+      if (getMemberGroups().some((item) => item && item.id === group.id)) return;
+      if (group.members.length >= SOCIAL_LIMITS.groupMembers) {
+        showToast('This numbered group is full. Another one will open locally.', false);
+        return;
+      }
+      title = 'Joined town group';
+      // A member belongs to one numbered town group at a time. Joining a new
+      // number moves them out of the previous one, including Group I.
+      (Array.isArray(state.groups) ? state.groups : []).forEach((item) => {
+        if (!item || item.id === group.id || item.kind !== 'town' || item.left) return;
+        item.members = (Array.isArray(item.members) ? item.members : [])
+          .filter((member) => member && member.memberId !== selfId);
+        item.memberCount = item.members.length;
+        if (Array.isArray(item.admins)) item.admins = item.admins.filter((id) => id !== selfId);
+      });
+      group.members = Array.isArray(group.members) ? group.members : [];
+      if (!group.members.some((member) => member && member.memberId === selfId)) {
+        group.members.push({ memberId: selfId, name: state.pledge.name || 'You' });
+      }
+      group.memberCount = group.members.length;
+      group.left = false;
+    } else if (action === 'cancel') {
+      if (group.kind === 'town') {
+        showToast('A town group cannot be canceled from a member profile.', false);
+        return;
+      }
+      if (!isGroupAdmin(group, selfId)) {
+        showToast('Only an admin can cancel a group.', false);
+        return;
+      }
+      title = 'Group canceled';
+      state.groups = (Array.isArray(state.groups) ? state.groups : [])
+        .filter((item) => item && item.id !== group.id);
+    } else if (action === 'leave') {
+      if (group.kind === 'town') {
+        showToast('Your town group is automatic and cannot be left.', false);
+        return;
+      }
+      if (!otherGroupAdmins(group).length) {
+        showToast('Add another admin before leaving this group.', false);
+        return;
+      }
+      title = 'Left group';
+      group.members = (Array.isArray(group.members) ? group.members : [])
+        .filter((member) => member && member.memberId !== selfId);
+      group.admins = (Array.isArray(group.admins) ? group.admins : [])
+        .filter((id) => id !== selfId);
+      group.memberCount = group.members.length;
+      group.left = true;
+      if (group.kind === 'own') group.kind = 'joined';
+    } else {
       return;
     }
-    if (town.name !== name) {
-      town.name = name;
-      saveState();
+    if (state.pledge) {
+      state.pledge.group = getMemberGroups().map(groupDisplayLabel).filter(Boolean).join(', ');
     }
+    addNotification('social', `${title}: ${groupDisplayLabel(group)}`,
+      'Changed locally in this browser. No other account, invitation, or device was changed.',
+      { tab: 'social', sourceId: group.id });
+    saveState();
+    renderSocial();
+    renderAccountInfo();
+    renderProfile();
+    renderGroupProfile();
+    renderNotifications();
+    announce(`${groupDisplayLabel(group)}: ${title.toLowerCase()} locally.`);
+    showToast(`${title} locally.`, false);
+    if (trigger instanceof HTMLElement) trigger.focus({ preventScroll: true });
+  }
+
+  function addGroupAdmin(groupId, memberId, trigger) {
+    if (!requireMembership()) return;
+    const selfId = state.pledge.memberId;
+    const group = getGroupById(groupId);
+    if (!group || !isGroupAdmin(group, selfId)) {
+      showToast('Only an admin can add another admin.', false);
+      return;
+    }
+    const member = (Array.isArray(group.members) ? group.members : [])
+      .find((entry) => entry && entry.memberId === memberId);
+    if (!member || isGroupAdmin(group, memberId)) return;
+    if (!isGroupWorkerId(memberId)) {
+      showToast('Only workers can be admins.', false);
+      return;
+    }
+    group.admins = Array.isArray(group.admins) ? group.admins : [];
+    group.admins.push(memberId);
+    if (state.pledge) state.pledge.group = getMemberGroups().map(groupDisplayLabel).filter(Boolean).join(', ');
+    addNotification('social', `Admin added: ${member.name}`,
+      `You can now leave ${groupDisplayLabel(group)} because another admin is recorded in this browser. No invitation was sent.`,
+      { tab: 'social', sourceId: group.id, memberId });
+    saveState();
+    renderSocial();
+    renderProfile();
+    renderGroupProfile();
+    renderNotifications();
+    announce(`${member.name} is now an admin of ${groupDisplayLabel(group)}.`);
+    showToast('Admin added locally.', false);
+    if (trigger instanceof HTMLElement) trigger.focus({ preventScroll: true });
+  }
+
+  function openGroupForm(kind, trigger) {
+    if (!requireMembership()) return;
+    setDashboardTab('social');
+    const form = document.querySelector('[data-group-form]');
+    if (form) {
+      const kindSelect = form.querySelector('select[name="kind"]');
+      if (kindSelect) kindSelect.value = kind === 'own' ? 'own' : 'joined';
+      if (kind === 'own') {
+        const ownOption = kindSelect && Array.from(kindSelect.options).find((option) => option.value === 'own');
+        if (ownOption) ownOption.disabled = getMemberGroups().some((group) => group.kind === 'own');
+      }
+      const nameInput = form.querySelector('input[name="name"]');
+      if (nameInput) nameInput.focus({ preventScroll: false });
+    }
+    if (trigger instanceof HTMLElement) trigger.setAttribute('aria-expanded', 'true');
   }
 
   function socialAudienceOptions(friends, groups) {
@@ -5271,7 +6996,7 @@
     const options = [`<option value="friends">Friends (${friends.length}/${SOCIAL_LIMITS.friends})</option>`];
     groups.forEach((group) => {
       const label = group.kind === 'town' ? 'Main group' : group.kind === 'own' ? 'Your group' : 'Group';
-      options.push(`<option value="${e(group.kind)}:${e(group.id)}">${label}: ${e(group.name)} (${group.memberCount}/${SOCIAL_LIMITS.groupMembers})</option>`);
+      options.push(`<option value="${e(group.kind)}:${e(group.id)}">${label}: ${e(groupDisplayLabel(group))} (${group.memberCount}/${SOCIAL_LIMITS.groupMembers})</option>`);
     });
     return options.join('');
   }
@@ -5279,6 +7004,33 @@
   function getFriendRequests() {
     if (!Array.isArray(state.friendRequests)) state.friendRequests = [];
     return state.friendRequests;
+  }
+
+  // Names of directory members are links to their limited public profile. The
+  // profile page reads only the public projection, never the private record.
+  function findMemberById(memberId) {
+    const id = cleanString(memberId, 100);
+    if (!id) return null;
+    if (state.pledge && state.pledge.memberId === id) return state.pledge;
+    return memberDirectory().find((member) => member && member.memberId === id) || null;
+  }
+
+  function memberProfileUrl(memberId) {
+    const id = cleanString(memberId, 100);
+    return id ? `profile.html?member=${encodeURIComponent(id)}` : 'profile.html';
+  }
+
+  function memberNameLink(name, memberId, extraClass) {
+    const label = escapeHtml(cleanString(name, 60) || 'Member');
+    const id = cleanString(memberId, 100);
+    if (!id) return label;
+    const className = ['member-link', extraClass].filter(Boolean).join(' ');
+    return `<a class="${escapeHtml(className)}" href="${escapeHtml(memberProfileUrl(id))}">${label}</a>`;
+  }
+
+  function memberNameLinkByName(name) {
+    const member = memberDirectory().find((item) => item && item.name === name);
+    return memberNameLink(name, member && member.memberId);
   }
 
   function memberDirectory() {
@@ -5294,6 +7046,7 @@
         name: item.name,
         profession: item.profession || '',
         cityState: item.cityState || (item.zip ? `ZIP ${item.zip}` : ''),
+        track: cleanString(item.track, 30),
         sample: false
       });
     });
@@ -5331,7 +7084,7 @@
           : pendingIn ? 'Request received' : 'Send request';
       const meta = [member.profession, member.cityState].filter(Boolean).map(e).join(' · ');
       return `<li class="friend-result">
-        <div><strong>${e(member.name)}</strong>${member.sample ? '<span class="badge badge--soft">Sample member</span>' : ''}<span class="contribution-meta">${meta || 'Current member'}</span></div>
+        <div><strong>${memberNameLink(member.name, member.memberId)}</strong>${member.sample ? '<span class="badge badge--soft">Sample member</span>' : ''}<span class="contribution-meta">${meta || 'Current member'}</span></div>
         <button class="button button--outline button--tiny" type="button" data-friend-request-send="${e(member.memberId)}"${disabled ? ' disabled' : ''}>${label}</button>
       </li>`;
     }).join('')}</ul>`;
@@ -5348,7 +7101,7 @@
     return `<ul class="friend-request-list">${pending.map((request) => {
       const meta = [request.profession, request.cityState].filter(Boolean).map(e).join(' · ');
       return `<li class="friend-request-item">
-        <div><strong>${e(request.name)}</strong>${request.sample ? '<span class="badge badge--soft">Sample request</span>' : ''}<span class="contribution-meta">${meta || 'Current member'} · ${e(formatDate(request.createdAt))}</span></div>
+        <div><strong>${memberNameLink(request.name, request.memberId)}</strong>${request.sample ? '<span class="badge badge--soft">Sample request</span>' : ''}<span class="contribution-meta">${meta || 'Current member'} · ${e(formatDate(request.createdAt))}</span></div>
         ${direction === 'incoming'
           ? `<div class="notification-actions">
               <button class="button button--primary button--tiny" type="button" data-friend-request-action="accept" data-friend-request-id="${e(request.id)}">Accept</button>
@@ -5387,9 +7140,10 @@
     requests.unshift(request);
     addNotification('social', `Friend request: ${member.name}`,
       'Saved locally as a request draft. In a live system this would be delivered; no request was sent.',
-      { tab: 'social', sourceId: request.id });
+      { tab: 'social', sourceId: request.id, memberId: member.memberId });
     saveState();
     renderSocial();
+    renderProfile();
     renderNotifications();
     announce(`${member.name}'s friend request is pending locally.`);
     showToast('Friend request recorded locally. Nothing was sent.', false);
@@ -5419,19 +7173,20 @@
       request.status = 'accepted';
       addNotification('social', `Friend request accepted: ${request.name}`,
         'Accepted locally in this prototype. No other account or device was changed.',
-        { tab: 'social', sourceId: request.id });
+        { tab: 'social', sourceId: request.id, memberId: request.memberId });
       announce(`${request.name} was added to your local friend list.`);
       showToast('Friend added locally. No invitation was sent.', false);
     } else {
       request.status = 'declined';
       addNotification('social', `Friend request declined: ${request.name}`,
         'Declined locally in this prototype. No other account or device was notified.',
-        { tab: 'social', sourceId: request.id });
+        { tab: 'social', sourceId: request.id, memberId: request.memberId });
       announce(`${request.name}'s friend request was declined locally.`);
       showToast('Request declined locally. Nothing was sent.', false);
     }
     saveState();
     renderSocial();
+    renderProfile();
     renderNotifications();
     if (trigger instanceof HTMLElement) trigger.focus({ preventScroll: true });
   }
@@ -5452,11 +7207,11 @@
     panel.innerHTML = `<section class="account-card">
       <p class="eyebrow">Social circles</p>
       <h3>Friends &amp; groups</h3>
-      <p class="account-note">Your town group is added automatically and is the main group. Every other group is a social or support circle you make or join. This prototype has one local account, so friends, groups, and chat audiences are saved only on this device; no invitations or messages are sent, and every group is capped at ${SOCIAL_LIMITS.groupMembers} people.</p>
+      <p class="account-note">Your town group is added automatically as the main group. When it reaches the local limit, another Stroudsburg group opens with a Roman numeral; neighbors may choose Group I, II, III, XI, and so on. A numbered group has no seed status, and the first member of a new group is not a seed member. Every other group is a social or support circle. Seven admin seats rotate each week for workers only, staggered across one-to-seven-week cycles. This prototype has one local account, so friends, groups, and chat audiences are saved only on this device; no invitations or messages are sent, and each group stays capped at ${SOCIAL_LIMITS.groupMembers} people.</p>
       <div class="social-grid">
         <div class="account-block">
           <h4>Friends (${friends.length}/${SOCIAL_LIMITS.friends})</h4>
-          ${friends.length ? `<ul class="social-list">${friends.map((friend) => `<li class="social-item"><strong>${e(friend.name)}</strong><span class="contribution-meta">${e(formatDate(friend.createdAt))} · local only</span></li>`).join('')}</ul>` : '<p class="account-note">No friends added yet.</p>'}
+          ${friends.length ? `<ul class="social-list">${friends.map((friend) => `<li class="social-item"><strong>${memberNameLink(friend.name, friend.memberId)}</strong><span class="contribution-meta">${e(formatDate(friend.createdAt))} · local only</span></li>`).join('')}</ul>` : '<p class="account-note">No friends added yet.</p>'}
           <div class="friend-finder">
             <h5>Find current members</h5>
             <p class="account-note">Search by chosen name, profession, or town, then send a local friend request. Accept or decline incoming requests here. This prototype has one account, so no request is delivered and no one else’s data changes.</p>
@@ -5474,10 +7229,8 @@
         </div>
         <div class="account-block">
           <h4>Groups (max ${SOCIAL_LIMITS.groupMembers} each)</h4>
-          ${groups.length ? `<ul class="social-list">${groups.map((group) => {
-            const kindLabel = group.kind === 'town' ? 'Main group · automatic' : group.kind === 'own' ? 'Your group' : 'Joined group';
-            return `<li class="social-item ${group.kind === 'town' ? 'social-item--main' : ''}"><strong>${e(group.name)}</strong><span class="contribution-meta">${kindLabel} · ${group.memberCount}/${SOCIAL_LIMITS.groupMembers} people</span>${group.purpose ? `<span>${e(group.purpose)}</span>` : ''}</li>`;
-          }).join('')}</ul>` : '<p class="account-note">Add a town in your profile to get your main group, or create a social or support group below.</p>'}
+          ${renderGroupMembership(true)}
+          <p class="field-hint">Town groups split automatically at the cap; this form makes a social or support circle only. Only workers can be admins.</p>
           <form class="account-form" data-group-form>
             <div class="form-row">
               <div class="field">
@@ -5491,10 +7244,12 @@
                   <option value="own" ${hasOwnGroup ? 'disabled' : ''}>My own group</option>
                 </select>
               </div>
-              <div class="field">
-                <label for="group-count">People (including you)</label>
-                <input type="number" id="group-count" name="memberCount" min="1" max="${SOCIAL_LIMITS.groupMembers}" step="1" value="1" required>
-              </div>
+            </div>
+            <div class="field group-member-picker">
+              <p class="field-label">People in this group</p>
+              <p class="field-hint">You are always counted in a social or support circle. Choose current members to include locally; the count comes from this list, not a typed number. Town groups split into Group II, III, XI, and so on at 150 people, and numbered groups are opt-in.</p>
+              ${renderGroupMemberOptions()}
+              <p class="field-hint" data-group-count-preview>1/${SOCIAL_LIMITS.groupMembers} people · you</p>
             </div>
             <div class="field">
               <label for="group-purpose">Purpose <span class="optional">(optional)</span></label>
@@ -5552,6 +7307,18 @@
       const updateResults = () => renderFriendSearchResults(friendSearch.value, results);
       friendSearch.addEventListener('input', updateResults);
       updateResults();
+    }
+
+    const groupForm = panel.querySelector('[data-group-form]');
+    const countPreview = groupForm && groupForm.querySelector('[data-group-count-preview]');
+    if (groupForm && countPreview) {
+      const updateCount = () => {
+        const selected = groupForm.querySelectorAll('[data-group-member]:checked').length;
+        const total = Math.min(SOCIAL_LIMITS.groupMembers, 1 + selected);
+        countPreview.textContent = `${total}/${SOCIAL_LIMITS.groupMembers} people · ${selected ? `you + ${selected} neighbor${selected === 1 ? '' : 's'}` : 'you'}`;
+      };
+      groupForm.querySelectorAll('[data-group-member]').forEach((input) => input.addEventListener('change', updateCount));
+      updateCount();
     }
   }
 
@@ -5618,6 +7385,18 @@
         respondToFriendRequest(requestAction.dataset.friendRequestId, requestAction.dataset.friendRequestAction, requestAction);
         return;
       }
+      const groupAction = event.target.closest('[data-group-action]');
+      if (groupAction) {
+        event.preventDefault();
+        changeGroupMembership(groupAction.dataset.groupId, groupAction.dataset.groupAction, groupAction);
+        return;
+      }
+      const groupFormOpen = event.target.closest('[data-open-group-form]');
+      if (groupFormOpen) {
+        event.preventDefault();
+        openGroupForm(groupFormOpen.dataset.openGroupForm, groupFormOpen);
+        return;
+      }
       const folderTab = event.target.closest('[data-message-folder]');
       if (folderTab) {
         activeMessageFolder = folderTab.dataset.messageFolder;
@@ -5650,20 +7429,25 @@
         showToast(action === 'star' ? 'Star updated locally.' : 'Message folder updated locally.', false);
         return;
       }
-      const openTab = event.target.closest('[data-notification-tab]');
-      if (openTab) {
-        setDashboardTab(openTab.dataset.notificationTab);
-        return;
-      }
-      const markOne = event.target.closest('[data-mark-notification]');
-      if (markOne) {
+      const noticeLink = event.target.closest('li[data-notification-link]');
+      if (noticeLink) {
+        event.preventDefault();
         const notice = (Array.isArray(state.notifications) ? state.notifications : [])
-          .find((item) => item && item.id === markOne.dataset.markNotification);
-        if (!notice) return;
-        notice.read = true;
-        saveState();
-        renderNotifications();
-        announce('Notification marked as read.');
+          .find((item) => item && item.id === noticeLink.dataset.notificationId);
+        if (notice && !notice.read) {
+          notice.read = true;
+          saveState();
+          updateHeaderNotificationBadge();
+        }
+        const tab = cleanString(noticeLink.dataset.notificationTab, 30);
+        if (tab) {
+          setDashboardTab(tab);
+          renderNotifications();
+          announce('Notification marked as read and opened.');
+          return;
+        }
+        const href = cleanString(noticeLink.dataset.notificationHref, 500) || 'dashboard.html#notifications';
+        window.location.href = href;
         return;
       }
       const markAll = event.target.closest('[data-mark-notifications]');
@@ -5675,6 +7459,14 @@
         renderNotifications();
         announce('All notifications marked as read.');
       }
+    });
+
+    dash.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      const noticeLink = event.target.closest('li[data-notification-link]');
+      if (!noticeLink) return;
+      event.preventDefault();
+      noticeLink.click();
     });
 
     dash.addEventListener('submit', async (event) => {
@@ -5784,13 +7576,14 @@
         state.pledge.unpaidSkills = cleanString(data.get('unpaidSkills'), 400);
         state.pledge.bio = cleanString(data.get('bio'), 600);
         state.pledge.tagline = cleanString(data.get('tagline'), 90);
-        state.pledge.group = cleanString(data.get('group'), 80);
-        // Donation amounts are recorded through the donate flow. Hours are
-        // derived only from mutual confirmation or review votes.
-        state.pledge.hoursCompleted = getHourTotals().all;
-        state.pledge.hoursUsed = cleanHours(data.get('hoursUsed'));
-        state.pledge.itemsGifted = cleanCount(data.get('itemsGifted'));
-        state.pledge.itemsTaken = cleanCount(data.get('itemsTaken'));
+        // Donation amounts are recorded through the donate flow. All commons
+        // counts are derived only from mutual confirmation or review votes.
+        const confirmedTotals = getConfirmedExchangeTotals(state.pledge.memberId);
+        state.pledge.hoursCompleted = confirmedTotals.hoursWorked;
+        state.pledge.hoursUsed = confirmedTotals.hoursUsed;
+        state.pledge.itemsGifted = confirmedTotals.itemsGifted;
+        state.pledge.itemsTaken = confirmedTotals.itemsTaken;
+        state.pledge.group = getMemberGroups().map(groupDisplayLabel).filter(Boolean).join(', ');
         state.pledge.available = Boolean(data.get('available'));
         state.pledge.publicPhone = Boolean(data.get('publicPhone'));
         state.pledge.publicAddressSource = data.get('publicAddressSource') === 'physical' ? 'physical' : 'mailing';
@@ -5885,10 +7678,16 @@
         event.preventDefault();
         const name = cleanString(data.get('name'), 80);
         const kind = data.get('kind') === 'own' ? 'own' : 'joined';
-        const memberCount = cleanCount(data.get('memberCount'));
         const purpose = cleanString(data.get('purpose'), 200);
-        if (!name || !memberCount) return;
-        if (memberCount > SOCIAL_LIMITS.groupMembers) {
+        if (!name || !state.pledge) return;
+        const members = [{ memberId: state.pledge.memberId, name: state.pledge.name || 'You' }];
+        data.getAll('members').forEach((value) => {
+          const id = cleanString(value, 100);
+          if (!id || id === state.pledge.memberId || members.some((item) => item.memberId === id)) return;
+          const member = findMemberById(id);
+          members.push({ memberId: id, name: member ? member.name : 'Member' });
+        });
+        if (members.length > SOCIAL_LIMITS.groupMembers) {
           showToast(`A group can hold up to ${SOCIAL_LIMITS.groupMembers} people.`, false);
           return;
         }
@@ -5902,12 +7701,15 @@
           kind,
           name,
           purpose,
-          memberCount,
+          members,
+          memberCount: members.length,
+          admins: [state.pledge.memberId],
           createdAt: now
         };
         state.groups.push(group);
+        if (state.pledge) state.pledge.group = getMemberGroups().map(groupDisplayLabel).filter(Boolean).join(', ');
         addNotification('social', `${kind === 'own' ? 'Your group' : 'Group'} saved: ${name}`,
-          `Recorded locally with ${memberCount} of ${SOCIAL_LIMITS.groupMembers} people. No invitations or membership changes were sent.`,
+          `Recorded locally with ${group.memberCount} of ${SOCIAL_LIMITS.groupMembers} people. No invitations or membership changes were sent.`,
           { tab: 'social', sourceId: group.id });
         saveState();
         renderSocial();
@@ -5939,7 +7741,7 @@
             .find((item) => item && item.id === groupId);
           if (group) {
             const label = group.kind === 'town' ? 'Main group' : group.kind === 'own' ? 'Your group' : 'Group';
-            audienceLabel = `${label}: ${group.name}`;
+            audienceLabel = `${label}: ${groupDisplayLabel(group)}`;
           }
         }
         const chat = {
@@ -6172,6 +7974,17 @@
     const description = cleanString(data.get('description'), 1200);
     if (!meta || !description || !data.get('goodFaith')) return;
 
+    const adminReview = data.get('adminReview') === 'true';
+    const evidence = cleanEvidenceItems(reportEvidenceDrafts.get(form) || []);
+    if (adminReview && meta.route === 'criminal') {
+      showToast('An admin review must be a non-criminal matter. Use a police referral for suspected crimes.', false);
+      return;
+    }
+    if (adminReview && !evidence.length) {
+      showToast('A temporary admin review needs at least one evidence item.', false);
+      return;
+    }
+
     const now = new Date();
     const isCriminal = meta.route === 'criminal';
     const report = {
@@ -6183,10 +7996,14 @@
       contextArea: cleanString(data.get('contextArea'), 80) || 'Dashboard',
       contextDetail: cleanString(data.get('contextDetail'), 160),
       sourceId: cleanString(data.get('sourceId'), 100),
-      evidence: cleanEvidenceItems(reportEvidenceDrafts.get(form) || []),
+      evidence,
       type,
       typeLabel: meta.label,
       route: meta.route,
+      adminReview,
+      temporaryAdmin: adminReview && data.get('temporaryAdmin') === 'true',
+      groupId: cleanString(data.get('groupId'), 100),
+      reviewBasis: adminReview ? 'impartial member review' : meta.route,
       description,
       occurredAt: cleanString(data.get('occurredAt'), 20),
       createdAt: now.toISOString(),
@@ -6220,8 +8037,10 @@
     if (reportDialog && reportDialog.open) closeDialog(reportDialog);
     announce(isCriminal
       ? 'Criminal matter recorded as a police referral. In a live system it would be referred to police for investigation. Nothing was transmitted in this prototype.'
-      : `Report filed from ${report.contextArea}. Evidence stayed in this browser. The response period is open.`);
-    showToast(isCriminal ? 'Police referral recorded (prototype only).' : 'Report filed. Response period is open.', false);
+      : adminReview
+        ? `Temporary admin review filed from ${report.contextArea}. Evidence stayed in this browser. An impartial member review follows the response period.`
+        : `Report filed from ${report.contextArea}. Evidence stayed in this browser. The response period is open.`);
+    showToast(isCriminal ? 'Police referral recorded (prototype only).' : adminReview ? 'Admin review filed. Impartial review is required.' : 'Report filed. Response period is open.', false);
   }
 
   // One report form is shared by every contextual trigger. The person being
@@ -6247,12 +8066,16 @@
           <h2 id="report-dialog-title">Report a concern</h2>
           <p id="report-dialog-intro">This report is tied to your member record. The person is carried over from the listing, message, or profile where you opened this form—you do not type their name.</p>
           <p class="dialog-note" data-report-context-summary role="status"></p>
+          <p class="dialog-note" data-report-admin-note hidden>Temporary admin review: evidence is required, and an impartial member review follows the response period. Criminal matters are never decided by member vote.</p>
           <form class="account-form report-form" data-report-form>
             <input type="hidden" name="respondentName" value="">
             <input type="hidden" name="respondentMemberId" value="">
             <input type="hidden" name="contextArea" value="Dashboard">
             <input type="hidden" name="contextDetail" value="">
             <input type="hidden" name="sourceId" value="">
+            <input type="hidden" name="adminReview" value="">
+            <input type="hidden" name="temporaryAdmin" value="">
+            <input type="hidden" name="groupId" value="">
             <div class="field">
               <label for="report-dialog-type">What are you reporting? <span class="required-mark" aria-hidden="true">*</span></label>
               <select id="report-dialog-type" name="type" required>
@@ -6260,7 +8083,7 @@
                 <optgroup label="Reviewed by members (not a crime)">
                   ${Object.keys(REPORT_TYPES).filter((key) => REPORT_TYPES[key].route === 'board').map((key) => `<option value="${escapeHtml(key)}">${escapeHtml(REPORT_TYPES[key].label)}</option>`).join('')}
                 </optgroup>
-                <optgroup label="Criminal matter — police referral">
+                <optgroup label="Criminal matter — police referral" data-report-criminal-options>
                   ${Object.keys(REPORT_TYPES).filter((key) => REPORT_TYPES[key].route === 'criminal').map((key) => `<option value="${escapeHtml(key)}">${escapeHtml(REPORT_TYPES[key].label)}</option>`).join('')}
                 </optgroup>
               </select>
@@ -6275,7 +8098,7 @@
               <p class="field-hint">Up to 1200 characters. Stored with your member record in this browser only.</p>
             </div>
             <fieldset class="evidence-fieldset">
-              <legend>Local evidence <span class="optional">(optional)</span></legend>
+              <legend data-report-evidence-legend>Local evidence <span class="optional">(optional)</span></legend>
               <p class="field-hint">Select images, text or message files, or other files from this device. Images are resized and saved locally; text files are copied locally; other files are recorded by name and size only. Up to ${REPORT_EVIDENCE.maxItems} items, 8 MB each. Nothing is uploaded or transmitted.</p>
               <input type="file" id="report-evidence-input" name="evidenceFiles" multiple accept="${REPORT_EVIDENCE.accepted}">
               <p class="evidence-status" data-report-evidence-status role="status"></p>
@@ -6364,6 +8187,9 @@
     const name = cleanString(context && context.name, 80);
     const memberId = cleanString(context && context.memberId, 100);
     const sourceId = cleanString(context && context.sourceId, 100);
+    const adminReview = Boolean(context && context.adminReview);
+    const temporaryAdmin = Boolean(context && context.temporaryAdmin);
+    const groupId = cleanString(context && context.groupId, 100);
 
     const setField = (fieldName, value) => {
       const input = form.querySelector(`[name="${fieldName}"]`);
@@ -6383,12 +8209,37 @@
     setField('contextArea', area);
     setField('contextDetail', detail);
     setField('sourceId', sourceId);
+    setField('adminReview', adminReview ? 'true' : '');
+    setField('temporaryAdmin', adminReview && temporaryAdmin ? 'true' : '');
+    setField('groupId', groupId);
+
+    const adminNote = dialog.querySelector('[data-report-admin-note]');
+    if (adminNote) adminNote.hidden = !adminReview;
+    const evidenceLegend = dialog.querySelector('[data-report-evidence-legend]');
+    if (evidenceLegend) evidenceLegend.innerHTML = adminReview
+      ? 'Local evidence <span class="required-mark" aria-hidden="true">*</span> <span class="optional">(required for admin review)</span>'
+      : 'Local evidence <span class="optional">(optional)</span>';
+    const criminalOptions = dialog.querySelector('[data-report-criminal-options]');
+    if (criminalOptions) {
+      criminalOptions.hidden = adminReview;
+      Array.from(criminalOptions.querySelectorAll('option')).forEach((option) => {
+        option.disabled = adminReview;
+      });
+    }
+    const typeSelect = form.querySelector('[name="type"]');
+    if (typeSelect && adminReview && hasOwn(REPORT_TYPES, typeSelect.value) && REPORT_TYPES[typeSelect.value].route === 'criminal') {
+      typeSelect.value = 'other-board';
+    }
 
     const parts = [`Reporting from ${area}`];
     if (detail) parts.push(detail);
     if (name) parts.push(`about ${name}`);
     else parts.push('about a general concern');
-    if (summary) summary.textContent = `${parts.join(' · ')}. The name was filled from this page, not typed by you.`;
+    if (summary) {
+      summary.textContent = `${parts.join(' · ')}. The name was filled from this page, not typed by you.${adminReview
+        ? ' A current admin is requiring an impartial review: evidence is required and a member review follows the response period.'
+        : ''}`;
+    }
 
     dialog._returnFocus = trigger instanceof HTMLElement ? trigger : null;
     openDialog(dialog);
@@ -6404,7 +8255,10 @@
         detail: trigger.dataset.reportDetail,
         name: trigger.dataset.reportName,
         memberId: trigger.dataset.reportMemberId,
-        sourceId: trigger.dataset.reportSourceId
+        sourceId: trigger.dataset.reportSourceId,
+        adminReview: trigger.dataset.reportAdminReview === 'true',
+        temporaryAdmin: trigger.dataset.reportTemporaryAdmin === 'true',
+        groupId: trigger.dataset.reportGroupId || ''
       }, trigger);
     });
   }
@@ -6520,6 +8374,8 @@
         ${report.occurredAt ? `<div><dt>When it happened</dt><dd>${e(report.occurredAt)}</dd></div>` : ''}
         <div><dt>Filed on</dt><dd>${e(formatDate(report.createdAt))}</dd></div>
       </dl>
+      ${report.adminReview ? `<p class="case-file-section-title">Impartial review required</p>
+      <p class="case-file-text">${report.temporaryAdmin ? 'Filed by a temporary admin.' : 'Filed by a current admin.'} Evidence was required, and an impartial member review follows the response period. Criminal matters are never decided by member vote.</p>` : ''}
       <p class="case-file-section-title">What was reported</p>
       <p class="case-file-text">${e(report.description)}</p>
       <p class="case-file-section-title">Evidence from the person reporting</p>
@@ -7211,6 +9067,10 @@
           available: true,
           publicAddressSource: 'mailing',
           publicPhone: false,
+          profileTheme: {
+            public: { ...PROFILE_THEME_DEFAULTS.public },
+            private: { ...PROFILE_THEME_DEFAULTS.private }
+          },
           note,
           signedAt: new Date().toISOString(),
           status: 'active'
@@ -7380,9 +9240,11 @@
         </div>
         <div class="form-row">
           <div class="field">
-            <label for="contributor-hours">Weekly hours pledged <span class="required-mark" aria-hidden="true">*</span></label>
-            <input type="number" id="contributor-hours" name="hours" min="1" max="40" step="1" value="1" required>
-            <p class="field-hint">Phase 1 minimum: 1 hour per week. A real, sustainable number—you can change it later.</p>
+            <label for="contributor-hours">Weekly time pledged <span class="required-mark" aria-hidden="true">*</span></label>
+            <select id="contributor-hours" name="hours" required>
+              ${[1, 2, 3, 4, 5, 6, 8, 10, 12, 20, 30, 40].map((hours) => `<option value="${hours}"${hours === 1 ? ' selected' : ''}>${hours} hour${hours === 1 ? '' : 's'} per week</option>`).join('')}
+            </select>
+            <p class="field-hint">Phase 1 minimum: 1 hour per week. Choose a sustainable amount; you can change it later. Logged hours still require mutual confirmation or review.</p>
           </div>
           <div class="field">
             <label for="contributor-availability">Availability <span class="optional">(optional)</span></label>
@@ -8522,9 +10384,17 @@
   /* ------------------------------------------------------------------------
      09. Initialization
      ------------------------------------------------------------------------ */
+  function initPhaseGating() {
+    document.querySelectorAll('[data-phase]').forEach((item) => {
+      item.hidden = Number(item.dataset.phase) > SITE_PHASE;
+    });
+  }
+
   function init() {
+    initPhaseGating();
     initHeader();
     initPledgePage();
+    initHeaderSearch();
     initHeaderNotifications();
     initPledgeForm();
     initSigninForm();
@@ -8534,6 +10404,11 @@
     initDashboardMenu();
     initSkillPickers();
     initProfileViewToggle();
+    initProfilePrivacyForm();
+    initProfileFriendActions();
+    initGroupPostActions();
+    initGroupAdminForm();
+    initProfileThemeForm();
     initAccountability();
     initTracks();
     initTabs();
