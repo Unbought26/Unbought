@@ -53,11 +53,12 @@ locally. Results are plain local links; the search sends no query to a server.
 ## Member data and public resume
 
 The local member record stores full legal name, chosen name, mailing and physical
-addresses with county, housing status, birthdate, phone, profession, career/paid skills, unpaid
-skills, bio, locally resized picture, chosen tag line, private group/crew, donation
-count, confirmed hours worked, hours used, items gifted, items taken, reports made
-against the member, availability, and public-sharing choices. The full record is
-visible only in the Dashboard and in the signed-in member profile.
+addresses with county, housing status, birthdate, cell phone, optional public phone,
+text-message preference, profession, career/paid skills, unpaid skills, bio, locally
+resized picture, chosen tag line, private group/crew, donation count, confirmed hours
+worked, hours used, items gifted, items taken, reports made against the member,
+availability, and public-sharing choices. The full record is visible only in the
+Dashboard and in the signed-in member profile.
 
 The pledge and Settings forms keep both addresses as structured fields: Address 1,
 Address 2, City, County, State, and ZIP. County is private and exists only for
@@ -68,11 +69,19 @@ unpaid skills use a search box with suggested skills; members can also type a
 custom skill and press Enter. Chosen skills are saved as comma-separated values and
 shown as removable chips.
 
+The phone section asks for a required cell phone, an optional public phone, whether
+the public phone is the same as the cell phone, whether the chosen phone number
+should appear on the public resume, and whether the member wants text messages.
+When “same as cell” is checked, the public phone mirrors the cell phone and locks
+until the box is cleared. The text preference is stored locally only; no texts are
+sent in this prototype. These fields can also be edited in Settings and on the
+signed-in private profile.
+
 The public resume is a filtered projection. It shows the chosen first name,
 picture, tag line, bio, profession, City/State from the member-selected mailing or
 physical address, both skill lists, confirmed hours worked, items gifted, other
-commons totals, availability, and a phone number only when the member opts in. It
-never includes the legal name, street or mailing addresses, county, ZIP, housing
+commons totals, availability, and the public phone number only when the member opts
+in. It never includes the cell phone, legal name, street or mailing addresses, county, ZIP, housing
 status, birthdate, group/crew, report count, amounts donated, comments, or
 interactions.
 Member IDs are never displayed; they remain storage and report attributes only.
@@ -193,8 +202,22 @@ the new application goes straight to review and a vote by members in their
 area. Therapy is encouraged, and some cases require a therapeutic evaluation
 and proof of treatment. Nothing is enforced outside this browser prototype.
 
-Track access follows the same rules: apprentices may use basic necessities only
-while enrolled, Care Circle members may use basic necessities with no labor
+## Basic Necessities and alliances
+
+Basic Necessities are Food, Health Care, Dental, Mental Health, Shelter,
+Clothing, Gas Cards, Uber Gift cards, spot on the waitlist for land, access to
+the Academy. No luxury items or nice to haves. Groups can decide how mutual aid
+will work within these limits. The same closed definition is used in
+`guidelines.html`, the FAQ, the How It Works track note, the Academy roadmap,
+the track panels, and group profiles.
+
+Alliances are other groups within the Unbought network. Groups decide whether
+to accept an alliance between them, and working members vote on alliance terms
+and guidelines. The group settings field and group profile use this definition;
+alliance records stay local in this prototype.
+
+Track access follows the same rules: apprentices may use Basic Necessities only
+while enrolled, Care Circle members may use Basic Necessities with no labor
 obligation and limits are reviewable with evidence, and Observers may read,
 explore, and donate. Consequence steps are unnumbered.
 
@@ -205,7 +228,8 @@ Voting is open to members whose physical-address county matches an involved
 party's county; if one party is in State A and the other in State B, members in
 both respective counties may vote. Members of the same group may also vote
 unless they have a report against them from the last year. Members of allied
-groups may vote too, unless the group voted to close its review board to
+groups (other groups within the Unbought network that chose to accept an
+alliance) may vote too, unless the group voted to close its review board to
 alliances outside its own ZIP code; alliances within that ZIP code are always
 included. Working members of groups and alliances vote on alliance terms and
 guidelines. County fields are captured on the pledge and editable in Settings,
@@ -229,7 +253,7 @@ already working in the commons can learn free by promising to work for Unbought
 part time (the community's 1–15 hours per week rhythm) for one year upon
 completing the program. That year must finish before their 25th birthday, or
 they become liable for the same tuition offered to non-members. Students hold a
-limited standing — basic necessities only — while enrolled, and not completing
+limited standing — Basic Necessities only — while enrolled, and not completing
 the program creates a tuition obligation. This is a community commitment
 reviewed under the guidelines, not a legal contract, and full membership still
 opens at 18. The rules live in the Academy section of `future.html`, in `faq.html`,
@@ -338,7 +362,9 @@ delivers nothing.
 
 Dashboard → Friends & Groups automatically places the member in the main town group
 named after their town (for example, "Stroudsburg Group I"). Other groups are social
-or support circles the member creates or joins. Town group names link to
+or support circles the member creates or joins. Groups decide how mutual aid works
+within Basic Necessities and whether to accept an alliance with another group in
+the Unbought network. Town group names link to
 `group.html?group=<id>`, and group counts come from `group.members`, not a typed
 number. When a town group reaches 150 people, another Stroudsburg group is created
 with a Roman numeral ending: II, III, … XI. The first member of a new numbered group

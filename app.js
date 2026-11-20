@@ -32,6 +32,16 @@
   const postPhotoPending = new WeakMap();
   let reportDialog = null;
 
+  // Basic Necessities are a closed list for limited-access tracks and safety
+  // limits. Groups may choose how mutual aid happens, not what counts as a
+  // luxury or nice to have.
+  const BASIC_NECESSITIES_COPY = 'Food, Health Care, Dental, Mental Health, Shelter, Clothing, Gas Cards, Uber Gift cards, spot on the waitlist for land, access to the Academy.';
+  const BASIC_NECESSITIES_NOTE = `${BASIC_NECESSITIES_COPY} No luxury items or nice to haves. Groups can decide how mutual aid will work.`;
+
+  // An alliance is a voluntary link between other groups in the Unbought
+  // network. The groups themselves decide whether to accept the alliance.
+  const ALLIANCE_COPY = 'Alliances are other groups within the Unbought network. Groups decide whether to accept an alliance between them.';
+
   // Sample newsboard posts shared by the public site and the member dashboard.
   // A blog service will replace this list in the live site.
   const NEWS_POSTS = Object.freeze([
@@ -75,7 +85,7 @@
       label: 'Nov 14, 2026',
       tag: 'Academy',
       title: 'Learning now, giving back later',
-      body: 'The Academy is free for pledged members. Neighbors 15 and older who are not already working in the commons may learn with basic-necessities-only access, promising part-time work for Unbought for one year after finishing — before their 25th birthday. Non-member tuition and any tuition obligation go to the Unbought donation fund.'
+      body: `The Academy is free for pledged members. Neighbors 15 and older who are not already working in the commons may learn with basic-necessities-only access. ${BASIC_NECESSITIES_NOTE} They promise part-time work for Unbought for one year after finishing, before their 25th birthday. Non-member tuition and any tuition obligation go to the Unbought donation fund.`
     },
     {
       date: '2026-11-13',
@@ -1857,6 +1867,47 @@
     });
   }
 
+  function publicPhoneFor(member) {
+    if (!member) return '';
+    return cleanString(member.publicPhoneNumber, 40)
+      || (member.samePhone ? cleanString(member.cellPhone || member.phone, 40) : '');
+  }
+
+  function syncPhoneFields(scope) {
+    const root = scope || document;
+    root.querySelectorAll('form').forEach((form) => {
+      const cell = form.querySelector('[data-cell-phone]');
+      const publicLine = form.querySelector('[data-public-phone]');
+      const same = form.querySelector('[data-same-phone]');
+      if (!cell || !publicLine || !same) return;
+      publicLine.readOnly = Boolean(same.checked);
+      if (same.checked && publicLine.value !== cell.value) publicLine.value = cell.value;
+    });
+  }
+
+  function initPhoneFields() {
+    syncPhoneFields(document);
+    document.addEventListener('change', (event) => {
+      const same = event.target && event.target.closest && event.target.closest('[data-same-phone]');
+      if (!same) return;
+      const form = same.closest('form') || document;
+      const cell = form.querySelector('[data-cell-phone]');
+      const publicLine = form.querySelector('[data-public-phone]');
+      if (!cell || !publicLine) return;
+      if (same.checked) publicLine.value = cell.value;
+      else if (publicLine.value === cell.value) publicLine.value = '';
+      publicLine.readOnly = Boolean(same.checked);
+    });
+    document.addEventListener('input', (event) => {
+      const cell = event.target && event.target.closest && event.target.closest('[data-cell-phone]');
+      if (!cell) return;
+      const form = cell.closest('form') || document;
+      const same = form.querySelector('[data-same-phone]');
+      const publicLine = form.querySelector('[data-public-phone]');
+      if (same && same.checked && publicLine) publicLine.value = cell.value;
+    });
+  }
+
   function initProfilePrivacyForm() {
     document.addEventListener('submit', (event) => {
       const form = event.target;
@@ -1864,13 +1915,23 @@
       event.preventDefault();
       if (!requireMembership() || !form.reportValidity()) return;
       const data = new FormData(form);
+      const cell = cleanString(data.get('cellPhone'), 40);
+      const same = Boolean(data.get('samePhone'));
+      const publicLine = same ? cell : cleanString(data.get('publicPhoneNumber'), 40);
       state.pledge.publicAddressSource = data.get('publicAddressSource') === 'physical' ? 'physical' : 'mailing';
-      state.pledge.publicPhone = Boolean(data.get('publicPhone'));
+      if (cell) {
+        state.pledge.cellPhone = cell;
+        state.pledge.phone = cell;
+        state.pledge.samePhone = same;
+        state.pledge.publicPhoneNumber = publicLine;
+        state.pledge.receiveTexts = Boolean(data.get('receiveTexts'));
+      }
+      state.pledge.publicPhone = Boolean(data.get('publicPhone')) && Boolean(publicPhoneFor(state.pledge));
       state.pledge.available = Boolean(data.get('available'));
       saveState();
       renderSharedMemberViews();
-      announce('Privacy choices saved in this browser.');
-      showToast('Privacy choices saved locally.', false);
+      announce('Phone choices and privacy settings saved in this browser.');
+      showToast('Phone choices and privacy saved locally.', false);
     });
   }
 
@@ -2304,7 +2365,7 @@
   function requireFullAccess(message) {
     if (!requireMembership()) return false;
     if (hasActiveRestriction()) {
-      showToast(message || 'Full access is paused during your reflection period. Basic necessities remain available.');
+      showToast(message || 'Full access is paused during your reflection period. Basic necessities remain available under the Community Guidelines definition.');
       return false;
     }
     return true;
@@ -2710,6 +2771,12 @@
         const mailingAddress = cleanString(raw.pledge.mailingAddress, 240)
           || composeMailingAddress({ address1, address2, city, state: stateCode, zip: raw.pledge.zip });
         const parsedPhysicalAddress = parseMailingParts(raw.pledge.physicalAddress);
+        const cellPhone = cleanString(raw.pledge.cellPhone || raw.pledge.phone, 40);
+        const storedPublicPhone = cleanString(raw.pledge.publicPhoneNumber, 40);
+        const samePhone = typeof raw.pledge.samePhone === 'boolean'
+          ? raw.pledge.samePhone
+          : !storedPublicPhone;
+        const publicPhoneNumber = samePhone ? cellPhone : storedPublicPhone;
         fallback.pledge = {
           memberId: cleanString(raw.pledge.memberId, 100) || makeId('member'),
           name,
@@ -2733,7 +2800,11 @@
           physicalState: normalizeStateCode(raw.pledge.physicalState) || parsedPhysicalAddress.state,
           physicalZip: normalizeZip(raw.pledge.physicalZip || parsedPhysicalAddress.zip),
           housingStatus: normalizeHousingStatus(raw.pledge.housingStatus),
-          phone: cleanString(raw.pledge.phone, 40),
+          phone: cellPhone,
+          cellPhone,
+          publicPhoneNumber,
+          samePhone,
+          receiveTexts: Boolean(raw.pledge.receiveTexts),
           dob: cleanString(raw.pledge.dob, 10),
           profession: normalizeProfession(raw.pledge.profession
             || String(raw.pledge.paidSkills || '').split(/[\n,;]/)[0]),
@@ -5467,7 +5538,11 @@
         accountDetail('Public City, State', e(`${publicCity}, ${publicState}`)),
         accountDetail('ZIP code', e(m.zip || 'Not shared')),
         accountDetail('Housing status', e(hasOwn(HOUSING_STATUSES, m.housingStatus) ? HOUSING_STATUSES[m.housingStatus] : 'Not shared')),
-        accountDetail('Phone number', e(m.phone || 'Not shared')),
+        accountDetail('Cell phone', e(m.cellPhone || m.phone || 'Not shared')),
+        accountDetail('Public phone', e(publicPhoneFor(m) || 'Not shared')),
+        accountDetail('Public phone same as cell', m.samePhone ? 'Yes' : 'No'),
+        accountDetail('Show public phone on resume', m.publicPhone ? 'Yes' : 'No'),
+        accountDetail('Text messages', m.receiveTexts ? 'Opted in locally; no texts are sent' : 'Not opted in'),
         accountDetail('Date of birth', e(m.dob || 'Not shared'))
       ])),
       section('Profile &amp; skills', `
@@ -5565,6 +5640,25 @@
             </div>
           </fieldset>
           <fieldset>
+            <legend>Phone &amp; texts</legend>
+            <div class="form-row">
+              <div class="field">
+                <label for="account-cell-phone">Cell phone</label>
+                <input type="tel" id="account-cell-phone" name="cellPhone" data-cell-phone autocomplete="tel" maxlength="40" value="${e(m.cellPhone || m.phone || '')}">
+                <p class="field-hint">Private. Stored only on this device.</p>
+              </div>
+              <div class="field">
+                <label for="account-public-phone">Public phone <span class="optional">(optional)</span></label>
+                <input type="tel" id="account-public-phone" name="publicPhoneNumber" data-public-phone autocomplete="off" maxlength="40" value="${e(publicPhoneFor(m))}" placeholder="A different number neighbors may use">
+                <p class="field-hint">Shown on your public resume only if you opt in below.</p>
+              </div>
+            </div>
+            <label class="checkbox"><input type="checkbox" name="samePhone" data-same-phone${m.samePhone !== false ? ' checked' : ''}> <span>Public phone is the same as my cell phone</span></label>
+            <label class="checkbox"><input type="checkbox" name="publicPhone"${m.publicPhone ? ' checked' : ''}> <span>Show my public phone number on my public resume</span></label>
+            <label class="checkbox"><input type="checkbox" name="receiveTexts"${m.receiveTexts ? ' checked' : ''}> <span>I want to receive texts at my cell number</span></label>
+            <p class="field-hint">In this prototype no texts are sent and nothing is transmitted. The text choice is recorded locally only.</p>
+          </fieldset>
+          <fieldset>
             <legend>Profile &amp; skills</legend>
             <div class="form-row">
               <div class="field skill-picker" data-skill-picker="paid">
@@ -5622,7 +5716,6 @@
           <fieldset class="account-privacy-options">
             <legend>Privacy</legend>
             <label class="checkbox"><input type="checkbox" name="available"${m.available !== false ? ' checked' : ''}> <span>Available for exchanges</span></label>
-            <label class="checkbox"><input type="checkbox" name="publicPhone"${m.publicPhone ? ' checked' : ''}> <span>Show my phone number on my public resume</span></label>
           </fieldset>
           <div class="account-form-actions">
             <button type="submit" class="button button--primary button--small">Save account details</button>
@@ -5643,6 +5736,7 @@
       </div>
     </section>`;
     refreshSkillPickers(panel);
+    syncPhoneFields(panel);
   }
 
   function renderSettings() {
@@ -5668,7 +5762,7 @@
       itemsGifted: totals.itemsGifted,
       itemsTaken: totals.itemsTaken,
       available: member.available !== false,
-      phone: member.publicPhone ? cleanString(member.phone, 40) : ''
+      phone: member.publicPhone ? publicPhoneFor(member) : ''
     };
   }
 
@@ -5988,12 +6082,26 @@
             </select>
             <p class="field-hint">Only the city and state from that address are shown; the street and ZIP stay private.</p>
           </div>
+          <div class="form-row">
+            <div class="field">
+              <label for="profile-cell-phone">Cell phone</label>
+              <input type="tel" id="profile-cell-phone" name="cellPhone" data-cell-phone autocomplete="tel" maxlength="40" value="${e(m.cellPhone || m.phone || '')}">
+              <p class="field-hint">Private. Stored only on this device.</p>
+            </div>
+            <div class="field">
+              <label for="profile-public-phone">Public phone <span class="optional">(optional)</span></label>
+              <input type="tel" id="profile-public-phone" name="publicPhoneNumber" data-public-phone autocomplete="off" maxlength="40" value="${e(publicPhoneFor(m))}" placeholder="A different number neighbors may use">
+              <p class="field-hint">Shown only if you opt in below.</p>
+            </div>
+          </div>
+          <label class="checkbox"><input type="checkbox" name="samePhone" data-same-phone${m.samePhone !== false ? ' checked' : ''}> <span>Public phone is the same as my cell phone</span></label>
           <fieldset class="account-privacy-options">
             <legend>Show on public resume</legend>
-            <label class="checkbox"><input type="checkbox" name="publicPhone"${m.publicPhone ? ' checked' : ''}> <span>Phone number</span></label>
+            <label class="checkbox"><input type="checkbox" name="publicPhone"${m.publicPhone ? ' checked' : ''}> <span>Public phone number</span></label>
+            <label class="checkbox"><input type="checkbox" name="receiveTexts"${m.receiveTexts ? ' checked' : ''}> <span>Receive texts at my cell number (local choice only)</span></label>
             <label class="checkbox"><input type="checkbox" name="available"${m.available !== false ? ' checked' : ''}> <span>Available for exchanges</span></label>
           </fieldset>
-          <p class="field-hint">Always private: legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, amounts donated, comment text, and interactions.</p>
+          <p class="field-hint">In this prototype no texts are sent and nothing is transmitted. Always private: legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, amounts donated, comment text, and interactions.</p>
           <div class="account-form-actions">
             <button type="submit" class="button button--primary button--small">Save privacy choices</button>
           </div>
@@ -6037,6 +6145,7 @@
       </div>
       <p class="account-note">City, State, ZIP, birthdate, group, report count, amounts donated, and every sensitive record stay here. Hours and item counts are never typed by hand; they appear only after mutual confirmation or review.</p>
     </section>`;
+    syncPhoneFields(privatePanel);
   }
 
   function canPostInGroup(group) {
@@ -6198,8 +6307,8 @@
         ${canModerate ? `<form class="account-form group-guidelines-form" data-group-guidelines-form data-group-id="${e(group.id)}">
           <div class="field">
             <label for="group-guidelines-${e(domId(group.id))}">Group community guidelines</label>
-            <textarea id="group-guidelines-${e(domId(group.id))}" name="guidelines" rows="3" maxlength="1200" placeholder="Consent, scope, and how this group makes decisions…">${e(group.guidelines || '')}</textarea>
-            <p class="field-hint">Only current admins can change this. Stored locally in this browser; nothing is published to another device.</p>
+            <textarea id="group-guidelines-${e(domId(group.id))}" name="guidelines" rows="3" maxlength="1200" placeholder="Consent, scope, how mutual aid handles Basic Necessities, and how this group makes decisions…">${e(group.guidelines || '')}</textarea>
+            <p class="field-hint">Only current admins can change this. Basic Necessities are fixed across Unbought; this group decides how mutual aid works within them. Stored locally in this browser; nothing is published to another device.</p>
           </div>
           <button type="submit" class="button button--outline button--small">Save guidelines locally</button>
         </form>
@@ -6292,6 +6401,8 @@
           ${SITE_PHASE >= 2 && business.enabled ? `<div><dt>Business</dt><dd>${e(business.brandName || groupDisplayLabel(group))} · ${e(groupBrandLabel(settings))}</dd></div>` : ''}
           <div><dt>Added</dt><dd>${e(formatDate(group.createdAt) || 'Not recorded')}</dd></div>
         </dl>
+        <p class="account-note"><strong>Basic Necessities:</strong> ${e(BASIC_NECESSITIES_NOTE)}</p>
+        <p class="account-note"><strong>Alliances:</strong> ${e(ALLIANCE_COPY)} Working members vote on alliance terms and guidelines.</p>
         ${SITE_PHASE >= 2 && business.enabled ? `<div class="group-business-details">
           <h4>Group business</h4>
           <p class="account-note">${business.brandChoice === 'unbought' ? 'This group records the Unbought Brand' : 'This group records its own brand'} for a collection of related services and goods. It creates industry inside a moneyless society: neighbors trade through mutual consent, not prices. Group brands arrive in Phase 2 on the vernal equinox, ${e(GROUP_BRAND_ROLLOUT_COPY)}.</p>
@@ -6356,7 +6467,7 @@
               <div class="field">
                 <label for="group-alliances">Allied group IDs</label>
                 <input type="text" id="group-alliances" name="alliances" maxlength="500" value="${e(settings.alliances.join(', '))}" placeholder="group-id-one, group-id-two">
-                <p class="field-hint">Separate allied group IDs with commas. Working members vote on alliance terms and guidelines; members of allied groups may vote on this group’s review board cases.</p>
+                <p class="field-hint">${e(ALLIANCE_COPY)} Separate allied group IDs with commas. The groups decide whether to accept the alliance, and working members vote on alliance terms and guidelines; members of allied groups may vote on this group’s review board cases.</p>
               </div>
               <label class="checkbox">
                 <input type="checkbox" id="group-review-open-alliance" name="reviewOpenToAlliance" ${settings.reviewBoard.openToAlliance ? 'checked' : ''}>
@@ -8147,7 +8258,6 @@
         state.pledge.group = getMemberGroups().map(groupDisplayLabel).filter(Boolean).join(', ');
         addMemberToRoster(state.pledge);
         state.pledge.available = Boolean(data.get('available'));
-        state.pledge.publicPhone = Boolean(data.get('publicPhone'));
         state.pledge.publicAddressSource = data.get('publicAddressSource') === 'physical' ? 'physical' : 'mailing';
         if (data.get('removePicture')) {
           state.pledge.picture = '';
@@ -8162,6 +8272,17 @@
             }
             state.pledge.picture = safeProfileImageUrl(photo.dataUrl);
           }
+        }
+        if (data.has('cellPhone')) {
+          const cell = cleanString(data.get('cellPhone'), 40);
+          const same = Boolean(data.get('samePhone'));
+          const publicLine = same ? cell : cleanString(data.get('publicPhoneNumber'), 40);
+          state.pledge.cellPhone = cell;
+          state.pledge.phone = cell;
+          state.pledge.samePhone = same;
+          state.pledge.publicPhoneNumber = publicLine;
+          state.pledge.receiveTexts = Boolean(data.get('receiveTexts'));
+          state.pledge.publicPhone = Boolean(data.get('publicPhone')) && Boolean(publicLine);
         }
         syncTownGroup();
         saveState();
@@ -9474,6 +9595,7 @@
     }
 
     if (form) {
+      if (form.querySelector('[data-cell-phone]')) syncPhoneFields(form);
       form.addEventListener('submit', (event) => {
         event.preventDefault();
         if (errorBox) errorBox.hidden = true;
@@ -9526,7 +9648,11 @@
             state: physicalState,
             zip: physicalZip
           });
-        const phone = cleanString(data.get('phone'), 40);
+        const cellPhone = cleanString(data.get('cellPhone'), 40);
+        const samePhone = Boolean(data.get('samePhone'));
+        const publicPhoneNumber = samePhone ? cellPhone : cleanString(data.get('publicPhoneNumber'), 40);
+        const receiveTexts = Boolean(data.get('receiveTexts'));
+        const showPublicPhone = Boolean(data.get('publicPhone')) && Boolean(publicPhoneNumber);
         const dob = cleanString(data.get('dob'), 10);
         const profession = normalizeProfession(data.get('profession'));
         const housingStatus = normalizeHousingStatus(data.get('housingStatus'));
@@ -9557,8 +9683,12 @@
           return;
         }
 
-        if (!firstName || !lastName || !name || !location || !address1 || !city || !county || !stateCode || !physicalAddress || !physicalCounty || !phone) {
-          showPledgeError('Please complete your first name, last name, chosen name, mailing address and county, physical address and county, phone number, and general location.', 'pledge-first-name');
+        if (!firstName || !lastName || !name || !location || !address1 || !city || !county || !stateCode || !physicalAddress || !physicalCounty || !cellPhone) {
+          showPledgeError('Please complete your first name, last name, chosen name, mailing address and county, physical address and county, cell phone number, and general location.', 'pledge-first-name');
+          return;
+        }
+        if (Boolean(data.get('publicPhone')) && !publicPhoneNumber) {
+          showPledgeError('Enter a public phone number or choose the same as your cell phone before showing it on your public resume.', 'pledge-public-phone');
           return;
         }
         if (!hasOwn(HOUSING_STATUSES, housingStatus)) {
@@ -9636,7 +9766,11 @@
           physicalState,
           physicalZip,
           housingStatus,
-          phone,
+          phone: cellPhone,
+          cellPhone,
+          publicPhoneNumber,
+          samePhone,
+          receiveTexts,
           dob,
           profession,
           zip,
@@ -9653,7 +9787,7 @@
           itemsTaken: 0,
           available: true,
           publicAddressSource: 'mailing',
-          publicPhone: false,
+          publicPhone: showPublicPhone,
           profileTheme: {
             public: { ...PROFILE_THEME_DEFAULTS.public },
             private: { ...PROFILE_THEME_DEFAULTS.private }
@@ -9857,6 +9991,7 @@
           <p class="eyebrow">Apprentice <span class="optional">(Skill-Builder)</span></p>
           <h3>What do you want to learn?</h3>
           <p>Join a mentor and a local or online guild. You are not expected to arrive skilled—only willing to practice safely and give the craft back to the community.</p>
+          <p class="panel-note">${BASIC_NECESSITIES_NOTE}</p>
         </div>
         <span class="badge badge--pillar">Learn by doing</span>
       </div>
@@ -9905,6 +10040,7 @@
           <p class="eyebrow">Care Circle Member</p>
           <h3>You do not have to earn care.</h3>
           <p>This track is for people who cannot work right now due to age, disability, illness, or mental capacity—and for anyone whose capacity changes. No diagnosis is requested. No productivity test. A peer can meet you where you are.</p>
+          <p class="panel-note">${BASIC_NECESSITIES_NOTE}</p>
         </div>
         <span class="badge badge--amber">Ubuntu welcome</span>
       </div>
@@ -10991,6 +11127,7 @@
     initDashboardMenu();
     initSkillPickers();
     initProfileViewToggle();
+    initPhoneFields();
     initProfilePrivacyForm();
     initProfileFriendActions();
     initGroupPostActions();

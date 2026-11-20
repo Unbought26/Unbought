@@ -404,8 +404,9 @@
 
             <div class="form-row">
               <div class="field field--on-blue">
-                <label for="pledge-phone">Phone number <span class="required-mark" aria-hidden="true">*</span></label>
-                <input type="tel" id="pledge-phone" name="phone" autocomplete="tel" maxlength="40" required placeholder="A number where we can reach you">
+                <label for="pledge-cell-phone">Cell phone <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="tel" id="pledge-cell-phone" name="cellPhone" data-cell-phone autocomplete="tel" maxlength="40" required placeholder="Your mobile number">
+                <p class="field-hint">Private. In this prototype it is stored only on this device.</p>
               </div>
               <div class="field field--on-blue dob-field">
                 <p class="address-group-title">Date of birth <span class="required-mark" aria-hidden="true">*</span></p>
@@ -442,6 +443,21 @@
                   </div>
                 </div>
                 <input type="hidden" id="pledge-dob" name="dob">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="field field--on-blue">
+                <label for="pledge-public-phone">Public phone <span class="optional">(optional)</span></label>
+                <input type="tel" id="pledge-public-phone" name="publicPhoneNumber" data-public-phone autocomplete="off" maxlength="40" placeholder="A different number neighbors may use">
+                <p class="field-hint">Leave blank unless you want a number separate from your cell phone. It is shown only if you opt in below.</p>
+              </div>
+              <div class="field field--on-blue">
+                <p class="address-group-title">Phone choices</p>
+                <label class="checkbox"><input type="checkbox" id="pledge-same-phone" name="samePhone" data-same-phone checked> <span>Public phone is the same as my cell phone</span></label>
+                <label class="checkbox"><input type="checkbox" id="pledge-public-phone-opt-in" name="publicPhone"> <span>Show my public phone number on my public resume</span></label>
+                <label class="checkbox"><input type="checkbox" id="pledge-receive-texts" name="receiveTexts"> <span>I want to receive texts at my cell number</span></label>
+                <p class="field-hint">Prototype: no texts are sent and nothing is transmitted. The text choice is recorded locally only.</p>
               </div>
             </div>
 
@@ -496,7 +512,7 @@
               <p class="password-note">Do not reuse a real password. This prototype saves a local hash on this device only—there is no server, no recovery, and no real security.</p>
             </div>
 
-            <p class="pledge-privacy-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Prototype: your name, addresses, phone number, date of birth, username, and password hash stay in this browser only. Nothing is transmitted, sold, or shared, and no real account is created.</p>
+            <p class="pledge-privacy-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Prototype: your name, addresses, cell and public phone numbers, text preference, date of birth, username, and password hash stay in this browser only. Nothing is transmitted, sold, shared, or texted, and no real account is created.</p>
 
             <p class="form-error" id="pledge-error" role="alert" hidden></p>
 
