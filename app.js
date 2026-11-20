@@ -774,8 +774,14 @@
   const GROUP_ADMIN_SEATS = 7;
   const WEEK_MS = 7 * DAY_MS;
 
-  // Phase 1 is labor, goods, and the commons. Academy navigation stays hidden
-  // until Phase 2; the roadmap page still explains what is coming.
+  // Group brands and co-op businesses arrive in Phase 2, on the same 2027
+  // vernal equinox that rolls out the full site and member labels.
+  const GROUP_BRAND_ROLLOUT_AT = LABEL_ROLLOUT_AT;
+  const GROUP_BRAND_ROLLOUT_COPY = 'March 20, 2027 at 4:25pm Eastern';
+
+  // Phase 1 is labor, goods, and the commons. Academy navigation and group
+  // business settings stay hidden until Phase 2; the roadmap page still
+  // explains what is coming.
   const SITE_PHASE = 1;
 
   const PROFILE_THEME_DEFAULTS = Object.freeze({
@@ -2983,6 +2989,7 @@
             seedEligible: typeof item.seedEligible === 'boolean' ? item.seedEligible : true,
             purpose: cleanString(item.purpose, 200),
             guidelines: cleanString(item.guidelines, 1200),
+            settings: normalizeGroupSettings(item.settings),
             members,
             admins,
             left: Boolean(item.left),
@@ -3267,6 +3274,7 @@
       jobTitles: checkedFilterValues('[data-filter-job-title]:checked'),
       formats: checkedFilterValues('[data-filter-format]:checked'),
       brand: $('#brand-filter') ? $('#brand-filter').value.trim() : '',
+      price: $('#price-filter') ? $('#price-filter').value : 'all',
       query: $('#search-filter') ? $('#search-filter').value.trim().toLowerCase() : '',
       city: $('#city-filter') ? $('#city-filter').value.trim() : '',
       state: $('#state-filter') ? $('#state-filter').value.trim().toUpperCase() : '',
@@ -3297,14 +3305,36 @@
     return hasOwn(SERVICE_FORMATS, listing && listing.format) ? listing.format : 'inperson';
   }
 
+  const DONATION_PRICE_LABELS = {
+    free: 'Free to everyone',
+    priced: 'Has a suggested donation',
+    under25: 'Under $25',
+    '25to49': '$25 – $49',
+    '50plus': '$50 and up'
+  };
+
+  function listingMatchesPrice(listing, band) {
+    if (band === 'all') return true;
+    const price = getNonmemberPrice(listing);
+    if (band === 'free') return !(price > 0);
+    if (band === 'priced') return price > 0;
+    if (band === 'under25') return price > 0 && price < 25;
+    if (band === '25to49') return price >= 25 && price < 50;
+    if (band === '50plus') return price >= 50;
+    return true;
+  }
+
   function listingMatchesFilters(listing, values, scope) {
     if (values.pillar !== 'all' && listing.pillar !== values.pillar) return false;
     if (values.exchange !== 'all' && listing.exchange !== values.exchange) return false;
+    if (!listingMatchesPrice(listing, values.price)) return false;
 
     if (values.query) {
+      const price = getNonmemberPrice(listing);
       const haystack = [
         listing.title, listing.description, listing.provider, listing.location,
-        listing.jobTitle, listing.brand, listing.category
+        listing.jobTitle, listing.brand, listing.category,
+        price > 0 ? `${formatMoney(price)} ${price} suggested donation price` : ''
       ].filter(Boolean).join(' ').toLowerCase();
       if (!haystack.includes(values.query)) return false;
     }
@@ -3396,7 +3426,7 @@
     if (listing.isUser) addBadge(badges, 'badge--soft', 'Posted by you');
     if (hasOwn(SCOPE_LABELS, listing.scope)) addBadge(badges, 'badge--soft', SCOPE_LABELS[listing.scope]);
     if (listingNonmemberPrice) {
-      addBadge(badges, 'badge--fund', `Non-members ${formatMoney(listingNonmemberPrice)} → Unbought donation fund`);
+      addBadge(badges, 'badge--fund', `Donation ${formatMoney(listingNonmemberPrice)} → Unbought donation fund`);
     }
     return badges;
   }
@@ -3504,6 +3534,13 @@
         if (hasOwn(GOOD_FACETS, key) && attributes[key]) {
           details.push({ label: GOOD_FACETS[key].label, value: attributes[key] });
         }
+      });
+    }
+
+    if (listingNonmemberPrice > 0) {
+      details.push({
+        label: 'Donation price',
+        value: `${formatMoney(listingNonmemberPrice)} for non-members → Unbought donation fund · members free`
       });
     }
 
@@ -3743,6 +3780,9 @@
     const addChip = (label, attrs) => chips.push({ label, attrs });
 
     if (values.query) addChip(`Search: ${values.query}`, { clearFilter: 'query' });
+    if (values.price !== 'all') {
+      addChip(`Price: ${DONATION_PRICE_LABELS[values.price] || values.price}`, { clearFilter: 'price' });
+    }
     if (values.city) addChip(`City: ${values.city}`, { clearFilter: 'city' });
     if (values.state) addChip(`State: ${values.state}`, { clearFilter: 'state' });
     if (values.zip) addChip(`ZIP near: ${values.zip}`, { clearFilter: 'zip' });
@@ -3813,13 +3853,14 @@
       return;
     }
     if (kind === 'category' || kind === 'brand' || kind === 'pillar' || kind === 'exchange'
-      || kind === 'query' || kind === 'city' || kind === 'state' || kind === 'zip'
+      || kind === 'price' || kind === 'query' || kind === 'city' || kind === 'state' || kind === 'zip'
       || kind === 'nearZip') {
       const idMap = {
         category: 'category-filter',
         brand: 'brand-filter',
         pillar: 'pillar-filter',
         exchange: 'exchange-filter',
+        price: 'price-filter',
         query: 'search-filter',
         city: 'city-filter',
         state: 'state-filter',
@@ -4024,7 +4065,7 @@
   }
 
   function resetFilters() {
-    const ids = ['pillar-filter', 'exchange-filter', 'category-filter'];
+    const ids = ['pillar-filter', 'exchange-filter', 'category-filter', 'price-filter'];
     ids.forEach((id) => {
       const control = document.getElementById(id);
       if (control) control.value = 'all';
@@ -4174,6 +4215,7 @@
     const exchangeFilter = document.getElementById('exchange-filter');
     const categoryFilter = document.getElementById('category-filter');
     const brandFilter = document.getElementById('brand-filter');
+    const priceFilter = document.getElementById('price-filter');
     const searchFilter = document.getElementById('search-filter');
     const cityFilter = document.getElementById('city-filter');
     const stateFilter = document.getElementById('state-filter');
@@ -4185,6 +4227,7 @@
     const activeFilters = document.getElementById('active-filters');
 
     if (exchangeFilter) exchangeFilter.addEventListener('change', applyFilters);
+    if (priceFilter) priceFilter.addEventListener('change', applyFilters);
     if (brandFilter) brandFilter.addEventListener('input', applyFilters);
     if (searchFilter) searchFilter.addEventListener('input', applyFilters);
     if (cityFilter) cityFilter.addEventListener('input', applyFilters);
@@ -4562,6 +4605,8 @@
     $$('[data-post-trigger]').forEach((trigger) => {
       trigger.addEventListener('click', (event) => {
         event.preventDefault();
+        if (!requireMembership('Sign the Unbought Pledge to become a member before posting to the commons.')) return;
+        if (!requireFullAccess('Full access is paused during your reflection period. Posting is unavailable until you complete the reflection and treatment requirements.')) return;
         fillProviderName();
         openDialog(dialog);
       });
@@ -4747,8 +4792,11 @@
     });
 
     if (window.location.hash === '#post-trigger' || window.location.hash === '#post-form') {
-      fillProviderName();
-      openDialog(dialog);
+      if (requireMembership('Sign the Unbought Pledge to become a member before posting to the commons.') &&
+          requireFullAccess('Full access is paused during your reflection period. Posting is unavailable until you complete the reflection and treatment requirements.')) {
+        fillProviderName();
+        openDialog(dialog);
+      }
     }
   }
 
@@ -5850,7 +5898,13 @@
     const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
     const canModerate = isGroupAdmin(group, selfId);
     const rotation = groupAdminRotation(group);
-    const location = group.kind === 'town' ? townLocationLabel() : '';
+    const settings = normalizeGroupSettings(group.settings);
+    const configuredLocation = cleanString(settings.location, 120);
+    const location = settings.online
+      ? 'Online'
+      : (configuredLocation || (group.kind === 'town' ? townLocationLabel() : ''));
+    const business = settings.business;
+    const brandOffers = groupBrandOfferings(settings);
     panel.innerHTML = `<section class="resume-card group-profile" aria-labelledby="group-profile-title">
       <div class="resume-head">
         <div>
@@ -5861,7 +5915,10 @@
           ${group.left ? '<p class="private-notice">You left this group. It stays here only so this local record can still be opened; it is no longer in your group list.</p>' : ''}
           ${group.purpose ? `<p class="resume-bio">${e(group.purpose)}</p>` : '<p class="resume-empty">No purpose added yet.</p>'}
         </div>
-        <a class="button button--outline button--small" href="dashboard.html#social">Back to groups</a>
+        <div class="group-profile-actions">
+          ${canModerate && SITE_PHASE >= 2 ? `<button class="button button--outline button--small" type="button" data-group-settings="${e(group.id)}">Group settings</button>` : ''}
+          <a class="button button--outline button--small" href="dashboard.html#social">Back to groups</a>
+        </div>
       </div>
       <div class="resume-section">
         <h3>Members</h3>
@@ -5966,6 +6023,13 @@
       </div>
       <div class="resume-section">
         <h3>Offers in Free Stuff &amp; Free Labor</h3>
+        ${SITE_PHASE >= 2 && business.enabled ? `<div class="group-brand-banner">
+          <p class="eyebrow">${e(groupBrandLabel(settings))}</p>
+          <h4>${e(business.brandName || groupDisplayLabel(group))}</h4>
+          ${business.description ? `<p>${e(business.description)}</p>` : ''}
+          ${brandOffers.length ? `<p class="contribution-meta">Known for: ${brandOffers.map((offer) => e(offer)).join(' · ')}</p>` : ''}
+          <p class="account-note">A collection of related services and goods offered by this group. Members still receive everything free through mutual consent.</p>
+        </div>` : ''}
         ${renderProfilePosts(listingPosts)}
       </div>
       <div class="resume-section">
@@ -5975,11 +6039,188 @@
           <div><dt>People</dt><dd>${members.length}/${SOCIAL_LIMITS.groupMembers}</dd></div>
           <div><dt>Admin seats</dt><dd>${rotation.seats.length}/${GROUP_ADMIN_SEATS} · staggered weekly</dd></div>
           ${location ? `<div><dt>Location</dt><dd>${e(location)}</dd></div>` : ''}
+          ${SITE_PHASE >= 2 && business.enabled ? `<div><dt>Business</dt><dd>${e(business.brandName || groupDisplayLabel(group))} · ${e(groupBrandLabel(settings))}</dd></div>` : ''}
           <div><dt>Added</dt><dd>${e(formatDate(group.createdAt) || 'Not recorded')}</dd></div>
         </dl>
+        ${SITE_PHASE >= 2 && business.enabled ? `<div class="group-business-details">
+          <h4>Group business</h4>
+          <p class="account-note">${business.brandChoice === 'unbought' ? 'This group records the Unbought Brand' : 'This group records its own brand'} for a collection of related services and goods. It creates industry inside a moneyless society: neighbors trade through mutual consent, not prices. Group brands arrive in Phase 2 on the vernal equinox, ${e(GROUP_BRAND_ROLLOUT_COPY)}.</p>
+          ${business.coop.legalName || business.coop.entityType || business.coop.registration || business.coop.notes ? `<div class="group-coop-details">
+            <h5>Co-op legal information</h5>
+            <p class="contribution-meta">${[
+              business.coop.legalName ? `Legal name: ${e(business.coop.legalName)}` : '',
+              business.coop.entityType ? `Entity type: ${e(business.coop.entityType)}` : '',
+              business.coop.registration ? `Registration: ${e(business.coop.registration)}` : ''
+            ].filter(Boolean).join(' · ')}</p>
+            ${business.coop.notes ? `<p>${e(business.coop.notes)}</p>` : ''}
+            <p class="account-note">A co-op is optional and is formed legally outside Unbought. These details stay in this browser; nothing is filed or transmitted.</p>
+          </div>` : ''}
+          ${business.brandChoice === 'unbought' ? `<p class="account-note">Because this group chose the Unbought Brand, the Unbought legal guild and administrative guild will work with you to ensure safety. No request leaves this browser in the prototype.</p>` : `<p class="account-note">This group uses its own brand. Using the Unbought Brand is optional.</p>`}
+        </div>` : ''}
       </div>
       <p class="account-note">This is a local prototype group. Membership, names, and the count are stored only in this browser; nothing was sent, and no invitations were delivered.</p>
     </section>`;
+  }
+
+  function openGroupSettingsDialog(groupId) {
+    const group = getGroupById(groupId);
+    if (!group || !isGroupAdmin(group, state.pledge.memberId)) {
+      showToast('Only a current admin can change group settings.', false);
+      return;
+    }
+    const existing = document.getElementById('group-settings-dialog');
+    if (existing) existing.remove();
+    const settings = normalizeGroupSettings(group.settings);
+    const business = settings.business;
+    const e = escapeHtml;
+    const dialog = document.createElement('dialog');
+    dialog.className = 'dialog dialog--settings';
+    dialog.id = 'group-settings-dialog';
+    dialog.setAttribute('aria-labelledby', 'group-settings-title');
+    dialog.innerHTML = `
+      <div class="dialog-shell">
+        <div class="dialog-top">
+          <p class="eyebrow">Group settings</p>
+          <button class="icon-button" type="button" data-dialog-close aria-label="Close group settings">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+          </button>
+        </div>
+        <div class="dialog-content">
+          <h2 id="group-settings-title">${e(groupDisplayLabel(group))}</h2>
+          <p class="dialog-note">Only current admins can change these details. Group brands arrive in Phase 2 on the vernal equinox, ${e(GROUP_BRAND_ROLLOUT_COPY)}. Everything stays in this browser; nothing is transmitted.</p>
+          <form class="account-form" data-group-settings-form data-group-id="${e(group.id)}">
+            <fieldset class="field">
+              <legend>Where this group meets</legend>
+              <div class="field">
+                <label for="group-settings-location">Physical location</label>
+                <input type="text" id="group-settings-location" name="location" maxlength="120" value="${e(settings.location)}" placeholder="Stroudsburg, PA">
+              </div>
+              <label class="checkbox">
+                <input type="checkbox" id="group-settings-online" name="online" ${settings.online ? 'checked' : ''}>
+                <span>Online group with no physical location</span>
+              </label>
+              <p class="field-hint">When Online is checked, the group profile shows “Online” instead of an address.</p>
+            </fieldset>
+            <fieldset class="field">
+              <legend>Group business <span class="badge badge--amber">Phase 2</span></legend>
+              <label class="checkbox">
+                <input type="checkbox" id="group-business-enabled" name="businessEnabled" ${business.enabled ? 'checked' : ''}>
+                <span>Offer this group as a business with its own brand</span>
+              </label>
+              <div id="group-business-fields" ${business.enabled ? '' : 'hidden'}>
+                <div class="field">
+                  <label for="group-brand-name">Brand name</label>
+                  <input type="text" id="group-brand-name" name="brandName" maxlength="80" value="${e(business.brandName)}" placeholder="e.g., Stroudsburg Repair Guild">
+                </div>
+                <div class="field">
+                  <label for="group-brand-choice">Brand</label>
+                  <select id="group-brand-choice" name="brandChoice">
+                    <option value="group" ${business.brandChoice === 'group' ? 'selected' : ''}>Our own group brand</option>
+                    <option value="unbought" ${business.brandChoice === 'unbought' ? 'selected' : ''}>Use the Unbought Brand</option>
+                  </select>
+                  <p class="field-hint">The Unbought Brand is optional. If you choose it, the Unbought legal guild and administrative guild will work with you to ensure safety.</p>
+                </div>
+                <div class="field">
+                  <label for="group-brand-offerings">Related services and products</label>
+                  <input type="text" id="group-brand-offerings" name="offerings" maxlength="500" value="${e(business.offerings)}" placeholder="Bike repair, tutoring, seed starting">
+                  <p class="field-hint">Separate each offer with a comma. This is the collection that makes up the group brand.</p>
+                </div>
+                <div class="field">
+                  <label for="group-brand-description">Description</label>
+                  <textarea id="group-brand-description" name="description" rows="3" maxlength="500" placeholder="What this group makes or does together…">${e(business.description)}</textarea>
+                </div>
+                <fieldset class="field group-coop-fields">
+                  <legend>Co-op legal information <span class="optional">(optional)</span></legend>
+                  <p class="field-hint">You are welcome to form a co-op legally and record its details here. Unbought does not form or register co-ops in this prototype.</p>
+                  <div class="field">
+                    <label for="group-coop-legal-name">Legal name</label>
+                    <input type="text" id="group-coop-legal-name" name="coopLegalName" maxlength="120" value="${e(business.coop.legalName)}">
+                  </div>
+                  <div class="form-row">
+                    <div class="field">
+                      <label for="group-coop-entity-type">Entity type</label>
+                      <input type="text" id="group-coop-entity-type" name="coopEntityType" maxlength="80" value="${e(business.coop.entityType)}" placeholder="e.g., Worker cooperative">
+                    </div>
+                    <div class="field">
+                      <label for="group-coop-registration">Registration number</label>
+                      <input type="text" id="group-coop-registration" name="coopRegistration" maxlength="80" value="${e(business.coop.registration)}">
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="group-coop-notes">Notes</label>
+                    <textarea id="group-coop-notes" name="coopNotes" rows="2" maxlength="500">${e(business.coop.notes)}</textarea>
+                  </div>
+                </fieldset>
+              </div>
+            </fieldset>
+            <div class="account-form-actions">
+              <button type="submit" class="button button--primary button--small">Save group settings locally</button>
+              <button type="button" class="button button--ghost button--small" data-dialog-close>Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>`;
+    document.body.appendChild(dialog);
+    dialog.querySelectorAll('[data-dialog-close]').forEach((button) => {
+      button.addEventListener('click', () => closeDialog(dialog));
+    });
+    const enabled = dialog.querySelector('#group-business-enabled');
+    const fields = dialog.querySelector('#group-business-fields');
+    if (enabled && fields) {
+      enabled.addEventListener('change', () => { fields.hidden = !enabled.checked; });
+    }
+    openDialog(dialog);
+  }
+
+  function initGroupSettings() {
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-group-settings]');
+      if (!button) return;
+      event.preventDefault();
+      if (SITE_PHASE < 2) return;
+      openGroupSettingsDialog(button.dataset.groupSettings);
+    });
+    document.addEventListener('submit', (event) => {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement) || !form.matches('[data-group-settings-form]')) return;
+      event.preventDefault();
+      if (SITE_PHASE < 2 || !requireMembership() || !form.reportValidity()) return;
+      const group = getGroupById(form.dataset.groupId);
+      if (!group || !isGroupAdmin(group, state.pledge.memberId)) {
+        showToast('Only a current admin can change group settings.', false);
+        return;
+      }
+      const data = new FormData(form);
+      const current = normalizeGroupSettings(group.settings);
+      const enabled = Boolean(data.get('businessEnabled'));
+      group.settings = {
+        location: cleanString(data.get('location'), 120),
+        online: Boolean(data.get('online')),
+        business: {
+          enabled,
+          brandName: cleanString(data.get('brandName'), 80),
+          brandChoice: data.get('brandChoice') === 'unbought' ? 'unbought' : 'group',
+          description: cleanString(data.get('description'), 500),
+          offerings: cleanString(data.get('offerings'), 500),
+          coop: {
+            legalName: cleanString(data.get('coopLegalName'), 120),
+            entityType: cleanString(data.get('coopEntityType'), 80),
+            registration: cleanString(data.get('coopRegistration'), 80),
+            notes: cleanString(data.get('coopNotes'), 500)
+          },
+          createdAt: current.business.enabled ? current.business.createdAt : new Date().toISOString()
+        }
+      };
+      saveState();
+      const dialog = form.closest('dialog');
+      if (dialog) closeDialog(dialog);
+      addNotification('groupSettings', `Group settings updated: ${groupDisplayLabel(group)}`,
+        'Recorded locally by a current admin. Nothing was transmitted.',
+        { tab: 'social', sourceId: group.id });
+      renderGroupProfile();
+      announce('Group settings saved locally.');
+      showToast(enabled ? 'Group brand saved locally.' : 'Group settings saved locally.', false);
+    });
   }
 
   function renderSharedMemberViews() {
@@ -6629,6 +6870,45 @@
         .some((member) => member && (member.memberId || member.id) === selfId));
   }
 
+  // Group settings are local-only. Admins can set a physical location or mark
+  // the group Online, and in Phase 2 they can record a group brand and the
+  // legal details of a co-op they chose to form outside Unbought.
+  function normalizeGroupSettings(raw) {
+    const src = raw && typeof raw === 'object' ? raw : {};
+    const business = src.business && typeof src.business === 'object' ? src.business : {};
+    const coop = business.coop && typeof business.coop === 'object' ? business.coop : {};
+    return {
+      location: cleanString(src.location, 120),
+      online: Boolean(src.online),
+      business: {
+        enabled: Boolean(business.enabled),
+        brandName: cleanString(business.brandName, 80),
+        brandChoice: business.brandChoice === 'unbought' ? 'unbought' : 'group',
+        description: cleanString(business.description, 500),
+        offerings: cleanString(business.offerings, 500),
+        coop: {
+          legalName: cleanString(coop.legalName, 120),
+          entityType: cleanString(coop.entityType, 80),
+          registration: cleanString(coop.registration, 80),
+          notes: cleanString(coop.notes, 500)
+        },
+        createdAt: cleanString(business.createdAt, 40)
+      }
+    };
+  }
+
+  function groupBrandOfferings(settings) {
+    const offerings = cleanString(settings && settings.business
+      ? settings.business.offerings : '', 500);
+    return offerings.split(',').map((item) => cleanString(item, 80)).filter(Boolean).slice(0, 12);
+  }
+
+  function groupBrandLabel(settings) {
+    const business = settings && settings.business;
+    if (!business || business.brandChoice !== 'unbought') return 'Group brand';
+    return 'Unbought Brand';
+  }
+
   function normalizeGroup(group) {
     if (!group) return group;
     const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
@@ -6670,6 +6950,7 @@
     if (!group.left && !admins.length && (group.kind === 'own' || group.kind === 'town')
       && selfId && isGroupWorkerId(selfId) && members.some((item) => item.memberId === selfId)) admins.push(selfId);
     group.admins = admins;
+    group.settings = normalizeGroupSettings(group.settings);
     return group;
   }
 
@@ -10408,6 +10689,7 @@
     initProfileFriendActions();
     initGroupPostActions();
     initGroupAdminForm();
+    initGroupSettings();
     initProfileThemeForm();
     initAccountability();
     initTracks();

@@ -204,7 +204,7 @@
             <p class="eyebrow">Free stuff directory</p>
             <h2 id="services-title">The commons, in plain sight.</h2>
           </div>
-          <p class="section-head-aside">Every listing is an offer, not an advertisement. Members request goods with mutual consent; non-members may record a local purchase intent in this prototype. No real payment is processed and nothing is transmitted.</p>
+          <p class="section-head-aside">Every listing is an offer, not an advertisement. Members request goods with mutual consent; non-members may record a local purchase intent at the suggested donation price, which is shown on each card and searchable in the filters. The amount goes to the Unbought donation fund. No real payment is processed and nothing is transmitted.</p>
         </div>
 
         <div class="market-shell">
@@ -241,6 +241,17 @@
                   <legend>Brand</legend>
                   <input type="search" id="brand-filter" name="brand" list="brand-options" placeholder="Search a brand" autocomplete="off">
                   <datalist id="brand-options"></datalist>
+                </fieldset>
+                <fieldset class="facet-group">
+                  <legend>Donation price</legend>
+                  <select id="price-filter" name="price">
+                    <option value="all">All offers</option>
+                    <option value="priced">Has a suggested donation</option>
+                    <option value="free">Free to everyone</option>
+                    <option value="under25">Under $25</option>
+                    <option value="25to49">$25 – $49</option>
+                    <option value="50plus">$50 and up</option>
+                  </select>
                 </fieldset>
                 <fieldset class="facet-group">
                   <legend>Location</legend>
@@ -369,13 +380,13 @@
                 <p class="field-hint" id="post-description-hint">Up to 400 characters. Be clear about condition and pickup.</p>
               </div>
               <fieldset class="field field--wide purchase-optin">
-                <legend>Non-member purchase (optional)</legend>
+                <legend>Suggested donation price (optional)</legend>
                 <label class="checkbox">
                   <input type="checkbox" id="post-nonmember-enabled" name="nonmemberPurchaseEnabled">
-                  <span>Allow non-members to record a purchase intent for this item.</span>
+                  <span>Set a donation price so non-members can record a purchase intent (members still get this free).</span>
                 </label>
                 <div class="field" id="post-nonmember-price-field" hidden>
-                  <label for="post-nonmember-price">Price for non-members (USD) <span class="required-mark" aria-hidden="true">*</span></label>
+                  <label for="post-nonmember-price">Donation price for non-members (USD) <span class="required-mark" aria-hidden="true">*</span></label>
                   <input type="number" id="post-nonmember-price" name="nonmemberPurchasePrice" min="1" step="1" inputmode="decimal" placeholder="25">
                   <p class="field-hint">Members always get this item free. Every cent goes to the Unbought donation fund; no payment is processed here.</p>
                 </div>
@@ -564,7 +575,7 @@
                 <input type="email" id="purchase-email" name="purchaseEmail" maxlength="120" placeholder="you@example.com">
               </div>
               <div class="field">
-                <label for="purchase-amount">Price for non-members (USD) <span class="required-mark" aria-hidden="true">*</span></label>
+                <label for="purchase-amount">Suggested donation (USD) <span class="required-mark" aria-hidden="true">*</span></label>
                 <input type="number" id="purchase-amount" name="purchaseAmount" min="1" step="1" inputmode="decimal" placeholder="25" readonly>
                 <p class="field-hint" id="purchase-price-hint">Set by the provider. Every cent goes to the Unbought donation fund; no payment is processed here. Members get this free.</p>
               </div>

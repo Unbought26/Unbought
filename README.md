@@ -131,8 +131,14 @@ are never auto-filled elsewhere.
 ## Member-set non-member prices
 
 Members always get goods and labor free through mutual consent. On the goods and
-labor post forms a provider can opt in to a fixed whole-dollar price for
-non-members, who see that price as a tag on the card and in the details and locked purchase dialogs.
+labor post forms a provider can opt in to a fixed whole-dollar suggested donation
+price for non-members, shown as a badge on the card, as a "Donation price" row in
+the details dialog, and in the locked purchase dialog. Each directory has a
+**Donation price** filter (free to everyone, has a suggested donation, under $25,
+$25–$49, $50 and up), and the text search also matches the dollar amount, so
+neighbors can find and compare prices. Only pledged members can post a service
+or product: the posting button and the `#post-trigger` / `#post-form` links check
+membership before opening the form, and restricted members are blocked too.
 Guests cannot type their own amount: the submit handler reads the provider's
 stored price and records a `nonmember_purchase` request plus a contribution in
 the local Unbought donation fund. Listings without an opt-in are shown as member-only and
@@ -342,6 +348,23 @@ block. Offers come only from that group’s members’ Free Stuff and Free Labor
 scraped listing comments are not shown. Group profiles show the member list, admin
 seats, group chat, group offers, and local details only.
 
+## Group brands and businesses (Phase 2)
+
+Group business features are stored locally in `group.settings` and hidden in Phase 1
+(`SITE_PHASE = 1`). They roll out on the 2027 vernal equinox, **March 20, 2027 at
+4:25pm Eastern**, the same instant as the rest of the full site. A group can create a
+Business and offer a collection of related services and products as a Group Brand,
+creating industry inside a moneyless society; members still receive everything free.
+Only a current admin can open Group settings from the group profile. There, admins set
+a physical location or mark the group **Online** when it has no physical location, and
+can record a brand name, the related offers, a description, and optional co-op legal
+information. The Unbought Brand is optional: choosing it records, in local copy only,
+that the Unbought legal guild and administrative guild will work with the group to
+ensure safety. Forming a co-op is a legal step outside Unbought; nothing is filed,
+registered, published, or transmitted. The group profile shows a Group Brand banner
+under "Offers in Free Stuff & Free Labor" and the location or "Online" under the group
+title, without adding any new headings to the group profile.
+
 The member search covers a small local sample directory plus the current member
 recorded on this device; searches match chosen name, profession, and city/state.
 Sending, accepting, and declining friend requests changes local records only, and
@@ -363,7 +386,8 @@ transmitted.
 This build is static and local-first. There is no real authentication, payment
 processing, email delivery, wage API, stock issuance, payout, police report, server
 upload, or server transmission. Copy across the site says plainly that nothing is
-transmitted. `SITE_PHASE = 1` hides Phase 2 features such as the Unbought Academy.
+transmitted. `SITE_PHASE = 1` hides Phase 2 features such as the Unbought Academy and
+group brands/business settings.
 Every footer carries “Built on Consent.” exactly once. The public fund name is
 “Unbought donation fund”; internal `severanceFund`, `severance_purchase`, and
 `getSeveranceSummary()` keys remain only for older local data compatibility. The

@@ -3896,6 +3896,10 @@ em {
   width: min(720px, calc(100vw - 2rem));
 }
 
+.dialog--settings {
+  width: min(760px, calc(100vw - 2rem));
+}
+
 .dialog--report .dialog-note {
   border-left: 3px solid var(--blue);
   background: var(--blue-mist);
@@ -4970,10 +4974,14 @@ em {
 }
 
 .closing-cta-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.7rem;
   margin-top: 1.4rem;
+}
+
+.closing-cta-actions .button {
+  width: 100%;
 }
 
 .closing-cta .button--outline {
@@ -5570,13 +5578,15 @@ em {
     grid-template-columns: 1fr;
   }
 
-  .closing-cta-actions,
+  .closing-cta-actions {
+    grid-template-columns: 1fr;
+  }
+
   .donate-hero .hero-actions {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .closing-cta-actions .button,
   .donate-hero .hero-actions .button {
     width: 100%;
   }
@@ -8180,8 +8190,14 @@ body[data-directory-scope="goods"] .goods-attributes .form-grid {
 
 .academy-access-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .academy-access-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .access-card {
@@ -8191,8 +8207,34 @@ body[data-directory-scope="goods"] .goods-attributes .form-grid {
   background: rgba(12, 27, 62, 0.35);
 }
 
+/* The member card is the main answer: a full-width, low-height banner.
+   The other three cards line up underneath it in the columns below. */
 .access-card--member {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem 1.4rem;
   border-top-color: #fff;
+}
+
+.academy-access-grid .access-card--member h4 {
+  flex: 0 0 170px;
+  margin: 0;
+}
+
+.academy-access-grid .access-card--member p {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 640px) {
+  .access-card--member {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .academy-access-grid .access-card--member h4 {
+    flex: 0 0 auto;
+  }
 }
 
 .access-card--young {
@@ -9059,6 +9101,65 @@ body[data-directory-scope="goods"] .product-card .listing-title:hover {
   font-size: 0.86rem;
   font-weight: 700;
 }
+
+/* Phase 2 group business / brand settings live in the group profile. */
+.group-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.group-brand-banner {
+  margin: 0.75rem 0 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--amber-light);
+  border-left: 4px solid var(--amber);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.group-brand-banner .eyebrow {
+  color: var(--blue-deep);
+}
+
+.group-brand-banner h4 {
+  margin: 0.3rem 0 0.4rem;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+}
+
+.group-brand-banner p {
+  margin: 0.25rem 0;
+}
+
+.group-business-details,
+.group-coop-details {
+  margin-top: 0.8rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.group-business-details h4,
+.group-coop-details h5 {
+  margin: 0 0 0.35rem;
+  color: var(--blue-deep);
+}
+
+.group-coop-details {
+  margin-top: 0.65rem;
+  border-style: dashed;
+}
+
+.group-coop-fields {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+
 .admin-seat-list {
   display: grid;
   gap: 0.5rem;
