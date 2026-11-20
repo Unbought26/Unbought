@@ -37,7 +37,8 @@ In the Supabase dashboard:
 1. Open this project.
 2. Go to **SQL Editor**.
 3. Paste the contents of `supabase/migrations/20261120120000_public_data_only.sql`.
-4. Run it.
+4. Run it. The file ends with `notify pgrst, 'reload schema';` so the browser API
+   sees the new tables and grants immediately.
 
 The repo already includes `supabase/config.toml`, so do not run `supabase init`
 again. Once the Supabase CLI is installed, you can link this folder with:

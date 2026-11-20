@@ -129,3 +129,7 @@ create policy "Public community posts can be added"
   on public.public_community_posts for insert
   to anon, authenticated
   with check (true);
+
+-- Make PostgREST refresh its schema cache so the new tables and grants are
+-- available to the browser immediately.
+notify pgrst, 'reload schema';
