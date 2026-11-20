@@ -694,9 +694,83 @@ em {
 }
 
 .field--on-blue input:focus,
-.field--on-blue textarea:focus {
+.field--on-blue textarea:focus,
+.field--on-blue select:focus {
   border-color: var(--amber);
   box-shadow: 0 0 0 3px rgba(217, 155, 38, 0.34);
+}
+
+.field--on-blue input[readonly],
+.field--on-blue select:disabled {
+  opacity: 0.68;
+}
+
+.address-group-title {
+  margin: 0 0 0.55rem;
+  color: #F2F5FC;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.dob-fields {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.skill-results,
+.skill-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+
+.skill-result-button,
+.skill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #F4F7FC;
+  color: var(--ink);
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.skill-result-button {
+  cursor: pointer;
+}
+
+.skill-result-button:hover,
+.skill-result-button:focus-visible {
+  border-color: var(--blue);
+  background: var(--blue-mist);
+}
+
+.field--on-blue .skill-result-button,
+.field--on-blue .skill-chip {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.14);
+  color: #F2F5FC;
+}
+
+.skill-chip button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.skill-empty {
+  color: var(--muted);
+  font-size: 0.78rem;
 }
 
 .field--wide {
@@ -1621,8 +1695,10 @@ em {
 }
 
 .pledge-video {
+  display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
+  border: 0;
   border-radius: 14px;
   background: #081227;
   object-fit: cover;
@@ -6289,6 +6365,10 @@ em {
   .manifesto-actions .button {
     width: 100%;
   }
+
+  .dob-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* Member account, contributions, stock, Unbought donation fund (prototype) */
@@ -6304,18 +6384,39 @@ em {
 .account-meta { color: var(--muted); margin: 0.5rem 0 0; }
 .account-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 0.75rem;
   margin: 1rem 0;
 }
 .account-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
   background: var(--sand);
   border: 1px solid var(--border);
+  border-left: 3px solid var(--blue);
   border-radius: 12px;
-  padding: 0.75rem 0.85rem;
+  padding: 0.85rem 1rem;
 }
-.account-stat-label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 0.2rem; }
-.account-stat-value { display: block; font-size: 1rem; color: var(--ink); }
+.account-stat-label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+.account-stat-value {
+  color: var(--ink);
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.account-stat-detail {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
 .account-note, .contribution-meta { color: var(--muted); font-size: 0.92rem; }
 .account-block { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
 .account-block h4 { margin: 0 0 0.35rem; }
@@ -7998,20 +8099,6 @@ body[data-directory-scope="goods"] .goods-attributes .form-grid {
   background: #fff;
 }
 
-.step-number {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  width: 1.7rem;
-  height: 1.7rem;
-  border-radius: 50%;
-  background: var(--amber-soft);
-  color: var(--amber-deep);
-  font-size: 0.8rem;
-  font-weight: 800;
-}
-
 .therapy-note {
   margin-top: 1rem;
   padding: 1.1rem 1.2rem;
@@ -8550,11 +8637,123 @@ body[data-directory-scope="goods"] .product-price--nonmember .product-price-valu
   background: var(--blue-mist);
 }
 
+.friend-finder {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.account-block h5 {
+  margin: 0.9rem 0 0.4rem;
+  color: var(--blue-deep);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.friend-result-list,
+.friend-request-list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 0.8rem;
+  padding: 0;
+  list-style: none;
+}
+
+.friend-result,
+.friend-request-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.85rem;
+}
+
+.friend-result > div,
+.friend-request-item > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.friend-result .badge,
+.friend-request-item .badge {
+  justify-self: start;
+}
+
+.listing-card--link,
+.listing-card--link:link,
+.listing-card--link:visited,
+.listing-card--link:hover,
+.listing-card--link:focus {
+  color: inherit;
+  text-decoration: none;
+}
+
+.listing-card--link .listing-title,
+.listing-card--link .listing-title:hover,
+body[data-directory-scope="goods"] .product-card .listing-title:hover {
+  text-decoration: none;
+}
+
+.listing-card--link .product-media {
+  display: grid;
+  place-items: center;
+  height: 150px;
+  margin-bottom: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: linear-gradient(180deg, #FBFBFD 0%, #F1F3F7 100%);
+}
+
+.listing-card--link .product-glyph {
+  font-size: 3.7rem;
+  line-height: 1;
+  filter: saturate(0.92);
+}
+
+.listing-location {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.dialog--listing {
+  width: min(720px, calc(100vw - 2rem));
+}
+
+.dialog--listing .listing-detail-card {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 .social-chat-list .chat-message {
   padding: 0.7rem;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: #fff;
+}
+
+.chat-title {
+  margin: 0.25rem 0 !important;
+  color: var(--blue-deep);
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.chat-picture {
+  display: block;
+  width: min(220px, 100%);
+  max-height: 180px;
+  margin: 0.45rem 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .listing-comments {

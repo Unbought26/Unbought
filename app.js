@@ -768,6 +768,39 @@
     groupMembers: 150
   });
 
+  // A small local sample directory so the prototype can demonstrate member
+  // search and the request flow. These are not real accounts; nothing is sent.
+  const LOCAL_MEMBER_DIRECTORY = Object.freeze([
+    { id: 'sample-member-maya', name: 'Maya Torres', profession: 'Baker', cityState: 'Stroudsburg, PA' },
+    { id: 'sample-member-jordan', name: 'Jordan Lee', profession: 'Electrician', cityState: 'East Stroudsburg, PA' },
+    { id: 'sample-member-sam', name: 'Sam Rivera', profession: 'Care worker', cityState: 'Scranton, PA' },
+    { id: 'sample-member-ana', name: 'Ana Patel', profession: 'Teacher', cityState: 'Stroudsburg, PA' }
+  ]);
+
+  const SKILL_OPTIONS = Object.freeze({
+    paid: Object.freeze([
+      'Carpentry', 'Plumbing', 'Electrical work', 'Painting', 'Roofing', 'Landscaping',
+      'Auto repair', 'Bicycle repair', 'Welding', 'Mechanics', 'Cleaning', 'Cooking',
+      'Baking', 'Childcare', 'Elder care', 'Nursing', 'Medical assisting', 'Counseling',
+      'Social work', 'Teaching', 'Tutoring', 'Music instruction', 'Dance instruction',
+      'Fitness training', 'Hairdressing', 'Sewing', 'Tailoring', 'Graphic design',
+      'Web development', 'Coding', 'Writing', 'Editing', 'Photography', 'Translation',
+      'Bookkeeping', 'Accounting', 'Event planning', 'Community organizing',
+      'Delivery driving', 'Customer service', 'Farming', 'Gardening', 'Food preservation',
+      'Legal aid', 'Library work', 'Accessibility support'
+    ]),
+    unpaid: Object.freeze([
+      'Caregiving', 'Listening', 'Emotional support', 'Peer support', 'Care circle support',
+      'Accompanying to appointments', 'Home repair', 'Gardening', 'Seed saving', 'Cooking',
+      'Cleaning', 'Childcare', 'Elder care', 'Tutoring', 'Teaching', 'Community organizing',
+      'Mutual aid', 'First aid', 'Conflict mediation', 'Translating', 'Interpreting',
+      'Bicycle repair', 'Clothing repair', 'Mending', 'Canning', 'Food distribution',
+      'Tenant organizing', 'Digital literacy', 'Accessibility support', 'Transportation',
+      'Pet care', 'Storytelling', 'Music', 'Art', 'Crafts', 'Repair café', 'Neighborhood care',
+      'Reading support', 'Meal sharing', 'Composting', 'Housing support', 'Grocery sharing'
+    ])
+  });
+
   const REFLECTION_OPTIONS = Object.freeze([30, 90, 180]);
   const TREATMENT_STEPS = Object.freeze([
     { key: 'evaluation', label: 'Therapeutic evaluation completed (inside or outside Unbought)' },
@@ -798,6 +831,17 @@
       reports: [],
       notifications: [],
       friends: [],
+      friendRequests: [{
+        id: 'sample-friend-request-maya',
+        memberId: 'sample-member-maya',
+        name: 'Maya Torres',
+        profession: 'Baker',
+        cityState: 'Stroudsburg, PA',
+        direction: 'incoming',
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        sample: true
+      }],
       groups: [],
       socialChats: [],
       settings: {
@@ -853,6 +897,185 @@
     return normalizeZip((String(address || '').match(/\b\d{5}(?:-\d{4})?\b/) || [''])[0]);
   }
 
+  const NAME_SUFFIXES = Object.freeze(['jr', 'sr', 'ii', 'iii', 'iv', 'v', 'vi']);
+
+  function normalizeStateCode(value) {
+    return cleanString(value, 2).toUpperCase();
+  }
+
+  function parseFullNameParts(value) {
+    const tokens = cleanString(value, 100).split(/\s+/).filter(Boolean);
+    if (!tokens.length) return { firstName: '', middleInitial: '', lastName: '', suffix: '' };
+    let suffix = '';
+    const lastToken = tokens[tokens.length - 1].replace(/\./g, '').toLowerCase();
+    if (tokens.length > 1 && NAME_SUFFIXES.includes(lastToken)) suffix = tokens.pop();
+    const firstName = tokens.shift() || '';
+    const lastName = tokens.length > 1 ? tokens.pop() : tokens.pop() || '';
+    const middleInitial = tokens.length ? tokens[0].slice(0, 1).toUpperCase() : '';
+    return { firstName, middleInitial, lastName, suffix };
+  }
+
+  function composeFullName(parts) {
+    return [parts.firstName, parts.middleInitial, parts.lastName, parts.suffix]
+      .map((part) => cleanString(part, 60))
+      .filter(Boolean)
+      .join(' ')
+      .slice(0, 100);
+  }
+
+  function parseMailingParts(value) {
+    const parts = cleanString(value, 240)
+      .split(/[\n,]+/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+    let city = '';
+    let state = '';
+    let cityIndex = -1;
+    for (let index = parts.length - 1; index > 0; index -= 1) {
+      const match = parts[index].match(/^([A-Za-z]{2})(?:\s+\d{5}(?:-\d{4})?)?$/);
+      if (!match) continue;
+      const candidate = safeCity(parts[index - 1]);
+      if (!candidate) continue;
+      city = candidate;
+      state = match[1].toUpperCase();
+      cityIndex = index - 1;
+      break;
+    }
+    const streetParts = cityIndex >= 0 ? parts.slice(0, cityIndex) : parts;
+    return {
+      address1: streetParts[0] || '',
+      address2: streetParts.slice(1).join(', '),
+      city,
+      state,
+      zip: zipFromAddress(value)
+    };
+  }
+
+  function composeMailingAddress(parts) {
+    const street = [cleanString(parts.address1, 100), cleanString(parts.address2, 100)].filter(Boolean);
+    const city = safeCity(parts.city);
+    const state = normalizeStateCode(parts.state);
+    const zip = normalizeZip(parts.zip);
+    const locality = city || state || zip
+      ? [city, [state, zip].filter(Boolean).join(' ')].filter(Boolean).join(', ')
+      : '';
+    return [...street, locality].filter(Boolean).join(', ').slice(0, 240);
+  }
+
+  function splitSkillList(value) {
+    return cleanString(value, 400)
+      .split(/[\n,]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  function refreshSkillPicker(picker) {
+    if (!(picker instanceof HTMLElement)) return;
+    const input = picker.querySelector('input[type="hidden"]');
+    const chips = picker.querySelector('[data-skill-chips]');
+    if (!input || !chips) return;
+    const items = splitSkillList(input.value);
+    chips.innerHTML = items.length
+      ? items.map((skill) => `<span class="skill-chip">${escapeHtml(skill)}<button type="button" data-skill-remove="${escapeHtml(skill)}" aria-label="Remove ${escapeHtml(skill)}">×</button></span>`).join('')
+      : '<span class="skill-empty">No skills added yet.</span>';
+  }
+
+  function refreshSkillPickers(root = document) {
+    const pickers = root instanceof HTMLElement
+      ? [root, ...root.querySelectorAll('.skill-picker')]
+      : Array.from(root.querySelectorAll('.skill-picker'));
+    pickers.filter((picker) => picker.classList.contains('skill-picker')).forEach(refreshSkillPicker);
+  }
+
+  function updateSkillResults(picker) {
+    if (!(picker instanceof HTMLElement)) return;
+    const search = picker.querySelector('[data-skill-search]');
+    const results = picker.querySelector('[data-skill-results]');
+    const input = picker.querySelector('input[type="hidden"]');
+    if (!search || !results || !input) return;
+    const query = cleanString(search.value, 80).trim();
+    const lowerQuery = query.toLowerCase();
+    if (!lowerQuery) {
+      results.innerHTML = '';
+      return;
+    }
+    const kind = picker.dataset.skillPicker === 'unpaid' ? 'unpaid' : 'paid';
+    const selected = splitSkillList(input.value).map((item) => item.toLowerCase());
+    const matches = SKILL_OPTIONS[kind]
+      .filter((option) => option.toLowerCase().includes(lowerQuery) && !selected.includes(option.toLowerCase()))
+      .slice(0, 8);
+    const custom = !SKILL_OPTIONS[kind].some((option) => option.toLowerCase() === lowerQuery)
+      ? [query.slice(0, 60)] : [];
+    const options = [...matches, ...custom]
+      .filter((option, index, all) => all.findIndex((item) => item.toLowerCase() === option.toLowerCase()) === index);
+    results.innerHTML = options.length
+      ? options.map((option) => `<button type="button" class="skill-result-button" data-skill-add="${escapeHtml(option)}">${escapeHtml(option)}</button>`).join('')
+      : '<span class="skill-empty">No matches. Type your own and press Enter.</span>';
+  }
+
+  function addSkill(picker, value) {
+    if (!(picker instanceof HTMLElement)) return;
+    const input = picker.querySelector('input[type="hidden"]');
+    const search = picker.querySelector('[data-skill-search]');
+    const results = picker.querySelector('[data-skill-results]');
+    const skill = cleanString(value, 60);
+    if (!input || !skill) return;
+    const items = splitSkillList(input.value);
+    if (!items.some((item) => item.toLowerCase() === skill.toLowerCase())) items.push(skill);
+    input.value = items.join(', ').slice(0, 400);
+    if (search) search.value = '';
+    if (results) results.innerHTML = '';
+    refreshSkillPicker(picker);
+  }
+
+  function removeSkill(picker, value) {
+    if (!(picker instanceof HTMLElement)) return;
+    const input = picker.querySelector('input[type="hidden"]');
+    if (!input) return;
+    const skill = cleanString(value, 60).toLowerCase();
+    input.value = splitSkillList(input.value)
+      .filter((item) => item.toLowerCase() !== skill)
+      .join(', ')
+      .slice(0, 400);
+    refreshSkillPicker(picker);
+  }
+
+  let skillPickersBound = false;
+  function initSkillPickers() {
+    if (skillPickersBound) {
+      refreshSkillPickers();
+      return;
+    }
+    skillPickersBound = true;
+    document.addEventListener('input', (event) => {
+      const search = event.target.closest('[data-skill-search]');
+      if (search) updateSkillResults(search.closest('.skill-picker'));
+    });
+    document.addEventListener('click', (event) => {
+      const add = event.target.closest('[data-skill-add]');
+      if (add) {
+        event.preventDefault();
+        addSkill(add.closest('.skill-picker'), add.dataset.skillAdd);
+        return;
+      }
+      const remove = event.target.closest('[data-skill-remove]');
+      if (remove) {
+        event.preventDefault();
+        removeSkill(remove.closest('.skill-picker'), remove.dataset.skillRemove);
+      }
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return;
+      const search = event.target.closest('[data-skill-search]');
+      if (!search) return;
+      event.preventDefault();
+      const picker = search.closest('.skill-picker');
+      const first = picker.querySelector('[data-skill-add]');
+      addSkill(picker, first ? first.dataset.skillAdd : search.value);
+    });
+    refreshSkillPickers();
+  }
+
   function getMemberRoster() {
     if (!Array.isArray(state.memberRoster)) state.memberRoster = [];
     return state.memberRoster;
@@ -864,10 +1087,15 @@
     const profession = normalizeProfession(pledge.profession
       || String(pledge.paidSkills || '').split(/[\n,;]/)[0]);
     const zip = normalizeZip(pledge.zip || zipFromAddress(pledge.mailingAddress));
+    const cityState = parseCityState(pledge.mailingAddress)
+      || cleanString(pledge.location, 100)
+      || (zip ? `ZIP ${zip}` : '');
     const entry = {
       memberId: pledge.memberId,
+      name: cleanString(pledge.name, 60),
       profession,
       professionKey: profession.toLowerCase(),
+      cityState,
       zip,
       signedAt: cleanString(pledge.signedAt, 40),
       standing: cleanString(pledge.status, 30) || 'active',
@@ -1664,13 +1892,41 @@
       const name = cleanString(raw.pledge.name, 60);
       if (name) {
         const signedAt = cleanString(raw.pledge.signedAt, 40) || new Date().toISOString();
+        const parsedName = parseFullNameParts(raw.pledge.fullName);
+        const firstName = cleanString(raw.pledge.firstName, 40) || parsedName.firstName;
+        const middleInitial = cleanString(raw.pledge.middleInitial, 2) || parsedName.middleInitial;
+        const lastName = cleanString(raw.pledge.lastName, 60) || parsedName.lastName;
+        const suffix = cleanString(raw.pledge.suffix, 12) || parsedName.suffix;
+        const fullName = cleanString(raw.pledge.fullName, 100)
+          || composeFullName({ firstName, middleInitial, lastName, suffix });
+        const parsedAddress = parseMailingParts(raw.pledge.mailingAddress);
+        const address1 = cleanString(raw.pledge.address1, 100) || parsedAddress.address1;
+        const address2 = cleanString(raw.pledge.address2, 100) || parsedAddress.address2;
+        const city = cleanString(raw.pledge.city, 80) || parsedAddress.city;
+        const stateCode = normalizeStateCode(raw.pledge.state) || parsedAddress.state;
+        const mailingAddress = cleanString(raw.pledge.mailingAddress, 240)
+          || composeMailingAddress({ address1, address2, city, state: stateCode, zip: raw.pledge.zip });
+        const parsedPhysicalAddress = parseMailingParts(raw.pledge.physicalAddress);
         fallback.pledge = {
           memberId: cleanString(raw.pledge.memberId, 100) || makeId('member'),
           name,
-          fullName: cleanString(raw.pledge.fullName, 100),
+          fullName,
+          firstName,
+          middleInitial,
+          lastName,
+          suffix,
           location: cleanString(raw.pledge.location, 80),
-          mailingAddress: cleanString(raw.pledge.mailingAddress, 240),
+          address1,
+          address2,
+          city,
+          state: stateCode,
+          mailingAddress,
           physicalAddress: cleanString(raw.pledge.physicalAddress, 240),
+          physicalAddress1: cleanString(raw.pledge.physicalAddress1, 100) || parsedPhysicalAddress.address1,
+          physicalAddress2: cleanString(raw.pledge.physicalAddress2, 100) || parsedPhysicalAddress.address2,
+          physicalCity: cleanString(raw.pledge.physicalCity, 80) || parsedPhysicalAddress.city,
+          physicalState: normalizeStateCode(raw.pledge.physicalState) || parsedPhysicalAddress.state,
+          physicalZip: normalizeZip(raw.pledge.physicalZip || parsedPhysicalAddress.zip),
           housingStatus: normalizeHousingStatus(raw.pledge.housingStatus),
           phone: cleanString(raw.pledge.phone, 40),
           dob: cleanString(raw.pledge.dob, 10),
@@ -2080,6 +2336,25 @@
         .filter((item) => item.name);
     }
 
+    if (Array.isArray(raw.friendRequests)) {
+      fallback.friendRequests = raw.friendRequests
+        .filter((item) => item && typeof item === 'object')
+        .slice(0, 150)
+        .map((item) => ({
+          id: cleanString(item.id, 100) || makeId('friend-request'),
+          memberId: cleanString(item.memberId, 100),
+          name: cleanString(item.name, 60),
+          profession: cleanString(item.profession, 80),
+          cityState: cleanString(item.cityState, 100),
+          direction: item.direction === 'outgoing' ? 'outgoing' : 'incoming',
+          status: ['accepted', 'declined'].includes(item.status) ? item.status : 'pending',
+          createdAt: cleanString(item.createdAt, 40) || new Date().toISOString(),
+          respondedAt: cleanString(item.respondedAt, 40),
+          sample: Boolean(item.sample)
+        }))
+        .filter((item) => item.memberId && item.name);
+    }
+
     if (Array.isArray(raw.groups)) {
       fallback.groups = raw.groups
         .filter((item) => item && typeof item === 'object')
@@ -2109,7 +2384,9 @@
           name: cleanString(item.name, 60),
           audience: cleanString(item.audience, 40) || 'friends',
           audienceLabel: cleanString(item.audienceLabel, 80) || 'Friends',
+          title: cleanString(item.title, 90),
           body: cleanString(item.body, 1200),
+          picture: cleanPostPhotos(item.picture).slice(0, 1),
           createdAt: cleanString(item.createdAt, 40)
         }))
         .filter((item) => item.body);
@@ -2425,65 +2702,7 @@
     return badge;
   }
 
-  function buildListingCard(listing) {
-    const card = createEl('article', 'listing-card');
-    card.id = `listing-${domId(listing.id)}`;
-    card.dataset.pillar = listing.pillar;
-    card.dataset.listingId = listing.id;
-    if (listing.isUser) card.classList.add('is-user');
-
-    const photos = cleanPostPhotos(listing.photos);
-    const listingNonmemberPrice = getNonmemberPrice(listing);
-
-    // On the goods page each offer gets a product-style thumbnail and a
-    // prominent free price, a small nod to a familiar catalog layout.
-    const isProductCard = listing.pillar === 'goods' && getDirectoryScope() === 'goods';
-    if (isProductCard) {
-      card.classList.add('product-card');
-      const media = createEl('div', 'product-media');
-      if (photos.length) {
-        const image = createEl('img', 'product-photo');
-        image.src = photos[0].dataUrl;
-        image.alt = `Photo of ${listing.title}`;
-        image.loading = 'lazy';
-        media.appendChild(image);
-        if (photos.length > 1) {
-          media.appendChild(createEl('span', 'product-photo-count', `+${photos.length - 1}`));
-        }
-      } else {
-        media.setAttribute('aria-hidden', 'true');
-        media.appendChild(createEl('span', 'product-glyph', GOODS_CATEGORY_ICONS[listing.category] || '📦'));
-      }
-      card.appendChild(media);
-      const price = createEl('div', 'product-price');
-      if (!isMember() && listingNonmemberPrice) {
-        price.classList.add('product-price--nonmember');
-        price.appendChild(createEl('span', 'product-price-value', formatMoney(listingNonmemberPrice)));
-        price.appendChild(createEl('span', 'product-price-note', 'Non-member price · all of it to the Unbought donation fund · free for members'));
-      } else {
-        price.appendChild(createEl('span', 'product-price-value', 'FREE'));
-        price.appendChild(createEl('span', 'product-price-note', listingNonmemberPrice
-          ? `Free for you · non-members pay ${formatMoney(listingNonmemberPrice)} to the fund`
-          : goodsCategoryShort(listing)));
-      }
-      card.appendChild(price);
-    } else if (photos.length) {
-      const strip = createEl('div', 'listing-photos');
-      photos.forEach((photo) => {
-        const image = createEl('img');
-        image.src = photo.dataUrl;
-        image.alt = `Photo of ${listing.title}`;
-        image.loading = 'lazy';
-        strip.appendChild(image);
-      });
-      card.appendChild(strip);
-    }
-
-    const matchingRequests = state.requests.filter((request) => request.listingId === listing.id);
-    const hasMutualRequest = matchingRequests.some((request) => request.type !== 'nonmember_purchase');
-    const hasPurchaseIntent = matchingRequests.some((request) => request.type === 'nonmember_purchase');
-    if (hasMutualRequest || hasPurchaseIntent) card.classList.add('is-requested');
-
+  function buildListingBadges(listing, listingNonmemberPrice) {
     const badges = createEl('div', 'listing-badges');
     addBadge(badges, 'badge--pillar', PILLARS[listing.pillar].short);
     const isGoods = listing.pillar === 'goods';
@@ -2502,10 +2721,77 @@
     if (listingNonmemberPrice) {
       addBadge(badges, 'badge--fund', `Non-members ${formatMoney(listingNonmemberPrice)} → Unbought donation fund`);
     }
-    card.appendChild(badges);
+    return badges;
+  }
+
+  function buildListingCard(listing, options = {}) {
+    const idPrefix = options.idPrefix || 'listing';
+    const card = createEl(options.modal ? 'article' : 'a', 'listing-card');
+    card.id = `${idPrefix}-${domId(listing.id)}`;
+    card.dataset.pillar = listing.pillar;
+    card.dataset.listingId = listing.id;
+    if (listing.isUser) card.classList.add('is-user');
+    if (!options.modal) {
+      card.classList.add('listing-card--link');
+      card.href = `#listing-${domId(listing.id)}`;
+      card.dataset.listingOpen = listing.id;
+      card.setAttribute('aria-label', `View details for ${listing.title}`);
+    }
+
+    const photos = cleanPostPhotos(listing.photos);
+    const listingNonmemberPrice = getNonmemberPrice(listing);
+    const matchingRequests = state.requests.filter((request) => request.listingId === listing.id);
+    const hasMutualRequest = matchingRequests.some((request) => request.type !== 'nonmember_purchase');
+    const hasPurchaseIntent = matchingRequests.some((request) => request.type === 'nonmember_purchase');
+    if (hasMutualRequest || hasPurchaseIntent) card.classList.add('is-requested');
+
+    // Directory cards stay compact: photos, tags, title, description, and location.
+    // The full record opens in a details dialog.
+    if (!options.modal) {
+      const media = createEl('div', 'product-media');
+      if (photos.length) {
+        const image = createEl('img', 'product-photo');
+        image.src = photos[0].dataUrl;
+        image.alt = `Photo of ${listing.title}`;
+        image.loading = 'lazy';
+        media.appendChild(image);
+        if (photos.length > 1) {
+          media.appendChild(createEl('span', 'product-photo-count', `+${photos.length - 1}`));
+        }
+      } else {
+        const glyphs = { building: '🛠️', health: '💚', daily: '🥬', arts: '🎨', civic: '🤝', goods: '📦' };
+        media.setAttribute('aria-hidden', 'true');
+        media.appendChild(createEl('span', 'product-glyph',
+          GOODS_CATEGORY_ICONS[listing.category] || glyphs[listing.pillar] || '📦'));
+      }
+      card.appendChild(media);
+      card.appendChild(buildListingBadges(listing, listingNonmemberPrice));
+
+      const title = createEl('h3', 'listing-title', listing.title);
+      title.id = `${idPrefix}-title-${domId(listing.id)}`;
+      card.appendChild(title);
+      card.appendChild(createEl('p', 'listing-desc', listing.description));
+      card.appendChild(createEl('p', 'listing-location', listing.location || 'Location not listed'));
+      return card;
+    }
+
+    // Inside the details dialog the full record is shown, including all
+    // photos, tags, details, actions, and local comments.
+    if (photos.length) {
+      const strip = createEl('div', 'listing-photos');
+      photos.forEach((photo) => {
+        const image = createEl('img');
+        image.src = photo.dataUrl;
+        image.alt = `Photo of ${listing.title}`;
+        image.loading = 'lazy';
+        strip.appendChild(image);
+      });
+      card.appendChild(strip);
+    }
+    card.appendChild(buildListingBadges(listing, listingNonmemberPrice));
 
     const title = createEl('h3', 'listing-title', listing.title);
-    title.id = `listing-title-${domId(listing.id)}`;
+    title.id = `${idPrefix}-title-${domId(listing.id)}`;
     card.appendChild(title);
 
     const provider = createEl('p', 'listing-provider');
@@ -2523,14 +2809,14 @@
       ? [...listing.details]
       : [{ label: 'Where', value: listing.location }];
 
-    if (!isProductCard && listing.pillar !== 'goods') {
+    if (listing.pillar !== 'goods') {
       if (listing.jobTitle) details.push({ label: 'Service', value: listing.jobTitle });
       if (hasOwn(SERVICE_FORMATS, listing.format)) {
         details.push({ label: 'Format', value: SERVICE_FORMATS[listing.format] });
       }
     }
 
-    if (isProductCard) {
+    if (listing.pillar === 'goods') {
       if (hasOwn(GOOD_CONDITIONS, listing.condition)) {
         details.push({ label: 'Condition', value: GOOD_CONDITIONS[listing.condition] });
       }
@@ -2639,11 +2925,11 @@
     commentToggle.type = 'button';
     commentToggle.dataset.toggleComments = listing.id;
     commentToggle.setAttribute('aria-expanded', 'false');
-    commentToggle.setAttribute('aria-controls', `comment-thread-${domId(listing.id)}`);
+    commentToggle.setAttribute('aria-controls', `${idPrefix}-comment-thread-${domId(listing.id)}`);
     commentWrap.appendChild(commentToggle);
 
     const thread = createEl('div', 'comment-thread');
-    thread.id = `comment-thread-${domId(listing.id)}`;
+    thread.id = `${idPrefix}-comment-thread-${domId(listing.id)}`;
     thread.hidden = true;
     thread.dataset.commentThread = listing.id;
     if (comments.length) {
@@ -2681,9 +2967,9 @@
       const form = createEl('form', 'account-form listing-comment-form');
       form.dataset.listingCommentForm = listing.id;
       const label = createEl('label', '', 'Add a comment');
-      label.htmlFor = `listing-comment-${domId(listing.id)}`;
+      label.htmlFor = `${idPrefix}-comment-${domId(listing.id)}`;
       const input = createEl('textarea');
-      input.id = `listing-comment-${domId(listing.id)}`;
+      input.id = `${idPrefix}-comment-${domId(listing.id)}`;
       input.name = 'text';
       input.rows = 2;
       input.maxLength = 800;
@@ -3080,6 +3366,132 @@
     applyFilters();
   }
 
+  function createListingDialog() {
+    const existing = document.getElementById('listing-dialog');
+    if (existing) return existing;
+    const dialog = document.createElement('dialog');
+    dialog.className = 'dialog dialog--listing';
+    dialog.id = 'listing-dialog';
+    dialog.setAttribute('aria-labelledby', 'listing-dialog-title');
+    dialog.innerHTML = `
+      <div class="dialog-shell">
+        <div class="dialog-top">
+          <div><p class="eyebrow">Listing details</p><h2 id="listing-dialog-title">More about this offer</h2></div>
+          <button class="icon-button" type="button" data-dialog-close aria-label="Close listing details">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+          </button>
+        </div>
+        <div class="dialog-content" id="listing-dialog-content"></div>
+      </div>`;
+    document.body.appendChild(dialog);
+    dialog.addEventListener('click', handleListingCardClick);
+    dialog.addEventListener('submit', handleListingCommentSubmit);
+    return dialog;
+  }
+
+  function openListingModal(id, trigger) {
+    const listing = findListing(id);
+    if (!listing) return;
+    const dialog = createListingDialog();
+    const content = document.getElementById('listing-dialog-content');
+    const detail = buildListingCard(listing, { modal: true, idPrefix: 'detail' });
+    detail.classList.add('listing-detail-card');
+    content.replaceChildren(detail);
+    dialog._returnFocus = trigger instanceof HTMLElement ? trigger : null;
+    openDialog(dialog);
+  }
+
+  function handleListingCardClick(event) {
+    const openButton = event.target.closest('[data-listing-open]');
+    if (openButton) {
+      event.preventDefault();
+      openListingModal(openButton.dataset.listingOpen, openButton);
+      return;
+    }
+    const commentButton = event.target.closest('[data-toggle-comments]');
+    if (commentButton) {
+      const card = commentButton.closest('.listing-card');
+      const thread = card && card.querySelector('.comment-thread');
+      if (!thread) return;
+      thread.hidden = !thread.hidden;
+      commentButton.setAttribute('aria-expanded', String(!thread.hidden));
+      if (!thread.hidden) {
+        const input = thread.querySelector('textarea');
+        if (input) input.focus({ preventScroll: true });
+      }
+      return;
+    }
+
+    const replyButton = event.target.closest('[data-reply-comment]');
+    if (replyButton) {
+      const thread = replyButton.closest('.comment-thread');
+      const input = thread && thread.querySelector('textarea');
+      if (!input) return;
+      input.value = `@${replyButton.dataset.replyComment} `;
+      input.focus({ preventScroll: true });
+      return;
+    }
+
+    const requestButton = event.target.closest('[data-request-listing]');
+    if (requestButton) {
+      openConsentDialog(requestButton.dataset.requestListing, requestButton);
+      return;
+    }
+
+    const removeButton = event.target.closest('[data-remove-listing]');
+    if (removeButton) {
+      confirmRemoveListing(removeButton.dataset.removeListing, removeButton);
+      return;
+    }
+
+    const resetButton = event.target.closest('[data-clear-filters]');
+    if (resetButton) resetFilters();
+  }
+
+  function handleListingCommentSubmit(event) {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches('[data-listing-comment-form]')) return;
+    event.preventDefault();
+    if (!requireMembership()) return;
+    if (!form.reportValidity()) return;
+    const listing = findListing(form.dataset.listingCommentForm);
+    if (!listing) return;
+    const text = cleanString(new FormData(form).get('text'), 800);
+    if (!text) return;
+    const comment = {
+      id: makeId('comment'),
+      memberId: state.pledge.memberId,
+      name: state.pledge.name,
+      text,
+      createdAt: new Date().toISOString()
+    };
+    const comments = getListingComments(listing);
+    comments.push(comment);
+    const savedComments = cleanThreadComments(comments);
+    state.listingComments = state.listingComments && typeof state.listingComments === 'object'
+      ? state.listingComments : {};
+    state.listingComments[listing.id] = savedComments;
+    if (Array.isArray(state.listings) && state.listings.includes(listing)) {
+      listing.comments = savedComments;
+    }
+    addNotification('comment', `Comment on ${listing.title}`,
+      `Added locally to ${listing.provider}'s post. Comments stay on the listing; nothing was transmitted.`,
+      { sourceId: comment.id });
+    saveState();
+    if (form.closest('#listing-dialog')) {
+      const content = document.getElementById('listing-dialog-content');
+      if (content) {
+        const detail = buildListingCard(listing, { modal: true, idPrefix: 'detail' });
+        detail.classList.add('listing-detail-card');
+        content.replaceChildren(detail);
+      }
+    } else {
+      applyFilters();
+    }
+    announce('Your comment was added locally.');
+    showToast('Comment saved in this browser. Nothing was transmitted.', false);
+  }
+
   function initDirectory() {
     const pillarFilter = document.getElementById('pillar-filter');
     const exchangeFilter = document.getElementById('exchange-filter');
@@ -3129,81 +3541,9 @@
     }
 
     if (grid) {
-      grid.addEventListener('click', (event) => {
-        const commentButton = event.target.closest('[data-toggle-comments]');
-        if (commentButton) {
-          const card = commentButton.closest('.listing-card');
-          const thread = card && card.querySelector('.comment-thread');
-          if (!thread) return;
-          thread.hidden = !thread.hidden;
-          commentButton.setAttribute('aria-expanded', String(!thread.hidden));
-          if (!thread.hidden) {
-            const input = thread.querySelector('textarea');
-            if (input) input.focus({ preventScroll: true });
-          }
-          return;
-        }
-
-        const replyButton = event.target.closest('[data-reply-comment]');
-        if (replyButton) {
-          const thread = replyButton.closest('.comment-thread');
-          const input = thread && thread.querySelector('textarea');
-          if (!input) return;
-          input.value = `@${replyButton.dataset.replyComment} `;
-          input.focus({ preventScroll: true });
-          return;
-        }
-
-        const requestButton = event.target.closest('[data-request-listing]');
-        if (requestButton) {
-          openConsentDialog(requestButton.dataset.requestListing, requestButton);
-          return;
-        }
-
-        const removeButton = event.target.closest('[data-remove-listing]');
-        if (removeButton) {
-          confirmRemoveListing(removeButton.dataset.removeListing, removeButton);
-          return;
-        }
-
-        const resetButton = event.target.closest('[data-clear-filters]');
-        if (resetButton) resetFilters();
-      });
-
-      grid.addEventListener('submit', (event) => {
-        const form = event.target;
-        if (!(form instanceof HTMLFormElement) || !form.matches('[data-listing-comment-form]')) return;
-        event.preventDefault();
-        if (!requireMembership()) return;
-        if (!form.reportValidity()) return;
-        const listing = findListing(form.dataset.listingCommentForm);
-        if (!listing) return;
-        const text = cleanString(new FormData(form).get('text'), 800);
-        if (!text) return;
-        const comment = {
-          id: makeId('comment'),
-          memberId: state.pledge.memberId,
-          name: state.pledge.name,
-          text,
-          createdAt: new Date().toISOString()
-        };
-        const comments = getListingComments(listing);
-        comments.push(comment);
-        const savedComments = cleanThreadComments(comments);
-        state.listingComments = state.listingComments && typeof state.listingComments === 'object'
-          ? state.listingComments : {};
-        state.listingComments[listing.id] = savedComments;
-        if (Array.isArray(state.listings) && state.listings.includes(listing)) {
-          listing.comments = savedComments;
-        }
-        addNotification('comment', `Comment on ${listing.title}`,
-          `Added locally to ${listing.provider}'s post. Comments stay on the Free Labor or Free Stuff listing; nothing was transmitted.`,
-          { sourceId: comment.id });
-        saveState();
-        applyFilters();
-        announce('Your comment was added locally.');
-        showToast('Comment saved in this browser. Nothing was transmitted.', false);
-      });
+      grid.addEventListener('click', handleListingCardClick);
+      grid.addEventListener('submit', handleListingCommentSubmit);
+      createListingDialog();
     }
 
     renderStaticFilterOptions();
@@ -3775,28 +4115,29 @@
       const intro = createEl('p', '', 'Anyone can browse. To participate in the commons (post offers/needs, request mutual-aid connections, and manage your track), sign the Unbought Pledge to become a member. Where a provider has opted in, people who do not take the pledge can record a purchase intent at the provider’s price; every cent is tracked locally for the Unbought donation fund and no real payment is processed. Members receive those same offers free.');
       card.appendChild(intro);
     } else {
-      const meta = createEl('p', 'account-meta', `${state.pledge.name} · ${state.pledge.location || 'Location not shared'} · Member ID ${state.pledge.memberId}`);
+      const meta = createEl('p', 'account-meta', `${state.pledge.name} · ${state.pledge.location || 'Location not shared'}`);
       card.appendChild(meta);
     }
 
     const stats = createEl('div', 'account-stats');
-    const hourPeriods = `Week ${hours.week} hr · month ${hours.month} hr · year ${hours.year} hr · all time ${hours.all} hr`;
-    const giftPeriods = `Week ${formatMoney(donated.week)} · month ${formatMoney(donated.month)} · year ${formatMoney(donated.year)} · all time ${formatMoney(donated.all)}`;
+    const hourPeriods = `Week ${hours.week} hr · month ${hours.month} hr · year ${hours.year} hr`;
+    const giftPeriods = `Week ${formatMoney(donated.week)} · month ${formatMoney(donated.month)} · year ${formatMoney(donated.year)}`;
     const statDefs = signedIn ? [
-      ['Hours worked', hourPeriods],
-      ['Donated', giftPeriods],
-      ['Your share of the fund', formatMoney(fund.entitled)],
-      ['Unbought donation fund (current balance)', formatMoney(fund.balance)]
+      ['Hours worked (all time)', `${hours.all} hr`, hourPeriods],
+      ['Donated (all time)', formatMoney(donated.all), giftPeriods],
+      ['Your share of the fund', formatMoney(fund.entitled), 'Local estimate · not a payout'],
+      ['Unbought donation fund', formatMoney(fund.balance), 'Current local balance']
     ] : [
-      ['Unbought donation fund (current balance)', formatMoney(fund.balance)],
-      ['Recorded non-member purchase intents', String(fund.count)],
-      ['Member benefit', 'Mutual-aid access by pledge (no purchase)'],
-      ['Fund income', 'Donations, academy tuition, and non-member purchases']
+      ['Unbought donation fund', formatMoney(fund.balance), 'Current local balance'],
+      ['Recorded non-member purchase intents', String(fund.count), 'Local records only'],
+      ['Member benefit', 'Free mutual-aid access', 'By pledge · no purchase'],
+      ['Fund income', 'Three sources', 'Donations, academy tuition, and non-member purchases']
     ];
-    statDefs.forEach(([label, value]) => {
+    statDefs.forEach(([label, value, detail]) => {
       const s = createEl('div', 'account-stat');
       s.appendChild(createEl('span', 'account-stat-label', label));
       s.appendChild(createEl('strong', 'account-stat-value', value));
+      if (detail) s.appendChild(createEl('span', 'account-stat-detail', detail));
       stats.appendChild(s);
     });
     card.appendChild(stats);
@@ -4255,13 +4596,21 @@
           <fieldset>
             <legend>Profile &amp; skills</legend>
             <div class="form-row">
-              <div class="field">
-                <label for="account-paid-skills">Career / paid skills</label>
-                <textarea id="account-paid-skills" name="paidSkills" rows="3" maxlength="400">${e(m.paidSkills || '')}</textarea>
+              <div class="field skill-picker" data-skill-picker="paid">
+                <label for="account-paid-skills-search">Career / paid skills</label>
+                <input type="search" id="account-paid-skills-search" data-skill-search="paid" maxlength="80" placeholder="Search carpentry, nursing, design…" autocomplete="off">
+                <p class="field-hint">Search listed skills, or type your own and press Enter.</p>
+                <div class="skill-results" data-skill-results></div>
+                <div class="skill-chips" data-skill-chips></div>
+                <input type="hidden" id="account-paid-skills" name="paidSkills" value="${e(m.paidSkills || '')}">
               </div>
-              <div class="field">
-                <label for="account-unpaid-skills">Unpaid skills</label>
-                <textarea id="account-unpaid-skills" name="unpaidSkills" rows="3" maxlength="400">${e(m.unpaidSkills || '')}</textarea>
+              <div class="field skill-picker" data-skill-picker="unpaid">
+                <label for="account-unpaid-skills-search">Unpaid skills</label>
+                <input type="search" id="account-unpaid-skills-search" data-skill-search="unpaid" maxlength="80" placeholder="Search care, repair, tutoring…" autocomplete="off">
+                <p class="field-hint">Search listed skills, or type your own and press Enter.</p>
+                <div class="skill-results" data-skill-results></div>
+                <div class="skill-chips" data-skill-chips></div>
+                <input type="hidden" id="account-unpaid-skills" name="unpaidSkills" value="${e(m.unpaidSkills || '')}">
               </div>
             </div>
             <div class="form-row">
@@ -4317,6 +4666,7 @@
         </form>
       </div>
     </section>`;
+    refreshSkillPickers(panel);
   }
 
   function renderSettings() {
@@ -4926,6 +5276,166 @@
     return options.join('');
   }
 
+  function getFriendRequests() {
+    if (!Array.isArray(state.friendRequests)) state.friendRequests = [];
+    return state.friendRequests;
+  }
+
+  function memberDirectory() {
+    const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
+    const entries = LOCAL_MEMBER_DIRECTORY.map((member) => ({ ...member, memberId: member.id, sample: true }));
+    getMemberRoster().forEach((item) => {
+      if (!item || !item.memberId || item.memberId === selfId || !item.name) return;
+      if (item.standing && item.standing !== 'active') return;
+      if (entries.some((entry) => entry.memberId === item.memberId)) return;
+      entries.push({
+        id: item.memberId,
+        memberId: item.memberId,
+        name: item.name,
+        profession: item.profession || '',
+        cityState: item.cityState || (item.zip ? `ZIP ${item.zip}` : ''),
+        sample: false
+      });
+    });
+    return entries;
+  }
+
+  function renderFriendSearchResults(query, results) {
+    if (!results) return;
+    const e = escapeHtml;
+    const q = cleanString(query, 80).toLowerCase();
+    if (!q) {
+      results.innerHTML = '<p class="account-note">Start typing to see current members recorded on this device.</p>';
+      return;
+    }
+    const matches = memberDirectory()
+      .filter((member) => [member.name, member.profession, member.cityState]
+        .some((value) => cleanString(value, 100).toLowerCase().includes(q)))
+      .slice(0, 12);
+    if (!matches.length) {
+      results.innerHTML = `<p class="account-note">No current members match “${e(cleanString(query, 80))}”. This prototype only searches its sample directory and members recorded here; nothing was contacted.</p>`;
+      return;
+    }
+    const requests = getFriendRequests();
+    const friends = Array.isArray(state.friends) ? state.friends : [];
+    results.innerHTML = `<ul class="friend-result-list">${matches.map((member) => {
+      const alreadyFriend = friends.some((friend) => friend && (friend.memberId === member.memberId
+        || (member.sample && friend.name === member.name)));
+      const pendingOut = requests.some((request) => request && request.memberId === member.memberId
+        && request.direction === 'outgoing' && request.status === 'pending');
+      const pendingIn = requests.some((request) => request && request.memberId === member.memberId
+        && request.direction === 'incoming' && request.status === 'pending');
+      const disabled = alreadyFriend || pendingOut || pendingIn;
+      const label = alreadyFriend ? 'Already a friend'
+        : pendingOut ? 'Request pending'
+          : pendingIn ? 'Request received' : 'Send request';
+      const meta = [member.profession, member.cityState].filter(Boolean).map(e).join(' · ');
+      return `<li class="friend-result">
+        <div><strong>${e(member.name)}</strong>${member.sample ? '<span class="badge badge--soft">Sample member</span>' : ''}<span class="contribution-meta">${meta || 'Current member'}</span></div>
+        <button class="button button--outline button--tiny" type="button" data-friend-request-send="${e(member.memberId)}"${disabled ? ' disabled' : ''}>${label}</button>
+      </li>`;
+    }).join('')}</ul>`;
+  }
+
+  function renderFriendRequestList(direction) {
+    const e = escapeHtml;
+    const pending = getFriendRequests()
+      .filter((request) => request && request.direction === direction && request.status === 'pending')
+      .slice(0, 20);
+    if (!pending.length) {
+      return `<p class="account-note">No ${direction === 'incoming' ? 'incoming' : 'sent'} friend requests.</p>`;
+    }
+    return `<ul class="friend-request-list">${pending.map((request) => {
+      const meta = [request.profession, request.cityState].filter(Boolean).map(e).join(' · ');
+      return `<li class="friend-request-item">
+        <div><strong>${e(request.name)}</strong>${request.sample ? '<span class="badge badge--soft">Sample request</span>' : ''}<span class="contribution-meta">${meta || 'Current member'} · ${e(formatDate(request.createdAt))}</span></div>
+        ${direction === 'incoming'
+          ? `<div class="notification-actions">
+              <button class="button button--primary button--tiny" type="button" data-friend-request-action="accept" data-friend-request-id="${e(request.id)}">Accept</button>
+              <button class="button button--ghost button--tiny" type="button" data-friend-request-action="decline" data-friend-request-id="${e(request.id)}">Decline</button>
+            </div>`
+          : '<span class="contribution-meta">Pending locally · nothing was delivered</span>'}
+      </li>`;
+    }).join('')}</ul>`;
+  }
+
+  function sendFriendRequest(memberId, trigger) {
+    if (!requireMembership()) return;
+    const member = memberDirectory().find((entry) => entry.memberId === memberId);
+    if (!member) return;
+    const requests = getFriendRequests();
+    const friends = Array.isArray(state.friends) ? state.friends : [];
+    if (requests.some((request) => request && request.memberId === memberId && request.status === 'pending')) {
+      showToast('That friend request is already pending locally.', false);
+      return;
+    }
+    if (friends.length >= SOCIAL_LIMITS.friends) {
+      showToast(`The local friend cap is ${SOCIAL_LIMITS.friends}.`, false);
+      return;
+    }
+    const request = {
+      id: makeId('friend-request'),
+      memberId: member.memberId,
+      name: member.name,
+      profession: member.profession || '',
+      cityState: member.cityState || '',
+      direction: 'outgoing',
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      sample: Boolean(member.sample)
+    };
+    requests.unshift(request);
+    addNotification('social', `Friend request: ${member.name}`,
+      'Saved locally as a request draft. In a live system this would be delivered; no request was sent.',
+      { tab: 'social', sourceId: request.id });
+    saveState();
+    renderSocial();
+    renderNotifications();
+    announce(`${member.name}'s friend request is pending locally.`);
+    showToast('Friend request recorded locally. Nothing was sent.', false);
+    if (trigger instanceof HTMLElement) trigger.focus({ preventScroll: true });
+  }
+
+  function respondToFriendRequest(requestId, action, trigger) {
+    if (!requireMembership()) return;
+    const request = getFriendRequests().find((item) => item && item.id === requestId
+      && item.direction === 'incoming' && item.status === 'pending');
+    if (!request || !['accept', 'decline'].includes(action)) return;
+    const now = new Date().toISOString();
+    request.respondedAt = now;
+    if (action === 'accept') {
+      const friends = Array.isArray(state.friends) ? state.friends : [];
+      if (friends.length >= SOCIAL_LIMITS.friends) {
+        showToast(`The local friend cap is ${SOCIAL_LIMITS.friends}.`, false);
+        return;
+      }
+      state.friends = friends;
+      state.friends.push({
+        id: makeId('friend'),
+        memberId: request.memberId,
+        name: request.name,
+        createdAt: now
+      });
+      request.status = 'accepted';
+      addNotification('social', `Friend request accepted: ${request.name}`,
+        'Accepted locally in this prototype. No other account or device was changed.',
+        { tab: 'social', sourceId: request.id });
+      announce(`${request.name} was added to your local friend list.`);
+      showToast('Friend added locally. No invitation was sent.', false);
+    } else {
+      request.status = 'declined';
+      addNotification('social', `Friend request declined: ${request.name}`,
+        'Declined locally in this prototype. No other account or device was notified.',
+        { tab: 'social', sourceId: request.id });
+      announce(`${request.name}'s friend request was declined locally.`);
+      showToast('Request declined locally. Nothing was sent.', false);
+    }
+    saveState();
+    renderSocial();
+    renderNotifications();
+    if (trigger instanceof HTMLElement) trigger.focus({ preventScroll: true });
+  }
+
   function renderSocial() {
     const panel = document.getElementById('social-panel');
     if (!panel || !isMember()) return;
@@ -4936,7 +5446,6 @@
       .sort((a, b) => Number(b && b.kind === 'town') - Number(a && a.kind === 'town'))
       .slice(0, 100);
     const chats = (Array.isArray(state.socialChats) ? state.socialChats : []).slice(-12).reverse();
-    const canAddFriend = friends.length < SOCIAL_LIMITS.friends;
     const hasOwnGroup = (Array.isArray(state.groups) ? state.groups : [])
       .some((group) => group && group.kind === 'own');
 
@@ -4948,14 +5457,20 @@
         <div class="account-block">
           <h4>Friends (${friends.length}/${SOCIAL_LIMITS.friends})</h4>
           ${friends.length ? `<ul class="social-list">${friends.map((friend) => `<li class="social-item"><strong>${e(friend.name)}</strong><span class="contribution-meta">${e(formatDate(friend.createdAt))} · local only</span></li>`).join('')}</ul>` : '<p class="account-note">No friends added yet.</p>'}
-          ${canAddFriend ? `<form class="account-form" data-friend-form>
+          <div class="friend-finder">
+            <h5>Find current members</h5>
+            <p class="account-note">Search by chosen name, profession, or town, then send a local friend request. Accept or decline incoming requests here. This prototype has one account, so no request is delivered and no one else’s data changes.</p>
             <div class="field">
-              <label for="friend-name">Add a friend by chosen name</label>
-              <input type="text" id="friend-name" name="name" maxlength="60" required placeholder="Neighbor's chosen name">
-              <p class="field-hint">No account lookup happens in this prototype.</p>
+              <label for="friend-search">Search members</label>
+              <input type="search" id="friend-search" data-friend-search maxlength="80" placeholder="Maya, baker, or Stroudsburg" autocomplete="off">
+              <p class="field-hint">Try “Maya”, “baker”, or “Stroudsburg”.</p>
             </div>
-            <button type="submit" class="button button--outline button--small">Add friend locally</button>
-          </form>` : `<p class="account-note">The local friend cap of ${SOCIAL_LIMITS.friends} has been reached.</p>`}
+            <div class="friend-results" data-friend-results></div>
+          </div>
+          <h5>Incoming friend requests</h5>
+          ${renderFriendRequestList('incoming')}
+          <h5>Sent friend requests</h5>
+          ${renderFriendRequestList('outgoing')}
         </div>
         <div class="account-block">
           <h4>Groups (max ${SOCIAL_LIMITS.groupMembers} each)</h4>
@@ -4993,7 +5508,16 @@
         <h4>Social chat</h4>
         <p class="account-note">Choose friends, your automatic town group, your own group, or a group you joined. Each message is a local draft with the audience written on it; nothing is delivered.</p>
         <ul class="chat-list social-chat-list">
-          ${chats.length ? chats.map((chat) => `<li class="chat-message"><p class="contribution-meta"><strong>${e(chat.name)}</strong> → ${e(chat.audienceLabel)} · ${e(formatDate(chat.createdAt))}</p><p>${e(chat.body)}</p><button class="button button--ghost button--small button--report" type="button" data-report-context data-report-area="Social chat" data-report-detail="${e(chat.audienceLabel)}" data-report-name="${e(chat.name)}" data-report-source-id="${e(chat.id)}" aria-label="Report a concern about a social chat message from ${e(chat.name)}">Report</button></li>`).join('') : '<li class="account-note">No social chat drafts yet.</li>'}
+          ${chats.length ? chats.map((chat) => {
+            const chatPhoto = Array.isArray(chat.picture) ? cleanPostPhotos(chat.picture)[0] : null;
+            return `<li class="chat-message">
+              <p class="contribution-meta"><strong>${e(chat.name)}</strong> → ${e(chat.audienceLabel)} · ${e(formatDate(chat.createdAt))}</p>
+              ${chat.title ? `<p class="chat-title">${e(chat.title)}</p>` : ''}
+              ${chatPhoto ? `<img class="chat-picture" src="${e(safeProfileImageUrl(chatPhoto.dataUrl))}" alt="Local picture for ${e(chat.title || 'this chat draft')}">` : ''}
+              <p>${e(chat.body)}</p>
+              <button class="button button--ghost button--small button--report" type="button" data-report-context data-report-area="Social chat" data-report-detail="${e(chat.title ? `${chat.title} · ` : '')}${e(chat.audienceLabel)}" data-report-name="${e(chat.name)}" data-report-source-id="${e(chat.id)}" aria-label="Report a concern about a social chat message from ${e(chat.name)}">Report</button>
+            </li>`;
+          }).join('') : '<li class="account-note">No social chat drafts yet.</li>'}
         </ul>
         <form class="account-form" data-social-chat-form>
           <div class="form-row">
@@ -5002,14 +5526,33 @@
               <select id="social-audience" name="audience">${socialAudienceOptions(friends, groups)}</select>
             </div>
             <div class="field">
+              <label for="social-title">Title</label>
+              <input type="text" id="social-title" name="title" maxlength="90" placeholder="What is this draft about?">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
               <label for="social-body">Message</label>
-              <input type="text" id="social-body" name="body" maxlength="1200" required placeholder="Write a local chat draft…">
+              <textarea id="social-body" name="body" rows="3" maxlength="1200" required placeholder="Write a local chat draft…"></textarea>
+            </div>
+            <div class="field">
+              <label for="social-picture">Picture <span class="optional">(optional)</span></label>
+              <input type="file" id="social-picture" name="picture" accept="image/jpeg,image/png,image/webp,image/gif">
+              <p class="field-hint">Resized locally and kept only in this browser. Nothing is uploaded.</p>
             </div>
           </div>
           <button type="submit" class="button button--primary button--small">Record chat draft</button>
         </form>
       </div>
     </section>`;
+
+    const friendSearch = panel.querySelector('[data-friend-search]');
+    if (friendSearch) {
+      const results = panel.querySelector('[data-friend-results]');
+      const updateResults = () => renderFriendSearchResults(friendSearch.value, results);
+      friendSearch.addEventListener('input', updateResults);
+      updateResults();
+    }
   }
 
   function renderSuggestions() {
@@ -5063,6 +5606,18 @@
     initDashboardTabs();
 
     dash.addEventListener('click', (event) => {
+      const requestSend = event.target.closest('[data-friend-request-send]');
+      if (requestSend) {
+        event.preventDefault();
+        sendFriendRequest(requestSend.dataset.friendRequestSend, requestSend);
+        return;
+      }
+      const requestAction = event.target.closest('[data-friend-request-action]');
+      if (requestAction) {
+        event.preventDefault();
+        respondToFriendRequest(requestAction.dataset.friendRequestId, requestAction.dataset.friendRequestAction, requestAction);
+        return;
+      }
       const folderTab = event.target.closest('[data-message-folder]');
       if (folderTab) {
         activeMessageFolder = folderTab.dataset.messageFolder;
@@ -5326,31 +5881,6 @@
         form.reset();
         announce('Your message was recorded in this browser.');
         showToast('Message recorded locally.', false);
-      } else if (form.matches('[data-friend-form]')) {
-        event.preventDefault();
-        const name = cleanString(data.get('name'), 60);
-        if (!name) return;
-        state.friends = Array.isArray(state.friends) ? state.friends : [];
-        if (state.friends.length >= SOCIAL_LIMITS.friends) {
-          showToast(`The local friend cap is ${SOCIAL_LIMITS.friends}.`, false);
-          return;
-        }
-        const friend = {
-          id: makeId('friend'),
-          memberId: '',
-          name,
-          createdAt: now
-        };
-        state.friends.push(friend);
-        addNotification('social', `Friend added: ${name}`,
-          'Saved locally by chosen name. In a live system this would become a friend request; no account was looked up and nothing was sent.',
-          { tab: 'social', sourceId: friend.id });
-        saveState();
-        renderSocial();
-        renderNotifications();
-        form.reset();
-        announce(`${name} was added to your local friend list.`);
-        showToast('Friend added locally. No invitation was sent.', false);
       } else if (form.matches('[data-group-form]')) {
         event.preventDefault();
         const name = cleanString(data.get('name'), 80);
@@ -5388,8 +5918,20 @@
       } else if (form.matches('[data-social-chat-form]')) {
         event.preventDefault();
         const body = cleanString(data.get('body'), 1200);
+        const title = cleanString(data.get('title'), 90);
         const audience = cleanString(data.get('audience'), 40) || 'friends';
         if (!body) return;
+        let picture = [];
+        const pictureInput = form.querySelector('input[name="picture"]');
+        const pictureFile = pictureInput && pictureInput.files ? pictureInput.files[0] : null;
+        if (pictureFile) {
+          const photo = await preparePostPhoto(pictureFile);
+          if (!photo) {
+            showToast('That image could not be resized locally. Try a smaller JPEG, PNG, WebP, or GIF.', false);
+            return;
+          }
+          picture = [photo];
+        }
         let audienceLabel = `Friends (${(Array.isArray(state.friends) ? state.friends : []).length}/${SOCIAL_LIMITS.friends})`;
         if (audience.startsWith('town:') || audience.startsWith('own:') || audience.startsWith('joined:')) {
           const groupId = audience.slice(audience.indexOf(':') + 1);
@@ -5406,13 +5948,15 @@
           name: state.pledge.name,
           audience,
           audienceLabel,
+          title,
           body,
+          picture,
           createdAt: now
         };
         state.socialChats = Array.isArray(state.socialChats) ? state.socialChats : [];
         state.socialChats.push(chat);
         state.socialChats = state.socialChats.slice(-300);
-        addNotification('comment', 'Social chat draft recorded',
+        addNotification('comment', `Social chat draft: ${title || 'Untitled'}`,
           `Saved locally for ${audienceLabel}. In a live system the audience would be notified; nothing was delivered.`,
           { tab: 'social', sourceId: chat.id });
         saveState();
@@ -6105,7 +6649,7 @@
     html += `
       <div class="account-block">
         <h4>File a report</h4>
-        <p class="account-note">Filed under ${e(member.name)} (member ID ${e(member.memberId)}). You do not type the person's name: open <strong>Report</strong> from the listing, message, or profile where the interaction happened. The context is carried into the form automatically.</p>
+        <p class="account-note">Filed under ${e(member.name)}. You do not type the person's name: open <strong>Report</strong> from the listing, message, or profile where the interaction happened. The context is carried into the form automatically.</p>
         <button class="button button--outline button--small" type="button" data-report-context data-report-area="Dashboard" data-report-detail="Accountability panel" data-report-source-id="dashboard">Report a concern</button>
         <p class="field-hint">You can attach local images, message files, or other file details in the form. Nothing is uploaded or transmitted.</p>
       </div>`;
@@ -6394,27 +6938,104 @@
     const card = document.getElementById('signature-card');
     if (!form && !withdraw) return;
 
-    // Members must be 18+. The submit handler applies the real age check;
-    // no max attribute is used so the visitor gets a clear explanation.
-    const dobInput = document.getElementById('pledge-dob');
+    // Members must be 18+. Three small selects avoid the inconsistent native
+    // date control while still composing one ISO value for storage.
+    const dobHidden = document.getElementById('pledge-dob');
+    const dobMonth = document.getElementById('pledge-dob-month');
+    const dobDay = document.getElementById('pledge-dob-day');
+    const dobYear = document.getElementById('pledge-dob-year');
+    const dobParts = [dobMonth, dobDay, dobYear].filter(Boolean);
+    const pad2 = (value) => String(value).padStart(2, '0');
+
+    function syncDob() {
+      if (!dobHidden) return;
+      dobHidden.value = dobYear && dobMonth && dobDay && dobYear.value && dobMonth.value && dobDay.value
+        ? `${dobYear.value}-${dobMonth.value}-${dobDay.value}`
+        : '';
+    }
+
+    function refreshDobDays() {
+      if (!dobDay) return;
+      const year = Number(dobYear && dobYear.value);
+      const month = Number(dobMonth && dobMonth.value);
+      const days = year && month ? new Date(year, month, 0).getDate() : 31;
+      const previous = dobDay.value;
+      let options = '<option value="">Day</option>';
+      for (let day = 1; day <= days; day += 1) {
+        options += `<option value="${pad2(day)}">${day}</option>`;
+      }
+      dobDay.innerHTML = options;
+      dobDay.value = Number(previous) <= days ? previous : '';
+      syncDob();
+    }
+
+    function focusDob() {
+      const first = dobParts.find((part) => !part.value) || dobParts[0];
+      if (first) first.focus({ preventScroll: true });
+    }
+
+    if (dobYear) {
+      const thisYear = new Date().getFullYear();
+      let years = '<option value="">Year</option>';
+      for (let year = thisYear; year >= 1900; year -= 1) {
+        years += `<option value="${year}">${year}</option>`;
+      }
+      dobYear.innerHTML = years;
+    }
+    dobParts.forEach((part) => {
+      part.addEventListener('change', () => {
+        if (part === dobMonth || part === dobYear) refreshDobDays();
+        else syncDob();
+      });
+    });
+    refreshDobDays();
 
     const sameAddress = document.getElementById('pledge-same-address');
-    const mailingInput = document.getElementById('pledge-mailing');
-    const physicalInput = document.getElementById('pledge-physical');
-    if (sameAddress && mailingInput && physicalInput) {
-      const syncAddress = () => {
-        if (sameAddress.checked) {
-          physicalInput.value = mailingInput.value;
-          physicalInput.readOnly = true;
-        } else {
-          physicalInput.readOnly = false;
-          if (physicalInput.value === mailingInput.value) physicalInput.value = '';
-        }
-      };
-      sameAddress.addEventListener('change', syncAddress);
-      mailingInput.addEventListener('input', () => {
-        if (sameAddress.checked) physicalInput.value = mailingInput.value;
+    const mailingFields = {
+      address1: document.getElementById('pledge-address1'),
+      address2: document.getElementById('pledge-address2'),
+      city: document.getElementById('pledge-city'),
+      state: document.getElementById('pledge-state'),
+      zip: document.getElementById('pledge-zip')
+    };
+    const physicalFields = {
+      address1: document.getElementById('pledge-physical-address1'),
+      address2: document.getElementById('pledge-physical-address2'),
+      city: document.getElementById('pledge-physical-city'),
+      state: document.getElementById('pledge-physical-state'),
+      zip: document.getElementById('pledge-physical-zip')
+    };
+    const mailingFieldList = Object.values(mailingFields).filter(Boolean);
+    const physicalFieldList = Object.values(physicalFields).filter(Boolean);
+
+    function setPhysicalLocked(locked) {
+      physicalFieldList.forEach((input) => {
+        input.readOnly = locked;
+        if (input.tagName === 'SELECT') input.disabled = locked;
       });
+    }
+
+    function syncPhysicalAddress() {
+      Object.keys(physicalFields).forEach((key) => {
+        const source = mailingFields[key];
+        const target = physicalFields[key];
+        if (source && target) target.value = source.value;
+      });
+      setPhysicalLocked(true);
+    }
+
+    if (sameAddress && physicalFieldList.length && mailingFieldList.length) {
+      sameAddress.addEventListener('change', () => {
+        if (sameAddress.checked) syncPhysicalAddress();
+        else setPhysicalLocked(false);
+      });
+      mailingFieldList.forEach((input) => {
+        input.addEventListener('input', () => {
+          if (sameAddress.checked) syncPhysicalAddress();
+        });
+      });
+      if (sameAddress.checked) syncPhysicalAddress();
+      else setPhysicalLocked(false);
     }
 
     if (form) {
@@ -6423,14 +7044,17 @@
         if (errorBox) errorBox.hidden = true;
 
         // Check age before native validation so under-18 visitors get a clear
-        // explanation instead of a generic date-range tooltip.
-        const earlyAge = getAgeFromDob(dobInput ? dobInput.value : '');
+        // explanation instead of a generic browser tooltip.
+        syncDob();
+        const earlyAge = getAgeFromDob(dobHidden ? dobHidden.value : '');
         if (earlyAge === null) {
-          showPledgeError('Please enter a valid date of birth.', 'pledge-dob');
+          showPledgeError('Please enter a valid date of birth.');
+          focusDob();
           return;
         }
         if (earlyAge < 18) {
-          showPledgeError('You must be 18 or older to sign the Unbought Pledge. You can keep browsing the commons and sign when you turn 18. Nothing was saved.', 'pledge-dob');
+          showPledgeError('You must be 18 or older to sign the Unbought Pledge. You can keep browsing the commons and sign when you turn 18. Nothing was saved.');
+          focusDob();
           announce('Members must be 18 or older. Your pledge was not signed.');
           return;
         }
@@ -6438,17 +7062,36 @@
         if (!form.reportValidity()) return;
 
         const data = new FormData(form);
-        const fullName = cleanString(data.get('fullName'), 100);
+        const firstName = cleanString(data.get('firstName'), 40);
+        const middleInitial = cleanString(data.get('middleInitial'), 2);
+        const lastName = cleanString(data.get('lastName'), 60);
+        const suffix = cleanString(data.get('suffix'), 12);
+        const fullName = composeFullName({ firstName, middleInitial, lastName, suffix });
         const name = cleanString(data.get('chosenName'), 60);
         const location = cleanString(data.get('location'), 80);
-        const mailingAddress = cleanString(data.get('mailingAddress'), 240);
+        const address1 = cleanString(data.get('address1'), 100);
+        const address2 = cleanString(data.get('address2'), 100);
+        const city = cleanString(data.get('city'), 80);
+        const stateCode = normalizeStateCode(data.get('state'));
+        const zip = normalizeZip(data.get('zip'));
+        const mailingAddress = composeMailingAddress({ address1, address2, city, state: stateCode, zip });
+        const physicalAddress1 = cleanString(data.get('physicalAddress1'), 100);
+        const physicalAddress2 = cleanString(data.get('physicalAddress2'), 100);
+        const physicalCity = cleanString(data.get('physicalCity'), 80);
+        const physicalState = normalizeStateCode(data.get('physicalState'));
+        const physicalZip = normalizeZip(data.get('physicalZip'));
         const physicalAddress = sameAddress && sameAddress.checked
           ? mailingAddress
-          : cleanString(data.get('physicalAddress'), 240);
+          : composeMailingAddress({
+            address1: physicalAddress1,
+            address2: physicalAddress2,
+            city: physicalCity,
+            state: physicalState,
+            zip: physicalZip
+          });
         const phone = cleanString(data.get('phone'), 40);
         const dob = cleanString(data.get('dob'), 10);
         const profession = normalizeProfession(data.get('profession'));
-        const zip = normalizeZip(data.get('zip'));
         const housingStatus = normalizeHousingStatus(data.get('housingStatus'));
         const paidSkills = cleanString(data.get('paidSkills'), 400);
         const unpaidSkills = cleanString(data.get('unpaidSkills'), 400);
@@ -6477,8 +7120,8 @@
           return;
         }
 
-        if (!fullName || !name || !location || !mailingAddress || !physicalAddress || !phone) {
-          showPledgeError('Please complete your full name, chosen name, mailing address, physical address, phone number, and general location.', 'pledge-full-name');
+        if (!firstName || !lastName || !name || !location || !address1 || !city || !stateCode || !physicalAddress || !phone) {
+          showPledgeError('Please complete your first name, last name, chosen name, mailing address, physical address, phone number, and general location.', 'pledge-first-name');
           return;
         }
         if (!hasOwn(HOUSING_STATUSES, housingStatus)) {
@@ -6491,6 +7134,10 @@
         }
         if (!zip) {
           showPledgeError('Please enter a 5-digit ZIP code, such as 18360.', 'pledge-zip');
+          return;
+        }
+        if (!(sameAddress && sameAddress.checked) && !physicalZip) {
+          showPledgeError('Please enter a 5-digit ZIP code for your physical address.', 'pledge-physical-zip');
           return;
         }
 
@@ -6514,11 +7161,13 @@
 
         const age = getAgeFromDob(dob);
         if (age === null) {
-          showPledgeError('Please enter a valid date of birth.', 'pledge-dob');
+          showPledgeError('Please enter a valid date of birth.');
+          focusDob();
           return;
         }
         if (age < 18) {
-          showPledgeError('You must be 18 or older to sign the Unbought Pledge. You can keep browsing the commons and sign when you turn 18. Nothing was saved.', 'pledge-dob');
+          showPledgeError('You must be 18 or older to sign the Unbought Pledge. You can keep browsing the commons and sign when you turn 18. Nothing was saved.');
+          focusDob();
           announce('Members must be 18 or older. Your pledge was not signed.');
           return;
         }
@@ -6527,9 +7176,22 @@
           memberId: makeId('member'),
           name,
           fullName,
+          firstName,
+          middleInitial,
+          lastName,
+          suffix,
           location,
+          address1,
+          address2,
+          city,
+          state: stateCode,
           mailingAddress,
           physicalAddress,
+          physicalAddress1,
+          physicalAddress2,
+          physicalCity,
+          physicalState,
+          physicalZip,
           housingStatus,
           phone,
           dob,
@@ -7870,6 +8532,7 @@
     syncTownGroup();
     initDashboard();
     initDashboardMenu();
+    initSkillPickers();
     initProfileViewToggle();
     initAccountability();
     initTracks();

@@ -44,6 +44,14 @@ count, confirmed hours worked, hours used, items gifted, items taken, reports ma
 against the member, availability, and public-sharing choices. The full record is
 visible only in the Dashboard and in the signed-in member profile.
 
+The pledge and Settings forms keep both addresses as structured fields: Address 1,
+Address 2, City, State, and ZIP. When “same as mailing” is checked, the physical
+fields copy the mailing fields and lock until the box is cleared. Birthdate uses
+separate month, day, and year selectors and is stored as one ISO date. Career and
+unpaid skills use a search box with suggested skills; members can also type a
+custom skill and press Enter. Chosen skills are saved as comma-separated values and
+shown as removable chips.
+
 The public resume is a filtered projection. It shows the chosen first name,
 picture, tag line, bio, profession, City/State from the member-selected mailing or
 physical address, both skill lists, confirmed hours worked, items gifted, other
@@ -87,7 +95,7 @@ are never auto-filled elsewhere.
 
 Members always get goods and labor free through mutual consent. On the goods and
 labor post forms a provider can opt in to a fixed whole-dollar price for
-non-members, who see that price on the card and in the locked purchase dialog.
+non-members, who see that price as a tag on the card and in the details and locked purchase dialogs.
 Guests cannot type their own amount: the submit handler reads the provider's
 stored price and records a `nonmember_purchase` request plus a contribution in
 the local Unbought donation fund. Listings without an opt-in are shown as member-only and
@@ -173,7 +181,9 @@ description, provider, or service title; filter by city, two-letter state, ZIP
 prefix, and in-person/online format; and sort by featured, newest, title,
 service title, location, or nearest to a ZIP entered in the sort controls.
 Active filters can be removed one at a time. Custom titles written in by members
-also appear as filter choices.
+also appear as filter choices. Both directories use compact linked cards (photo,
+tags, title, description, and location); opening a card reveals the full record,
+actions, and local comments in a dialog.
 
 The post form follows the same structure. A member chooses a pillar, then a
 listed service title, or writes a new one. Location can be city/state/ZIP, city
@@ -219,9 +229,9 @@ nothing is transmitted.
 
 Members can attach up to three photos to a goods or labor post. Each image is
 resized in the browser to a small JPEG preview (at most 800px on the long edge)
-and saved with the listing in this browser. Photos appear as thumbnails on the
-listing card; extra photos are counted on goods cards. Nothing is uploaded, and
-no photo leaves the device.
+and saved with the listing in this browser. A photo appears on the compact listing
+card, extra photos are counted there, and the full set appears in the details
+dialog. Nothing is uploaded, and no photo leaves the device.
 
 Each photo is stored as a structured record with `id`, `name`, `mime`, `size`,
 `width`, `height`, `addedAt`, a local-only `dataUrl`, and an empty `storageRef`.
@@ -253,11 +263,15 @@ this prototype delivers nothing.
 
 Dashboard → Friends & Groups automatically places the member in the main group named
 after their town (for example, "Stroudsburg Group"). Other groups are social or
-support circles the member creates or joins. The panel also stores friends by chosen
-name and social chat drafts addressed to friends or any group; each chat record
-carries its audience label. There is a single local account, so there are no
-invitations, account lookups, or changes to another person’s data. Friend lists are
-capped at 150 people and every group at 150 people.
+support circles the member creates or joins. The member search covers a small local
+sample directory plus the current member recorded on this device; searches match
+chosen name, profession, and city/state. Sending, accepting, and declining friend
+requests changes local records only, including one sample incoming request used to
+demonstrate the flow. The panel also stores friends and social chat drafts with an
+audience, title, message, and optional locally resized picture; each chat record
+carries its audience label. There is a single local account, so no request or chat
+draft is delivered and no other person’s data changes. Friend lists are capped at
+150 people and every group at 150 people.
 
 Free Labor and Free Stuff listings have local comment threads with replies (a reply
 simply quotes the earlier chosen name). Comments on the static seed listings are

@@ -170,21 +170,17 @@
             <p class="eyebrow">The Unbought Pledge</p>
             <h2 id="pledge-title">A pledge you can hear, read, and sign.</h2>
           </div>
-          <p class="section-head-aside">Watch the short film or read the five commitments in full. They turn the question above into a practice: dignity beyond price, giving without scorekeeping, consent, shared learning, and accountability. Members must be 18 or older; your details stay in this browser—not on a server, not for sale.</p>
+          <p class="section-head-aside">Watch a short Alan Watts talk or read the five commitments in full. They turn the question above into a practice: dignity beyond price, giving without scorekeeping, consent, shared learning, and accountability. Members must be 18 or older; your details stay in this browser—not on a server, not for sale.</p>
         </div>
 
         <div class="pledge-grid">
           <div class="media-column">
             <div class="video-frame">
-              <video class="pledge-video" controls preload="metadata" poster="assets/pledge-poster.png" width="1280" height="720">
-                <source src="assets/unbought-pledge.mp4" type="video/mp4">
-                <track kind="captions" src="assets/unbought-pledge.vtt" srclang="en" label="English Subtitles" default>
-                Your browser does not support the video element. The full written pledge appears beside this film.
-              </video>
+              <iframe class="pledge-video" src="https://www.youtube-nocookie.com/embed/Y93qFCJWygA?rel=0" title="Alan Watts on money, capitalism, and what is real" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
             </div>
             <div class="video-caption">
-              <span class="badge badge--soft">Placeholder reel</span>
-              <p>The pledge film is a placeholder in this prototype. The complete commitments are written beside it, and captions are enabled by default.</p>
+              <span class="badge badge--soft">Alan Watts</span>
+              <p>“Veil of Thoughts, Part 1” from the Official Alan Watts Org looks at money, capitalism, and the difference between symbols and real life. The video is hosted by YouTube; Unbought does not transmit your pledge or profile details anywhere.</p>
             </div>
           </div>
 
@@ -283,18 +279,60 @@
 
             <div class="form-row">
               <div class="field field--on-blue">
-                <label for="pledge-full-name">Full legal name <span class="required-mark" aria-hidden="true">*</span></label>
-                <input type="text" id="pledge-full-name" name="fullName" autocomplete="name" maxlength="100" required placeholder="Your full legal name">
+                <label for="pledge-first-name">First name <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="pledge-first-name" name="firstName" autocomplete="given-name" maxlength="40" required placeholder="First name">
               </div>
               <div class="field field--on-blue">
-                <label for="pledge-name">Chosen name <span class="required-mark" aria-hidden="true">*</span></label>
-                <input type="text" id="pledge-name" name="chosenName" autocomplete="nickname" maxlength="60" required placeholder="What should we call you?">
+                <label for="pledge-middle-initial">Middle Initial <span class="optional">(optional)</span></label>
+                <input type="text" id="pledge-middle-initial" name="middleInitial" maxlength="2" placeholder="M">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="field field--on-blue">
+                <label for="pledge-last-name">Last name <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="pledge-last-name" name="lastName" autocomplete="family-name" maxlength="60" required placeholder="Last name">
+              </div>
+              <div class="field field--on-blue">
+                <label for="pledge-suffix">Suffix <span class="optional">(optional)</span></label>
+                <input type="text" id="pledge-suffix" name="suffix" maxlength="12" placeholder="Jr., Sr., III, etc.">
               </div>
             </div>
 
             <div class="field field--on-blue">
-              <label for="pledge-mailing">Mailing address <span class="required-mark" aria-hidden="true">*</span></label>
-              <textarea id="pledge-mailing" name="mailingAddress" rows="2" maxlength="240" autocomplete="street-address" required placeholder="123 Main St, Stroudsburg, PA 18360"></textarea>
+              <label for="pledge-name">Chosen name <span class="required-mark" aria-hidden="true">*</span></label>
+              <input type="text" id="pledge-name" name="chosenName" autocomplete="nickname" maxlength="60" required placeholder="What should we call you?">
+            </div>
+
+            <div class="address-group">
+              <p class="address-group-title">Mailing address <span class="required-mark" aria-hidden="true">*</span></p>
+              <div class="form-row">
+                <div class="field field--on-blue">
+                  <label for="pledge-address1">Address 1 <span class="required-mark" aria-hidden="true">*</span></label>
+                  <input type="text" id="pledge-address1" name="address1" autocomplete="address-line1" maxlength="100" required placeholder="123 Main St">
+                </div>
+                <div class="field field--on-blue">
+                  <label for="pledge-address2">Address 2 <span class="optional">(optional)</span></label>
+                  <input type="text" id="pledge-address2" name="address2" autocomplete="address-line2" maxlength="100" placeholder="Apt, unit, or PO Box">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="field field--on-blue">
+                  <label for="pledge-city">City <span class="required-mark" aria-hidden="true">*</span></label>
+                  <input type="text" id="pledge-city" name="city" autocomplete="address-level2" maxlength="80" required placeholder="Stroudsburg">
+                </div>
+                <div class="field field--on-blue">
+                  <label for="pledge-state">State <span class="required-mark" aria-hidden="true">*</span></label>
+                  <input type="text" id="pledge-state" name="state" autocomplete="address-level1" maxlength="2" required placeholder="PA">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="field field--on-blue">
+                  <label for="pledge-zip">ZIP code <span class="required-mark" aria-hidden="true">*</span></label>
+                  <input type="text" id="pledge-zip" name="zip" maxlength="10" inputmode="numeric" autocomplete="postal-code" required placeholder="18360">
+                  <p class="form-hint">Private. Used only to determine member labels.</p>
+                </div>
+              </div>
             </div>
 
             <div class="field field--on-blue field--check">
@@ -304,22 +342,41 @@
               </label>
             </div>
 
-            <div class="field field--on-blue" id="physical-address-field">
-              <label for="pledge-physical">Physical address <span class="required-mark" aria-hidden="true">*</span></label>
-              <textarea id="pledge-physical" name="physicalAddress" rows="2" maxlength="240" required placeholder="East Stroudsburg, PA 18301, if different from mailing"></textarea>
+            <div class="address-group" id="physical-address-field">
+              <p class="address-group-title">Physical address <span class="required-mark" aria-hidden="true">*</span></p>
+              <div class="form-row">
+                <div class="field field--on-blue">
+                  <label for="pledge-physical-address1">Address 1 <span class="required-mark" aria-hidden="true">*</span></label>
+                  <input type="text" id="pledge-physical-address1" name="physicalAddress1" autocomplete="address-line1" maxlength="100" required placeholder="123 Main St">
+                </div>
+                <div class="field field--on-blue">
+                  <label for="pledge-physical-address2">Address 2 <span class="optional">(optional)</span></label>
+                  <input type="text" id="pledge-physical-address2" name="physicalAddress2" autocomplete="address-line2" maxlength="100" placeholder="Apt, unit, or PO Box">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="field field--on-blue">
+                  <label for="pledge-physical-city">City <span class="required-mark" aria-hidden="true">*</span></label>
+                  <input type="text" id="pledge-physical-city" name="physicalCity" autocomplete="address-level2" maxlength="80" required placeholder="Stroudsburg">
+                </div>
+                <div class="field field--on-blue">
+                  <label for="pledge-physical-state">State <span class="required-mark" aria-hidden="true">*</span></label>
+                  <input type="text" id="pledge-physical-state" name="physicalState" autocomplete="address-level1" maxlength="2" required placeholder="PA">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="field field--on-blue">
+                  <label for="pledge-physical-zip">ZIP code <span class="required-mark" aria-hidden="true">*</span></label>
+                  <input type="text" id="pledge-physical-zip" name="physicalZip" maxlength="10" inputmode="numeric" autocomplete="postal-code" required placeholder="18360">
+                  <p class="form-hint">Private. Only used if this address is different from your mailing address.</p>
+                </div>
+              </div>
             </div>
 
-            <div class="form-row">
-              <div class="field field--on-blue">
-                <label for="pledge-zip">ZIP code <span class="required-mark" aria-hidden="true">*</span></label>
-                <input type="text" id="pledge-zip" name="zip" maxlength="10" inputmode="numeric" autocomplete="postal-code" required placeholder="18360">
-                <p class="form-hint">Private. Used only to determine member labels.</p>
-              </div>
-              <div class="field field--on-blue">
-                <label for="pledge-profession">Primary profession or trade <span class="required-mark" aria-hidden="true">*</span></label>
-                <input type="text" id="pledge-profession" name="profession" maxlength="80" required placeholder="Carpenter, nurse, teacher, farmer...">
-                <p class="form-hint">Private. The first signup of a profession in a ZIP becomes a seed member.</p>
-              </div>
+            <div class="field field--on-blue">
+              <label for="pledge-profession">Primary profession or trade <span class="required-mark" aria-hidden="true">*</span></label>
+              <input type="text" id="pledge-profession" name="profession" maxlength="80" required placeholder="Carpenter, nurse, teacher, farmer...">
+              <p class="form-hint">Private. The first signup of a profession in a ZIP becomes a seed member.</p>
             </div>
 
             <div class="field field--on-blue">
@@ -341,9 +398,41 @@
                 <label for="pledge-phone">Phone number <span class="required-mark" aria-hidden="true">*</span></label>
                 <input type="tel" id="pledge-phone" name="phone" autocomplete="tel" maxlength="40" required placeholder="A number where we can reach you">
               </div>
-              <div class="field field--on-blue">
-                <label for="pledge-dob">Date of birth <span class="required-mark" aria-hidden="true">*</span></label>
-                <input type="date" id="pledge-dob" name="dob" autocomplete="bday" min="1900-01-01" required>
+              <div class="field field--on-blue dob-field">
+                <p class="address-group-title">Date of birth <span class="required-mark" aria-hidden="true">*</span></p>
+                <div class="form-row dob-fields">
+                  <div class="field field--on-blue">
+                    <label for="pledge-dob-month">Month</label>
+                    <select id="pledge-dob-month" data-dob-part="month" autocomplete="bday-month" required>
+                      <option value="">Month</option>
+                      <option value="01">January</option>
+                      <option value="02">February</option>
+                      <option value="03">March</option>
+                      <option value="04">April</option>
+                      <option value="05">May</option>
+                      <option value="06">June</option>
+                      <option value="07">July</option>
+                      <option value="08">August</option>
+                      <option value="09">September</option>
+                      <option value="10">October</option>
+                      <option value="11">November</option>
+                      <option value="12">December</option>
+                    </select>
+                  </div>
+                  <div class="field field--on-blue">
+                    <label for="pledge-dob-day">Day</label>
+                    <select id="pledge-dob-day" data-dob-part="day" autocomplete="bday-day" required>
+                      <option value="">Day</option>
+                    </select>
+                  </div>
+                  <div class="field field--on-blue">
+                    <label for="pledge-dob-year">Year</label>
+                    <select id="pledge-dob-year" data-dob-part="year" autocomplete="bday-year" required>
+                      <option value="">Year</option>
+                    </select>
+                  </div>
+                </div>
+                <input type="hidden" id="pledge-dob" name="dob">
               </div>
             </div>
 
@@ -361,15 +450,21 @@
             </div>
 
             <div class="form-row">
-              <div class="field field--on-blue">
-                <label for="pledge-paid-skills">Career / paid skills <span class="optional">(optional)</span></label>
-                <textarea id="pledge-paid-skills" name="paidSkills" rows="3" maxlength="400" placeholder="Trades, professions, paid experience"></textarea>
-                <p class="form-hint">Listed on your public resume.</p>
+              <div class="field field--on-blue skill-picker" data-skill-picker="paid">
+                <label for="pledge-paid-skills-search">Career / paid skills <span class="optional">(optional)</span></label>
+                <input type="search" id="pledge-paid-skills-search" data-skill-search="paid" maxlength="80" placeholder="Search carpentry, nursing, design…" autocomplete="off">
+                <p class="field-hint">Search listed skills, or type your own and press Enter. Chosen skills appear on your public resume.</p>
+                <div class="skill-results" data-skill-results></div>
+                <div class="skill-chips" data-skill-chips></div>
+                <input type="hidden" id="pledge-paid-skills" name="paidSkills" value="">
               </div>
-              <div class="field field--on-blue">
-                <label for="pledge-unpaid-skills">Unpaid skills <span class="optional">(optional)</span></label>
-                <textarea id="pledge-unpaid-skills" name="unpaidSkills" rows="3" maxlength="400" placeholder="Care, repair, organizing, teaching, making"></textarea>
-                <p class="form-hint">Listed on your public resume.</p>
+              <div class="field field--on-blue skill-picker" data-skill-picker="unpaid">
+                <label for="pledge-unpaid-skills-search">Unpaid skills <span class="optional">(optional)</span></label>
+                <input type="search" id="pledge-unpaid-skills-search" data-skill-search="unpaid" maxlength="80" placeholder="Search care, repair, tutoring…" autocomplete="off">
+                <p class="field-hint">Search listed skills, or type your own and press Enter. Chosen skills appear on your public resume.</p>
+                <div class="skill-results" data-skill-results></div>
+                <div class="skill-chips" data-skill-chips></div>
+                <input type="hidden" id="pledge-unpaid-skills" name="unpaidSkills" value="">
               </div>
             </div>
 
