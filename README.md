@@ -76,6 +76,14 @@ Identity &amp; contact block—legal name parts, both structured addresses and
 counties, ZIP codes, birthdate, availability, and phone choices—rather than
 showing a read-only duplicate.
 
+Availability is a request gate, not a hidden profile. When a member is marked
+Unavailable, their Free Labor and Free Stuff offers stay visible, but neighbors
+cannot send labor or product requests or record a non-member purchase intent:
+the request button is disabled and both the dialog and submit paths refuse the
+request. Availability is chosen in Settings or the private profile privacy
+panel and copied into the local member roster so other members' listings follow
+it too. Seeded community offers remain requestable by default.
+
 The phone section asks for a required cell phone, an optional public phone, whether
 the public phone is the same as the cell phone, whether the chosen phone number
 should appear on the public resume, and whether the member wants text messages.
@@ -92,8 +100,13 @@ in. It never includes the cell phone, legal name, street or mailing addresses, c
 status, birthdate, group/crew, report count, amounts donated, comments, or
 interactions.
 Member IDs are never displayed; they remain storage and report attributes only.
-Seed and founder status appears as a public tag, with pending labels marked as
-pending before rollout.
+Status badges appear on the public resume: a profession-based Seed badge (for
+example, Dancer Seed, Law Seed, Doctor Seed, Cleaning Seed), Beta Founder for
+everyone who signs from the database build until rollout, 1st Year for non-seeds
+in the first official year, First year Founder for seeds in that year, and
+Volunteer for local operating-team members. Seed and Beta Founder badges are
+marked pending before rollout; Volunteer is active locally as soon as an offer is
+recorded. Badges never include ZIP, dates, or other private fields.
 
 `profile.html` uses the public resume card as the visual basis for the private
 record. Signed-in members get an edit-profile action, Dashboard menu, a clear
@@ -111,6 +124,21 @@ account details and account settings live on the same Settings page. The Commons
 menu appears only inside The Commons, on the left with content on the right, and
 contains Free Labor, Free Stuff, Donate, Exchanges, Messages, Review Board, and
 Friends/Groups. Unbought Academy is phase-gated to Phase 2 and hidden in Phase 1.
+Commons content is grouped into a shortcut strip, a compact “Your corner” activity
+card, and a wider community-chat card so channels and threads are easier to scan.
+
+## Volunteers and operating-team access
+
+Volunteers get a special Volunteer badge and access to the member tools. The
+roles describe the people running Unbought: keeping the website updated, paying
+the bills, accepting new volunteers, legal work, records, communications, and
+accessibility. The shared sign-up dialog includes a volunteer-intake role. When
+a signed-in member records an offer, the offer is stored in `state.volunteerInterests`,
+the Volunteer badge appears on the public resume and private profile, and a
+volunteer-access card appears in Dashboard → Overview. The private profile's
+Local account access block also notes the local access. This is local prototype
+access only: there is no real authentication, website admin, server, or
+background check, and nothing is transmitted.
 
 ## Confirmed hours and member-only fund metrics
 
@@ -140,9 +168,14 @@ share the same accounting model while sensitive profile fields stay private.
 
 The published allocation plan runs in stages. Every dollar starts with pre-rollout
 operations: licensing, web hosting, database set up, and social media awareness.
-Once the Land Trust account is formed and initial start-up costs are paid, the fund
-builds in an account while seeking accountants until the first plot of land, house,
-or warehouse can be bought. After that, a separate housing-stability account keeps
+The beta plan is to get the database, mailer, and social channels running for free
+first, then consider a Patreon-style pledge stream and legal help from a volunteer
+lawyer to set the fund up. Once the Land Trust account is formed and initial
+start-up costs are paid, the fund builds in an account while seeking accountants
+until the first plot of land, house, or warehouse can be bought. The first house
+will be where the most Unbought members live; scaling means groups keep scouting
+locally while the first purchase follows the densest membership. After that, a
+separate housing-stability account keeps
 the Land Trust alive, obtains resources, and keeps the lights on. Vacant houses will
 be furnished for members to stay free or for non-members to stay for donations
 decided by surrounding Groups. Any budget that has leftover money sends it to the
@@ -151,17 +184,24 @@ stays in an active checking fund.
 
 Once the balance sheet is organized and producing a surplus, that surplus goes to a
 local member wishlist. Members search a fixed catalog, may type their own item, add
-an example `http(s)` link, and label each entry as need, want, or nice to have with a
-priority number from 1 to 20. Each item also has a local wishlist group: Active
-working members, Disabled, Over 65, Homeless, Under 25, or Confirmed report within
-the last year, in that order. Each priority list is first come, first served: the
-waitlist picks the earliest saved item on each list and cycles through the six
-lists. Need/want/nice and the item number remain visible as local priority labels,
-and matching titles tally with other lists. Whoever listed an item as a need sees
-it first. After seven days, unless the item is marked perishable, it appears in the
-public wishlist. No item is bought, delivered, or transmitted, and wishlists never
-appear on a public resume. The wishlist is separate from the closed Basic
-Necessities list.
+an example `http(s)` link, and label each entry High priority, Medium, or Nice to
+have. High priority equals 3 points, Medium equals 2, and Nice to have equals 1;
+the points come from the type, not a typed number. Each item also has a local
+wishlist group: Active working members, Disabled, Over 65, Homeless, Under 25, or
+Confirmed report within the last year, in that order. The group is not chosen by
+hand. It is derived from age, disability status, housing status, and all
+information in the member's profile stored on this device, including the
+care/capacity track, worker information, and confirmed reports. “Active working
+members” is the default; when more than one status applies, the first matching
+status group in the published order is used. The group is re-derived when the
+profile changes and never appears on a public resume. Each priority list is first
+come, first served: the waitlist picks the earliest saved item on each list and
+cycles through the six lists. The category and its points remain visible as local
+priority labels, and matching titles tally with other lists. Whoever listed an item
+first on its priority list sees it first. After seven days, unless the item is
+marked perishable, it appears in the public wishlist. No item is bought, delivered,
+or transmitted, and wishlists never appear on a public resume. The wishlist is
+separate from the closed Basic Necessities list.
 
 When a member withdraws, the prototype shows a cancellation estimate capped at
 $4,000. It multiplies the member's share of contributions credited to their groups
@@ -203,31 +243,45 @@ all visible copy calls it the Unbought donation fund, which also holds academy t
 
 The sign-up form collects a primary profession and ZIP code. A seed member is
 the first person of a profession to sign up in a ZIP code; the local roster
-stores one entry per member and resolves ties by signup time and member ID.
-Founding members are seed members whose signup falls in Unbought's first year.
+stores one entry per member and resolves ties by signup time and member ID. The
+public badge is the profession plus Seed: Dancer Seed, Law Seed, Doctor Seed,
+Cleaning Seed, and so on. Common synonyms map to the shorter badge word, such as
+lawyer/attorney/legal to Law Seed.
+
+Every member who signs from the database build through the beta period gets a
+Beta Founder badge. The first official membership year begins at the 2027 rollout
+equinox; non-seed members who sign during that year get a 1st Year badge, and
+seed members who sign during that year get a First year Founder badge. The
+Volunteer badge is separate and is active locally when a member records a
+volunteer offer.
 
 Membership years begin at the exact moment of the northern vernal equinox. The
-first year runs from March 20, 2026 at 14:46 UTC to March 20, 2027 at 20:25 UTC
-— 4:25pm Eastern. That 2027 equinox is also the label rollout moment. Before
-then the dashboard shows the labels as pending rather than presenting them as
-live. Published equinox instants for 2026–2031 are kept in `VERNAL_EQUINOXES`;
-ZIP stays private and never appears on the public resume; profession is shown.
+beta build year runs from March 20, 2026 at 14:46 UTC to March 20, 2027 at
+20:25 UTC — 4:25pm Eastern. That 2027 equinox is also the label rollout moment
+and the first day of the first official year, which runs to the 2028 equinox.
+Before rollout the dashboard marks Seed and Beta Founder labels as pending
+rather than presenting them as live. Published equinox instants for 2026–2031
+are kept in `VERNAL_EQUINOXES`; ZIP stays private and never appears on the
+public resume; profession is shown.
 
 ## Equinox festival and seed-member thank-you
 
 `future.html#festival` describes the hope of partnering with an organization
 for a large festival somewhere in the United States on the 2028 vernal equinox,
 March 20 at 4:25pm Eastern — one full year after the 2027 rollout — celebrating
-the movement and its seed and founding members. The exact sentence is: “The moment
+the movement and its Seed, Beta Founder, 1st Year, and First year Founder members. The exact sentence is: “The moment
 matters because we will have been fully rolled out for a full year, meaning something
 must be working”. It is explicitly a planning intention: no venue, partner, or
 ticket exists. The beta runs until the exact 2027 vernal equinox, March 20, 2027 at
-4:25pm, when the site rolls out; seed members remain until then, day joined is
-logged, and that date is the first day of the first official year.
+4:25pm, when the site rolls out; seed members and Beta Founders remain until
+then, day joined is logged, and that date is the first day of the first official
+year. Seed members who sign in that first official year receive a First year
+Founder badge; other first-year members receive a 1st Year badge.
 
 Seed members see a locally generated thank-you draft in the dashboard
 (`renderSeedThankYou`). A live deployment would email it automatically. The
-copy explains the label, mentions the possible festival, and suggests ways to
+copy explains the profession Seed badge, Beta Founder status when applicable,
+the possible festival, and suggests ways to
 get involved: talk to other professionals locally, post on social media, scout
 cheap or donated housing, start an Unbought business for donation revenue,
 donate, volunteer services to develop the community, and offer skills through
@@ -243,6 +297,17 @@ revoked member serves a community-decided reflection period before reapplying;
 the new application goes straight to review and a vote by members in their
 area. Therapy is encouraged, and some cases require a therapeutic evaluation
 and proof of treatment. Nothing is enforced outside this browser prototype.
+
+No porn and no prostitution. There are free websites that can serve those needs
+outside of Unbought. Anything else unsuitable for minors must carry an NSFW tag;
+the tag is available on Free Labor, Free Stuff, group posts, and community chat
+posts, and it never permits prohibited content. Photos can be added to posts and
+chat messages, are resized locally, and are never uploaded.
+
+All voting is completely anonymous. Ballots do not store a member ID, name, or
+link back to the voter; results show only the choice, reflection period, reason,
+and date. Anonymous receipts record only that a ballot was cast on this device.
+This applies to review board cases, group guideline votes, and hour-review votes.
 
 ## Basic Necessities and alliances
 
@@ -416,8 +481,9 @@ another group in the Unbought network. Town group names link to
 `group.html?group=<id>`, and group counts come from `group.members`, not a typed
 number. When a town group reaches 150 people, another Stroudsburg group is created
 with a Roman numeral ending: II, III, … XI. The first member of a new numbered group
-is not a seed member, seed/founding labels stay tied to the original profession/ZIP
-roster, and neighbors may choose Group I, II, III, XI, and so on. Joining a numbered
+is not a seed member, Seed and other membership badges stay with the member's
+sign-up record rather than the group, and neighbors may choose Group I, II, III,
+XI, and so on. Joining a numbered
 group moves the member out of the previous town group. Town group profiles show the
 location below the title with city/state and ZIP.
 
@@ -475,6 +541,16 @@ social chat drafts with exactly Audience, Title, Message, and picture; each chat
 record carries its audience label. There is a single local account, so no request
 or chat draft is delivered and no other person’s data changes. Friend lists and
 every group are capped at 150 people.
+
+Dashboard → The Commons also has community chat channels. Members can create a
+channel, then create threads within that channel; every thread and reply has a
+subject. A picture is optional, and anything unsuitable for minors is tagged
+NSFW. Channels live in `state.communityChannels`, threads in
+`state.communityThreads`, and messages in `state.chats` with channel, thread,
+subject, NSFW, and picture fields. All of it stays on this device. Each public
+resume shows that member's Free Stuff and Free Labor offers plus their community
+chat posts; group chat posts and replies stay on the group profile for group
+members only.
 
 Free Labor and Free Stuff listings have separate local comment threads with replies
 (a reply simply quotes the earlier chosen name). Comments on the static seed

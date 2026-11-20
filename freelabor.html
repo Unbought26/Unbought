@@ -135,7 +135,7 @@
             <p class="eyebrow">Free labor directory</p>
             <h2 id="services-title">The commons, in plain sight.</h2>
           </div>
-          <p>Labor is free; suggested donation prices go to the Unbought donation fund. Search, filter, sort, and request a connection with mutual consent.</p>
+          <p>Labor is free; suggested donation prices go to the Unbought donation fund. Search, filter, sort, and request a connection with mutual consent. Members marked Unavailable keep their listings here, but cannot receive labor or product requests.</p>
         </div>
 
         <div class="filter-bar labor-filters" aria-labelledby="filter-title">
@@ -351,6 +351,12 @@
                 <label for="post-description">Description <span class="required-mark" aria-hidden="true">*</span></label>
                 <textarea id="post-description" name="description" rows="4" maxlength="400" required placeholder="What are you offering? Include what you can safely do, what materials may be needed, and how you will agree on scope."></textarea>
                 <p class="field-hint" id="post-description-hint">Up to 400 characters. Be clear about scope and consent.</p>
+              </div>
+              <div class="field field--wide field--check">
+                <label class="checkbox">
+                  <input type="checkbox" id="post-nsfw" name="nsfw" value="1">
+                  <span>Mark this post NSFW if it is unsuitable for minors. NSFW is not for porn or prostitution, which are not allowed on Unbought.</span>
+                </label>
               </div>
               <fieldset class="field field--wide purchase-optin">
                 <legend>Suggested donation price (optional)</legend>

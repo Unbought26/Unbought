@@ -170,12 +170,12 @@
           <li class="fund-stage">
             <span class="fund-stage-number">Stage 1</span>
             <h3>Before rollout</h3>
-            <p>Every dollar that goes into the Unbought donation fund starts with getting Unbought off the ground: licensing, web hosting, database set up, and social media awareness. This is the pre-rollout operation goal before the March 20, 2027 rollout.</p>
+            <p>Every dollar that goes into the Unbought donation fund starts with getting Unbought off the ground: licensing, web hosting, database set up, and social media awareness. During beta the practical plan is to get the database, mailer, and social channels rolling for free first, then consider a Patreon-style pledge stream, and hope a lawyer joins to help set the fund up legally. This is the pre-rollout operation goal before the March 20, 2027 rollout. Nothing is connected, charged, or transmitted in this prototype.</p>
           </li>
           <li class="fund-stage">
             <span class="fund-stage-number">Stage 2</span>
             <h3>Land Trust account</h3>
-            <p>Once the Land Trust account is formed and the initial start-up costs are paid, the fund funnels into an account while we are seeking accountants. It builds there until we can buy our first plot of land, house, or warehouse.</p>
+            <p>Once the Land Trust account is formed and the initial start-up costs are paid, the fund funnels into an account while we are seeking accountants. It builds there until we can buy our first plot of land, house, or warehouse. The first house will be in the place where the most Unbought members live. We also have to think about how to scale: local Groups keep scouting their own areas, while the first purchase follows the densest membership. This is a planning rule, not a purchase or an offer, and nothing is transmitted.</p>
           </li>
           <li class="fund-stage">
             <span class="fund-stage-number">Stage 3</span>
@@ -190,7 +190,7 @@
           <li class="fund-stage">
             <span class="fund-stage-number">Stage 5</span>
             <h3>Surplus wishlist</h3>
-            <p>Once the balance sheet is organized and providing a surplus, the surplus goes toward a wishlist. Each member can search multiple items, provide links to examples, and label each as a need, a want, or a nice to have with a number. The priority lists are Active working members, Disabled, Over 65, Homeless, Under 25, and Confirmed report within the last year. Each priority list is first come, first serve; the waitlist takes the top of each list and cycles through the lists. <a href="#wishlist">See the local wishlist draft</a>.</p>
+            <p>Once the balance sheet is organized and providing a surplus, the surplus goes toward a wishlist. Each member can search multiple items, provide example links, and label each High priority, Medium, or Nice to have. High priority equals 3 points, Medium equals 2, and Nice to have equals 1; the points come from the label, not a typed number. The group for each item is derived from the member's profile. The priority lists are Active working members, Disabled, Over 65, Homeless, Under 25, and Confirmed report within the last year. Each priority list is first come, first served; the waitlist takes the top of each list and cycles through the lists. <a href="#wishlist">See the local wishlist draft</a>.</p>
           </li>
         </ol>
 
@@ -379,7 +379,7 @@
             <p class="eyebrow">Surplus allocation draft</p>
             <h2 id="wishlist-title">A wishlist, not a spending race.</h2>
           </div>
-          <p class="section-head-aside">This is the future surplus wishlist, separate from the closed Basic Necessities list. Its priority lists are Active working members, Disabled, Over 65, Homeless, Under 25, and Confirmed report within the last year. Each priority list is first come, first serve. It is not a store, a request for payment, or a promise that an item will be bought.</p>
+          <p class="section-head-aside">This is the future surplus wishlist, separate from the closed Basic Necessities list. Its priority lists are Active working members, Disabled, Over 65, Homeless, Under 25, and Confirmed report within the last year. Each priority list is first come, first served. It is not a store, a request for payment, or a promise that an item will be bought.</p>
         </div>
 
         <div class="wishlist-layout">
@@ -404,20 +404,16 @@
 
               <div class="field">
                 <label for="wishlist-item-title">Item <span class="required-mark" aria-hidden="true">*</span></label>
-                <input type="text" id="wishlist-item-title" name="title" maxlength="120" required placeholder="The item you want ranked">
+                <input type="text" id="wishlist-item-title" name="title" maxlength="120" required placeholder="The item you want to add">
               </div>
 
               <div class="field">
-                <label for="wishlist-group">Wishlist group <span class="required-mark" aria-hidden="true">*</span></label>
-                <select id="wishlist-group" name="wishlistGroup" required>
-                  <option value="active">Active working members</option>
-                  <option value="disabled">Disabled</option>
-                  <option value="over65">Over 65</option>
-                  <option value="homeless">Homeless</option>
-                  <option value="under25">Under 25</option>
-                  <option value="report">Confirmed report within the last year</option>
-                </select>
-                <p class="field-hint">This is a local prototype status choice, not a verified record. The waitlist uses these groups in the order shown above.</p>
+                <span class="field-label" id="wishlist-group-label">Wishlist group</span>
+                <div class="derived-field" id="wishlist-group" role="status" aria-live="polite" aria-labelledby="wishlist-group-label" aria-describedby="wishlist-group-hint">
+                  <span id="wishlist-group-value">Available after sign-in</span>
+                  <span class="derived-field-note">From profile</span>
+                </div>
+                <p class="field-hint" id="wishlist-group-hint">This is determined by age, disability status, housing status, and all information in the member's profile saved on this device. It is a local prototype assignment, not a verified record. The waitlist uses the six groups in the order shown above.</p>
               </div>
 
               <div class="field">
@@ -426,20 +422,14 @@
                 <p class="field-hint">A link is only a local example for a future buyer. It is never opened, checked, or sent by this prototype.</p>
               </div>
 
-              <div class="wishlist-field-row">
-                <div class="field">
-                  <label for="wishlist-category">Priority type <span class="required-mark" aria-hidden="true">*</span></label>
-                  <select id="wishlist-category" name="category" required>
-                    <option value="need">Need</option>
-                    <option value="want">Want</option>
-                    <option value="nice">Nice to have</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="wishlist-rank">Number <span class="required-mark" aria-hidden="true">*</span></label>
-                  <input type="number" id="wishlist-rank" name="rank" min="1" max="20" step="1" value="10" required>
-                  <p class="field-hint">1 is the highest priority.</p>
-                </div>
+              <div class="field">
+                <label for="wishlist-category">Priority type <span class="required-mark" aria-hidden="true">*</span></label>
+                <select id="wishlist-category" name="category" required>
+                  <option value="high">High priority</option>
+                  <option value="medium">Medium</option>
+                  <option value="nice">Nice to have</option>
+                </select>
+                <p class="field-hint">High priority equals 3 points, Medium equals 2, and Nice to have equals 1. Points come from the type you choose.</p>
               </div>
 
               <div class="field field--check">
@@ -464,13 +454,13 @@
             <section class="wishlist-card" aria-labelledby="wishlist-cycle-title">
               <span class="badge badge--green">Tallied locally</span>
               <h3 id="wishlist-cycle-title">Surplus cycle preview</h3>
-              <p class="field-hint">The waitlist follows the member-group order above. Each priority list is first come, first serve: the waitlist picks the earliest item on each list and cycles through the lists again. Need, want, nice-to-have, and the item number stay on the item as its local priority label.</p>
+              <p class="field-hint">The waitlist follows the member-group order above. Each priority list is first come, first served: the waitlist picks the earliest item on each list and cycles through the lists again. High priority equals 3 points, Medium equals 2, and Nice to have equals 1, and those points stay on the item as its local label.</p>
               <div id="wishlist-cycle" aria-live="polite"></div>
             </section>
 
             <section class="wishlist-card" aria-labelledby="wishlist-public-title">
               <h3 id="wishlist-public-title">Visible to the general public</h3>
-              <p class="field-hint">Whoever listed an item as a need sees it first. After a week, unless it is perishable, the item becomes visible here.</p>
+              <p class="field-hint">Whoever listed an item first on its priority list sees it first. After a week, unless it is perishable, the item becomes visible here.</p>
               <div id="wishlist-public" aria-live="polite"></div>
             </section>
           </div>

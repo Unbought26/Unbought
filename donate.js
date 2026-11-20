@@ -22,11 +22,24 @@
     'pledge-later': 'Pledge to give when the trust opens'
   });
 
+  const WISHLIST_CATEGORY_POINTS = Object.freeze({
+    high: 3,
+    medium: 2,
+    nice: 1
+  });
   const WISHLIST_CATEGORIES = Object.freeze({
-    need: 'Need',
-    want: 'Want',
+    high: 'High priority',
+    medium: 'Medium',
     nice: 'Nice to have'
   });
+  function normalizeWishlistCategory(value) {
+    if (value === 'need' || value === 'high') return 'high';
+    if (value === 'want' || value === 'medium') return 'medium';
+    return 'nice';
+  }
+  function pointsForWishlistCategory(value) {
+    return WISHLIST_CATEGORY_POINTS[normalizeWishlistCategory(value)];
+  }
   const WISHLIST_GROUPS = Object.freeze([
     { key: 'active', label: 'Active working members' },
     { key: 'disabled', label: 'Disabled' },
@@ -43,6 +56,7 @@
     'Public transit pass', 'Internet access', 'Phone minutes'
   ]);
   const WISHLIST_HOLD_MS = 7 * 24 * 60 * 60 * 1000;
+  const WISHLIST_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
   const MAX_WISHLIST_ITEMS = 200;
 
   const form = document.getElementById('donation-form');
@@ -73,7 +87,7 @@
   const wishlistUrl = document.getElementById('wishlist-example-url');
   const wishlistCategory = document.getElementById('wishlist-category');
   const wishlistGroup = document.getElementById('wishlist-group');
-  const wishlistRank = document.getElementById('wishlist-rank');
+  const wishlistGroupValue = document.getElementById('wishlist-group-value');
   const wishlistPerishable = document.getElementById('wishlist-perishable');
   const wishlistError = document.getElementById('wishlist-error');
   const wishlistOwned = document.getElementById('wishlist-owned');
@@ -109,20 +123,25 @@
     }
   }
 
-  function normalizeWishlistItem(item) {
+  function normalizeWishlistItem(item, member, source) {
     if (!item || typeof item !== 'object') return null;
     const title = cleanText(item.title, 120);
     const memberId = cleanText(item.memberId, 100);
     if (!title || !memberId) return null;
-    const rank = Number(item.rank);
+    const category = normalizeWishlistCategory(item.category);
+    const savedGroup = WISHLIST_GROUPS.some((group) => group.key === item.wishlistGroup) ? item.wishlistGroup : 'active';
     return {
       id: cleanText(item.id, 100) || `wish-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
       memberId,
       memberName: cleanText(item.memberName, 60),
       title,
-      category: Object.prototype.hasOwnProperty.call(WISHLIST_CATEGORIES, item.category) ? item.category : 'want',
-      wishlistGroup: WISHLIST_GROUPS.some((group) => group.key === item.wishlistGroup) ? item.wishlistGroup : 'active',
-      rank: Number.isFinite(rank) ? Math.min(20, Math.max(1, Math.round(rank))) : 10,
+      category,
+      // Re-derive from the saved profile so a birthday, housing change, care
+      // track change, or confirmed report updates the local priority list.
+      wishlistGroup: member && member.memberId === memberId
+        ? deriveWishlistGroup(member, source)
+        : savedGroup,
+      points: pointsForWishlistCategory(category),
       exampleUrl: cleanExampleUrl(item.exampleUrl),
       perishable: Boolean(item.perishable),
       createdAt: cleanText(item.createdAt, 40) || new Date().toISOString(),
@@ -131,8 +150,9 @@
   }
 
   function wishlistItems() {
+    const member = getMember();
     return (Array.isArray(state.wishlistItems) ? state.wishlistItems : [])
-      .map(normalizeWishlistItem)
+      .map((item) => normalizeWishlistItem(item, member, state))
       .filter(Boolean)
       .slice(0, MAX_WISHLIST_ITEMS);
   }
@@ -177,7 +197,11 @@
     if (!Array.isArray(base.donationIntents)) base.donationIntents = [];
     if (!Array.isArray(base.wishlistItems)) base.wishlistItems = [];
     if (!Array.isArray(base.contributions)) base.contributions = [];
-    base.wishlistItems = base.wishlistItems.map(normalizeWishlistItem).filter(Boolean).slice(0, MAX_WISHLIST_ITEMS);
+    const wishlistMember = memberFromSource(base);
+    base.wishlistItems = base.wishlistItems
+      .map((item) => normalizeWishlistItem(item, wishlistMember, base))
+      .filter(Boolean)
+      .slice(0, MAX_WISHLIST_ITEMS);
 
     // Migrate legacy standalone donation intents if shared state has none.
     if (!base.donationIntents.length) {
@@ -222,12 +246,73 @@
     }
   }
 
-  function getMember() {
+  function memberFromSource(source) {
+    if (!source || typeof source !== 'object') return null;
     // Match the app's member check: a stored pledge alone is not enough, the
-    // visitor must be signed in. This keeps auto-filled names and tracking
+    // visitor must be signed in. This keeps wishlist groups and tracking
     // consistent when someone signs out on this device.
-    const signedIn = Boolean(state.auth && state.auth.session && state.auth.session.signedIn);
-    return signedIn && state.pledge && state.pledge.memberId ? state.pledge : null;
+    const signedIn = Boolean(source.auth && source.auth.session && source.auth.session.signedIn);
+    return signedIn && source.pledge && source.pledge.memberId ? source.pledge : null;
+  }
+
+  function getMember() {
+    return memberFromSource(state);
+  }
+
+  function wishlistAge(dob) {
+    const value = cleanText(dob, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+    const [year, month, day] = value.split('-').map(Number);
+    const birth = new Date(year, month - 1, day);
+    if (birth.getFullYear() !== year || birth.getMonth() !== month - 1 || birth.getDate() !== day) return null;
+    const now = new Date();
+    let age = now.getFullYear() - year;
+    if (now.getMonth() < month - 1 || (now.getMonth() === month - 1 && now.getDate() < day)) age -= 1;
+    return age;
+  }
+
+  function hasRecentConfirmedReport(member, source) {
+    const memberId = cleanText(member.memberId, 100);
+    const memberName = cleanText(member.name, 80).trim().toLowerCase();
+    const reports = source && Array.isArray(source.reports) ? source.reports : [];
+    const cutoff = Date.now() - WISHLIST_YEAR_MS;
+    return reports.some((report) => {
+      if (!report || typeof report !== 'object') return false;
+      const respondentId = cleanText(report.respondentMemberId, 100);
+      const respondentName = cleanText(report.respondentName, 80).trim().toLowerCase();
+      const idMatch = Boolean(memberId && respondentId && respondentId === memberId);
+      const nameMatch = Boolean(memberName && respondentName && respondentName === memberName);
+      if (!idMatch && !nameMatch) return false;
+      const votes = Array.isArray(report.votes) ? report.votes : [];
+      const guiltyVotes = votes.filter((vote) => vote && vote.verdict === 'guilty').length;
+      const notGuiltyVotes = votes.filter((vote) => vote && vote.verdict === 'not_guilty').length;
+      const confirmed = ['restriction_active', 'access_restored'].includes(cleanText(report.status, 30))
+        || Boolean(report.response && report.response.plea === 'guilty')
+        || guiltyVotes > notGuiltyVotes;
+      if (!confirmed) return false;
+      const resolved = Date.parse(cleanText(report.resolutionAt, 40) || cleanText(report.createdAt, 40));
+      return Number.isFinite(resolved) && resolved >= cutoff;
+    });
+  }
+
+  function deriveWishlistGroup(member, source) {
+    if (!member) return WISHLIST_GROUPS[0].key;
+    const data = source && typeof source === 'object' ? source : state;
+    const track = cleanText(data.track || member.track, 30).toLowerCase();
+    const disabilityStatus = cleanText(member.disabilityStatus, 30).toLowerCase();
+    const careTrack = track === 'care' || disabilityStatus === 'disabled' || disabilityStatus === 'disability';
+    const age = wishlistAge(member.dob);
+    const housing = cleanText(member.housingStatus, 30).toLowerCase();
+
+    // The six priority lists keep their published order. "Active working
+    // members" is the default; the other statuses are checked in the listed
+    // order so a member with more than one status gets one consistent list.
+    if (careTrack) return 'disabled';
+    if (age !== null && age >= 65) return 'over65';
+    if (housing === 'homeless') return 'homeless';
+    if (age !== null && age < 25) return 'under25';
+    if (hasRecentConfirmedReport(member, data)) return 'report';
+    return 'active';
   }
 
   function visibleIntents() {
@@ -564,7 +649,7 @@
       const existing = map.get(key);
       if (existing) {
         existing.count += 1;
-        existing.bestRank = Math.min(existing.bestRank, item.rank);
+        existing.points = Math.max(existing.points, item.points);
         existing.createdAt = existing.createdAt < item.createdAt ? existing.createdAt : item.createdAt;
         existing.members.add(item.memberId);
       } else {
@@ -573,7 +658,7 @@
           category: item.category,
           wishlistGroup: item.wishlistGroup,
           count: 1,
-          bestRank: item.rank,
+          points: item.points,
           createdAt: item.createdAt,
           members: new Set([item.memberId])
         });
@@ -610,7 +695,7 @@
         row.appendChild(element('span', 'wishlist-cycle-step', String(shown + 1)));
         const copy = element('div', 'wishlist-cycle-copy');
         copy.appendChild(element('strong', '', `${group.label}: ${top.title}`));
-        copy.appendChild(element('span', 'contribution-meta', `${WISHLIST_CATEGORIES[top.category]} #${top.bestRank} · saved ${formatDate(top.createdAt)} · first come, first served · round ${round}`));
+        copy.appendChild(element('span', 'contribution-meta', `${WISHLIST_CATEGORIES[top.category]} · ${top.points} point${top.points === 1 ? '' : 's'} · saved ${formatDate(top.createdAt)} · first come, first served · round ${round}`));
         row.appendChild(copy);
         wishlistCycle.appendChild(row);
         shown += 1;
@@ -628,10 +713,7 @@
     }
     const own = items
       .filter((item) => item.memberId === member.memberId)
-      .sort((a, b) => {
-        const order = { need: 0, want: 1, nice: 2 };
-        return order[a.category] - order[b.category] || a.rank - b.rank || a.title.localeCompare(b.title);
-      });
+      .sort((a, b) => b.points - a.points || timeOf(a.createdAt) - timeOf(b.createdAt) || a.title.localeCompare(b.title));
     const head = element('h4', '', 'Saved on this device');
     wishlistOwned.appendChild(head);
     if (!own.length) {
@@ -642,7 +724,7 @@
       const card = element('article', 'wishlist-item');
       const top = element('div', 'wishlist-item-top');
       top.appendChild(element('strong', '', item.title));
-      top.appendChild(element('span', 'badge badge--soft', `${wishlistGroupLabel(item.wishlistGroup)} · ${WISHLIST_CATEGORIES[item.category]} #${item.rank}`));
+      top.appendChild(element('span', 'badge badge--soft', `${wishlistGroupLabel(item.wishlistGroup)} · ${WISHLIST_CATEGORIES[item.category]} · ${item.points} pt${item.points === 1 ? '' : 's'}`));
       card.appendChild(top);
       card.appendChild(element('p', 'contribution-meta', isPublicWishlistItem(item, Date.now())
         ? 'Visible to the general public now.'
@@ -670,12 +752,9 @@
     const now = Date.now();
     const publicItems = items
       .filter((item) => isPublicWishlistItem(item, now))
-      .sort((a, b) => {
-        const order = { need: 0, want: 1, nice: 2 };
-        return order[a.category] - order[b.category] || a.rank - b.rank || a.title.localeCompare(b.title);
-      });
+      .sort((a, b) => b.points - a.points || timeOf(a.createdAt) - timeOf(b.createdAt) || a.title.localeCompare(b.title));
     if (!publicItems.length) {
-      wishlistPublic.appendChild(element('p', 'field-hint', 'No items are public yet. Need items stay with the member who listed them for seven days unless marked perishable.'));
+      wishlistPublic.appendChild(element('p', 'field-hint', 'No items are public yet. Items stay with the member who listed them for seven days unless marked perishable.'));
       return;
     }
     const { sorted } = wishlistTallies(items);
@@ -686,7 +765,7 @@
       top.appendChild(element('span', 'badge badge--soft', WISHLIST_CATEGORIES[item.category]));
       card.appendChild(top);
       const tally = sorted.find((entry) => entry.wishlistGroup === item.wishlistGroup && entry.category === item.category && entry.title.toLowerCase() === item.title.toLowerCase());
-      card.appendChild(element('p', 'contribution-meta', `${wishlistGroupLabel(item.wishlistGroup)} · ${WISHLIST_CATEGORIES[item.category]} #${item.rank}${tally ? ` · ${tally.count} list${tally.count === 1 ? '' : 's'}` : ''} · saved ${formatDate(item.createdAt)}${item.perishable ? ' · perishable' : ''}`));
+      card.appendChild(element('p', 'contribution-meta', `${wishlistGroupLabel(item.wishlistGroup)} · ${WISHLIST_CATEGORIES[item.category]} · ${item.points} pt${item.points === 1 ? '' : 's'}${tally ? ` · ${tally.count} list${tally.count === 1 ? '' : 's'}` : ''} · saved ${formatDate(item.createdAt)}${item.perishable ? ' · perishable' : ''}`));
       if (item.exampleUrl) {
         const link = element('a', 'text-link', 'Example link');
         link.href = item.exampleUrl;
@@ -711,10 +790,15 @@
 
   function syncWishlistUI() {
     const member = getMember();
+    const derivedGroup = deriveWishlistGroup(member, state);
     if (wishlistStatus) {
       wishlistStatus.textContent = member
         ? `Signed in as ${member.name}. Your wishlist is saved only on this device and never appears on a public resume.`
         : 'Sign in with your member or representative username to build a local wishlist. Everyone can still see items that have become public.';
+    }
+    if (wishlistGroup) wishlistGroup.dataset.wishlistGroup = derivedGroup;
+    if (wishlistGroupValue) {
+      wishlistGroupValue.textContent = member ? wishlistGroupLabel(derivedGroup) : 'Available after sign-in';
     }
     if (wishlistGate) wishlistGate.hidden = Boolean(member);
     if (wishlistForm) wishlistForm.hidden = !member;
@@ -748,9 +832,9 @@
       const title = cleanText(wishlistTitle ? wishlistTitle.value : '', 120);
       const exampleUrl = cleanExampleUrl(wishlistUrl ? wishlistUrl.value : '');
       const rawUrl = cleanText(wishlistUrl ? wishlistUrl.value : '', 500);
-      const category = cleanText(wishlistCategory ? wishlistCategory.value : '', 20);
-      const groupKey = cleanText(wishlistGroup ? wishlistGroup.value : '', 20);
-      const rank = Math.round(Number(wishlistRank ? wishlistRank.value : 10));
+      const category = normalizeWishlistCategory(cleanText(wishlistCategory ? wishlistCategory.value : '', 20));
+      const groupKey = deriveWishlistGroup(member, state);
+      const points = pointsForWishlistCategory(category);
       if (!title) {
         if (wishlistError) {
           wishlistError.textContent = 'Enter an item before saving it.';
@@ -767,26 +851,18 @@
         if (wishlistUrl) wishlistUrl.focus();
         return;
       }
-      if (!Object.prototype.hasOwnProperty.call(WISHLIST_CATEGORIES, category)) {
+      if (!Object.prototype.hasOwnProperty.call(WISHLIST_CATEGORY_POINTS, category)) {
         if (wishlistError) {
-          wishlistError.textContent = 'Choose need, want, or nice to have.';
+          wishlistError.textContent = 'Choose High priority, Medium, or Nice to have.';
           wishlistError.hidden = false;
         }
         return;
       }
       if (!WISHLIST_GROUPS.some((group) => group.key === groupKey)) {
         if (wishlistError) {
-          wishlistError.textContent = 'Choose one of the six wishlist groups.';
+          wishlistError.textContent = 'Your saved profile does not match one of the six wishlist groups. Update your profile and try again.';
           wishlistError.hidden = false;
         }
-        return;
-      }
-      if (!Number.isFinite(rank) || rank < 1 || rank > 20) {
-        if (wishlistError) {
-          wishlistError.textContent = 'Use a priority number from 1 to 20.';
-          wishlistError.hidden = false;
-        }
-        if (wishlistRank) wishlistRank.focus();
         return;
       }
 
@@ -797,7 +873,7 @@
         title,
         category,
         wishlistGroup: groupKey,
-        rank,
+        points,
         exampleUrl,
         perishable: Boolean(wishlistPerishable && wishlistPerishable.checked),
         createdAt: new Date().toISOString(),
@@ -817,7 +893,7 @@
       if (wishlistSearch) wishlistSearch.value = '';
       if (wishlistSuggestions) wishlistSuggestions.replaceChildren();
       syncWishlistUI();
-      announce(`${title} added to your local ${WISHLIST_CATEGORIES[category].toLowerCase()} wishlist at priority ${rank}.`);
+      announce(`${title} added to your local ${WISHLIST_CATEGORIES[category].toLowerCase()} wishlist with ${points} point${points === 1 ? '' : 's'}.`);
     });
   }
 

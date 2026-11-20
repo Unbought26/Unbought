@@ -77,8 +77,8 @@
       date: '2026-11-15',
       label: 'Nov 15, 2026',
       tag: 'Membership',
-      title: 'Seed and founding members',
-      body: 'The first person of a profession to sign up in a ZIP code is a seed member. Seed members who join during the first year are founding members. Membership years begin at the northern vernal equinox, and the labels stay pending until rollout so the first year can be counted honestly.'
+      title: 'Seed, Beta Founder, and first-year badges',
+      body: 'The first person of a profession to sign up in a ZIP code gets a profession Seed badge, such as Dancer Seed or Cleaning Seed. Everyone who signs from the database build until the 2027 vernal equinox is a Beta Founder. After rollout, non-seeds in the first official year get a 1st Year badge, and seeds in that year get a First year Founder badge. Beta labels stay pending until rollout so the first official year can be counted honestly.'
     },
     {
       date: '2026-11-14',
@@ -99,7 +99,7 @@
       label: 'Nov 12, 2026',
       tag: 'The equinox',
       title: 'A gathering we hope to build',
-      body: 'We hope to partner with an organization for a large festival somewhere in the United States on March 20, 2028, at 4:25pm Eastern, celebrating the movement and its seed and founding members. It is an intention, not a booked event. The moment matters because we will have been fully rolled out for a full year, meaning something must be working.'
+      body: 'We hope to partner with an organization for a large festival somewhere in the United States on March 20, 2028, at 4:25pm Eastern, celebrating the movement and its Seed, Beta Founder, 1st Year, and First year Founder members. It is an intention, not a booked event. The moment matters because we will have been fully rolled out for a full year, meaning something must be working.'
     },
     {
       date: '2026-11-11',
@@ -700,6 +700,7 @@
     administrative: 'Administration & records',
     web: 'Web development',
     hr: 'HR & people operations',
+    'volunteer-intake': 'Volunteer intake & onboarding',
     finance: 'Finance & bookkeeping',
     communications: 'Communications & accessibility'
   });
@@ -738,9 +739,33 @@
   const FIRST_YEAR_START = VERNAL_EQUINOXES[0].at;
   const FIRST_YEAR_END = VERNAL_EQUINOXES[1].at;
   const LABEL_ROLLOUT_AT = VERNAL_EQUINOXES[1].at;
+  const FIRST_OFFICIAL_YEAR = VERNAL_EQUINOXES[1].year;
   const MEMBER_LABELS = Object.freeze({
-    seed: 'Seed member',
-    founding: 'Founding member'
+    betaFounder: 'Beta Founder',
+    firstYear: '1st Year',
+    firstYearFounder: 'First year Founder',
+    volunteer: 'Volunteer'
+  });
+  const MEMBER_LABEL_ICONS = Object.freeze({
+    seed: '🌱',
+    'beta-founder': '✨',
+    'first-year': '🌟',
+    'first-year-founder': '🌿',
+    volunteer: '💙'
+  });
+  const VOLUNTEER_ACCESS_COPY = 'Volunteers run Unbought: keeping the website updated, paying the bills, accepting new volunteers, legal work, and the rest of the operating team.';
+  const SEED_LABEL_WORDS = Object.freeze({
+    law: 'Law',
+    lawyer: 'Law',
+    legal: 'Law',
+    attorney: 'Law',
+    doctor: 'Doctor',
+    physician: 'Doctor',
+    cleaning: 'Cleaning',
+    cleaner: 'Cleaning',
+    housekeeping: 'Cleaning',
+    dancer: 'Dancer',
+    dance: 'Dancer'
   });
 
   const MEDIA_TYPES = Object.freeze({
@@ -873,6 +898,55 @@
   /* ------------------------------------------------------------------------
      02. State, storage & small helpers
      ------------------------------------------------------------------------ */
+  function defaultCommunityChannels() {
+    const createdAt = new Date().toISOString();
+    return [
+      { id: 'channel-general', name: 'general', purpose: 'Open local conversation', createdBy: '', createdAt },
+      { id: 'channel-mutual-aid', name: 'mutual-aid', purpose: 'Requests and offers of help', createdBy: '', createdAt },
+      { id: 'channel-projects', name: 'projects', purpose: 'Working projects and ideas', createdBy: '', createdAt }
+    ];
+  }
+
+  function communityChannelSlug(value) {
+    return cleanString(value, 60).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'general';
+  }
+
+  function findCommunityChannel(channelId, fallbackName = '') {
+    const id = cleanString(channelId, 100);
+    const channel = (Array.isArray(state.communityChannels) ? state.communityChannels : [])
+      .find((item) => item && item.id === id);
+    if (channel) return channel;
+    const name = cleanString(fallbackName, 60);
+    return {
+      id: id || `channel-${communityChannelSlug(name)}`,
+      name: name || 'general',
+      purpose: '',
+      createdBy: '',
+      createdAt: ''
+    };
+  }
+
+  function findCommunityThread(threadId) {
+    const id = cleanString(threadId, 100);
+    return id
+      ? (Array.isArray(state.communityThreads) ? state.communityThreads : []).find((item) => item && item.id === id)
+      : null;
+  }
+
+  function communityChatChannelName(chat) {
+    if (!chat) return 'general';
+    const saved = findCommunityChannel(chat.channelId, chat.channel);
+    return saved.name || 'general';
+  }
+
+  function communityChatSubject(chat) {
+    if (!chat) return 'Community post';
+    const subject = cleanString(chat.subject, 120);
+    if (subject) return subject;
+    const thread = findCommunityThread(chat.threadId);
+    return thread ? thread.subject : 'Community post';
+  }
+
   function createDefaultState() {
     return {
       pledge: null,
@@ -892,6 +966,7 @@
       contributions: [],
       volunteerInterests: [],
       reports: [],
+      anonymousVotes: [],
       notifications: [],
       friends: [],
       friendRequests: [{
@@ -909,6 +984,8 @@
       groups: [],
       groupPosts: [],
       socialChats: [],
+      communityChannels: defaultCommunityChannels(),
+      communityThreads: [],
       settings: {
         compactDashboard: false,
         showPrototypeNotices: true
@@ -1192,7 +1269,8 @@
       zip,
       signedAt: cleanString(pledge.signedAt, 40),
       standing: cleanString(pledge.status, 30) || 'active',
-      track: cleanString(state.track, 30)
+      track: cleanString(state.track, 30),
+      available: pledge.available !== false
     };
     const index = roster.findIndex((item) => item && item.memberId === entry.memberId);
     if (index >= 0) roster[index] = entry;
@@ -1228,29 +1306,88 @@
     return Boolean(first && first.memberId === member.memberId);
   }
 
-  function isFoundingMember(member) {
-    if (!isSeedMember(member)) return false;
+  function isBetaFounder(member) {
+    if (!member || !member.signedAt) return false;
     const when = Date.parse(member.signedAt);
     return !Number.isNaN(when) && when >= Date.parse(FIRST_YEAR_START) && when < Date.parse(FIRST_YEAR_END);
   }
 
+  function isFirstOfficialYear(member) {
+    return membershipYearAt(member && member.signedAt) === FIRST_OFFICIAL_YEAR;
+  }
+
+  function seedBadgeLabel(member) {
+    const profession = normalizeProfession(member.profession
+      || String(member.paidSkills || '').split(/[\n,;]/)[0]);
+    const known = profession.split(/\s+/)
+      .map((word) => SEED_LABEL_WORDS[word.toLowerCase().replace(/[^a-z]/g, '')])
+      .find(Boolean);
+    return `${known || profession || 'Profession'} Seed`;
+  }
+
+  function hasRecordedVolunteerOffer(member) {
+    const id = member && cleanString(member.memberId, 100);
+    if (!id) return false;
+    return (Array.isArray(state.volunteerInterests) ? state.volunteerInterests : [])
+      .some((item) => item && item.memberId === id && item.status !== 'withdrawn');
+  }
+
+  function isVolunteerMember(member) {
+    return Boolean(member && member.memberId
+      && (member.volunteer === true || member.volunteerStatus === 'active' || hasRecordedVolunteerOffer(member)));
+  }
+
+  function isCurrentVolunteer() {
+    return isMember() && isVolunteerMember(state.pledge);
+  }
+
   function getMemberLabels(member) {
     const labels = [];
-    if (isSeedMember(member)) {
+    const seed = isSeedMember(member);
+    if (seed) {
       labels.push({
         key: 'seed',
-        name: MEMBER_LABELS.seed,
-        detail: `First ${normalizeProfession(member.profession) || 'profession'} in ZIP ${normalizeZip(member.zip || zipFromAddress(member.mailingAddress))} in this browser.`
+        name: seedBadgeLabel(member),
+        detail: `First ${normalizeProfession(member.profession) || 'profession'} in ZIP ${normalizeZip(member.zip || zipFromAddress(member.mailingAddress))} in this browser.`,
+        pending: true
       });
     }
-    if (isFoundingMember(member)) {
+    if (isBetaFounder(member)) {
       labels.push({
-        key: 'founding',
-        name: MEMBER_LABELS.founding,
-        detail: `Signed during the first equinox year, ${formatDate(FIRST_YEAR_START)} to ${formatDate(FIRST_YEAR_END)}.`
+        key: 'beta-founder',
+        name: MEMBER_LABELS.betaFounder,
+        detail: `Signed during the beta build period, ${formatDate(FIRST_YEAR_START)} to ${formatDate(FIRST_YEAR_END)}.`,
+        pending: true
+      });
+    }
+    if (isFirstOfficialYear(member)) {
+      labels.push(seed
+        ? {
+          key: 'first-year-founder',
+          name: MEMBER_LABELS.firstYearFounder,
+          detail: `Seed member who signed in the first official year, ${formatDate(FIRST_YEAR_END)} to ${formatDate(VERNAL_EQUINOXES[2].at)}.`,
+          pending: false
+        }
+        : {
+          key: 'first-year',
+          name: MEMBER_LABELS.firstYear,
+          detail: `Signed in the first official year, ${formatDate(FIRST_YEAR_END)} to ${formatDate(VERNAL_EQUINOXES[2].at)}.`,
+          pending: false
+        });
+    }
+    if (isVolunteerMember(member)) {
+      labels.push({
+        key: 'volunteer',
+        name: MEMBER_LABELS.volunteer,
+        detail: VOLUNTEER_ACCESS_COPY,
+        pending: false
       });
     }
     return labels;
+  }
+
+  function labelIsPending(label, live) {
+    return !live && label.pending !== false;
   }
 
   function renderMemberLabelsHtml(member) {
@@ -1260,20 +1397,24 @@
       return `<div class="member-labels" role="note"><p>No member labels yet.</p>${guidelinesLink}</div>`;
     }
     const live = labelsLive();
-    const badges = labels.map((label) => `<span class="member-label member-label--${label.key}${live ? '' : ' is-pending'}">${escapeHtml(label.name)}</span>`).join('');
+    const badges = labels.map((label) => `<span class="member-label member-label--${label.key}${labelIsPending(label, live) ? ' is-pending' : ''}"><span class="member-label-icon" aria-hidden="true">${MEMBER_LABEL_ICONS[label.key] || '✦'}</span>${escapeHtml(label.name)}</span>`).join('');
+    const details = labels.map((label) => escapeHtml(label.detail)).join(' ');
     const note = live
-      ? labels.map((label) => escapeHtml(label.detail)).join(' ')
-      : `Beta testing runs until the exact 2027 vernal equinox, March 20, 2027 at 4:25pm Eastern — the day Unbought rolls out for everyone. Until then, people can become seed members, and we log the day each one joins. The site will not roll out before that moment; it is the first day of Unbought's first official year, so your labels stay pending until then. ${labels.map((label) => escapeHtml(label.detail)).join(' ')}`;
+      ? details
+      : `Beta testing runs until the exact 2027 vernal equinox, March 20, 2027 at 4:25pm Eastern — the day Unbought rolls out for everyone. Until then, people who sign from the database build are Beta Founders, people can become Seed members, and we log the day each one joins. The site will not roll out before that moment; it is the first day of Unbought's first official year, so Seed and Beta Founder labels stay pending until then. In the first official year, non-seeds get a 1st Year badge and seeds get a First year Founder badge. ${details}`;
     return `<div class="member-labels" role="note"><div class="member-label-list">${badges}</div><p>${note}</p>${guidelinesLink}</div>`;
   }
 
   // A compact status badge for the resume card. It carries no ZIP, date, or
-  // other private detail; before rollout it is visibly marked as pending.
+  // other private detail; beta-era badges are visibly marked as pending.
   function renderPublicStatusTags(member) {
     const labels = getMemberLabels(member);
     if (!labels.length) return '';
     const live = labelsLive();
-    return `<div class="resume-labels" aria-label="Member status">${labels.map((label) => `<span class="member-label member-label--${label.key}${live ? '' : ' is-pending'}">${escapeHtml(label.name)}${live ? '' : ' · pending'}</span>`).join('')}</div>`;
+    return `<div class="resume-labels" aria-label="Member status">${labels.map((label) => {
+      const pending = labelIsPending(label, live);
+      return `<span class="member-label member-label--${label.key}${pending ? ' is-pending' : ''}"><span class="member-label-icon" aria-hidden="true">${MEMBER_LABEL_ICONS[label.key] || '✦'}</span>${escapeHtml(label.name)}${pending ? ' · pending' : ''}</span>`;
+    }).join('')}</div>`;
   }
 
   // In a live system this would be emailed automatically when someone became a
@@ -1285,15 +1426,17 @@
     const firstName = cleanString(member.name, 60).trim().split(/\s+/)[0] || 'neighbor';
     const profession = normalizeProfession(member.profession) || 'your trade';
     const zip = normalizeZip(member.zip || zipFromAddress(member.mailingAddress));
-    const founding = isFoundingMember(member);
+    const badgeName = seedBadgeLabel(member);
+    const beta = isBetaFounder(member);
+    const firstYearFounder = isFirstOfficialYear(member);
     return `<details class="seed-email">
       <summary>See your seed-member thank-you message</summary>
       <div class="seed-email-body">
         <p class="seed-email-note">Prototype: in a live system this message would be emailed to you automatically as soon as you became a seed member. It is generated here only as a draft. Nothing is sent or transmitted.</p>
         <p><strong>To:</strong> ${e(firstName)} (chosen name; no email is collected)<br><strong>Subject:</strong> ${e(`Thank you for starting Unbought, ${firstName}`)}</p>
         <p>Hi ${e(firstName)},</p>
-        <p>Thank you for helping to start the movement. You are the first ${e(profession)} to sign up for Unbought in ZIP ${e(zip || 'your area')} — a seed member. ${founding ? 'Because you signed during the first equinox year, you are also a founding member.' : ''} Seed members are the people who prove a new trade can take root in a place; the whole commons begins with someone willing to go first.</p>
-        <p>Beta testing runs until the exact 2027 vernal equinox, March 20, 2027 at 4:25pm Eastern — the day Unbought rolls out for everyone and the first day of its first official year. Until then, people can become seed members, and we log the day each one joins. Your labels stay pending until rollout. If we are successful, we hope to partner with an organization and throw a huge festival somewhere in the United States on the following equinox, March 20, 2028 — one full year after rollout — to celebrate the movement and its seed and founding members. Nothing is booked or confirmed yet, but as a seed member you will hear about it first.</p>
+        <p>Thank you for helping to start the movement. You are the first ${e(profession)} to sign up for Unbought in ZIP ${e(zip || 'your area')} — a seed member. Your badge is <strong>${e(badgeName)}</strong>. ${beta ? 'Because you signed during the beta build period, you are also a Beta Founder.' : ''}${firstYearFounder ? 'Because you signed in the first official year, you are also a First year Founder.' : ''} Seed members are the people who prove a new trade can take root in a place; the whole commons begins with someone willing to go first.</p>
+        <p>Beta testing runs until the exact 2027 vernal equinox, March 20, 2027 at 4:25pm Eastern — the day Unbought rolls out for everyone and the first day of its first official year. Until then, people who sign from the database build are Beta Founders, people can become Seed members, and we log the day each one joins. Your Seed and Beta Founder labels stay pending until rollout. After rollout, non-seeds in the first official year get a 1st Year badge, and seeds in that year get a First year Founder badge. If we are successful, we hope to partner with an organization and throw a huge festival somewhere in the United States on the following equinox, March 20, 2028 — one full year after rollout — to celebrate the movement and its Seed, Beta Founder, 1st Year, and First year Founder members. Nothing is booked or confirmed yet, but as a seed member you will hear about it first.</p>
         <p>Ways to get the ball rolling:</p>
         <ul>
           <li>Talk to other professionals in your area and invite them to take the pledge.</li>
@@ -1604,6 +1747,7 @@
             name: state.pledge.name || 'Member',
             title: cleanString(data.get('title'), 90),
             body,
+            nsfw: Boolean(data.get('nsfw')),
             picture,
             createdAt: new Date().toISOString(),
             comments: []
@@ -1633,14 +1777,28 @@
             showToast('Only current members can reply in this group.', false);
             return;
           }
+          const isVoteReply = Boolean(post.guidelineVote);
+          const voteTarget = `group-vote:${post.id}`;
+          if (isVoteReply && hasAnonymousVote(voteTarget)) {
+            showToast('You already voted in this group chat. Votes stay anonymous.', false);
+            return;
+          }
           post.comments = Array.isArray(post.comments) ? post.comments : [];
-          post.comments.push({
+          post.comments.push(isVoteReply ? {
+            id: makeId('group-reply'),
+            anonymous: true,
+            memberId: '',
+            name: '',
+            body,
+            createdAt: new Date().toISOString()
+          } : {
             id: makeId('group-reply'),
             memberId: state.pledge.memberId,
             name: state.pledge.name || 'Member',
             body,
             createdAt: new Date().toISOString()
           });
+          if (isVoteReply) recordAnonymousVote(voteTarget);
           post.comments = post.comments.slice(-100);
           addNotification('groupComment', `Group reply: ${post.title || 'Untitled'}`,
             `Saved locally for ${groupDisplayLabel(group)}. In a live system the group would see it; nothing was delivered.`,
@@ -1949,6 +2107,7 @@
       }
       state.pledge.publicPhone = Boolean(data.get('publicPhone')) && Boolean(publicPhoneFor(state.pledge));
       state.pledge.available = Boolean(data.get('available'));
+      addMemberToRoster(state.pledge);
       saveState();
       renderSharedMemberViews();
       announce('Phone choices and privacy settings saved in this browser.');
@@ -2712,6 +2871,16 @@
       .filter(Boolean);
   }
 
+  // Returns [] when no file was chosen and null when a chosen image could not be
+  // resized locally. Callers can tell a normal empty photo field from a failure.
+  async function prepareFormPostPhoto(form, inputName = 'picture') {
+    const input = form && typeof form.querySelector === 'function' ? form.querySelector(`input[name="${inputName}"]`) : null;
+    const file = input && input.files ? input.files[0] : null;
+    if (!file) return [];
+    const photo = await preparePostPhoto(file);
+    return photo ? [photo] : null;
+  }
+
   function renderPostPhotos(form, photos) {
     const preview = $('#post-photos-preview', form);
     const count = $('#post-photo-count', form);
@@ -2827,6 +2996,7 @@
       state: place.state,
       zip: place.zip,
       description: cleanString(item.description, 400),
+      nsfw: Boolean(item.nsfw),
       note: cleanString(item.note, 120) || 'Added by a neighbor · consent first',
       scope: hasOwn(SCOPE_LABELS, item.scope) ? item.scope : '',
       details: Array.isArray(item.details)
@@ -2971,7 +3141,8 @@
             physicalState: normalizeStateCode(item.physicalState),
             signedAt: cleanString(item.signedAt, 40),
             standing: cleanString(item.standing, 30) || 'active',
-            track: cleanString(item.track, 30)
+            track: cleanString(item.track, 30),
+            available: item.available !== false
           };
         })
         .slice(0, 500);
@@ -3089,8 +3260,7 @@
                   .filter((vote) => vote && typeof vote === 'object')
                   .slice(0, 3)
                   .map((vote) => ({
-                    memberId: cleanString(vote.memberId, 100),
-                    name: cleanString(vote.name, 60),
+                    seatIndex: Number.isInteger(Number(vote.seatIndex)) ? Number(vote.seatIndex) : null,
                     hours: cleanHours(vote.hours),
                     reason: cleanString(vote.reason, 240),
                     votedAt: cleanString(vote.votedAt, 40)
@@ -3144,22 +3314,30 @@
     // The surplus wishlist is a local prototype catalog. It is normalized here
     // so donate.js additions survive the next loadState() on any page.
     if (Array.isArray(raw.wishlistItems)) {
+      const wishlistCategory = (value) => {
+        if (value === 'need' || value === 'high') return 'high';
+        if (value === 'want' || value === 'medium') return 'medium';
+        return 'nice';
+      };
       fallback.wishlistItems = raw.wishlistItems
         .filter((item) => item && typeof item === 'object')
         .slice(0, 200)
-        .map((item) => ({
-          id: cleanString(item.id, 100) || makeId('wish'),
-          memberId: cleanString(item.memberId, 100),
-          memberName: cleanString(item.memberName, 60),
-          title: cleanString(item.title, 120),
-          category: ['need', 'want', 'nice'].includes(item.category) ? item.category : 'want',
-          wishlistGroup: ['active', 'disabled', 'over65', 'homeless', 'under25', 'report'].includes(item.wishlistGroup) ? item.wishlistGroup : 'active',
-          rank: Number.isFinite(Number(item.rank)) ? Math.min(20, Math.max(1, Math.round(Number(item.rank)))) : 10,
-          exampleUrl: /^https?:\/\//i.test(cleanString(item.exampleUrl, 500)) ? cleanString(item.exampleUrl, 500) : '',
-          perishable: Boolean(item.perishable),
-          createdAt: cleanString(item.createdAt, 40) || new Date().toISOString(),
-          status: cleanString(item.status, 30) || 'active'
-        }))
+        .map((item) => {
+          const category = wishlistCategory(item.category);
+          return {
+            id: cleanString(item.id, 100) || makeId('wish'),
+            memberId: cleanString(item.memberId, 100),
+            memberName: cleanString(item.memberName, 60),
+            title: cleanString(item.title, 120),
+            category,
+            wishlistGroup: ['active', 'disabled', 'over65', 'homeless', 'under25', 'report'].includes(item.wishlistGroup) ? item.wishlistGroup : 'active',
+            points: ({ high: 3, medium: 2, nice: 1 })[category],
+            exampleUrl: /^https?:\/\//i.test(cleanString(item.exampleUrl, 500)) ? cleanString(item.exampleUrl, 500) : '',
+            perishable: Boolean(item.perishable),
+            createdAt: cleanString(item.createdAt, 40) || new Date().toISOString(),
+            status: cleanString(item.status, 30) || 'active'
+          };
+        })
         .filter((item) => item.memberId && item.title);
     }
 
@@ -3247,8 +3425,6 @@
             submittedAt: cleanString(item.response.submittedAt, 40)
           } : null,
           votes: Array.isArray(item.votes) ? item.votes.slice(0, 500).map((vote) => ({
-            memberId: cleanString(vote.memberId, 100),
-            name: cleanString(vote.name, 60),
             verdict: vote.verdict === 'guilty' || vote.verdict === 'not_guilty' ? vote.verdict : '',
             reflectionDays: REFLECTION_OPTIONS.includes(Number(vote.reflectionDays)) ? Number(vote.reflectionDays) : null,
             reason: cleanString(vote.reason, 600),
@@ -3281,6 +3457,18 @@
             note: cleanString(item.policeReferral.note, 280)
           } : null
         }));
+    }
+
+    if (Array.isArray(raw.anonymousVotes)) {
+      fallback.anonymousVotes = raw.anonymousVotes
+        .filter((item) => item && typeof item === 'object')
+        .slice(-500)
+        .map((item) => ({
+          id: cleanString(item.id, 100) || makeId('ballot'),
+          targetId: cleanString(item.targetId, 120),
+          votedAt: cleanString(item.votedAt, 40)
+        }))
+        .filter((item) => item.targetId);
     }
 
     if (Array.isArray(raw.contributions)) {
@@ -3347,18 +3535,56 @@
         }));
     }
 
+    if (Array.isArray(raw.communityChannels)) {
+      const saved = raw.communityChannels
+        .filter((item) => item && typeof item === 'object')
+        .slice(0, 100)
+        .map((item) => ({
+          id: cleanString(item.id, 100) || `channel-${communityChannelSlug(item.name)}`,
+          name: cleanString(item.name, 60),
+          purpose: cleanString(item.purpose, 200),
+          createdBy: cleanString(item.createdBy, 60),
+          createdAt: cleanString(item.createdAt, 40)
+        }))
+        .filter((item) => item.name);
+      const ids = new Set(saved.map((item) => item.id));
+      fallback.communityChannels = defaultCommunityChannels().filter((item) => !ids.has(item.id)).concat(saved);
+    }
+
+    if (Array.isArray(raw.communityThreads)) {
+      fallback.communityThreads = raw.communityThreads
+        .filter((item) => item && typeof item === 'object')
+        .slice(-300)
+        .map((item) => ({
+          id: cleanString(item.id, 100) || makeId('thread'),
+          channelId: cleanString(item.channelId, 100) || 'channel-general',
+          subject: cleanString(item.subject, 120),
+          createdBy: cleanString(item.createdBy, 60),
+          createdAt: cleanString(item.createdAt, 40)
+        }))
+        .filter((item) => item.subject);
+    }
+
     if (Array.isArray(raw.chats)) {
       fallback.chats = raw.chats
         .filter((item) => item && typeof item === 'object' && typeof item.body === 'string')
-        .slice(0, 300)
-        .map((item) => ({
-          id: cleanString(item.id, 100) || makeId('chat'),
-          memberId: cleanString(item.memberId, 100),
-          name: cleanString(item.name, 60),
-          channel: cleanString(item.channel, 40) || 'general',
-          body: cleanString(item.body, 1200),
-          createdAt: cleanString(item.createdAt, 40)
-        }));
+        .slice(-300)
+        .map((item) => {
+          const channel = cleanString(item.channel, 40) || 'general';
+          return {
+            id: cleanString(item.id, 100) || makeId('chat'),
+            memberId: cleanString(item.memberId, 100),
+            name: cleanString(item.name, 60),
+            channel,
+            channelId: cleanString(item.channelId, 100) || `channel-${communityChannelSlug(channel)}`,
+            threadId: cleanString(item.threadId, 100),
+            subject: cleanString(item.subject, 120),
+            nsfw: Boolean(item.nsfw),
+            picture: cleanPostPhotos(item.picture).slice(0, 1),
+            body: cleanString(item.body, 1200),
+            createdAt: cleanString(item.createdAt, 40)
+          };
+        });
     }
 
     if (Array.isArray(raw.suggestions)) {
@@ -3522,6 +3748,7 @@
           name: cleanString(item.name, 60),
           title: cleanString(item.title, 90),
           body: cleanString(item.body, 1200),
+          nsfw: Boolean(item.nsfw),
           picture: cleanPostPhotos(item.picture).slice(0, 1),
           createdAt: cleanString(item.createdAt, 40),
           guidelineVote: Boolean(item.guidelineVote),
@@ -3534,13 +3761,17 @@
           comments: (Array.isArray(item.comments) ? item.comments : [])
             .filter((comment) => comment && typeof comment === 'object')
             .slice(-100)
-            .map((comment) => ({
-              id: cleanString(comment.id, 100) || makeId('group-reply'),
-              memberId: cleanString(comment.memberId, 100),
-              name: cleanString(comment.name, 60),
-              body: cleanString(comment.body, 600),
-              createdAt: cleanString(comment.createdAt, 40)
-            }))
+            .map((comment) => {
+              const anonymous = Boolean(comment.anonymous);
+              return {
+                id: cleanString(comment.id, 100) || makeId('group-reply'),
+                anonymous,
+                memberId: anonymous ? '' : cleanString(comment.memberId, 100),
+                name: anonymous ? '' : cleanString(comment.name, 60),
+                body: cleanString(comment.body, 600),
+                createdAt: cleanString(comment.createdAt, 40)
+              };
+            })
             .filter((comment) => comment.body)
         }))
         .filter((item) => item.groupId && item.body);
@@ -3657,6 +3888,23 @@
     return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
   }
 
+  // Ballot receipts record only that a vote was cast on this device. They never
+  // store a member id, name, or choice, so a vote cannot be traced back to a
+  // member from the saved prototype data.
+  function hasAnonymousVote(targetId) {
+    const id = cleanString(targetId, 120);
+    return Boolean(id) && (Array.isArray(state.anonymousVotes) ? state.anonymousVotes : [])
+      .some((vote) => vote && cleanString(vote.targetId, 120) === id);
+  }
+
+  function recordAnonymousVote(targetId) {
+    const id = cleanString(targetId, 120);
+    if (!id) return;
+    state.anonymousVotes = Array.isArray(state.anonymousVotes) ? state.anonymousVotes : [];
+    state.anonymousVotes.push({ id: makeId('ballot'), targetId: id, votedAt: new Date().toISOString() });
+    state.anonymousVotes = state.anonymousVotes.slice(-500);
+  }
+
   function domId(value) {
     return String(value).replace(/[^a-zA-Z0-9_-]/g, '-');
   }
@@ -3724,6 +3972,32 @@
 
   function findListing(id) {
     return getAllListings().find((listing) => listing.id === id) || null;
+  }
+
+  // Availability is a local profile choice. An "Unavailable" member's offers
+  // stay visible, but neighbors cannot send labor or product requests.
+  function isListingProviderAvailable(listing) {
+    if (!listing) return true;
+    const memberId = cleanString(listing.memberId, 100);
+    const ownId = cleanString(state.pledge && state.pledge.memberId, 100);
+    if (memberId && memberId === ownId) {
+      return !state.pledge || state.pledge.available !== false;
+    }
+    const roster = Array.isArray(state.memberRoster) ? state.memberRoster : [];
+    const byId = memberId ? roster.find((entry) => entry && entry.memberId === memberId) : null;
+    if (byId && typeof byId.available === 'boolean') return byId.available;
+    const provider = cleanString(listing.provider, 60).toLowerCase();
+    const byName = provider
+      ? roster.find((entry) => entry && cleanString(entry.name, 60).toLowerCase() === provider)
+      : null;
+    if (byName && typeof byName.available === 'boolean') return byName.available;
+    const sample = LOCAL_MEMBER_DIRECTORY.find((entry) => entry.name.toLowerCase() === provider);
+    if (sample) {
+      const sampleEntry = roster.find((entry) => entry && entry.memberId === sample.id);
+      if (sampleEntry && typeof sampleEntry.available === 'boolean') return sampleEntry.available;
+    }
+    // Seeded community offers and sample neighbors are available by default.
+    return true;
   }
 
   // Comments on static seed listings cannot live on the seed object, so the
@@ -3905,6 +4179,7 @@
 
   function buildListingBadges(listing, listingNonmemberPrice) {
     const badges = createEl('div', 'listing-badges');
+    if (listing.nsfw) addBadge(badges, 'badge--nsfw', 'NSFW');
     addBadge(badges, 'badge--pillar', PILLARS[listing.pillar].short);
     const isGoods = listing.pillar === 'goods';
     if (isGoods && hasOwn(GOODS_CATEGORIES, listing.category)) {
@@ -4047,26 +4322,35 @@
     });
     card.appendChild(meta);
 
+    const providerAvailable = isListingProviderAvailable(listing);
     const actions = createEl('div', 'listing-actions');
     const note = createEl(
       'p',
       'listing-note',
-      hasMutualRequest
-        ? 'Request saved locally · consent first'
-        : hasPurchaseIntent
-          ? 'Purchase intent recorded locally · no payment processed'
-          : !isMember() && !canPurchaseAsNonmember(listing)
-            ? 'Free for pledged members · non-member purchase is not enabled for this offer'
-            : listing.note || 'Peer offer · consent first'
+      !providerAvailable
+        ? 'Unavailable right now · this member is not receiving labor or product requests'
+        : hasMutualRequest
+          ? 'Request saved locally · consent first'
+          : hasPurchaseIntent
+            ? 'Purchase intent recorded locally · no payment processed'
+            : !isMember() && !canPurchaseAsNonmember(listing)
+              ? 'Free for pledged members · non-member purchase is not enabled for this offer'
+              : listing.note || 'Peer offer · consent first'
     );
-    note.prepend(createIcon('check'));
+    note.prepend(createIcon(!providerAvailable && document.getElementById('icon-clock') ? 'clock' : 'check'));
     actions.appendChild(note);
 
     const requestButton = createEl('button', 'button button--small');
     requestButton.type = 'button';
     requestButton.dataset.requestListing = listing.id;
 
-    if (hasMutualRequest) {
+    if (!providerAvailable) {
+      requestButton.classList.add('button--ghost');
+      requestButton.disabled = true;
+      requestButton.textContent = 'Unavailable for requests';
+      requestButton.setAttribute('aria-label',
+        `${listing.provider} is unavailable and cannot receive labor or product requests right now.`);
+    } else if (hasMutualRequest) {
       requestButton.classList.add('button--ghost');
       requestButton.disabled = true;
       requestButton.append(createIcon('check'), document.createTextNode('Request recorded'));
@@ -4816,7 +5100,7 @@
         <div class="dialog-content">
           <h2 id="post-dialog-title">${escapeHtml(heading)}</h2>
           <p id="post-dialog-intro">${escapeHtml(intro)}</p>
-          <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Posting is for pledged members. Listings stay in this browser; nothing is sent to a provider or published online.</p>
+          <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Posting is for pledged members. No porn and no prostitution; there are free websites that can serve you outside of Unbought. Tag anything else unsuitable for minors as NSFW. Listings stay in this browser; nothing is sent to a provider or published online.</p>
           <div id="post-form-mount"></div>
         </div>
       </div>`;
@@ -5211,6 +5495,7 @@
         state: stateCode,
         zip,
         description,
+        nsfw: Boolean(data.get('nsfw')),
         pillar,
         exchange,
         category,
@@ -5460,7 +5745,7 @@
         </div>
         <div class="dialog-content">
           <h2 id="volunteer-dialog-title">Join the operating team.</h2>
-          <p id="volunteer-dialog-intro">Tell us where you can help. In this prototype your offer is recorded in this browser only—nothing is sent to a coordinator and no real onboarding happens yet.</p>
+          <p id="volunteer-dialog-intro">${escapeHtml(VOLUNTEER_ACCESS_COPY)} Volunteers get a Volunteer badge and access to the member tools on this device. In this prototype the offer is recorded locally only—nothing is sent to a coordinator, and no real website or server access is granted.</p>
           <div class="volunteer-gate" id="volunteer-dialog-gate" data-volunteer-gate role="status">
             <p data-volunteer-gate-text></p>
           </div>
@@ -5493,6 +5778,7 @@
               <p class="form-hint">Members only · no data leaves this device</p>
             </div>
           </form>
+          <p class="account-note">Recording an offer adds the Volunteer badge and local operating-team access in this browser. It is not a job, a background check, or real administrative access.</p>
           <p class="volunteer-join-status" id="volunteer-dialog-status" data-volunteer-status role="status">No volunteer offers recorded yet.</p>
         </div>
       </div>`;
@@ -5511,7 +5797,7 @@
     const memberName = signedIn ? (state.pledge.name || '') : '';
 
     const gateText = signedIn
-      ? `Signed in as ${memberName}. Record a volunteer offer in this pop-up—stored in this browser only.`
+      ? `Signed in as ${memberName}. Recording a role here adds the Volunteer badge and local member-area access. Stored in this browser only.`
       : 'Browsing these roles is open to everyone. Sign the Unbought Pledge to become a member and record a volunteer offer.';
 
     $$('[data-volunteer-gate-text]').forEach((node) => {
@@ -5535,8 +5821,8 @@
       .map((item) => (hasOwn(VOLUNTEER_ROLES, item.role) ? VOLUNTEER_ROLES[item.role] : item.role))
       .join(', ');
     const statusText = interests.length
-      ? `${interests.length} volunteer offer${interests.length === 1 ? '' : 's'} recorded in this browser${roles ? ` (${roles})` : ''}.`
-      : 'No volunteer offers recorded yet.';
+      ? `${interests.length} volunteer offer${interests.length === 1 ? '' : 's'} recorded in this browser${roles ? ` (${roles})` : ''}. Volunteer badge and local access are active.`
+      : 'No volunteer offers recorded yet. No Volunteer badge or local volunteer access yet.';
 
     $$('[data-volunteer-status], #volunteer-status').forEach((status) => {
       status.textContent = statusText;
@@ -5592,11 +5878,47 @@
       form.reset();
       renderVolunteerStatus();
       renderSharedMemberViews();
-      announce(`Volunteer offer for ${VOLUNTEER_ROLES[role]} recorded. This prototype saved it in your browser only.`);
-      showToast('Volunteer offer recorded locally. No data left this device.', false);
+      announce(`Volunteer offer for ${VOLUNTEER_ROLES[role]} recorded. Your Volunteer badge and local member-area access are active in this browser.`);
+      showToast('Volunteer offer, badge, and local access recorded here. No data left this device.', false);
     });
 
     renderVolunteerStatus();
+  }
+
+  // Volunteers see this operating-team card in Dashboard → Overview. It is
+  // local prototype access, not real website, server, or administrative access.
+  function renderVolunteerAccess() {
+    const panel = document.getElementById('volunteer-access-panel');
+    if (!panel) return;
+    if (!isCurrentVolunteer()) {
+      panel.hidden = true;
+      panel.innerHTML = '';
+      return;
+    }
+    const e = escapeHtml;
+    const roles = getMemberVolunteerInterests()
+      .map((item) => (hasOwn(VOLUNTEER_ROLES, item.role) ? VOLUNTEER_ROLES[item.role] : item.role))
+      .filter(Boolean)
+      .join(', ') || 'Operating team';
+    const duties = [
+      'Keeping the website updated',
+      'Paying the bills',
+      'Accepting new volunteers',
+      'Legal and compliance work',
+      'Records, communications, and accessibility'
+    ];
+    panel.hidden = false;
+    panel.innerHTML = `<section class="account-card volunteer-access-card">
+      <header class="account-panel-head">
+        <div>
+          <p class="eyebrow">Operating team</p>
+          <h3><span class="member-label member-label--volunteer"><span class="member-label-icon" aria-hidden="true">💙</span>Volunteer</span> access is active</h3>
+          <p class="account-subtitle">${e(VOLUNTEER_ACCESS_COPY)}</p>
+        </div>
+      </header>
+      <p class="account-note">Your recorded role${roles ? `: <strong>${e(roles)}</strong>` : ''} gives you local access to the member-area tools on this device. No real website, server, or admin access is granted, and nothing is transmitted.</p>
+      <ul class="volunteer-duty-list">${duties.map((duty) => `<li>${e(duty)}</li>`).join('')}</ul>
+    </section>`;
   }
 
   /* ------------------------------------------------------------------------
@@ -5784,6 +6106,7 @@
         ${rows([
           accountDetail('Signed in as', state.auth && state.auth.session && state.auth.session.actingAs === 'representative' ? 'Authorized representative' : 'Member'),
           accountDetail('Username', e(credential && credential.username ? credential.username : 'Not set')),
+          ...(isVolunteerMember(m) ? [accountDetail('Volunteer access', 'Local operating-team access · badge active')] : []),
           ...(m.powerOfAttorney && m.powerOfAttorney.enabled ? [
             accountDetail('Power of attorney', e([m.powerOfAttorney.representativeName, m.powerOfAttorney.relationship].filter(Boolean).join(' · ') || 'Recorded locally')),
             accountDetail('Representative user', e(m.powerOfAttorney.username || 'Not set'))
@@ -6121,7 +6444,8 @@
           </fieldset>
           <fieldset class="account-privacy-options">
             <legend>Privacy</legend>
-            <label class="checkbox"><input type="checkbox" name="available"${m.available !== false ? ' checked' : ''}> <span>Available for exchanges</span></label>
+            <label class="checkbox"><input type="checkbox" name="available"${m.available !== false ? ' checked' : ''}> <span>Available for labor and product requests</span></label>
+            <p class="field-hint">When this is off, neighbors can still see your offers but cannot send labor or product requests.</p>
           </fieldset>
           <div class="account-form-actions">
             <button type="submit" class="button button--primary button--small">Save account details</button>
@@ -6188,6 +6512,30 @@
         createdAt: cleanString(listing.createdAt, 40),
         comments: getListingComments(listing).length
       }));
+  }
+
+  // Public-resume chat posts come only from the Commons community chat. Group
+  // posts, replies, social drafts, and private messages stay out of this view.
+  function getMemberCommunityPosts(memberId) {
+    const id = cleanString(memberId, 100);
+    if (!id) return [];
+    return (Array.isArray(state.chats) ? state.chats : [])
+      .filter((chat) => chat && chat.memberId === id && cleanString(chat.body, 1200))
+      .slice()
+      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+      .slice(0, 12)
+      .map((chat) => {
+        const photo = cleanPostPhotos(chat.picture)[0];
+        return {
+          id: chat.id,
+          channel: communityChatChannelName(chat),
+          subject: communityChatSubject(chat),
+          body: cleanString(chat.body, 1200),
+          nsfw: Boolean(chat.nsfw),
+          picture: photo ? photo.dataUrl : '',
+          createdAt: cleanString(chat.createdAt, 40)
+        };
+      });
   }
 
   function getMemberListingComments(memberId) {
@@ -6285,6 +6633,17 @@
     }).join('')}</ul>`;
   }
 
+  function renderCommunityPosts(posts) {
+    if (!posts.length) return '<p class="resume-empty">No community chat posts yet.</p>';
+    const e = escapeHtml;
+    return `<ul class="profile-activity-list">${posts.map((post) => `<li>
+      <strong>#${e(post.channel)} · ${e(post.subject)}</strong>${post.nsfw ? ' <span class="badge badge--nsfw">NSFW</span>' : ''}
+      ${post.picture ? `<img class="chat-picture" src="${e(safeProfileImageUrl(post.picture))}" alt="Local picture for ${e(post.subject)}">` : ''}
+      <p>${e(post.body)}</p>
+      <span class="contribution-meta">${e(formatDate(post.createdAt) || 'Date not recorded')} · community chat post</span>
+    </li>`).join('')}</ul>`;
+  }
+
   function renderProfileComments(comments) {
     if (!comments.length) return '<p class="resume-empty">No comments yet.</p>';
     const e = escapeHtml;
@@ -6340,6 +6699,7 @@
     const other = Boolean(options.other);
     const resume = getPublicResume(member);
     const posts = getMemberPosts(member.memberId);
+    const communityPosts = getMemberCommunityPosts(member.memberId);
     const skillList = (value) => {
       const items = cleanString(value, 400)
         .split(/[\n,]+/)
@@ -6370,7 +6730,7 @@
           ${resume.phone ? `<p class="resume-phone">Public phone: ${e(resume.phone)}</p>` : ''}
           ${renderPublicStatusTags(member)}
         </div>
-        <span class="resume-availability ${resume.available ? 'is-available' : ''}">${resume.available ? 'Available' : 'Not available right now'}</span>
+        <span class="resume-availability ${resume.available ? 'is-available' : ''}">${resume.available ? 'Available for requests' : 'Unavailable · not receiving requests'}</span>
         <div class="profile-card-actions">
           ${renderProfileFriendAction(member)}
           ${canReport ? `<button class="button button--ghost button--small button--report" type="button" data-report-context data-report-area="Member profile" data-report-detail="Public resume" data-report-name="${e(member.name || resume.displayName)}" data-report-member-id="${e(member.memberId || '')}" data-report-source-id="${e(member.memberId || 'profile')}" aria-label="Report a concern from ${e(resume.displayName)}'s profile">Report from this profile</button>` : ''}
@@ -6398,9 +6758,13 @@
         <h3>Offers in Free Stuff &amp; Free Labor</h3>
         ${renderProfilePosts(posts)}
       </div>
+      <div class="resume-section">
+        <h3>Community chat posts</h3>
+        ${renderCommunityPosts(communityPosts)}
+      </div>
       <p class="account-note">${other
-        ? 'This is the limited public profile from the local directory. It shows only the chosen first name, picture, tag line, bio, profession, City/State, skills, confirmed commons totals, seed/founding status, availability, an optional public phone, and posts.'
-        : 'This resume shows only the chosen first name, picture, tag line, bio, profession, City/State, skills, confirmed hours and item totals, seed/founding status, availability, an optional public phone, and posts.'} Legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, amounts donated, comment text, and interactions are never included.</p>
+        ? 'This is the limited public profile from the local directory. It shows only the chosen first name, picture, tag line, bio, profession, City/State, skills, confirmed commons totals, membership badges (Seed, Beta Founder, 1st Year, First year Founder, Volunteer), availability, an optional public phone, Free Stuff and Free Labor posts, and community chat posts.'
+        : 'This resume shows only the chosen first name, picture, tag line, bio, profession, City/State, skills, confirmed hours and item totals, membership badges (Seed, Beta Founder, 1st Year, First year Founder, Volunteer), availability, an optional public phone, Free Stuff and Free Labor posts, and community chat posts.'} Group chats and group interactions stay only on the group profile for group members. Legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, amounts donated, listing comment text, and private interactions are never included.</p>
     </section>`;
   }
 
@@ -6457,7 +6821,7 @@
           ${m.profession ? `<p class="resume-profession">${e(m.profession)}</p>` : ''}
           <p class="resume-location"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-pin"></use></svg> ${e(m.location || 'Location not shared')}</p>
         </div>
-        <span class="resume-availability ${m.available === false ? '' : 'is-available'}">${m.available === false ? 'Not available right now' : 'Available'}</span>
+        <span class="resume-availability ${m.available === false ? '' : 'is-available'}">${m.available === false ? 'Unavailable · not receiving requests' : 'Available for requests'}</span>
         <a class="button button--outline button--small" href="dashboard.html#settings">Edit profile</a>
       </div>
       <p class="private-notice"><strong>This is your full member record.</strong> Everything below stays in your signed-in browser on this device. Neighbors see only the limited public resume; use <strong>View as: Neighbor</strong> above to see exactly what they see.</p>
@@ -6507,9 +6871,10 @@
             <legend>Show on public resume</legend>
             <label class="checkbox"><input type="checkbox" name="publicPhone"${m.publicPhone ? ' checked' : ''}> <span>Public phone number</span></label>
             <label class="checkbox"><input type="checkbox" name="receiveTexts"${m.receiveTexts ? ' checked' : ''}> <span>Receive texts at my cell number (local choice only)</span></label>
-            <label class="checkbox"><input type="checkbox" name="available"${m.available !== false ? ' checked' : ''}> <span>Available for exchanges</span></label>
+            <label class="checkbox"><input type="checkbox" name="available"${m.available !== false ? ' checked' : ''}> <span>Available for labor and product requests</span></label>
+            <p class="field-hint">When this is off, neighbors can still see your offers but cannot send labor or product requests.</p>
           </fieldset>
-          <p class="field-hint">In this prototype no texts are sent and nothing is transmitted. Always private: legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, amounts donated, comment text, and interactions.</p>
+          <p class="field-hint">In this prototype no texts are sent and nothing is transmitted. Always private: legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, amounts donated, listing comment text, group chats, group interactions, and other private interactions.</p>
           <div class="account-form-actions">
             <button type="submit" class="button button--primary button--small">Save privacy choices</button>
           </div>
@@ -6582,11 +6947,11 @@
       const agreeVotes = comments.filter((comment) => /^\s*agree\b/i.test(cleanString(comment && comment.body, 600))).length;
       const disagreeVotes = comments.filter((comment) => /^\s*disagree\b/i.test(cleanString(comment && comment.body, 600))).length;
       return `<li class="group-post">
-        <p class="contribution-meta"><strong>${memberNameLink(post.name, post.memberId)}</strong> · ${e(formatDate(post.createdAt) || 'Date not recorded')}</p>
+        <p class="contribution-meta"><strong>${memberNameLink(post.name, post.memberId)}</strong> · ${e(formatDate(post.createdAt) || 'Date not recorded')}${post.nsfw ? ' · <span class="badge badge--nsfw">NSFW</span>' : ''}</p>
         ${post.title ? `<h4>${e(post.title)}</h4>` : ''}
         ${picture ? `<img class="chat-picture" src="${e(safeProfileImageUrl(picture.dataUrl))}" alt="Local picture for ${e(post.title || 'this group post')}">` : ''}
         <p>${e(post.body)}</p>
-        ${post.guidelineVote ? `<p class="contribution-meta guideline-vote-tally">${post.reviewBoardVote ? 'Review board vote' : 'Guideline vote'} · ${agreeVotes} agree · ${disagreeVotes} disagree · run by ${e(post.name)}</p>` : ''}
+        ${post.guidelineVote ? `<p class="contribution-meta guideline-vote-tally">${post.reviewBoardVote ? 'Review board vote' : 'Guideline vote'} · ${agreeVotes} agree · ${disagreeVotes} disagree · opened by an admin · votes are anonymous</p>` : ''}
         ${post.guidelineVote && post.outcome ? `<p class="contribution-meta guideline-outcome">Admin outcome: ${e(post.outcome)} · chosen by ${e(post.outcomeBy || 'an admin')}${post.outcomeNote ? ` · ${e(post.outcomeNote)}` : ''}</p>` : ''}
         <div class="notification-actions">
           <button class="button button--ghost button--tiny button--report" type="button" data-report-context data-report-area="Group chat" data-report-detail="${e(post.title ? `${post.title} · ` : '')}${e(groupDisplayLabel(group))}" data-report-name="${e(post.name)}" data-report-member-id="${e(post.memberId || '')}" data-report-source-id="${e(post.id)}" aria-label="Report a concern about a post from ${e(post.name)}">Report</button>
@@ -6595,11 +6960,11 @@
         <div class="group-post-comments">
           <p class="contribution-meta">${comments.length} ${comments.length === 1 ? 'reply' : 'replies'} attached to this post</p>
           ${comments.length ? `<ul class="profile-activity-list">${comments.map((comment) => `<li>
-            <strong>${memberNameLink(comment.name, comment.memberId)}</strong>
+            <strong>${comment.anonymous ? 'Anonymous member' : memberNameLink(comment.name, comment.memberId)}</strong>
             <p>${e(comment.body)}</p>
-            <span class="contribution-meta">${e(formatDate(comment.createdAt) || 'Date not recorded')}</span>
+            <span class="contribution-meta">${e(formatDate(comment.createdAt) || 'Date not recorded')}${comment.anonymous ? ' · anonymous vote' : ''}</span>
             <div class="notification-actions">
-              <button class="button button--ghost button--tiny button--report" type="button" data-report-context data-report-area="Group chat reply" data-report-detail="${e(post.title ? `${post.title} · ` : '')}${e(groupDisplayLabel(group))}" data-report-name="${e(comment.name)}" data-report-member-id="${e(comment.memberId || '')}" data-report-source-id="${e(comment.id)}" aria-label="Report a concern about a reply from ${e(comment.name)}">Report</button>
+              <button class="button button--ghost button--tiny button--report" type="button" data-report-context data-report-area="Group chat reply" data-report-detail="${e(post.title ? `${post.title} · ` : '')}${e(groupDisplayLabel(group))}" data-report-name="${e(comment.anonymous ? 'Anonymous member' : comment.name)}" data-report-member-id="${e(comment.anonymous ? '' : (comment.memberId || ''))}" data-report-source-id="${e(comment.id)}" aria-label="Report a concern about a reply from ${e(comment.anonymous ? 'an anonymous member' : comment.name)}">Report</button>
               ${canModerate ? `<button class="button button--ghost button--tiny" type="button" data-group-delete="reply" data-group-id="${e(group.id)}" data-group-post-id="${e(post.id)}" data-group-reply-id="${e(comment.id)}" aria-label="Delete this reply locally">Delete reply</button>` : ''}
             </div>
           </li>`).join('')}</ul>` : ''}
@@ -6725,7 +7090,7 @@
           <div class="field">
             <label for="group-vote-${e(domId(group.id))}">Guideline change to vote on</label>
             <textarea id="group-vote-${e(domId(group.id))}" name="proposal" rows="2" maxlength="800" required placeholder="Write the guideline change members should vote on…"></textarea>
-            <p class="field-hint">Opens a group chat post where members reply “Agree” or “Disagree”. The vote stays on this device.</p>
+            <p class="field-hint">Opens a group chat post where members reply “Agree” or “Disagree”. Votes are anonymous: replies show “Anonymous member,” and the vote stays on this device.</p>
           </div>
           <button type="submit" class="button button--primary button--small">Start guideline vote in chat</button>
         </form>
@@ -6761,7 +7126,7 @@
       </div>
       <div class="resume-section">
         <h3>Group chat</h3>
-        <p class="account-note">This is the place for members of this group to post and talk. Replies stay attached to the post they answer.</p>
+        <p class="account-note">This is the place for members of this group to post and talk. Replies stay attached to the post they answer. Group interaction is only available to the Group; it never appears on a public resume.</p>
         ${renderGroupPosts(group, groupPosts, canPost, canModerate)}
         ${canPost ? `<form class="account-form group-post-form" data-group-post-form data-group-id="${e(group.id)}">
           <div class="form-row">
@@ -6785,6 +7150,12 @@
               <input type="file" id="group-post-picture" name="picture" accept="image/jpeg,image/png,image/webp,image/gif">
               <p class="field-hint">Resized locally and kept only in this browser. Nothing is uploaded.</p>
             </div>
+          </div>
+          <div class="field">
+            <label class="checkbox">
+              <input type="checkbox" name="nsfw" value="1">
+              <span>Mark this post NSFW if it is unsuitable for minors. No porn and no prostitution on Unbought.</span>
+            </label>
           </div>
           <button type="submit" class="button button--primary button--small">Post to group</button>
         </form>` : '<p class="account-note">Only current members can post in this group.</p>'}
@@ -6814,7 +7185,7 @@
         <p class="account-note"><strong>Basic Necessities:</strong> ${e(BASIC_NECESSITIES_NOTE)}</p>
         <p class="account-note"><strong>Alliances:</strong> ${e(ALLIANCE_COPY)} Working members vote on alliance terms and guidelines.</p>
         <p class="account-note"><strong>Surplus spending:</strong> This group has ${e(formatMoney(surplus.groupAmount))} credited locally to Unbought, ${e(String(surplus.percent))}% of the recorded fund. Its uncapped slice of unspoken-for money is ${e(formatMoney(surplus.amount))}. This group surplus slice is separate from any member's capped severance check, so the two amounts can be different. Eventually, admins from all the groups will come together to figure out Unbought spending. This is a planning estimate only; no money moves, is spent, or is transmitted in this prototype.</p>
-        <p class="account-note"><strong>Land search:</strong> Each group is in charge of finding land in their area that they want to collectively buy. Once a group picks a house, they will get in touch with the Unbought housing team — real estate, lawyers, and others, all volunteer — if it is available to buy a house. The local allowance is a guide for that discussion, not a purchase, offer, or commitment, and nothing is transmitted from this prototype.</p>
+        <p class="account-note"><strong>Land search:</strong> Each group is in charge of finding land in their area that they want to collectively buy. The first house will be in the place where the most Unbought members live; as we scale, groups keep scouting locally while the first purchase follows the densest membership. Once a group picks a house, they will get in touch with the Unbought housing team — real estate, lawyers, and others, all volunteer — if it is available to buy a house. The local allowance is a guide for that discussion, not a purchase, offer, or commitment, and nothing is transmitted from this prototype.</p>
         ${SITE_PHASE >= 2 && business.enabled ? `<div class="group-business-details">
           <h4>Group business</h4>
           <p class="account-note">${business.brandChoice === 'unbought' ? 'This group records the Unbought Brand' : 'This group records its own brand'} for a collection of related services and goods. It creates industry inside a moneyless society: neighbors trade through mutual consent, not prices. Group brands arrive in Phase 2 on the vernal equinox, ${e(GROUP_BRAND_ROLLOUT_COPY)}.</p>
@@ -7019,6 +7390,7 @@
     renderMemberAccount();
     renderProfile();
     renderGroupProfile();
+    renderVolunteerAccess();
     // The dashboard's account panel shows confirmed hours, which change when
     // an exchange is logged or a review vote resolves it.
     renderAccountInfo();
@@ -7241,15 +7613,15 @@
       const votes = Array.isArray(review.votes) ? review.votes : [];
       const role = requestRole(request);
       const mySeat = panel.find((seat) => seat.memberId === state.pledge.memberId);
-      const alreadyVoted = votes.some((vote) => vote.memberId === state.pledge.memberId);
+      const alreadyVoted = hasAnonymousVote(`hours:${request.id}`);
       const seats = Array.from({ length: HOUR_REVIEWER_COUNT }, (_, index) => {
         const seat = panel[index];
-        const vote = seat && votes.find((v) => v.memberId === seat.memberId);
-        return `<li class="review-seat"><strong>${seat ? e(seat.name) : 'Seat pending'}</strong>
-          <span class="contribution-meta">${vote ? `${e(vote.hours)} hr · ${e(vote.reason || 'No reason given')}` : 'Not voted yet'}</span></li>`;
+        const vote = votes.find((item) => item.seatIndex === index) || votes[index];
+        return `<li class="review-seat"><strong>Review seat ${index + 1}${seat ? ' · filled' : ' · pending'}</strong>
+          <span class="contribution-meta">${vote ? `${e(vote.hours)} hr · ${e(vote.reason || 'No reason given')} · anonymous` : 'Not voted yet'}</span></li>`;
       }).join('');
       return `<div class="hour-review">
-        <p class="account-note">The confirmed times differ, so three randomly drawn active members choose one of those times. Care circle, students, observers, and either party are excluded. In this browser-only prototype the draw uses locally stored eligible neighbors; a live system would fill all three seats.</p>
+        <p class="account-note">The confirmed times differ, so three randomly drawn active members choose one of those times. Care circle, students, observers, and either party are excluded. Votes are anonymous: ballots show only the chosen time and reason, never the reviewer’s name. In this browser-only prototype the draw uses locally stored eligible neighbors; a live system would fill all three seats.</p>
         <ul class="review-seats">${seats}</ul>
         ${panel.length < HOUR_REVIEWER_COUNT ? `<p class="field-hint">Only ${panel.length} eligible neighbor${panel.length === 1 ? '' : 's'} in this browser. The remaining ${HOUR_REVIEWER_COUNT - panel.length} seat${HOUR_REVIEWER_COUNT - panel.length === 1 ? '' : 's'} wait for a live draw.</p>` : ''}
         ${mySeat && role === 'none' && !alreadyVoted ? `<form class="account-form hour-vote-form" data-hour-vote data-id="${e(request.id)}">
@@ -7262,7 +7634,7 @@
           <button class="button button--primary button--small" type="submit">Cast review vote</button>
         </form>` : ''}
         ${role !== 'none' ? '<p class="field-hint">You are a party to this exchange and cannot vote on it.</p>' : ''}
-        ${alreadyVoted && mySeat ? '<p class="field-hint">Your vote is recorded above.</p>' : ''}
+        ${alreadyVoted && mySeat ? '<p class="field-hint">Your anonymous vote is recorded above.</p>' : ''}
       </div>`;
     };
 
@@ -7327,47 +7699,180 @@
     const panel = document.getElementById('commons-panel');
     if (!panel || !isMember()) return;
     const e = escapeHtml;
-    const posts = (Array.isArray(state.listings) ? state.listings : []).filter((item) => item && item.memberId === state.pledge.memberId).slice(0, 6);
-    const chats = (Array.isArray(state.chats) ? state.chats : []).slice(-12).reverse();
-    panel.innerHTML = `<section class="account-card">
-      <p class="eyebrow">The Commons</p>
-      <h3>Everything you can take part in</h3>
-      <div class="commons-links">
-        <a class="commons-link" href="freelabor.html"><strong>Free Labor</strong><span>Offer or request skills and time.</span></a>
-        <a class="commons-link" href="freestuff.html"><strong>Free Stuff</strong><span>Share new, homemade, used, and repairable goods.</span></a>
-        <a class="commons-link" href="future.html#academy"><strong>Academy</strong><span>Learn from a neighbor. Build for the commons.</span></a>
-        <a class="commons-link" href="donate.html"><strong>Donations</strong><span>Support the work. Track your giving here.</span></a>
-      </div>
-      <div class="account-block">
-        <h4>Your postings</h4>
-        ${posts.length ? `<ul class="contribution-list">${posts.map((post) => `<li class="contribution-item"><strong>${e(post.title)}</strong><span class="contribution-meta">${e(formatDate(post.createdAt))} · ${e(post.provider || '')}</span></li>`).join('')}</ul>` : `<p class="account-note">You have not posted an offering in this browser yet.</p>`}
-        <p class="account-note"><a href="freelabor.html#post-trigger">Post free labor</a> · <a href="freestuff.html#post-trigger">Post free stuff</a></p>
-      </div>
-      <div class="account-block">
-        <h4>Community chats</h4>
-        <p class="account-note">Local-only channels for this prototype. Nothing is sent to other people.</p>
-        <div class="chat-list">
-          ${chats.length ? chats.map((chat) => `<div class="chat-message"><p class="contribution-meta"><strong>${e(chat.name)}</strong> · ${e(chat.channel)} · ${e(formatDate(chat.createdAt))}</p><p>${e(chat.body)}</p><button class="button button--ghost button--small button--report" type="button" data-report-context data-report-area="Community chat" data-report-detail="${e(chat.channel)} channel" data-report-name="${e(chat.name)}" data-report-source-id="${e(chat.id)}" aria-label="Report a concern about a message from ${e(chat.name)}">Report</button></div>`).join('') : `<p class="account-note">No chat messages yet.</p>`}
-        </div>
-        <form class="account-form" data-chat-form>
+    const posts = (Array.isArray(state.listings) ? state.listings : [])
+      .filter((item) => item && item.memberId === state.pledge.memberId).slice(0, 6);
+    const channels = Array.isArray(state.communityChannels) && state.communityChannels.length
+      ? state.communityChannels
+      : defaultCommunityChannels();
+    const threads = Array.isArray(state.communityThreads) ? state.communityThreads : [];
+    const chats = Array.isArray(state.chats) ? state.chats : [];
+
+    const chatMessageMarkup = (chat) => {
+      const photo = cleanPostPhotos(chat.picture)[0];
+      const subject = communityChatSubject(chat);
+      const channelName = communityChatChannelName(chat);
+      return `<div class="chat-message community-chat-message">
+        <p class="contribution-meta"><strong>${e(chat.name || 'Member')}</strong> · #${e(channelName)} · ${e(subject)} · ${e(formatDate(chat.createdAt) || 'Date not recorded')}${chat.nsfw ? ' · <span class="badge badge--nsfw">NSFW</span>' : ''}</p>
+        ${photo ? `<img class="chat-picture" src="${e(safeProfileImageUrl(photo.dataUrl))}" alt="Local picture for ${e(subject)}">` : ''}
+        <p class="chat-title">${e(subject)}</p>
+        <p>${e(chat.body)}</p>
+        <button class="button button--ghost button--tiny button--report" type="button" data-report-context data-report-area="Community chat" data-report-detail="${e(`#${channelName} · ${subject}`)}" data-report-name="${e(chat.name || 'Member')}" data-report-source-id="${e(chat.id)}" aria-label="Report a concern about a community chat message from ${e(chat.name || 'a member')}">Report</button>
+      </div>`;
+    };
+
+    const threadMarkup = (thread, channel) => {
+      const threadId = cleanString(thread.id, 100);
+      const threadMessages = chats
+        .filter((chat) => chat && cleanString(chat.threadId, 100) === threadId)
+        .slice(-8);
+      const threadFormId = `community-reply-${domId(threadId)}`;
+      const subjectFieldId = `${threadFormId}-subject`;
+      const bodyFieldId = `${threadFormId}-body`;
+      const pictureFieldId = `${threadFormId}-picture`;
+      return `<div class="community-thread">
+        <h5>${e(thread.subject)}</h5>
+        <p class="contribution-meta">Started by ${e(thread.createdBy || 'a member')} · ${e(formatDate(thread.createdAt) || 'Date not recorded')}</p>
+        <div class="chat-list">${threadMessages.length
+          ? threadMessages.map(chatMessageMarkup).join('')
+          : '<p class="account-note">No replies yet.</p>'}</div>
+        <form class="account-form community-form" data-community-reply-form data-thread-id="${e(threadId)}" data-channel-id="${e(channel.id)}">
+          <div class="community-form-head"><strong>Reply in this thread</strong><span>Keep the subject with your reply.</span></div>
           <div class="form-row">
             <div class="field">
-              <label for="chat-channel">Channel</label>
-              <select id="chat-channel" name="channel">
-                <option value="general">general</option>
-                <option value="mutual-aid">mutual-aid</option>
-                <option value="projects">projects</option>
-              </select>
+              <label for="${e(subjectFieldId)}">Subject</label>
+              <input type="text" id="${e(subjectFieldId)}" name="subject" maxlength="120" required value="${e(thread.subject)}">
             </div>
             <div class="field">
-              <label for="chat-body">Message</label>
-              <input type="text" id="chat-body" name="body" maxlength="1200" required placeholder="Say something to the community…">
+              <label for="${e(bodyFieldId)}">Reply</label>
+              <textarea id="${e(bodyFieldId)}" name="body" rows="2" maxlength="1200" required placeholder="Reply in this thread…"></textarea>
             </div>
           </div>
-          <button type="submit" class="button button--primary button--small">Post to chat</button>
+          <div class="form-row">
+            <div class="field">
+              <label for="${e(pictureFieldId)}">Picture <span class="optional">(optional)</span></label>
+              <input type="file" id="${e(pictureFieldId)}" name="picture" accept="image/jpeg,image/png,image/webp,image/gif">
+            </div>
+            <div class="field">
+              <label class="checkbox"><input type="checkbox" name="nsfw" value="1"> <span>NSFW if unsuitable for minors</span></label>
+            </div>
+          </div>
+          <button type="submit" class="button button--outline button--small">Reply in thread</button>
         </form>
+      </div>`;
+    };
+
+    const channelMarkup = (channel, index) => {
+      const channelId = cleanString(channel.id, 100);
+      const channelName = cleanString(channel.name, 60) || 'general';
+      const channelThreads = threads.filter((thread) => thread && cleanString(thread.channelId, 100) === channelId);
+      const generalMessages = chats.filter((chat) => chat && !cleanString(chat.threadId, 100)
+        && (cleanString(chat.channelId, 100) === channelId
+          || (!cleanString(chat.channelId, 100) && communityChannelSlug(chat.channel) === communityChannelSlug(channelName))))
+        .slice(-8);
+      const threadFormId = `community-thread-${domId(channelId)}`;
+      const subjectFieldId = `${threadFormId}-subject`;
+      const bodyFieldId = `${threadFormId}-body`;
+      const pictureFieldId = `${threadFormId}-picture`;
+      const isOpen = index === 0 || channelThreads.length > 0;
+      return `<details class="community-channel"${isOpen ? ' open' : ''}>
+        <summary>
+          <span class="community-channel-name"><span class="community-channel-hash" aria-hidden="true">#</span><strong>${e(channelName)}</strong></span>
+          <span class="community-channel-summary">${channelThreads.length} thread${channelThreads.length === 1 ? '' : 's'} <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></span>
+        </summary>
+        ${channel.purpose ? `<p class="account-note">${e(channel.purpose)}</p>` : ''}
+        <form class="account-form community-form" data-community-thread-form data-channel-id="${e(channelId)}">
+          <div class="community-form-head"><strong>Start a thread</strong><span>Every message needs a subject.</span></div>
+          <div class="form-row">
+            <div class="field">
+              <label for="${e(subjectFieldId)}">Thread subject</label>
+              <input type="text" id="${e(subjectFieldId)}" name="subject" maxlength="120" required placeholder="What is this thread about?">
+            </div>
+            <div class="field">
+              <label for="${e(bodyFieldId)}">Message</label>
+              <textarea id="${e(bodyFieldId)}" name="body" rows="2" maxlength="1200" required placeholder="Start the conversation…"></textarea>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label for="${e(pictureFieldId)}">Picture <span class="optional">(optional)</span></label>
+              <input type="file" id="${e(pictureFieldId)}" name="picture" accept="image/jpeg,image/png,image/webp,image/gif">
+            </div>
+            <div class="field">
+              <label class="checkbox"><input type="checkbox" name="nsfw" value="1"> <span>NSFW if unsuitable for minors</span></label>
+            </div>
+          </div>
+          <button type="submit" class="button button--primary button--small">Start thread</button>
+        </form>
+        ${generalMessages.length ? `<div class="chat-list">${generalMessages.map(chatMessageMarkup).join('')}</div>` : ''}
+        ${channelThreads.length ? channelThreads.map((thread) => threadMarkup(thread, channel)).join('') : '<p class="account-note">No threads in this channel yet. Start one above.</p>'}
+      </details>`;
+    };
+
+    panel.innerHTML = `<div class="commons-workspace">
+      <section class="account-card commons-intro-card" aria-labelledby="commons-title">
+        <div class="commons-intro-head">
+          <div>
+            <p class="eyebrow">The Commons</p>
+            <h3 id="commons-title">Everything you can take part in</h3>
+          </div>
+          <p class="commons-intro-copy">Pick a doorway from the menu, or use these shortcuts. Everything you write here stays in this browser; nothing is sent to other people.</p>
+        </div>
+        <nav class="commons-links" aria-label="Commons shortcuts">
+          <a class="commons-link" href="freelabor.html">
+            <span class="commons-link-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-hammer"></use></svg></span>
+            <span class="commons-link-copy"><strong>Free Labor</strong><small>Offer or request skills and time.</small></span>
+          </a>
+          <a class="commons-link" href="freestuff.html">
+            <span class="commons-link-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-basket"></use></svg></span>
+            <span class="commons-link-copy"><strong>Free Stuff</strong><small>Share new, homemade, used, and repairable goods.</small></span>
+          </a>
+          <a class="commons-link" href="future.html#academy"${SITE_PHASE < 2 ? ' hidden' : ''}>
+            <span class="commons-link-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-spark"></use></svg></span>
+            <span class="commons-link-copy"><strong>Academy</strong><small>Learn from a neighbor. Build for the commons.</small></span>
+          </a>
+          <a class="commons-link" href="donate.html">
+            <span class="commons-link-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-heart"></use></svg></span>
+            <span class="commons-link-copy"><strong>Donations</strong><small>Support the work. Track your giving here.</small></span>
+          </a>
+        </nav>
+      </section>
+
+      <div class="commons-grid">
+        <section class="account-card commons-activity-card" aria-labelledby="commons-postings-title">
+          <div class="commons-card-head">
+            <span class="badge badge--green">Your corner</span>
+            <h3 id="commons-postings-title">Your postings</h3>
+            <span class="commons-count">${posts.length}</span>
+          </div>
+          <p class="account-note">Offers you have saved in this browser appear here.</p>
+          ${posts.length ? `<ul class="contribution-list">${posts.map((post) => `<li class="contribution-item"><strong>${e(post.title)}</strong><span class="contribution-meta">${e(formatDate(post.createdAt))} · ${e(post.provider || '')}</span></li>`).join('')}</ul>` : `<p class="account-note">You have not posted an offering in this browser yet.</p>`}
+          <div class="commons-action-links"><a href="freelabor.html#post-trigger">Post free labor</a><a href="freestuff.html#post-trigger">Post free stuff</a></div>
+        </section>
+
+        <section class="account-card commons-chat-card" aria-labelledby="commons-chat-title">
+          <div class="commons-card-head">
+            <span class="badge badge--soft">Local conversation</span>
+            <h3 id="commons-chat-title">Community chat</h3>
+          </div>
+          <p class="account-note">Create channels, then start threads inside them with a subject. Add a picture to any post and mark anything unsuitable for minors as NSFW. No porn and no prostitution. There are free websites that can serve you outside of Unbought.</p>
+          <form class="account-form community-form" data-community-channel-form>
+            <div class="community-form-head"><strong>Create a channel</strong><span>Keep each conversation easy to find.</span></div>
+            <div class="form-row">
+              <div class="field">
+                <label for="community-channel-name">New channel</label>
+                <input type="text" id="community-channel-name" name="name" maxlength="60" required placeholder="Channel name">
+              </div>
+              <div class="field">
+                <label for="community-channel-purpose">Purpose <span class="optional">(optional)</span></label>
+                <input type="text" id="community-channel-purpose" name="purpose" maxlength="200" placeholder="What belongs here?">
+              </div>
+            </div>
+            <button type="submit" class="button button--outline button--small">Create channel</button>
+          </form>
+          <div class="community-channels">${channels.map(channelMarkup).join('')}</div>
+        </section>
       </div>
-    </section>`;
+    </div>`;
   }
 
   const MESSAGE_FOLDERS = {
@@ -7634,7 +8139,7 @@
           ordinal: romanToInt(roman),
           overflow: true,
           seedEligible: false,
-          purpose: `Opened because ${groupDisplayLabel(last)} reached ${SOCIAL_LIMITS.groupMembers} people. Neighbors in this area can choose which numbered group to join. Seed and founding labels stay with the first group's profession and ZIP record.`,
+          purpose: `Opened because ${groupDisplayLabel(last)} reached ${SOCIAL_LIMITS.groupMembers} people. Neighbors in this area can choose which numbered group to join. Seed and other membership badges stay with the member's sign-up record, not the group.`,
           members: [],
           memberCount: 0,
           admins: [],
@@ -8598,6 +9103,7 @@
   function renderDashboard() {
     renderDashboardGate();
     if (!isMember()) return;
+    renderVolunteerAccess();
     renderAccountInfo();
     renderCommons();
     renderExchanges();
@@ -8789,23 +9295,24 @@
           && item.type === 'mutual_aid_request' && requestRole(item) === 'none');
         if (!request) return;
         const review = ensureHourReview(request);
-        if (!review || !review.panel.some((seat) => seat.memberId === state.pledge.memberId)) return;
-        if (review.votes.some((vote) => vote.memberId === state.pledge.memberId)) return;
+        const seatIndex = review && review.panel.findIndex((seat) => seat && seat.memberId === state.pledge.memberId);
+        if (!review || seatIndex < 0) return;
+        if (hasAnonymousVote(`hours:${request.id}`)) return;
         const hours = cleanHours(data.get('hours'));
         const reason = cleanString(data.get('reason'), 240);
         if (!(hours > 0) || !reason) return;
         review.votes.push({
-          memberId: state.pledge.memberId,
-          name: state.pledge.name,
+          seatIndex,
           hours,
           reason,
           votedAt: now
         });
+        recordAnonymousVote(`hours:${request.id}`);
         const finalized = finalizeHourReview(request);
         saveState();
         renderSharedMemberViews();
         renderExchanges();
-        announce(finalized ? 'Three votes are in; the majority hours were logged locally.' : 'Your review vote was saved locally.');
+        announce(finalized ? 'Three anonymous votes are in; the majority hours were logged locally.' : 'Your anonymous review vote was saved locally.');
         showToast(finalized ? 'Review resolved and hours logged locally.' : 'Review vote saved locally.', false);
         return;
       }
@@ -8951,30 +9458,126 @@
         renderAccountInfo();
         announce('Your settings were saved in this browser.');
         showToast('Settings saved locally.', false);
-      } else if (form.matches('[data-chat-form]')) {
+      } else if (form.matches('[data-community-channel-form]')) {
         event.preventDefault();
+        const name = cleanString(data.get('name'), 60);
+        const purpose = cleanString(data.get('purpose'), 200);
+        if (!name) return;
+        const slug = communityChannelSlug(name);
+        state.communityChannels = Array.isArray(state.communityChannels) ? state.communityChannels : defaultCommunityChannels();
+        if (state.communityChannels.some((item) => item && (communityChannelSlug(item.name) === slug || item.id === `channel-${slug}`))) {
+          showToast('A channel with that name already exists on this device.', false);
+          return;
+        }
+        const channel = {
+          id: `channel-${slug}`,
+          name,
+          purpose,
+          createdBy: state.pledge.name || 'Member',
+          createdAt: now
+        };
+        state.communityChannels.push(channel);
+        addNotification('comment', `Community channel created: ${channel.name}`,
+          'Saved locally. In a live system members could follow this channel; nothing was transmitted.',
+          { tab: 'commons', sourceId: channel.id });
+        saveState();
+        renderCommons();
+        renderNotifications();
+        form.reset();
+        announce(`Channel ${channel.name} was created locally.`);
+        showToast('Channel created locally. Nothing was transmitted.', false);
+      } else if (form.matches('[data-community-thread-form]')) {
+        event.preventDefault();
+        const channelId = cleanString(form.dataset.channelId, 100);
+        const channel = findCommunityChannel(channelId);
+        const subject = cleanString(data.get('subject'), 120);
         const body = cleanString(data.get('body'), 1200);
-        if (!body) return;
-        state.chats = Array.isArray(state.chats) ? state.chats : [];
+        if (!channel || !channel.name || !subject || !body) return;
+        const picture = await prepareFormPostPhoto(form);
+        if (picture === null) {
+          showToast('That image could not be resized locally. Try a smaller JPEG, PNG, WebP, or GIF.', false);
+          return;
+        }
+        const thread = {
+          id: makeId('thread'),
+          channelId: channel.id,
+          subject,
+          createdBy: state.pledge.name || 'Member',
+          createdAt: now
+        };
         const chat = {
           id: makeId('chat'),
           memberId: state.pledge.memberId,
-          name: state.pledge.name,
-          channel: cleanString(data.get('channel'), 40) || 'general',
+          name: state.pledge.name || 'Member',
+          channel: channel.name,
+          channelId: channel.id,
+          threadId: thread.id,
+          subject,
+          nsfw: Boolean(data.get('nsfw')),
+          picture,
           body,
           createdAt: now
         };
+        state.communityThreads = Array.isArray(state.communityThreads) ? state.communityThreads : [];
+        state.communityThreads.push(thread);
+        state.communityThreads = state.communityThreads.slice(-300);
+        state.chats = Array.isArray(state.chats) ? state.chats : [];
         state.chats.push(chat);
         state.chats = state.chats.slice(-300);
-        addNotification('comment', 'Community chat message recorded',
-          `Your message in ${chat.channel} is stored locally. In a live system channel members would be notified; nothing was transmitted.`,
+        addNotification('comment', `Community thread: ${subject}`,
+          `Saved locally in #${channel.name}. In a live system channel members would be notified; nothing was transmitted.`,
           { tab: 'commons', sourceId: chat.id });
         saveState();
         renderCommons();
         renderNotifications();
         form.reset();
-        announce('Your message was posted to the local community chat.');
-        showToast('Chat message saved locally.', false);
+        announce(`Thread ${subject} was started locally in ${channel.name}.`);
+        showToast('Thread saved locally. Nothing was transmitted.', false);
+      } else if (form.matches('[data-community-reply-form]')) {
+        event.preventDefault();
+        const threadId = cleanString(form.dataset.threadId, 100);
+        const thread = findCommunityThread(threadId);
+        if (!thread) return;
+        const channel = findCommunityChannel(form.dataset.channelId || thread.channelId);
+        if (!channel || !channel.name) return;
+        const subject = cleanString(data.get('subject'), 120) || cleanString(thread.subject, 120);
+        const body = cleanString(data.get('body'), 1200);
+        if (!subject || !body) return;
+        const picture = await prepareFormPostPhoto(form);
+        if (picture === null) {
+          showToast('That image could not be resized locally. Try a smaller JPEG, PNG, WebP, or GIF.', false);
+          return;
+        }
+        const chat = {
+          id: makeId('chat'),
+          memberId: state.pledge.memberId,
+          name: state.pledge.name || 'Member',
+          channel: channel.name,
+          channelId: channel.id,
+          threadId: thread.id,
+          subject,
+          nsfw: Boolean(data.get('nsfw')),
+          picture,
+          body,
+          createdAt: now
+        };
+        state.chats = Array.isArray(state.chats) ? state.chats : [];
+        state.chats.push(chat);
+        state.chats = state.chats.slice(-300);
+        addNotification('comment', `Community reply: ${subject}`,
+          `Saved locally in #${channel.name}. In a live system thread members would be notified; nothing was transmitted.`,
+          { tab: 'commons', sourceId: chat.id });
+        saveState();
+        renderCommons();
+        renderNotifications();
+        const bodyField = form.querySelector('[name="body"]');
+        if (bodyField) bodyField.value = '';
+        const pictureField = form.querySelector('[name="picture"]');
+        if (pictureField) pictureField.value = '';
+        const nsfwField = form.querySelector('[name="nsfw"]');
+        if (nsfwField) nsfwField.checked = false;
+        announce(`Your reply in ${subject} was saved locally.`);
+        showToast('Reply saved locally. Nothing was transmitted.', false);
       } else if (form.matches('[data-message-form]')) {
         event.preventDefault();
         const body = cleanString(data.get('body'), 1200);
@@ -9608,7 +10211,7 @@
     if (!isMember()) return;
     const report = allReports().find((item) => item.id === reportId);
     if (!report || report.status !== 'board_review') return;
-    if (report.votes.some((vote) => vote.memberId === state.pledge.memberId)) return;
+    if (hasAnonymousVote(`case:${report.id}`)) return;
     if (reviewVoteBlockReason(report, state.pledge.memberId)) return;
     if (report.demoVotingClosed || (report.votingEndsAt && Date.now() > Date.parse(report.votingEndsAt))) return;
 
@@ -9618,17 +10221,16 @@
 
     report.votes = Array.isArray(report.votes) ? report.votes : [];
     report.votes.push({
-      memberId: state.pledge.memberId,
-      name: state.pledge.name,
       verdict,
       reflectionDays: verdict === 'guilty' ? days : null,
       reason: cleanString(data.reason, 600),
       votedAt: new Date().toISOString()
     });
+    recordAnonymousVote(`case:${report.id}`);
     saveState();
     renderAccountability();
-    announce(`Vote recorded: ${verdict === 'guilty' ? 'guilty' : 'not guilty'}, with your reason attached.`);
-    showToast('Vote and reason recorded locally.', false);
+    announce(`Anonymous vote recorded: ${verdict === 'guilty' ? 'guilty' : 'not guilty'}, with your reason attached.`);
+    showToast('Anonymous vote and reason recorded locally.', false);
   }
 
   function submitRespondentResponse(reportId, form) {
@@ -9873,7 +10475,7 @@
     html += `</div>`;
 
     html += `<div class="account-block"><h4>Member review board · open cases</h4>
-      <p class="account-note">Each case opens with a ${RESPONSE_DAYS}-day response period so the reported member can gather evidence and plead. After that, voting is open for ${VOTING_DAYS} days. To keep review impartial, involved parties, friends of involved parties, Observers, and Care Circle members do not vote; they are still encouraged to provide evidence and join the conversation below. Voting is open to members whose physical address is in the same county as an involved party; in cross-state cases, both parties’ counties are eligible. Vote guilty or not guilty; if guilty, choose a reflection period (30, 90, or 180 days), and always explain why. The full case file, votes, reasons, and comments are stored in this browser only for this local prototype.</p>`;
+      <p class="account-note">Each case opens with a ${RESPONSE_DAYS}-day response period so the reported member can gather evidence and plead. After that, voting is open for ${VOTING_DAYS} days. To keep review impartial, involved parties, friends of involved parties, Observers, and Care Circle members do not vote; they are still encouraged to provide evidence and join the conversation below. Voting is open to members whose physical address is in the same county as an involved party; in cross-state cases, both parties’ counties are eligible. Vote guilty or not guilty; if guilty, choose a reflection period (30, 90, or 180 days), and always explain why. Voting is completely anonymous: ballots store no name, member ID, or link back to the voter, and results show only the vote, reflection choice, reason, and date. The full case file, anonymous votes, and comments are stored in this browser only for this local prototype.</p>`;
     if (!openReports.length) {
       html += `<p class="account-note">No cases are open for review right now.</p>`;
     } else {
@@ -9882,7 +10484,7 @@
         const votes = Array.isArray(report.votes) ? report.votes : [];
         const guilty = votes.filter((vote) => vote.verdict === 'guilty').length;
         const notGuilty = votes.filter((vote) => vote.verdict === 'not_guilty').length;
-        const alreadyVoted = votes.some((vote) => vote.memberId === member.memberId);
+        const alreadyVoted = hasAnonymousVote(`case:${report.id}`);
         const isResponsePhase = report.status === 'response_period';
         const voteBlockReason = isResponsePhase ? '' : reviewVoteBlockReason(report, member.memberId);
         const votingClosed = report.demoVotingClosed || (report.votingEndsAt && Date.now() > Date.parse(report.votingEndsAt));
@@ -9896,10 +10498,10 @@
             : `<p class="case-tally"><strong>Tally:</strong> guilty ${guilty} · not guilty ${notGuilty}</p>
               ${votes.length ? `<ul class="vote-reasons">${votes.map((vote) => `
                 <li class="vote-reason">
-                  <p class="contribution-meta"><strong>${e(vote.name || 'Member')}</strong> · voted ${e(vote.verdict === 'guilty' ? 'guilty' : 'not guilty')}${vote.verdict === 'guilty' && vote.reflectionDays ? ` · ${vote.reflectionDays} days` : ''} · ${e(formatDate(vote.votedAt))}</p>
+                  <p class="contribution-meta"><strong>Anonymous voter</strong> · voted ${e(vote.verdict === 'guilty' ? 'guilty' : 'not guilty')}${vote.verdict === 'guilty' && vote.reflectionDays ? ` · ${vote.reflectionDays} days` : ''} · ${e(formatDate(vote.votedAt))}</p>
                   <p>${e(vote.reason || 'No reason was recorded for this vote.')}</p>
                 </li>`).join('')}</ul>` : ''}
-              ${alreadyVoted ? `<p class="account-note">You already voted on this case. Your verdict and reason are listed above.</p>`
+              ${alreadyVoted ? `<p class="account-note">Your vote was recorded anonymously on this device. No name or member ID is attached to it.</p>`
                 : voteBlockReason ? `<p class="account-note vote-eligibility-note"><strong>You are not eligible to vote in this case.</strong> ${e(voteBlockReason)} You are still encouraged to provide evidence and join the conversation in the review board below.</p>`
                 : canVote ? `
                 <form class="account-form vote-form" data-vote-form data-id="${e(report.id)}">
@@ -9913,7 +10515,7 @@
                   <div class="field">
                     <label for="vote-reason-${e(domId(report.id))}">3. Why are you voting this way? <span class="required-mark" aria-hidden="true">*</span></label>
                     <textarea id="vote-reason-${e(domId(report.id))}" name="reason" rows="3" maxlength="600" required placeholder="Explain your reasoning. Stored locally with your vote."></textarea>
-                    <p class="field-hint">Your reason is recorded with your vote in this browser only. Up to 600 characters.</p>
+                    <p class="field-hint">Your reason is recorded with an anonymous ballot in this browser only. No name or member ID is stored with it. Up to 600 characters.</p>
                   </div>
                   <button type="submit" class="button button--primary button--small">Submit vote and reason</button>
                 </form>
@@ -9937,9 +10539,9 @@
           <p class="contribution-meta">${e(formatDate(report.resolutionAt || report.createdAt))} · ${e(getReportContextSummary(report))}${report.reflectionDays ? ' · ' + report.reflectionDays + ' days' : ''}</p>
           <p class="contribution-meta">${(report.votes || []).length} member vote${(report.votes || []).length === 1 ? '' : 's'}${report.status === 'not_guilty' ? ' · no restriction applied' : ''}</p>
           <details><summary>Full case file and response</summary>${renderCaseFile(report, e)}</details>
-          ${(report.votes || []).length ? `<details><summary>How members voted and why</summary><ul class="vote-reasons">${report.votes.map((vote) => `
+          ${(report.votes || []).length ? `<details><summary>How anonymous votes were cast and why</summary><ul class="vote-reasons">${report.votes.map((vote) => `
             <li class="vote-reason">
-              <p class="contribution-meta"><strong>${e(vote.name || 'Member')}</strong> · voted ${e(vote.verdict === 'guilty' ? 'guilty' : 'not guilty')}${vote.verdict === 'guilty' && vote.reflectionDays ? ` · ${vote.reflectionDays} days` : ''}</p>
+              <p class="contribution-meta"><strong>Anonymous voter</strong> · voted ${e(vote.verdict === 'guilty' ? 'guilty' : 'not guilty')}${vote.verdict === 'guilty' && vote.reflectionDays ? ` · ${vote.reflectionDays} days` : ''}</p>
               <p>${e(vote.reason || 'No reason was recorded for this vote.')}</p>
             </li>`).join('')}</ul></details>` : ''}
           ${renderCaseComments(report, e)}
@@ -11369,6 +11971,11 @@
 
     if (!dialog || !form || !listing) return;
 
+    if (!isListingProviderAvailable(listing)) {
+      showToast(`${listing.provider} is unavailable and is not receiving labor or product requests right now.`);
+      return;
+    }
+
     currentRequestMode = isMember() ? 'mutual' : 'purchase';
     if (currentRequestMode === 'purchase' && !canPurchaseAsNonmember(listing)) {
       showToast('Non-member purchase is not enabled for this offer. Pledged members receive it free.');
@@ -11445,6 +12052,12 @@
       const listing = findListing(currentListingId);
       if (!listing) {
         closeDialog(dialog);
+        return;
+      }
+
+      if (!isListingProviderAvailable(listing)) {
+        closeDialog(dialog);
+        showToast(`${listing.provider} is unavailable and cannot receive labor or product requests right now.`);
         return;
       }
 

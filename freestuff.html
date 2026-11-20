@@ -135,7 +135,7 @@
             <p class="eyebrow">Free stuff directory</p>
             <h2 id="services-title">The commons, in plain sight.</h2>
           </div>
-          <p>Every listing is an offer. Members request through mutual consent; suggested donation prices go to the Unbought donation fund. Search, filter, and sort locally.</p>
+          <p>Every listing is an offer. Members request through mutual consent; suggested donation prices go to the Unbought donation fund. Members marked Unavailable keep their listings here, but cannot receive labor or product requests. Search, filter, and sort locally.</p>
         </div>
 
         <div class="market-shell">
@@ -312,6 +312,12 @@
                 <label for="post-description">Description <span class="required-mark" aria-hidden="true">*</span></label>
                 <textarea id="post-description" name="description" rows="4" maxlength="400" required placeholder="What are you offering? Include size, quantity, condition, and pickup details."></textarea>
                 <p class="field-hint" id="post-description-hint">Up to 400 characters. Be clear about condition and pickup.</p>
+              </div>
+              <div class="field field--wide field--check">
+                <label class="checkbox">
+                  <input type="checkbox" id="post-nsfw" name="nsfw" value="1">
+                  <span>Mark this post NSFW if it is unsuitable for minors. NSFW is not for porn or prostitution, which are not allowed on Unbought.</span>
+                </label>
               </div>
               <fieldset class="field field--wide purchase-optin">
                 <legend>Suggested donation price (optional)</legend>
