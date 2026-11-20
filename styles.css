@@ -6478,11 +6478,45 @@ em {
   font-size: 0.85rem;
 }
 .resume-empty { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.resume-metric-groups { display: grid; gap: 0.7rem; }
 .resume-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.7rem; margin: 0; }
 .resume-metrics > div { padding: 0.7rem 0.8rem; border: 1px solid var(--border); border-radius: 12px; background: var(--sand); }
 .resume-metrics dt { color: var(--muted); font-size: 0.8rem; }
 .resume-metrics dd { margin: 0.2rem 0 0; font-size: 1.05rem; font-weight: 700; }
 .private-profile { margin-top: 1.5rem; }
+.private-notice {
+  margin: 1rem 0 0;
+  padding: 0.7rem 0.85rem;
+  border-left: 3px solid var(--blue);
+  border-radius: 8px;
+  background: var(--blue-mist);
+  color: var(--muted-dark);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.resume-section h4 { margin: 1rem 0 0.45rem; font-size: 0.85rem; color: var(--muted); }
+.profile-page .profile-dashboard-nav {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+.profile-page .profile-dashboard-nav .dashboard-menu-item { min-height: 44px; padding: 0.55rem 0.7rem; }
+.profile-page .profile-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--sand);
+}
+.profile-view-note { margin: 0; max-width: 70ch; color: var(--muted-dark); font-size: 0.9rem; line-height: 1.5; }
+.profile-toolbar-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.profile-page--public-only #private-profile { display: none !important; }
 .contribution-list { list-style: none; padding: 0; margin: 0.5rem 0 0; display: grid; gap: 0.6rem; }
 .contribution-item {
   display: grid; gap: 0.15rem;
@@ -6804,6 +6838,52 @@ em {
 .dashboard-panels [data-dashboard-panel]:not([hidden]) { animation: dash-fade 0.15s ease-in; }
 @keyframes dash-fade { from { opacity: 0.4; } to { opacity: 1; } }
 .dashboard-render .account-card { box-shadow: none; }
+.mailbox-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.2rem;
+  margin: 0 0 1rem;
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--sand);
+}
+.mailbox-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: 0;
+  width: 100%;
+  padding: 0.4rem 0.15rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted-dark);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mailbox-tab:hover { background: #fff; color: var(--blue-deep); }
+.mailbox-tab[aria-selected="true"] {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: #fff;
+}
+.mailbox-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.05rem;
+  padding: 0.05rem 0.2rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.55);
+  font-size: 0.7rem;
+}
+.mailbox-tab[aria-selected="true"] .mailbox-count { background: rgba(255,255,255,0.22); }
+.message-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.25rem; }
 
 .account-details { display: grid; gap: 0.4rem; margin: 0.75rem 0; }
 .account-details > div { display: grid; grid-template-columns: minmax(130px, 0.4fr) minmax(0, 1fr); gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid var(--border); }
@@ -6839,6 +6919,7 @@ body.dashboard-compact .account-block { margin-top: 0.7rem; padding-top: 0.7rem;
 }
 @media (max-width: 640px) {
   .dashboard-body.has-commons-nav { grid-template-columns: minmax(0, 1fr); }
+  .profile-page .profile-dashboard-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 700px) {
   .account-details > div { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
@@ -8462,6 +8543,11 @@ body[data-directory-scope="goods"] .product-price--nonmember .product-price-valu
   border-radius: 8px;
   background: #fff;
   font-size: 0.85rem;
+}
+.social-item--main {
+  border-color: #B6C3DF;
+  border-left: 3px solid var(--blue);
+  background: var(--blue-mist);
 }
 
 .social-chat-list .chat-message {

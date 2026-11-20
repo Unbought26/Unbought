@@ -59,9 +59,24 @@
     <section class="section profile-section" id="top" aria-labelledby="profile-page-title">
       <div class="container">
         <div class="section-head">
-          <p class="eyebrow"><span class="badge badge--soft">Member profile</span> Public resume</p>
-          <h1 id="profile-page-title">What a neighbor chooses to share.</h1>
-          <p>The public resume shows a first name, picture, tag line, bio, profession, City/State, skills, commons totals, availability, and an optional phone. Your legal name, street address, ZIP, housing status, birthdate, group, and report count stay private.</p>
+          <p class="eyebrow"><span class="badge badge--soft">Member profile</span> Your view</p>
+          <h1 id="profile-page-title">Your profile in the commons.</h1>
+          <p>The public resume is what neighbors see. Below it is your private member record, which stays on this device and is never included in the public profile.</p>
+        </div>
+
+        <nav class="profile-dashboard-nav" aria-label="Dashboard menu" data-member-only hidden>
+          <a class="dashboard-menu-item" href="dashboard.html#overview">Overview</a>
+          <a class="dashboard-menu-item" href="dashboard.html#commons">The Commons</a>
+          <a class="dashboard-menu-item is-active" href="profile.html" aria-current="page">Profile</a>
+          <a class="dashboard-menu-item" href="dashboard.html#settings">Settings</a>
+        </nav>
+
+        <div class="profile-toolbar" data-member-only hidden>
+          <p class="profile-view-note" id="profile-view-note">Member view: your public resume and a private record only you can see. Everything in the lower card is hidden from neighbors.</p>
+          <div class="profile-toolbar-actions">
+            <a class="button button--outline button--small" href="dashboard.html#settings">Edit profile</a>
+            <button class="button button--outline button--small" type="button" id="view-as-toggle" aria-pressed="false">View as: Neighbor</button>
+          </div>
         </div>
 
         <div id="public-resume"></div>

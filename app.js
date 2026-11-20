@@ -1035,6 +1035,23 @@
     });
   }
 
+  function initProfileViewToggle() {
+    const btn = document.getElementById('view-as-toggle');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const publicOnly = document.body.classList.toggle('profile-page--public-only');
+      btn.textContent = publicOnly ? 'View as: Member' : 'View as: Neighbor';
+      btn.setAttribute('aria-pressed', String(publicOnly));
+      const note = document.getElementById('profile-view-note');
+      if (note) {
+        note.textContent = publicOnly
+          ? 'Neighbor view: only the public resume is shown. Your private record is hidden.'
+          : 'Member view: your public resume and a private record only you can see. Everything in the lower card is hidden from neighbors.';
+      }
+      announce(publicOnly ? 'Viewing this profile as a neighbor.' : 'Viewing your full member profile.');
+    });
+  }
+
   // The signed pledge is the sign-in. Members land on the dashboard; everyone
   // else is invited to "Take the Pledge" on its dedicated page.
   function renderAuthUi() {
@@ -1052,6 +1069,11 @@
     const headerNotifications = document.querySelector('[data-notifications-cta]');
     if (headerNotifications) headerNotifications.hidden = !signedIn;
     updateHeaderNotificationBadge();
+
+    // Profile-only member controls are hidden from signed-out visitors.
+    document.querySelectorAll('[data-member-only]').forEach((item) => {
+      item.hidden = !signedIn;
+    });
 
     // Members do not need the pledge page, so retire pledge-only nav links.
     document.querySelectorAll('[data-pledge-nav]').forEach((item) => {
@@ -2063,7 +2085,7 @@
         .filter((item) => item && typeof item === 'object')
         .slice(0, 100)
         .map((item) => {
-          const kind = item.kind === 'joined' ? 'joined' : 'own';
+          const kind = item.kind === 'joined' || item.kind === 'town' ? item.kind : 'own';
           const count = cleanCount(item.memberCount) || 1;
           return {
             id: cleanString(item.id, 100) || makeId('group'),
@@ -4105,107 +4127,77 @@
     const track = state.track && hasOwn(TRACKS, state.track) ? TRACKS[state.track] : 'Not chosen';
     const summary = [
       ['Chosen name', e(m.name)],
-      ['Member ID', `<span class="account-id">${e(m.memberId)}</span>`],
       ['Profession', e(m.profession || 'Not shared')],
       ['Membership year', e(String(membershipYearAt(m.signedAt) ?? 'Unknown'))],
       ['Track', e(track)],
       ['Status', e(m.status || 'active')]
     ];
-    return `<div class="account-summary" aria-label="Membership at a glance">
-      ${summary.map(([label, value]) => `<div class="account-summary-item"><span>${label}</span><strong>${value}</strong></div>`).join('')}
-    </div>`;
+    return `<dl class="resume-metrics" aria-label="Membership at a glance">
+      ${summary.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}
+    </dl>`;
   }
 
-  function renderAccountDetailGroups(m, credential, confirmedHours, reportsAgainst) {
+  function renderAccountDetailGroups(m, credential, confirmedHours, guiltyReportsAgainst) {
     const e = escapeHtml;
-    const picture = m.picture
-      ? `<img class="profile-photo" src="${e(m.picture)}" alt="Your profile picture">`
-      : 'Not added';
+    const skillChips = (value) => {
+      const items = cleanString(value, 400).split(/[\n,]+/).map((item) => item.trim()).filter(Boolean);
+      return items.length
+        ? `<ul class="resume-skills">${items.map((item) => `<li>${e(item)}</li>`).join('')}</ul>`
+        : `<p class="resume-empty">Not listed yet.</p>`;
+    };
+    const section = (title, body) => `<div class="resume-section"><h3>${title}</h3>${body}</div>`;
+    const rows = (items) => `<dl class="account-details">${items.join('')}</dl>`;
     const address = m.publicAddressSource === 'physical' ? m.physicalAddress : m.mailingAddress;
     const publicPlace = parseCityState(address);
     const publicCity = publicPlace?.split(',')[0]?.trim() || 'Not shared';
     const publicState = publicPlace?.split(',')[1]?.trim() || 'Not shared';
 
-    const groups = [
-      {
-        title: 'Contact & address',
-        hint: 'Private to you',
-        open: true,
-        note: 'These details support accountability and emergency contact. They never appear on your public resume.',
-        rows: [
-          accountDetail('Full legal name', e(m.fullName || 'Not shared')),
-          accountDetail('General location', e(m.location || 'Not shared')),
-          accountDetail('Mailing address', e(m.mailingAddress || 'Not shared')),
-          accountDetail('Physical address', e(m.physicalAddress || 'Not shared')),
-          accountDetail('City', e(publicCity)),
-          accountDetail('State', e(publicState)),
-          accountDetail('ZIP code', e(m.zip || 'Not shared')),
-          accountDetail('Housing status', e(hasOwn(HOUSING_STATUSES, m.housingStatus) ? HOUSING_STATUSES[m.housingStatus] : 'Not shared')),
-          accountDetail('Phone number', e(m.phone || 'Not shared')),
-          accountDetail('Date of birth', e(m.dob || 'Not shared'))
-        ]
-      },
-      {
-        title: 'Profile & skills',
-        hint: 'Public where noted',
-        open: true,
-        note: 'Picture, tag line, bio, profession, and skills can appear on your public resume. Group and private note stay here.',
-        rows: [
-          accountDetail('Picture', picture),
-          accountDetail('Tag line', e(m.tagline || 'Not set')),
-          accountDetail('Primary profession or trade', e(m.profession || 'Not shared')),
-          accountDetail('Career / paid skills', e(m.paidSkills || 'Not listed')),
-          accountDetail('Unpaid skills', e(m.unpaidSkills || 'Not listed')),
-          accountDetail('Bio', e(m.bio || 'Not added')),
+    return [
+      section('Identity &amp; contact', rows([
+        accountDetail('Full legal name', e(m.fullName || 'Not shared')),
+        accountDetail('General location', e(m.location || 'Not shared')),
+        accountDetail('Mailing address', e(m.mailingAddress || 'Not shared')),
+        accountDetail('Physical address', e(m.physicalAddress || 'Not shared')),
+        accountDetail('Public City, State', e(`${publicCity}, ${publicState}`)),
+        accountDetail('ZIP code', e(m.zip || 'Not shared')),
+        accountDetail('Housing status', e(hasOwn(HOUSING_STATUSES, m.housingStatus) ? HOUSING_STATUSES[m.housingStatus] : 'Not shared')),
+        accountDetail('Phone number', e(m.phone || 'Not shared')),
+        accountDetail('Date of birth', e(m.dob || 'Not shared'))
+      ])),
+      section('Profile &amp; skills', `
+        ${m.tagline ? `<p class="resume-tagline">${e(m.tagline)}</p>` : ''}
+        ${m.bio ? `<p class="resume-bio">${e(m.bio)}</p>` : '<p class="resume-empty">No bio added yet.</p>'}
+        <h4>Career / paid skills</h4>
+        ${skillChips(m.paidSkills)}
+        <h4>Unpaid skills</h4>
+        ${skillChips(m.unpaidSkills)}
+        ${rows([
           accountDetail('Group / crew', e(m.group || 'Not set')),
           accountDetail('Private note', e(m.note || 'Not shared'))
-        ]
-      },
-      {
-        title: 'Privacy choices',
-        hint: 'What neighbors can see',
-        open: false,
-        rows: [
-          accountDetail('Public City, State from', m.publicAddressSource === 'physical' ? 'Physical address' : 'Mailing address'),
-          accountDetail('Public phone', m.publicPhone ? 'Shown on resume' : 'Hidden from resume'),
-          accountDetail('Availability', m.available === false ? 'Not available right now' : 'Available')
-        ]
-      },
-      {
-        title: 'Commons activity',
-        hint: 'Confirmed locally',
-        open: false,
-        rows: [
-          accountDetail('Donation count', String(cleanCount(m.donationCount))),
-          accountDetail('Hours worked (confirmed)', e(String(confirmedHours))),
-          accountDetail('Hours used on Unbought', e(String(cleanHours(m.hoursUsed)))),
-          accountDetail('Items gifted', String(cleanCount(m.itemsGifted))),
-          accountDetail('Items taken', String(cleanCount(m.itemsTaken))),
-          accountDetail('Volunteer offers', String(getMemberVolunteerInterests().length)),
-          accountDetail('Reports made against you', String(reportsAgainst)),
-          accountDetail('Pledged on', e(formatDate(m.signedAt) || 'Not recorded'))
-        ]
-      },
-      {
-        title: 'Local account access',
-        hint: 'Prototype only',
-        open: false,
-        note: 'This is a local demo credential, not a real login. Nothing is transmitted.',
-        rows: [
-          accountDetail('Username', e(credential && credential.username ? credential.username : 'Not set')),
-          accountDetail('Password hash (local prototype)', e(credential && credential.passwordHash ? credential.passwordHash : 'Not set')),
-          accountDetail('Password salt (local prototype)', e(credential && credential.salt ? credential.salt : 'Not set'))
-        ]
-      }
-    ];
-
-    return groups.map((group) => `<details class="account-section"${group.open ? ' open' : ''}>
-      <summary><span>${group.title}</span><span class="account-section-hint">${group.hint}</span></summary>
-      <div class="account-section-body">
-        ${group.note ? `<p class="account-section-note">${group.note}</p>` : ''}
-        <dl class="account-details">${group.rows.join('')}</dl>
-      </div>
-    </details>`).join('');
+        ])}`),
+      section('Privacy choices', rows([
+        accountDetail('Public City, State from', m.publicAddressSource === 'physical' ? 'Physical address' : 'Mailing address'),
+        accountDetail('Public phone', m.publicPhone ? 'Shown on resume' : 'Hidden from resume'),
+        accountDetail('Availability', m.available === false ? 'Not available right now' : 'Available')
+      ])),
+      section('Commons activity', `<div class="resume-metric-groups">
+        <dl class="resume-metrics">
+          <div><dt>Pledged on</dt><dd>${e(formatDate(m.signedAt) || 'Not recorded')}</dd></div>
+          <div><dt>Amount Donated</dt><dd>${e(formatMoney(getDonationTotals().all))}</dd></div>
+          <div><dt>Volunteer Offers</dt><dd>${getMemberVolunteerInterests().length}</dd></div>
+          <div><dt>Reports (Guilty)</dt><dd>${guiltyReportsAgainst}</dd></div>
+        </dl>
+        <dl class="resume-metrics">
+          <div><dt>Hours Worked</dt><dd>${e(String(confirmedHours))}</dd></div>
+          <div><dt>Hours Used</dt><dd>${cleanHours(m.hoursUsed)}</dd></div>
+          <div><dt>Items Gifted</dt><dd>${cleanCount(m.itemsGifted)}</dd></div>
+          <div><dt>Items Taken</dt><dd>${cleanCount(m.itemsTaken)}</dd></div>
+        </dl>
+      </div>`),
+      section('Local account access', `
+        ${rows([accountDetail('Username', e(credential && credential.username ? credential.username : 'Not set'))])}
+        <p class="account-note">This is a local demo credential, not a real login. A salted password hash is stored only on this device; nothing is transmitted.</p>`)
+    ].join('');
   }
 
   function renderAccountInfo() {
@@ -4214,9 +4206,6 @@
     const m = state.pledge;
     const s = state.settings || {};
     const e = escapeHtml;
-    const credential = getCredential();
-    const confirmedHours = getHourTotals().all;
-    const reportsAgainst = reportsAboutMember().length;
     const notice = state.settings && state.settings.showPrototypeNotices
       ? `<p class="prototype-note">Prototype: account details, your username, and a salted password hash are stored only on this device. There is no real authentication or server, and nothing is transmitted.</p>`
       : '';
@@ -4225,17 +4214,15 @@
         <div>
           <p class="eyebrow">Settings</p>
           <h3>Account &amp; preferences</h3>
-          <p class="account-subtitle">Your membership record and the local settings for this prototype, together in one place.</p>
+          <p class="account-subtitle">Edit what neighbors see, choose what stays private, and set how this prototype behaves on this device.</p>
         </div>
-        <a class="button button--outline button--small" href="profile.html">View public resume</a>
+        <a class="button button--outline button--small" href="profile.html">View member profile</a>
       </header>
       ${notice}
       ${renderMemberLabelsHtml(m)}
       ${renderSeedThankYou(m)}
-      ${renderAccountSummary(m)}
-      ${renderAccountDetailGroups(m, credential, confirmedHours, reportsAgainst)}
-      <details class="account-edit">
-        <summary><span>Edit account details</span><span class="account-section-hint">Name, profile, privacy, and counts</span></summary>
+      <details class="account-edit" open>
+        <summary><span>Edit profile &amp; account details</span><span class="account-section-hint">What neighbors see, privacy, and local counts</span></summary>
         <form class="account-form" data-account-form>
           <fieldset>
             <legend>Basics</legend>
@@ -4299,9 +4286,9 @@
             </div>
           </fieldset>
           <fieldset>
-            <legend>Activity counts</legend>
+            <legend>Commons counts</legend>
+            <p class="account-note">Amounts donated are recorded through the donate flow and stay private; they are not entered here.</p>
             <div class="form-row">
-              <div class="field"><label for="account-donations">Donation count</label><input type="number" id="account-donations" name="donationCount" min="0" step="1" value="${cleanCount(m.donationCount)}"></div>
               <div class="field"><label for="account-hours-used">Hours used</label><input type="number" id="account-hours-used" name="hoursUsed" min="0" step="0.25" value="${cleanHours(m.hoursUsed)}"></div>
               <div class="field"><label for="account-items-gifted">Items gifted</label><input type="number" id="account-items-gifted" name="itemsGifted" min="0" step="1" value="${cleanCount(m.itemsGifted)}"></div>
               <div class="field"><label for="account-items-taken">Items taken</label><input type="number" id="account-items-taken" name="itemsTaken" min="0" step="1" value="${cleanCount(m.itemsTaken)}"></div>
@@ -4317,7 +4304,7 @@
           </div>
         </form>
       </details>
-      <p class="account-note">Only you can see this full record on this device. Your public resume hides your legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and phone unless you opt in to show the phone. Hours worked are never typed here; they appear only after mutual confirmation or review. To withdraw your membership, use the button in the pledge section.</p>
+      <p class="account-note">Changes are saved only on this device; nothing is transmitted. Your public resume hides your legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated, and shows your phone only if you opt in. Hours worked are never typed here; they appear after mutual confirmation or review. To withdraw your membership, use the button in the pledge section.</p>
       <div class="settings-block">
         <h4>Local preferences</h4>
         <p class="account-note">These settings only change how this prototype behaves on this device. Nothing is sent anywhere.</p>
@@ -4348,7 +4335,6 @@
       profession: cleanString(member.profession, 80),
       paidSkills: cleanString(member.paidSkills, 400),
       unpaidSkills: cleanString(member.unpaidSkills, 400),
-      donationCount: cleanCount(member.donationCount),
       hoursWorked,
       hoursCompleted: hoursWorked,
       hoursUsed: cleanHours(member.hoursUsed),
@@ -4368,7 +4354,8 @@
     const m = state.pledge;
     const credential = getCredential();
     const confirmedHours = getHourTotals(m && m.memberId).all;
-    const reportsAgainst = reportsAboutMember().length;
+    const guiltyReportsAgainst = reportsAboutMember()
+      .filter((report) => report && ['restriction_active', 'access_restored'].includes(report.status)).length;
 
     if (!m) {
       publicPanel.innerHTML = `<section class="resume-card">
@@ -4392,7 +4379,6 @@
         : `<p class="resume-empty">Not listed yet.</p>`;
     };
     const metrics = [
-      ['Donation count', resume.donationCount],
       ['Hours worked', resume.hoursWorked],
       ['Hours used', resume.hoursUsed],
       ['Items gifted', resume.itemsGifted],
@@ -4431,7 +4417,7 @@
           ${metrics.map(([label, value]) => `<div><dt>${e(label)}</dt><dd>${e(value)}</dd></div>`).join('')}
         </dl>
       </div>
-      <p class="account-note">This resume shows only the chosen first name, picture, tag line, bio, profession, City/State, skills, commons totals, availability, and an optional public phone. Legal name, street and mailing addresses, ZIP, housing status, birthdate, group, and report count are never included.</p>
+      <p class="account-note">This resume shows only the chosen first name, picture, tag line, bio, profession, City/State, skills, hours, item totals, availability, and an optional public phone. Legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated are never included.</p>
       ${isMember() ? `<p class="field-hint">This prototype stores one local member profile. Opening the report fills the name from this resume; you do not type it.</p>` : ''}
     </section>`;
 
@@ -4441,18 +4427,26 @@
       return;
     }
 
-    privatePanel.innerHTML = `<section class="account-card private-profile" aria-labelledby="private-profile-title">
-      <header class="account-panel-head">
+    privatePanel.innerHTML = `<section class="resume-card private-profile" aria-labelledby="private-profile-title">
+      <div class="resume-head">
+        ${m.picture ? `<img class="resume-photo" src="${e(safeProfileImageUrl(m.picture))}" alt="Your profile picture">` : ''}
         <div>
           <p class="eyebrow">Private to you</p>
           <h2 id="private-profile-title">Your full member record</h2>
-          <p class="account-subtitle">This section appears only in your signed-in browser. It is not part of the public resume.</p>
+          ${m.tagline ? `<p class="resume-tagline">${e(m.tagline)}</p>` : ''}
+          ${m.profession ? `<p class="resume-profession">${e(m.profession)}</p>` : ''}
+          <p class="resume-location"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-pin"></use></svg> ${e(m.location || 'Location not shared')}</p>
         </div>
-        <a class="button button--outline button--small" href="dashboard.html">Edit in Dashboard</a>
-      </header>
-      ${renderAccountSummary(m)}
-      ${renderAccountDetailGroups(m, credential, confirmedHours, reportsAgainst)}
-      <p class="account-note">City, State, ZIP, birthdate, group, report count, and every sensitive record stay here.</p>
+        <span class="resume-availability ${m.available === false ? '' : 'is-available'}">${m.available === false ? 'Not available right now' : 'Available'}</span>
+        <a class="button button--outline button--small" href="dashboard.html#settings">Edit profile</a>
+      </div>
+      <p class="private-notice"><strong>Not your public profile.</strong> Everything below is visible only in your signed-in browser on this device. Neighbors see the public resume card above, not this record.</p>
+      <div class="resume-section">
+        <h3>Membership at a glance</h3>
+        ${renderAccountSummary(m)}
+      </div>
+      ${renderAccountDetailGroups(m, credential, confirmedHours, guiltyReportsAgainst)}
+      <p class="account-note">City, State, ZIP, birthdate, group, report count, amounts donated, and every sensitive record stay here. Hours worked are never typed by hand; they appear only after mutual confirmation or review.</p>
     </section>`;
   }
 
@@ -4785,16 +4779,66 @@
     </section>`;
   }
 
+  const MESSAGE_FOLDERS = {
+    inbox: 'Inbox',
+    sent: 'Sent',
+    archive: 'Archive',
+    trash: 'Trash',
+    starred: 'Starred'
+  };
+  let activeMessageFolder = 'inbox';
+
+  function messageFolder(message) {
+    if (message && hasOwn(MESSAGE_FOLDERS, message.folder)) return message.folder;
+    return message && message.toName ? 'sent' : 'inbox';
+  }
+
   function renderMessages() {
     const panel = document.getElementById('messages-panel');
     if (!panel || !isMember()) return;
     const e = escapeHtml;
-    const messages = (Array.isArray(state.messages) ? state.messages : []).slice(-20).reverse();
+    const messages = (Array.isArray(state.messages) ? state.messages : []).slice().reverse();
+    const counts = {
+      inbox: messages.filter((message) => messageFolder(message) === 'inbox').length,
+      sent: messages.filter((message) => messageFolder(message) === 'sent').length,
+      archive: messages.filter((message) => messageFolder(message) === 'archive').length,
+      trash: messages.filter((message) => messageFolder(message) === 'trash').length,
+      starred: messages.filter((message) => message.starred && messageFolder(message) !== 'trash').length
+    };
+    const visible = activeMessageFolder === 'starred'
+      ? messages.filter((message) => message.starred && messageFolder(message) !== 'trash')
+      : messages.filter((message) => messageFolder(message) === activeMessageFolder);
+    const emptyCopy = {
+      inbox: 'No incoming messages in this local prototype. Messages you record appear in Sent.',
+      sent: 'No messages recorded yet.',
+      archive: 'No archived messages.',
+      trash: 'Trash is empty.',
+      starred: 'No starred messages.'
+    };
+    const folderButtons = Object.entries(MESSAGE_FOLDERS).map(([key, label]) => `<button
+      class="mailbox-tab" type="button" role="tab" data-message-folder="${key}"
+      aria-selected="${key === activeMessageFolder}">${label} <span class="mailbox-count">${counts[key]}</span></button>`).join('');
+
     panel.innerHTML = `<section class="account-card">
+      <nav class="mailbox-tabs" role="tablist" aria-label="Message folders">${folderButtons}</nav>
       <p class="eyebrow">Messaging</p>
       <h3>Your messages</h3>
-      <p class="account-note">Consent-based requests and replies would gather here in a live system. In this prototype, messages stay on this device.</p>
-      ${messages.length ? `<ul class="contribution-list">${messages.map((message) => `<li class="contribution-item"><strong>${e(message.name)}${message.toName ? ` → ${e(message.toName)}` : ''}</strong><span>${e(message.body)}</span><span class="contribution-meta">${e(formatDate(message.createdAt))} · ${e(message.status || 'recorded')}</span>${message.toName ? `<button class="button button--ghost button--small button--report" type="button" data-report-context data-report-area="Dashboard messages" data-report-detail="Message to ${e(message.toName)}" data-report-name="${e(message.toName)}" data-report-source-id="${e(message.id)}" aria-label="Report a concern about the message to ${e(message.toName)}">Report</button>` : ''}</li>`).join('')}</ul>` : `<p class="account-note">No messages recorded yet.</p>`}
+      <p class="account-note">Consent-based requests and replies would gather here in a live system. In this prototype, folders, stars, and messages stay on this device; nothing is sent.</p>
+      ${visible.length ? `<ul class="contribution-list">${visible.map((message) => {
+        const folder = messageFolder(message);
+        const actions = [
+          `<button class="button button--ghost button--tiny" type="button" data-message-action="star" data-message-id="${e(message.id)}" aria-label="${message.starred ? 'Remove star from' : 'Star'} this message">${message.starred ? 'Unstar' : 'Star'}</button>`,
+          folder === 'archive' || folder === 'trash' ? '' : `<button class="button button--ghost button--tiny" type="button" data-message-action="archive" data-message-id="${e(message.id)}" aria-label="Archive this message">Archive</button>`,
+          folder === 'trash' ? `<button class="button button--ghost button--tiny" type="button" data-message-action="restore" data-message-id="${e(message.id)}" aria-label="Restore this message">Restore</button>` : `<button class="button button--ghost button--tiny" type="button" data-message-action="trash" data-message-id="${e(message.id)}" aria-label="Move this message to trash">Trash</button>`,
+          message.toName ? `<button class="button button--ghost button--small button--report" type="button" data-report-context data-report-area="Dashboard messages" data-report-detail="Message to ${e(message.toName)}" data-report-name="${e(message.toName)}" data-report-source-id="${e(message.id)}" aria-label="Report a concern about the message to ${e(message.toName)}">Report</button>` : ''
+        ].filter(Boolean).join('');
+        return `<li class="contribution-item">
+          <strong>${e(message.name)}${message.toName ? ` → ${e(message.toName)}` : ''}</strong>
+          <span>${e(message.body)}</span>
+          <span class="contribution-meta">${e(formatDate(message.createdAt))} · ${e(message.status || 'recorded')}${message.starred ? ' · Starred' : ''}</span>
+          <span class="message-actions">${actions}</span>
+        </li>`;
+      }).join('')}</ul>` : `<p class="account-note">${e(emptyCopy[activeMessageFolder])}</p>`}
       <form class="account-form" data-message-form>
         <div class="field">
           <label for="message-to">To (chosen name)</label>
@@ -4838,11 +4882,45 @@
     </section>`;
   }
 
+  function townGroupName() {
+    const m = state.pledge;
+    if (!m) return '';
+    const address = m.publicAddressSource === 'physical' ? m.physicalAddress : m.mailingAddress;
+    const place = parseCityState(address) || parseCityState(m.location) || safeCity(m.location)
+      || safeCity(m.physicalAddress) || safeCity(m.mailingAddress);
+    return place ? `${place.split(',')[0].trim()} Group` : '';
+  }
+
+  function syncTownGroup() {
+    if (!isMember()) return;
+    const name = townGroupName();
+    if (!name) return;
+    state.groups = Array.isArray(state.groups) ? state.groups : [];
+    const town = state.groups.find((group) => group && group.kind === 'town');
+    if (!town) {
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      state.groups.unshift({
+        id: `town-${slug || 'main'}`,
+        kind: 'town',
+        name,
+        purpose: 'Your main local group. Everyone in your town belongs here; other groups are social or support circles.',
+        memberCount: 1,
+        createdAt: new Date().toISOString()
+      });
+      saveState();
+      return;
+    }
+    if (town.name !== name) {
+      town.name = name;
+      saveState();
+    }
+  }
+
   function socialAudienceOptions(friends, groups) {
     const e = escapeHtml;
     const options = [`<option value="friends">Friends (${friends.length}/${SOCIAL_LIMITS.friends})</option>`];
     groups.forEach((group) => {
-      const label = group.kind === 'own' ? 'Your group' : 'Group';
+      const label = group.kind === 'town' ? 'Main group' : group.kind === 'own' ? 'Your group' : 'Group';
       options.push(`<option value="${e(group.kind)}:${e(group.id)}">${label}: ${e(group.name)} (${group.memberCount}/${SOCIAL_LIMITS.groupMembers})</option>`);
     });
     return options.join('');
@@ -4853,7 +4931,10 @@
     if (!panel || !isMember()) return;
     const e = escapeHtml;
     const friends = (Array.isArray(state.friends) ? state.friends : []).slice(0, SOCIAL_LIMITS.friends);
-    const groups = (Array.isArray(state.groups) ? state.groups : []).slice(0, 100);
+    const groups = (Array.isArray(state.groups) ? state.groups : [])
+      .slice()
+      .sort((a, b) => Number(b && b.kind === 'town') - Number(a && a.kind === 'town'))
+      .slice(0, 100);
     const chats = (Array.isArray(state.socialChats) ? state.socialChats : []).slice(-12).reverse();
     const canAddFriend = friends.length < SOCIAL_LIMITS.friends;
     const hasOwnGroup = (Array.isArray(state.groups) ? state.groups : [])
@@ -4862,7 +4943,7 @@
     panel.innerHTML = `<section class="account-card">
       <p class="eyebrow">Social circles</p>
       <h3>Friends &amp; groups</h3>
-      <p class="account-note">This prototype has one local account. Friends, groups, and chat audiences are saved on this device only; no invitations or messages are sent, and every group is capped at ${SOCIAL_LIMITS.groupMembers} people.</p>
+      <p class="account-note">Your town group is added automatically and is the main group. Every other group is a social or support circle you make or join. This prototype has one local account, so friends, groups, and chat audiences are saved only on this device; no invitations or messages are sent, and every group is capped at ${SOCIAL_LIMITS.groupMembers} people.</p>
       <div class="social-grid">
         <div class="account-block">
           <h4>Friends (${friends.length}/${SOCIAL_LIMITS.friends})</h4>
@@ -4878,7 +4959,10 @@
         </div>
         <div class="account-block">
           <h4>Groups (max ${SOCIAL_LIMITS.groupMembers} each)</h4>
-          ${groups.length ? `<ul class="social-list">${groups.map((group) => `<li class="social-item"><strong>${e(group.name)}</strong><span class="contribution-meta">${group.kind === 'own' ? 'Your group' : 'Joined group'} · ${group.memberCount}/${SOCIAL_LIMITS.groupMembers} people</span>${group.purpose ? `<span>${e(group.purpose)}</span>` : ''}</li>`).join('')}</ul>` : '<p class="account-note">No groups yet. Create your own or record one you joined.</p>'}
+          ${groups.length ? `<ul class="social-list">${groups.map((group) => {
+            const kindLabel = group.kind === 'town' ? 'Main group · automatic' : group.kind === 'own' ? 'Your group' : 'Joined group';
+            return `<li class="social-item ${group.kind === 'town' ? 'social-item--main' : ''}"><strong>${e(group.name)}</strong><span class="contribution-meta">${kindLabel} · ${group.memberCount}/${SOCIAL_LIMITS.groupMembers} people</span>${group.purpose ? `<span>${e(group.purpose)}</span>` : ''}</li>`;
+          }).join('')}</ul>` : '<p class="account-note">Add a town in your profile to get your main group, or create a social or support group below.</p>'}
           <form class="account-form" data-group-form>
             <div class="form-row">
               <div class="field">
@@ -4907,7 +4991,7 @@
       </div>
       <div class="account-block">
         <h4>Social chat</h4>
-        <p class="account-note">Choose friends, your own group, or a group you joined. Each message is a local draft with the audience written on it; nothing is delivered.</p>
+        <p class="account-note">Choose friends, your automatic town group, your own group, or a group you joined. Each message is a local draft with the audience written on it; nothing is delivered.</p>
         <ul class="chat-list social-chat-list">
           ${chats.length ? chats.map((chat) => `<li class="chat-message"><p class="contribution-meta"><strong>${e(chat.name)}</strong> → ${e(chat.audienceLabel)} · ${e(formatDate(chat.createdAt))}</p><p>${e(chat.body)}</p><button class="button button--ghost button--small button--report" type="button" data-report-context data-report-area="Social chat" data-report-detail="${e(chat.audienceLabel)}" data-report-name="${e(chat.name)}" data-report-source-id="${e(chat.id)}" aria-label="Report a concern about a social chat message from ${e(chat.name)}">Report</button></li>`).join('') : '<li class="account-note">No social chat drafts yet.</li>'}
         </ul>
@@ -4979,6 +5063,38 @@
     initDashboardTabs();
 
     dash.addEventListener('click', (event) => {
+      const folderTab = event.target.closest('[data-message-folder]');
+      if (folderTab) {
+        activeMessageFolder = folderTab.dataset.messageFolder;
+        renderMessages();
+        return;
+      }
+      const messageAction = event.target.closest('[data-message-action]');
+      if (messageAction) {
+        const message = (Array.isArray(state.messages) ? state.messages : [])
+          .find((item) => item && item.id === messageAction.dataset.messageId);
+        if (!message) return;
+        const action = messageAction.dataset.messageAction;
+        if (action === 'star') {
+          message.starred = !message.starred;
+        } else if (action === 'archive') {
+          message.folder = 'archive';
+          activeMessageFolder = 'archive';
+        } else if (action === 'trash') {
+          message.folder = 'trash';
+          activeMessageFolder = 'trash';
+        } else if (action === 'restore') {
+          message.folder = message.toName ? 'sent' : 'inbox';
+          activeMessageFolder = message.folder;
+        } else {
+          return;
+        }
+        saveState();
+        renderMessages();
+        announce(`Message ${action} recorded locally.`);
+        showToast(action === 'star' ? 'Star updated locally.' : 'Message folder updated locally.', false);
+        return;
+      }
       const openTab = event.target.closest('[data-notification-tab]');
       if (openTab) {
         setDashboardTab(openTab.dataset.notificationTab);
@@ -5114,8 +5230,8 @@
         state.pledge.bio = cleanString(data.get('bio'), 600);
         state.pledge.tagline = cleanString(data.get('tagline'), 90);
         state.pledge.group = cleanString(data.get('group'), 80);
-        state.pledge.donationCount = cleanCount(data.get('donationCount'));
-        // Hours are derived only from mutual confirmation or review votes.
+        // Donation amounts are recorded through the donate flow. Hours are
+        // derived only from mutual confirmation or review votes.
         state.pledge.hoursCompleted = getHourTotals().all;
         state.pledge.hoursUsed = cleanHours(data.get('hoursUsed'));
         state.pledge.itemsGifted = cleanCount(data.get('itemsGifted'));
@@ -5137,6 +5253,7 @@
             state.pledge.picture = safeProfileImageUrl(photo.dataUrl);
           }
         }
+        syncTownGroup();
         saveState();
         renderAccountInfo();
         renderSharedMemberViews();
@@ -5193,13 +5310,16 @@
           toName,
           body,
           createdAt: now,
-          status: 'recorded'
+          status: 'recorded',
+          folder: 'sent',
+          starred: false
         };
         state.messages.push(message);
         addNotification('message', `Message recorded to ${toName}`,
           'Saved locally as a draft. In a live system the recipient would be notified; no message was delivered.',
           { tab: 'messages', sourceId: message.id });
         state.messages = state.messages.slice(-300);
+        activeMessageFolder = 'sent';
         saveState();
         renderMessages();
         renderNotifications();
@@ -5271,11 +5391,14 @@
         const audience = cleanString(data.get('audience'), 40) || 'friends';
         if (!body) return;
         let audienceLabel = `Friends (${(Array.isArray(state.friends) ? state.friends : []).length}/${SOCIAL_LIMITS.friends})`;
-        if (audience.startsWith('own:') || audience.startsWith('joined:')) {
+        if (audience.startsWith('town:') || audience.startsWith('own:') || audience.startsWith('joined:')) {
           const groupId = audience.slice(audience.indexOf(':') + 1);
           const group = (Array.isArray(state.groups) ? state.groups : [])
             .find((item) => item && item.id === groupId);
-          if (group) audienceLabel = `${group.kind === 'own' ? 'Your group' : 'Group'}: ${group.name}`;
+          if (group) {
+            const label = group.kind === 'town' ? 'Main group' : group.kind === 'own' ? 'Your group' : 'Group';
+            audienceLabel = `${label}: ${group.name}`;
+          }
         }
         const chat = {
           id: makeId('social-chat'),
@@ -7744,8 +7867,10 @@
     initPledgeForm();
     initSigninForm();
     initVolunteerForm();
+    syncTownGroup();
     initDashboard();
     initDashboardMenu();
+    initProfileViewToggle();
     initAccountability();
     initTracks();
     initTabs();

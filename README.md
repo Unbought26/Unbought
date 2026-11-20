@@ -251,11 +251,13 @@ and point back to the comment on Free Labor or Free Stuff instead. A live system
 would notify neighbors about messages, requests, and comments on their posts;
 this prototype delivers nothing.
 
-Dashboard → Friends & Groups stores friends by chosen name, one group of your own,
-groups you have joined, and social chat drafts addressed to friends or one of those
-groups. Each chat record carries its audience label. There is a single local account,
-so there are no invitations, account lookups, or changes to another person’s data.
-Friend lists are capped at 150 people and every group at 150 people.
+Dashboard → Friends & Groups automatically places the member in the main group named
+after their town (for example, "Stroudsburg Group"). Other groups are social or
+support circles the member creates or joins. The panel also stores friends by chosen
+name and social chat drafts addressed to friends or any group; each chat record
+carries its audience label. There is a single local account, so there are no
+invitations, account lookups, or changes to another person’s data. Friend lists are
+capped at 150 people and every group at 150 people.
 
 Free Labor and Free Stuff listings have local comment threads with replies (a reply
 simply quotes the earlier chosen name). Comments on the static seed listings are
