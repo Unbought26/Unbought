@@ -715,8 +715,8 @@
 
   // Membership years start at the exact moment of the northern vernal
   // equinox, not on January 1. Times are published UTC instants, rounded to
-  // the minute. The 2027 equinox (20:25 UTC / 4:25pm Eastern) is both the end
-  // of Unbought's first year and the label rollout moment.
+  // the minute. The 2027 equinox (20:25 UTC / 4:25pm Eastern) ends the beta
+  // period, rolls out labels, and begins Unbought's first official year.
   const VERNAL_EQUINOXES = Object.freeze([
     { year: 2026, at: '2026-03-20T14:46:00.000Z' },
     { year: 2027, at: '2027-03-20T20:25:00.000Z' },
@@ -942,7 +942,7 @@
     const badges = labels.map((label) => `<span class="member-label member-label--${label.key}${live ? '' : ' is-pending'}">${escapeHtml(label.name)}</span>`).join('');
     const note = live
       ? labels.map((label) => escapeHtml(label.detail)).join(' ')
-      : `Pending rollout on ${escapeHtml(formatDate(LABEL_ROLLOUT_AT))} at 4:25pm Eastern (the exact 2027 vernal equinox). ${labels.map((label) => escapeHtml(label.detail)).join(' ')}`;
+      : `Beta testing runs until the exact 2027 vernal equinox, March 20, 2027 at 4:25pm Eastern — the day Unbought rolls out for everyone. Until then, people can become seed members, and we log the day each one joins. The site will not roll out before that moment; it is the first day of Unbought's first official year, so your labels stay pending until then. ${labels.map((label) => escapeHtml(label.detail)).join(' ')}`;
     return `<div class="member-labels" role="note"><div class="member-label-list">${badges}</div><p>${note}</p>${guidelinesLink}</div>`;
   }
 
@@ -963,7 +963,7 @@
         <p><strong>To:</strong> ${e(firstName)} (chosen name; no email is collected)<br><strong>Subject:</strong> ${e(`Thank you for starting Unbought, ${firstName}`)}</p>
         <p>Hi ${e(firstName)},</p>
         <p>Thank you for helping to start the movement. You are the first ${e(profession)} to sign up for Unbought in ZIP ${e(zip || 'your area')} — a seed member. ${founding ? 'Because you signed during the first equinox year, you are also a founding member.' : ''} Seed members are the people who prove a new trade can take root in a place; the whole commons begins with someone willing to go first.</p>
-        <p>Your labels stay pending until the exact 2027 vernal equinox, March 20 at 4:25pm Eastern — the end of Unbought's first year. If we are successful, we hope to partner with an organization and throw a huge festival somewhere in the United States on the following equinox, March 20, 2028 — one full year after rollout — to celebrate the movement and its seed and founding members. Nothing is booked or confirmed yet, but as a seed member you will hear about it first.</p>
+        <p>Beta testing runs until the exact 2027 vernal equinox, March 20, 2027 at 4:25pm Eastern — the day Unbought rolls out for everyone and the first day of its first official year. Until then, people can become seed members, and we log the day each one joins. Your labels stay pending until rollout. If we are successful, we hope to partner with an organization and throw a huge festival somewhere in the United States on the following equinox, March 20, 2028 — one full year after rollout — to celebrate the movement and its seed and founding members. Nothing is booked or confirmed yet, but as a seed member you will hear about it first.</p>
         <p>Ways to get the ball rolling:</p>
         <ul>
           <li>Talk to other professionals in your area and invite them to take the pledge.</li>
@@ -1005,6 +1005,36 @@
     saveState();
   }
 
+  function updateHeaderNotificationBadge() {
+    const btn = document.querySelector('[data-notifications-cta]');
+    if (!btn) return;
+    const unread = unreadNotificationCount();
+    const badge = btn.querySelector('.notification-badge');
+    if (badge) {
+      badge.textContent = unread > 99 ? '99+' : String(unread);
+      badge.hidden = !unread;
+    }
+    btn.setAttribute('aria-label', unread ? `Notifications, ${unread} unread` : 'Notifications');
+  }
+
+  function initHeaderNotifications() {
+    const cta = document.querySelector('.header-inner [data-auth-cta]');
+    if (!cta || document.querySelector('[data-notifications-cta]')) return;
+    const btn = document.createElement('a');
+    btn.className = 'header-notifications';
+    btn.setAttribute('data-notifications-cta', '');
+    btn.setAttribute('aria-label', 'Notifications');
+    btn.setAttribute('href', 'dashboard.html#notifications');
+    btn.innerHTML = '<svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/></svg><span class="notification-badge" hidden></span>';
+    cta.insertAdjacentElement('afterend', btn);
+    btn.addEventListener('click', (event) => {
+      if (window.location.pathname.split('/').pop() === 'dashboard.html') {
+        event.preventDefault();
+        setDashboardTab('notifications');
+      }
+    });
+  }
+
   // The signed pledge is the sign-in. Members land on the dashboard; everyone
   // else is invited to "Take the Pledge" on its dedicated page.
   function renderAuthUi() {
@@ -1018,6 +1048,10 @@
       element.setAttribute('href', href);
       element.setAttribute('aria-label', label);
     });
+
+    const headerNotifications = document.querySelector('[data-notifications-cta]');
+    if (headerNotifications) headerNotifications.hidden = !signedIn;
+    updateHeaderNotificationBadge();
 
     // Members do not need the pledge page, so retire pledge-only nav links.
     document.querySelectorAll('[data-pledge-nav]').forEach((item) => {
@@ -3976,13 +4010,14 @@
     }
   }
 
+  // Panels that belong to The Commons. Only these reveal the vertical left nav.
+  const COMMONS_PANELS = ['commons', 'exchanges', 'messages', 'review', 'social', 'suggestions'];
+
   function setDashboardTab(name) {
     const tabs = Array.from(document.querySelectorAll('[data-dashboard-tab]'));
     const panels = Array.from(document.querySelectorAll('[data-dashboard-panel]'));
     const tab = tabs.find((item) => item.dataset.dashboardTab === name);
 
-    // Newsboard is the landing region and has no tab button. Its menu button
-    // still needs to work, so a missing tab is not an error here.
     tabs.forEach((item) => {
       const active = item === tab;
       item.setAttribute('aria-selected', String(active));
@@ -3992,14 +4027,24 @@
       panel.hidden = panel.dataset.dashboardPanel !== name;
     });
 
-    const menuItems = Array.from(document.querySelectorAll('[data-menu-tab]'));
-    const menuItem = menuItems.find((item) => item.dataset.menuTab === name);
+    // The first menu has four views. The Commons owns the second, vertical nav;
+    // Account and preferences now live together under Settings.
+    const view = name === 'settings' ? 'settings'
+      : COMMONS_PANELS.includes(name) ? 'commons'
+        : name === 'overview' ? 'overview' : '';
+    const menuItems = Array.from(document.querySelectorAll('[data-dashboard-view]'));
+    const menuItem = menuItems.find((item) => item.dataset.dashboardView === view);
     menuItems.forEach((item) => {
       const active = item === menuItem;
       item.classList.toggle('is-active', active);
       if (active) item.setAttribute('aria-current', 'page');
       else item.removeAttribute('aria-current');
     });
+
+    const commonsNav = document.querySelector('.dashboard-tabs');
+    if (commonsNav) commonsNav.hidden = view !== 'commons';
+    const body = document.querySelector('.dashboard-body');
+    if (body) body.classList.toggle('has-commons-nav', view === 'commons');
 
     const focusTarget = tab || menuItem;
     if (focusTarget) focusTarget.focus({ preventScroll: true });
@@ -4009,10 +4054,10 @@
     const menu = document.querySelector('.dashboard-menu');
     if (!menu) return;
     menu.addEventListener('click', (event) => {
-      const item = event.target.closest('[data-menu-tab]');
+      const item = event.target.closest('[data-dashboard-view]');
       if (!item) return;
       event.preventDefault();
-      setDashboardTab(item.dataset.menuTab);
+      setDashboardTab(item.dataset.dashboardView);
     });
   }
 
@@ -4164,9 +4209,10 @@
   }
 
   function renderAccountInfo() {
-    const panel = document.getElementById('account-info-panel');
+    const panel = document.getElementById('settings-panel');
     if (!panel || !isMember()) return;
     const m = state.pledge;
+    const s = state.settings || {};
     const e = escapeHtml;
     const credential = getCredential();
     const confirmedHours = getHourTotals().all;
@@ -4177,9 +4223,9 @@
     panel.innerHTML = `<section class="account-card account-panel">
       <header class="account-panel-head">
         <div>
-          <p class="eyebrow">Account</p>
-          <h3>Your membership</h3>
-          <p class="account-subtitle">Your private record in the commons, grouped so you can find what matters and open the rest when you need it.</p>
+          <p class="eyebrow">Settings</p>
+          <h3>Account &amp; preferences</h3>
+          <p class="account-subtitle">Your membership record and the local settings for this prototype, together in one place.</p>
         </div>
         <a class="button button--outline button--small" href="profile.html">View public resume</a>
       </header>
@@ -4272,25 +4318,22 @@
         </form>
       </details>
       <p class="account-note">Only you can see this full record on this device. Your public resume hides your legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and phone unless you opt in to show the phone. Hours worked are never typed here; they appear only after mutual confirmation or review. To withdraw your membership, use the button in the pledge section.</p>
+      <div class="settings-block">
+        <h4>Local preferences</h4>
+        <p class="account-note">These settings only change how this prototype behaves on this device. Nothing is sent anywhere.</p>
+        <form class="account-form" data-settings-form>
+          <label class="checkbox"><input type="checkbox" name="compactDashboard" ${s.compactDashboard ? 'checked' : ''}> <span>Use compact spacing on the dashboard</span></label>
+          <label class="checkbox"><input type="checkbox" name="showPrototypeNotices" ${s.showPrototypeNotices ? 'checked' : ''}> <span>Show prototype notices</span></label>
+          <div class="account-form-actions">
+            <button type="submit" class="button button--primary button--small">Save settings</button>
+          </div>
+        </form>
+      </div>
     </section>`;
   }
 
   function renderSettings() {
-    const panel = document.getElementById('settings-panel');
-    if (!panel || !isMember()) return;
-    const s = state.settings || {};
-    panel.innerHTML = `<section class="account-card">
-      <p class="eyebrow">Settings</p>
-      <h3>Your local preferences</h3>
-      <p class="account-note">These settings only change how this prototype behaves on this device. Nothing is sent anywhere.</p>
-      <form class="account-form" data-settings-form>
-        <label class="checkbox"><input type="checkbox" name="compactDashboard" ${s.compactDashboard ? 'checked' : ''}> <span>Use compact spacing on the dashboard</span></label>
-        <label class="checkbox"><input type="checkbox" name="showPrototypeNotices" ${s.showPrototypeNotices ? 'checked' : ''}> <span>Show prototype notices</span></label>
-        <div class="account-form-actions">
-          <button type="submit" class="button button--primary button--small">Save settings</button>
-        </div>
-      </form>
-    </section>`;
+    renderAccountInfo();
   }
 
   function getPublicResume(member) {
@@ -4772,8 +4815,7 @@
     const e = escapeHtml;
     const items = (Array.isArray(state.notifications) ? state.notifications : []).slice(0, 50);
     const unread = unreadNotificationCount();
-    const menuLabel = document.querySelector('[data-menu-tab="notifications"] span');
-    if (menuLabel) menuLabel.textContent = `Notifications${unread ? ` (${unread})` : ''}`;
+    updateHeaderNotificationBadge();
 
     panel.innerHTML = `<section class="account-card">
       <p class="eyebrow">Activity</p>
@@ -4923,7 +4965,6 @@
     renderDashboardGate();
     if (!isMember()) return;
     renderAccountInfo();
-    renderSettings();
     renderCommons();
     renderExchanges();
     renderMessages();
@@ -5280,6 +5321,12 @@
     });
 
     renderDashboard();
+
+    // The header bell links here with a hash so members open notifications directly.
+    const initialPanel = window.location.hash.replace('#', '');
+    if (['overview', 'settings', 'commons', 'exchanges', 'messages', 'review', 'social', 'notifications', 'suggestions'].includes(initialPanel)) {
+      setDashboardTab(initialPanel);
+    }
   }
 
   /* ------------------------------------------------------------------------
@@ -7693,6 +7740,7 @@
   function init() {
     initHeader();
     initPledgePage();
+    initHeaderNotifications();
     initPledgeForm();
     initSigninForm();
     initVolunteerForm();

@@ -93,99 +93,94 @@
 
         <div class="dashboard" id="member-dashboard" hidden>
           <nav class="dashboard-menu" aria-label="Dashboard menu">
-            <a class="dashboard-menu-item" href="freelabor.html">
-              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-hammer"></use></svg>
-              <span>Free Labor</span>
-            </a>
-            <a class="dashboard-menu-item" href="freestuff.html">
-              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-basket"></use></svg>
-              <span>Free Stuff</span>
-            </a>
-            <a class="dashboard-menu-item" href="donate.html">
-              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-heart"></use></svg>
-              <span>Donate</span>
-            </a>
-            <button class="dashboard-menu-item" type="button" data-menu-tab="exchanges">
-              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg>
-              <span>Exchanges</span>
-            </button>
-            <button class="dashboard-menu-item" type="button" data-menu-tab="notifications">
-              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-bell"></use></svg>
-              <span>Notifications</span>
-            </button>
-            <button class="dashboard-menu-item" type="button" data-menu-tab="social">
-              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-users"></use></svg>
-              <span>Friends &amp; Groups</span>
-            </button>
-            <button class="dashboard-menu-item" type="button" data-menu-tab="review">
-              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-scale"></use></svg>
-              <span>Review Board</span>
-            </button>
-            <button class="dashboard-menu-item is-active" type="button" data-menu-tab="newsboard" aria-current="page">
+            <button class="dashboard-menu-item is-active" type="button" data-dashboard-view="overview" aria-current="page">
               <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-spark"></use></svg>
-              <span>Newsboard</span>
+              <span>Overview</span>
+            </button>
+            <button class="dashboard-menu-item" type="button" data-dashboard-view="commons">
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-hammer"></use></svg>
+              <span>The Commons</span>
+            </button>
+            <a class="dashboard-menu-item" href="profile.html">
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-users"></use></svg>
+              <span>Profile</span>
+            </a>
+            <button class="dashboard-menu-item" type="button" data-dashboard-view="settings">
+              <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg>
+              <span>Settings</span>
             </button>
           </nav>
 
-          <nav class="dashboard-tabs" role="tablist" aria-label="Dashboard sections">
-            <button type="button" role="tab" id="dash-tab-overview" aria-controls="dash-panel-overview" aria-selected="false" tabindex="-1" data-dashboard-tab="overview">Overview</button>
-            <button type="button" role="tab" id="dash-tab-account" aria-controls="dash-panel-account" aria-selected="false" tabindex="-1" data-dashboard-tab="account">Account</button>
-            <button type="button" role="tab" id="dash-tab-settings" aria-controls="dash-panel-settings" aria-selected="false" tabindex="-1" data-dashboard-tab="settings">Settings</button>
-            <button type="button" role="tab" id="dash-tab-commons" aria-controls="dash-panel-commons" aria-selected="false" tabindex="-1" data-dashboard-tab="commons">The Commons</button>
-            <button type="button" role="tab" id="dash-tab-exchanges" aria-controls="dash-panel-exchanges" aria-selected="false" tabindex="-1" data-dashboard-tab="exchanges">Exchanges</button>
-            <button type="button" role="tab" id="dash-tab-notifications" aria-controls="dash-panel-notifications" aria-selected="false" tabindex="-1" data-dashboard-tab="notifications">Notifications</button>
-            <button type="button" role="tab" id="dash-tab-social" aria-controls="dash-panel-social" aria-selected="false" tabindex="-1" data-dashboard-tab="social">Friends &amp; Groups</button>
-            <button type="button" role="tab" id="dash-tab-messages" aria-controls="dash-panel-messages" aria-selected="false" tabindex="-1" data-dashboard-tab="messages">Messages</button>
-            <button type="button" role="tab" id="dash-tab-review" aria-controls="dash-panel-review" aria-selected="false" tabindex="-1" data-dashboard-tab="review">Review Board</button>
-            <button type="button" role="tab" id="dash-tab-suggestions" aria-controls="dash-panel-suggestions" aria-selected="false" tabindex="-1" data-dashboard-tab="suggestions">Suggestions</button>
-          </nav>
+          <div class="dashboard-body">
+            <nav class="dashboard-tabs" role="tablist" aria-label="The Commons sections" hidden>
+              <a class="dashboard-tab-link" href="freelabor.html">
+                <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-hammer"></use></svg><span>Free Labor</span>
+              </a>
+              <a class="dashboard-tab-link" href="freestuff.html">
+                <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-basket"></use></svg><span>Free Stuff</span>
+              </a>
+              <a class="dashboard-tab-link" href="donate.html">
+                <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-heart"></use></svg><span>Donate</span>
+              </a>
+              <a class="dashboard-tab-link" href="future.html#academy">
+                <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-spark"></use></svg><span>Unbought Academy</span>
+              </a>
+              <button type="button" role="tab" id="dash-tab-exchanges" aria-controls="dash-panel-exchanges" aria-selected="false" tabindex="-1" data-dashboard-tab="exchanges">
+                <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg><span>Exchanges</span>
+              </button>
+              <button type="button" role="tab" id="dash-tab-messages" aria-controls="dash-panel-messages" aria-selected="false" tabindex="-1" data-dashboard-tab="messages">
+                <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg><span>Messages</span>
+              </button>
+              <button type="button" role="tab" id="dash-tab-review" aria-controls="dash-panel-review" aria-selected="false" tabindex="-1" data-dashboard-tab="review">
+                <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-scale"></use></svg><span>Review Board</span>
+              </button>
+              <button type="button" role="tab" id="dash-tab-social" aria-controls="dash-panel-social" aria-selected="false" tabindex="-1" data-dashboard-tab="social">
+                <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-users"></use></svg><span>Friends/Groups</span>
+              </button>
+            </nav>
 
-          <div class="dashboard-panels">
-            <div role="region" id="dash-panel-newsboard" aria-labelledby="dashboard-newsboard-title" data-dashboard-panel="newsboard">
-              <div class="dashboard-newsboard">
-                <div class="section-head section-head--split">
-                  <div>
-                    <p class="eyebrow">Above-board transparency</p>
-                    <h2 id="dashboard-newsboard-title">The newsboard.</h2>
+            <div class="dashboard-panels">
+              <div role="region" id="dash-panel-overview" aria-labelledby="dashboard-newsboard-title" data-dashboard-panel="overview">
+                <div class="dashboard-newsboard">
+                  <div class="section-head section-head--split">
+                    <div>
+                      <p class="eyebrow">Above-board transparency</p>
+                      <h2 id="dashboard-newsboard-title">The newsboard.</h2>
+                    </div>
+                    <p class="section-head-aside">Your landing page. General updates about the movement and rollout, shared across the site. In the live site, posts will come from a blog service.</p>
                   </div>
-                  <p class="section-head-aside">Your landing page. General updates about the movement and rollout, shared across the site. In the live site, posts will come from a blog service.</p>
+                  <div class="newsboard-feed" data-news-feed></div>
+                  <div class="newsboard-connect">
+                    <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg>
+                    <p><strong>Blog service connection pending.</strong> These are sample posts. When the blog service is connected, public updates will appear here automatically. This prototype shows no live feed and transmits nothing.</p>
+                  </div>
                 </div>
-                <div class="newsboard-feed" data-news-feed></div>
-                <div class="newsboard-connect">
-                  <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg>
-                  <p><strong>Blog service connection pending.</strong> These are sample posts. When the blog service is connected, public updates will appear here automatically. This prototype shows no live feed and transmits nothing.</p>
-                </div>
+                <div id="member-account" class="member-account" aria-labelledby="member-account-title"></div>
               </div>
-            </div>
-            <div role="tabpanel" id="dash-panel-overview" aria-labelledby="dash-tab-overview" data-dashboard-panel="overview" hidden>
-              <div id="member-account" class="member-account" aria-labelledby="member-account-title"></div>
-            </div>
-            <div role="tabpanel" id="dash-panel-account" aria-labelledby="dash-tab-account" data-dashboard-panel="account" hidden>
-              <div id="account-info-panel" class="dashboard-render"></div>
-            </div>
-            <div role="tabpanel" id="dash-panel-settings" aria-labelledby="dash-tab-settings" data-dashboard-panel="settings" hidden>
-              <div id="settings-panel" class="dashboard-render"></div>
-            </div>
-            <div role="tabpanel" id="dash-panel-commons" aria-labelledby="dash-tab-commons" data-dashboard-panel="commons" hidden>
-              <div id="commons-panel" class="dashboard-render"></div>
-            </div>
-            <div role="tabpanel" id="dash-panel-exchanges" aria-labelledby="dash-tab-exchanges" data-dashboard-panel="exchanges" hidden>
-              <div id="exchanges-panel" class="dashboard-render"></div>
-            </div>
-            <div role="tabpanel" id="dash-panel-notifications" aria-labelledby="dash-tab-notifications" data-dashboard-panel="notifications" hidden>
-              <div id="notifications-panel" class="dashboard-render"></div>
-            </div>
-            <div role="tabpanel" id="dash-panel-social" aria-labelledby="dash-tab-social" data-dashboard-panel="social" hidden>
-              <div id="social-panel" class="dashboard-render"></div>
-            </div>
-            <div role="tabpanel" id="dash-panel-messages" aria-labelledby="dash-tab-messages" data-dashboard-panel="messages" hidden>
-              <div id="messages-panel" class="dashboard-render"></div>
-            </div>
-            <div role="tabpanel" id="dash-panel-review" aria-labelledby="dash-tab-review" data-dashboard-panel="review" hidden>
-              <div id="accountability-panel" class="accountability-panel" aria-labelledby="accountability-title"></div>
-            </div>
-            <div role="tabpanel" id="dash-panel-suggestions" aria-labelledby="dash-tab-suggestions" data-dashboard-panel="suggestions" hidden>
-              <div id="suggestions-panel" class="dashboard-render"></div>
+              <div role="tabpanel" id="dash-panel-settings" aria-label="Settings" data-dashboard-panel="settings" hidden>
+                <div id="settings-panel" class="dashboard-render"></div>
+              </div>
+              <div role="tabpanel" id="dash-panel-commons" aria-label="The Commons" data-dashboard-panel="commons" hidden>
+                <div id="commons-panel" class="dashboard-render"></div>
+              </div>
+              <div role="tabpanel" id="dash-panel-exchanges" aria-labelledby="dash-tab-exchanges" data-dashboard-panel="exchanges" hidden>
+                <div id="exchanges-panel" class="dashboard-render"></div>
+              </div>
+              <div role="tabpanel" id="dash-panel-notifications" aria-label="Notifications" data-dashboard-panel="notifications" hidden>
+                <div id="notifications-panel" class="dashboard-render"></div>
+              </div>
+              <div role="tabpanel" id="dash-panel-social" aria-labelledby="dash-tab-social" data-dashboard-panel="social" hidden>
+                <div id="social-panel" class="dashboard-render"></div>
+              </div>
+              <div role="tabpanel" id="dash-panel-messages" aria-labelledby="dash-tab-messages" data-dashboard-panel="messages" hidden>
+                <div id="messages-panel" class="dashboard-render"></div>
+              </div>
+              <div role="tabpanel" id="dash-panel-review" aria-labelledby="dash-tab-review" data-dashboard-panel="review" hidden>
+                <div id="accountability-panel" class="accountability-panel" aria-labelledby="accountability-title"></div>
+              </div>
+              <div role="tabpanel" id="dash-panel-suggestions" aria-label="Suggestions" data-dashboard-panel="suggestions" hidden>
+                <div id="suggestions-panel" class="dashboard-render"></div>
+              </div>
             </div>
           </div>
         </div>
