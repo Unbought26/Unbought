@@ -156,6 +156,56 @@
       </div>
     </section>
 
+    <section class="section fund-flow-section" id="fund-flow" aria-labelledby="fund-flow-title">
+      <div class="container">
+        <div class="section-head section-head--split">
+          <div>
+            <p class="eyebrow">Allocation plan</p>
+            <h2 id="fund-flow-title">How a dollar moves through the fund.</h2>
+          </div>
+          <p class="section-head-aside">These are planned stages, not money already held. They do not change the published priority order, and the Free Goods Fund stays donation priority #4.</p>
+        </div>
+
+        <ol class="fund-flow-grid">
+          <li class="fund-stage">
+            <span class="fund-stage-number">Stage 1</span>
+            <h3>Before rollout</h3>
+            <p>Every dollar that goes into the Unbought donation fund starts with getting Unbought off the ground: licensing, web hosting, database set up, and social media awareness. This is the pre-rollout operation goal before the March 20, 2027 rollout.</p>
+          </li>
+          <li class="fund-stage">
+            <span class="fund-stage-number">Stage 2</span>
+            <h3>Land Trust account</h3>
+            <p>Once the Land Trust account is formed and the initial start-up costs are paid, the fund funnels into an account while we are seeking accountants. It builds there until we can buy our first plot of land, house, or warehouse.</p>
+          </li>
+          <li class="fund-stage">
+            <span class="fund-stage-number">Stage 3</span>
+            <h3>Housing stability account</h3>
+            <p>Once that happens, some of the money goes into an account to keep the Land Trust alive, obtain resources, and keep the lights on. This account is separate from everything else to ensure housing stability.</p>
+          </li>
+          <li class="fund-stage">
+            <span class="fund-stage-number">Stage 4</span>
+            <h3>Vacant houses</h3>
+            <p>Vacant houses will be decorated and furnished for members to stay temporarily for free, or for non-members to stay for donations decided by the surrounding Groups. Once a group picks a house, they will get in touch with the Unbought housing team — real estate, lawyers, and others, all volunteer — if it is available to buy a house. Nothing is contacted or transmitted in this prototype.</p>
+          </li>
+          <li class="fund-stage">
+            <span class="fund-stage-number">Stage 5</span>
+            <h3>Surplus wishlist</h3>
+            <p>Once the balance sheet is organized and providing a surplus, the surplus goes toward a wishlist. Each member can search multiple items, provide links to examples, and label each as a need, a want, or a nice to have with a number. The priority lists are Active working members, Disabled, Over 65, Homeless, Under 25, and Confirmed report within the last year. Each priority list is first come, first serve; the waitlist takes the top of each list and cycles through the lists. <a href="#wishlist">See the local wishlist draft</a>.</p>
+          </li>
+        </ol>
+
+        <div class="fund-flow-rule">
+          <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-scale"></use></svg>
+          <div>
+            <h3>Active checking and surplus</h3>
+            <p>Any budget that has leftover money, that money will go into the surplus fund. Any money that is spoken for will go into an active checking fund. Savings for taxes and utilities are considered spoken for as well.</p>
+          </div>
+        </div>
+
+        <p class="fund-flow-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-clock"></use></svg> This prototype holds no money, opens no accounts, and sends no notices. The stages are a plain-language plan for the future, not a promise of housing or a payout.</p>
+      </div>
+    </section>
+
     <section class="section section--tint accountability-section" id="accountability" aria-labelledby="accountability-title">
       <div class="container">
         <div class="section-head section-head--split">
@@ -254,6 +304,14 @@
                 <textarea id="donation-note" name="note" rows="3" maxlength="280" placeholder="A hope, a question, or a skill you would also like to share."></textarea>
               </div>
 
+              <div class="field" id="donation-source-field" hidden>
+                <label for="donation-source">Credit this intent to <span class="optional">(optional, members only)</span></label>
+                <select id="donation-source" name="source">
+                  <option value="">Unbought donation fund (general)</option>
+                </select>
+                <p class="field-hint">Local accounting only. Crediting a group or alliance lets the prototype test group shares and the capped cancellation estimate. No group receives a notice and no money moves.</p>
+              </div>
+
               <div class="field field--check">
                 <label class="checkbox">
                   <input type="checkbox" id="donation-agreement" name="agreement" required>
@@ -298,6 +356,7 @@
                 <div><dt>Chosen name &amp; note</dt><dd>Optional; never the legal name</dd></div>
                 <div><dt>Saved time &amp; reference</dt><dd>Local timestamp and intent ID</dd></div>
                 <div><dt>Member link</dt><dd>Member ID only when signed in</dd></div>
+                <div><dt>Group or alliance credit</dt><dd>Optional local accounting source</dd></div>
                 <div><dt>Guest email</dt><dd>Local only, for a future thank-you</dd></div>
                 <div><dt>Private record</dt><dd>Never on a public resume</dd></div>
               </dl>
@@ -309,6 +368,112 @@
             </div>
             <a class="text-link" href="#priorities">Review the fund priority <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
           </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wishlist-section" id="wishlist" aria-labelledby="wishlist-title">
+      <div class="container">
+        <div class="section-head section-head--split">
+          <div>
+            <p class="eyebrow">Surplus allocation draft</p>
+            <h2 id="wishlist-title">A wishlist, not a spending race.</h2>
+          </div>
+          <p class="section-head-aside">This is the future surplus wishlist, separate from the closed Basic Necessities list. Its priority lists are Active working members, Disabled, Over 65, Homeless, Under 25, and Confirmed report within the last year. Each priority list is first come, first serve. It is not a store, a request for payment, or a promise that an item will be bought.</p>
+        </div>
+
+        <div class="wishlist-layout">
+          <section class="wishlist-card wishlist-card--primary" aria-labelledby="my-wishlist-title">
+            <span class="badge badge--amber">Signed-in members</span>
+            <h3 id="my-wishlist-title">Your personal wishlist</h3>
+            <p class="form-hint" id="wishlist-status">Checking whether you are signed in on this device…</p>
+
+            <div class="wishlist-gate" id="wishlist-member-gate" hidden>
+              <p>Sign in with your member or authorized-representative username on the Pledge page to save a wishlist here. Your list stays on this device and never appears on a public resume.</p>
+              <a class="button button--outline button--small" href="pledge.html#signin">Sign in to add items</a>
+            </div>
+
+            <form id="wishlist-form" hidden>
+              <div class="field">
+                <label for="wishlist-search">Search the local item catalog</label>
+                <input type="search" id="wishlist-search" name="search" maxlength="120" autocomplete="off" placeholder="Start typing: food, dental, shelter, tools…" list="wishlist-options">
+                <datalist id="wishlist-options"></datalist>
+                <p class="field-hint" id="wishlist-search-hint">Choose a suggestion or type your own item. You can add as many items as you need.</p>
+                <div class="wishlist-suggestions" id="wishlist-suggestions" aria-live="polite"></div>
+              </div>
+
+              <div class="field">
+                <label for="wishlist-item-title">Item <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="wishlist-item-title" name="title" maxlength="120" required placeholder="The item you want ranked">
+              </div>
+
+              <div class="field">
+                <label for="wishlist-group">Wishlist group <span class="required-mark" aria-hidden="true">*</span></label>
+                <select id="wishlist-group" name="wishlistGroup" required>
+                  <option value="active">Active working members</option>
+                  <option value="disabled">Disabled</option>
+                  <option value="over65">Over 65</option>
+                  <option value="homeless">Homeless</option>
+                  <option value="under25">Under 25</option>
+                  <option value="report">Confirmed report within the last year</option>
+                </select>
+                <p class="field-hint">This is a local prototype status choice, not a verified record. The waitlist uses these groups in the order shown above.</p>
+              </div>
+
+              <div class="field">
+                <label for="wishlist-example-url">Example link <span class="optional">(optional)</span></label>
+                <input type="url" id="wishlist-example-url" name="exampleUrl" maxlength="500" placeholder="https://example.com/item">
+                <p class="field-hint">A link is only a local example for a future buyer. It is never opened, checked, or sent by this prototype.</p>
+              </div>
+
+              <div class="wishlist-field-row">
+                <div class="field">
+                  <label for="wishlist-category">Priority type <span class="required-mark" aria-hidden="true">*</span></label>
+                  <select id="wishlist-category" name="category" required>
+                    <option value="need">Need</option>
+                    <option value="want">Want</option>
+                    <option value="nice">Nice to have</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="wishlist-rank">Number <span class="required-mark" aria-hidden="true">*</span></label>
+                  <input type="number" id="wishlist-rank" name="rank" min="1" max="20" step="1" value="10" required>
+                  <p class="field-hint">1 is the highest priority.</p>
+                </div>
+              </div>
+
+              <div class="field field--check">
+                <label class="checkbox">
+                  <input type="checkbox" id="wishlist-perishable" name="perishable">
+                  <span>This item is perishable and can be shown to the public right away.</span>
+                </label>
+              </div>
+
+              <p class="form-error" id="wishlist-error" role="alert" hidden></p>
+
+              <div class="form-actions form-actions--stack">
+                <button class="button button--primary" type="submit">Add to my wishlist <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-plus"></use></svg></button>
+                <p class="form-hint">Saved only in this browser. No purchase, delivery, or message is created.</p>
+              </div>
+            </form>
+
+            <div class="wishlist-owned" id="wishlist-owned" aria-live="polite"></div>
+          </section>
+
+          <div class="wishlist-side">
+            <section class="wishlist-card" aria-labelledby="wishlist-cycle-title">
+              <span class="badge badge--green">Tallied locally</span>
+              <h3 id="wishlist-cycle-title">Surplus cycle preview</h3>
+              <p class="field-hint">The waitlist follows the member-group order above. Each priority list is first come, first serve: the waitlist picks the earliest item on each list and cycles through the lists again. Need, want, nice-to-have, and the item number stay on the item as its local priority label.</p>
+              <div id="wishlist-cycle" aria-live="polite"></div>
+            </section>
+
+            <section class="wishlist-card" aria-labelledby="wishlist-public-title">
+              <h3 id="wishlist-public-title">Visible to the general public</h3>
+              <p class="field-hint">Whoever listed an item as a need sees it first. After a week, unless it is perishable, the item becomes visible here.</p>
+              <div id="wishlist-public" aria-live="polite"></div>
+            </section>
+          </div>
         </div>
       </div>
     </section>
@@ -379,6 +544,8 @@
           <ul>
             <li><a href="index.html#newsboard">Newsboard</a></li>
             <li><a href="#priorities">Fund priority</a></li>
+            <li><a href="#fund-flow">Fund stages</a></li>
+            <li><a href="#wishlist">Surplus wishlist</a></li>
             <li><a href="#accountability">No-influence policy</a></li>
             <li><a href="future.html#land">Phase 3 status</a></li>
             <li><a href="index.html#accessibility">Accessibility Statement</a></li>

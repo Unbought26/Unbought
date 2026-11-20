@@ -888,6 +888,7 @@
       requests: [],
       inquiries: [],
       donationIntents: [],
+      wishlistItems: [],
       contributions: [],
       volunteerInterests: [],
       reports: [],
@@ -904,6 +905,7 @@
         createdAt: new Date().toISOString(),
         sample: true
       }],
+      groupJoinRequests: [],
       groups: [],
       groupPosts: [],
       socialChats: [],
@@ -923,6 +925,22 @@
 
   function getCredential() {
     return state.auth && state.auth.credential ? state.auth.credential : null;
+  }
+
+  function getCredentials() {
+    if (!state.auth || typeof state.auth !== 'object') state.auth = { credential: null, session: {} };
+    if (!Array.isArray(state.auth.credentials)) state.auth.credentials = [];
+    return state.auth.credentials;
+  }
+
+  function getActiveCredential() {
+    const credentials = getCredentials();
+    const session = state.auth && state.auth.session ? state.auth.session : {};
+    const id = cleanString(session.credentialId, 100);
+    return credentials.find((credential) => credential && (credential.id === id || credential.username === id))
+      || getCredential()
+      || credentials[0]
+      || null;
   }
 
   function isSignedIn() {
@@ -1308,11 +1326,14 @@
     return (hash >>> 0).toString(16).padStart(8, '0');
   }
 
-  function setSession(signedIn) {
+  function setSession(signedIn, credential) {
     if (!state.auth) state.auth = { credential: null, session: {} };
+    const active = credential || null;
     state.auth.session = {
       signedIn: Boolean(signedIn),
-      signedInAt: signedIn ? new Date().toISOString() : null
+      signedInAt: signedIn ? new Date().toISOString() : null,
+      credentialId: active ? cleanString(active.id || active.username, 100) : null,
+      actingAs: active ? (active.role === 'representative' ? 'representative' : 'member') : null
     };
     saveState();
   }
@@ -2093,6 +2114,68 @@
     return getPeriodTotals([...contributions, ...extras], 'createdAt', (item) => Number(item.amount) || 0);
   }
 
+  const CANCELLATION_CAP = 4000;
+
+  // A cancellation estimate is a local prototype calculation, never a payout.
+  // It uses the member's share of contributions credited to their groups and
+  // alliances, multiplied by those groups' share of the donation fund, capped
+  // at $4,000. Contributions must carry a groupId or allianceId to count.
+  function getCancellationEstimate(fundBalance) {
+    const empty = {
+      estimate: 0,
+      cap: CANCELLATION_CAP,
+      capped: false,
+      memberPercent: 0,
+      groupFundPercent: 0,
+      memberGroupAmount: 0,
+      groupFundAmount: 0,
+      fundBalance: Number(fundBalance) || 0,
+      groupCount: 0,
+      allianceCount: 0
+    };
+    const member = state.pledge && state.pledge.memberId ? state.pledge : null;
+    if (!member) return empty;
+
+    const groups = Array.isArray(state.groups) ? state.groups : [];
+    const memberGroups = groups.filter((group) => group && !group.left && Array.isArray(group.members)
+      && group.members.some((entry) => entry && entry.memberId === member.memberId));
+    const groupIds = new Set(memberGroups.map((group) => cleanString(group.id, 120)).filter(Boolean));
+    const allianceIds = new Set();
+    memberGroups.forEach((group) => {
+      const settings = group.settings && typeof group.settings === 'object' ? group.settings : {};
+      const alliances = Array.isArray(settings.alliances) ? settings.alliances : [];
+      alliances.forEach((id) => {
+        const clean = cleanString(id, 120);
+        if (clean) allianceIds.add(clean);
+      });
+    });
+
+    const inScope = (entry) => entry && entry.fund === 'unbought'
+      && (groupIds.has(cleanString(entry.groupId, 120)) || allianceIds.has(cleanString(entry.allianceId, 120)));
+    const scoped = (Array.isArray(state.contributions) ? state.contributions : []).filter(inScope);
+    const groupFundAmount = scoped.reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
+    const memberGroupAmount = scoped
+      .filter((entry) => entry.memberId === member.memberId)
+      .reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
+    const memberRatio = groupFundAmount > 0 ? memberGroupAmount / groupFundAmount : 0;
+    const fundRatio = fundBalance > 0 ? groupFundAmount / fundBalance : 0;
+    const rawEstimate = Math.max(0, Number(fundBalance) || 0) * fundRatio * memberRatio;
+    const estimate = Math.round(Math.min(CANCELLATION_CAP, rawEstimate) * 100) / 100;
+
+    return {
+      estimate,
+      cap: CANCELLATION_CAP,
+      capped: rawEstimate > CANCELLATION_CAP,
+      memberPercent: Math.round(memberRatio * 1000) / 10,
+      groupFundPercent: Math.round(fundRatio * 1000) / 10,
+      memberGroupAmount: Math.round(memberGroupAmount * 100) / 100,
+      groupFundAmount: Math.round(groupFundAmount * 100) / 100,
+      fundBalance: Math.round((Number(fundBalance) || 0) * 100) / 100,
+      groupCount: groupIds.size,
+      allianceCount: allianceIds.size
+    };
+  }
+
   function getSeveranceSummary() {
     // `severanceFund` is the legacy local-storage key. It now holds the
     // Unbought donation fund balance; the severance figure is the member's
@@ -2118,7 +2201,30 @@
       purchaseTotal,
       donationCount: donations.length,
       purchaseCount: purchases.length,
-      count: donations.length + purchases.length
+      count: donations.length + purchases.length,
+      cancellation: getCancellationEstimate(balance)
+    };
+  }
+
+  // Each group gets a local, uncapped estimate of what it could spend from the
+  // surplus. It is based on the group's share of all locally credited
+  // contributions to Unbought, applied to the current local fund balance as a
+  // surplus proxy. No cap is applied and no money moves in the prototype.
+  function getGroupSurplusAllowance(groupId) {
+    const id = cleanString(groupId, 120);
+    const contributions = (Array.isArray(state.contributions) ? state.contributions : [])
+      .filter((entry) => entry && entry.fund === 'unbought');
+    const total = contributions.reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
+    const groupAmount = contributions
+      .filter((entry) => cleanString(entry.groupId, 120) === id)
+      .reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
+    const percent = total > 0 ? groupAmount / total : 0;
+    const fundBalance = getSeveranceSummary().balance;
+    return {
+      amount: Math.round(percent * fundBalance * 100) / 100,
+      percent: Math.round(percent * 1000) / 10,
+      groupAmount: Math.round(groupAmount * 100) / 100,
+      fundBalance: Math.round(fundBalance * 100) / 100
     };
   }
 
@@ -2823,6 +2929,14 @@
           available: raw.pledge.available !== false,
           publicAddressSource: raw.pledge.publicAddressSource === 'physical' ? 'physical' : 'mailing',
           publicPhone: Boolean(raw.pledge.publicPhone),
+          powerOfAttorney: raw.pledge.powerOfAttorney && typeof raw.pledge.powerOfAttorney === 'object'
+            ? {
+              enabled: Boolean(raw.pledge.powerOfAttorney.enabled),
+              representativeName: cleanString(raw.pledge.powerOfAttorney.representativeName, 80),
+              relationship: cleanString(raw.pledge.powerOfAttorney.relationship, 80),
+              username: normalizeUsername(raw.pledge.powerOfAttorney.username)
+            }
+            : null,
           profileTheme: {
             public: {
               background: validThemeColor(raw.pledge.profileTheme && raw.pledge.profileTheme.public && raw.pledge.profileTheme.public.background, PROFILE_THEME_DEFAULTS.public.background),
@@ -2864,26 +2978,64 @@
     }
 
     const rawAuth = raw.auth && typeof raw.auth === 'object' ? raw.auth : null;
+    const normalizeCredential = (item, defaultRole) => {
+      if (!item || typeof item !== 'object') return null;
+      const username = normalizeUsername(item.username);
+      const salt = cleanString(item.salt, 40);
+      const passwordHash = cleanString(item.passwordHash, 16);
+      if (!username || !salt || !passwordHash) return null;
+      const role = item.role === 'representative' ? 'representative' : defaultRole;
+      return {
+        id: cleanString(item.id, 100) || username,
+        username,
+        salt,
+        passwordHash,
+        role,
+        label: cleanString(item.label, 80) || (role === 'representative' ? 'Authorized representative' : 'Member'),
+        representativeName: cleanString(item.representativeName, 80),
+        relationship: cleanString(item.relationship, 80)
+      };
+    };
     const rawCredential = rawAuth && rawAuth.credential && typeof rawAuth.credential === 'object'
       ? rawAuth.credential
       : null;
-    if (rawCredential) {
-      const username = normalizeUsername(rawCredential.username);
-      const salt = cleanString(rawCredential.salt, 40);
-      const passwordHash = cleanString(rawCredential.passwordHash, 16);
-      if (username && salt && passwordHash) {
-        fallback.auth.credential = { username, salt, passwordHash };
-      }
+    const primaryCredential = normalizeCredential(rawCredential, 'member');
+    const credentials = [];
+    if (primaryCredential) {
+      credentials.push(primaryCredential);
+      fallback.auth.credential = {
+        username: primaryCredential.username,
+        salt: primaryCredential.salt,
+        passwordHash: primaryCredential.passwordHash
+      };
+    }
+    if (rawAuth && Array.isArray(rawAuth.credentials)) {
+      rawAuth.credentials.forEach((item) => {
+        const credential = normalizeCredential(item, 'member');
+        if (!credential || credentials.some((entry) => entry.username === credential.username)) return;
+        credentials.push(credential);
+      });
+    }
+    fallback.auth.credentials = credentials;
+    if (!fallback.auth.credential && credentials.length) {
+      fallback.auth.credential = {
+        username: credentials[0].username,
+        salt: credentials[0].salt,
+        passwordHash: credentials[0].passwordHash
+      };
     }
     if (rawAuth && rawAuth.session && typeof rawAuth.session === 'object') {
       fallback.auth.session = {
         signedIn: Boolean(rawAuth.session.signedIn),
-        signedInAt: cleanString(rawAuth.session.signedInAt, 40) || null
+        signedInAt: cleanString(rawAuth.session.signedInAt, 40) || null,
+        credentialId: cleanString(rawAuth.session.credentialId, 100)
+          || (fallback.auth.credential ? fallback.auth.credential.username : ''),
+        actingAs: rawAuth.session.actingAs === 'representative' ? 'representative' : 'member'
       };
     }
     if (!fallback.auth.credential && fallback.pledge) {
       // Legacy local pledges predate usernames; keep them signed in.
-      fallback.auth.session = { signedIn: true, signedInAt: fallback.pledge.signedAt };
+      fallback.auth.session = { signedIn: true, signedInAt: fallback.pledge.signedAt, credentialId: '', actingAs: 'member' };
     }
 
     if (typeof raw.track === 'string' && hasOwn(TRACKS, raw.track)) {
@@ -2982,9 +3134,33 @@
           savedAt: cleanString(item.savedAt, 40),
           status: cleanString(item.status, 30) || 'intent',
           stockValue: Number.isFinite(Number(item.stockValue)) ? Math.max(0, Number(item.stockValue)) : (Number.isFinite(Number(item.amount)) ? Math.max(0, Number(item.amount)) : 0),
+          groupId: cleanString(item.groupId, 120),
+          allianceId: cleanString(item.allianceId, 120),
           thankYouEmailQueued: Boolean(item.thankYouEmailQueued)
         }))
         .filter((item) => item.amount >= 1 && ['one-time', 'monthly', 'pledge-later'].includes(item.frequency));
+    }
+
+    // The surplus wishlist is a local prototype catalog. It is normalized here
+    // so donate.js additions survive the next loadState() on any page.
+    if (Array.isArray(raw.wishlistItems)) {
+      fallback.wishlistItems = raw.wishlistItems
+        .filter((item) => item && typeof item === 'object')
+        .slice(0, 200)
+        .map((item) => ({
+          id: cleanString(item.id, 100) || makeId('wish'),
+          memberId: cleanString(item.memberId, 100),
+          memberName: cleanString(item.memberName, 60),
+          title: cleanString(item.title, 120),
+          category: ['need', 'want', 'nice'].includes(item.category) ? item.category : 'want',
+          wishlistGroup: ['active', 'disabled', 'over65', 'homeless', 'under25', 'report'].includes(item.wishlistGroup) ? item.wishlistGroup : 'active',
+          rank: Number.isFinite(Number(item.rank)) ? Math.min(20, Math.max(1, Math.round(Number(item.rank)))) : 10,
+          exampleUrl: /^https?:\/\//i.test(cleanString(item.exampleUrl, 500)) ? cleanString(item.exampleUrl, 500) : '',
+          perishable: Boolean(item.perishable),
+          createdAt: cleanString(item.createdAt, 40) || new Date().toISOString(),
+          status: cleanString(item.status, 30) || 'active'
+        }))
+        .filter((item) => item.memberId && item.title);
     }
 
     // Back-compat: migrate legacy donation intents stored by donate.js
@@ -3123,6 +3299,8 @@
           hourlyRate: Number.isFinite(Number(item.hourlyRate)) ? Math.max(0, Number(item.hourlyRate)) : 0,
           stockValue: Number.isFinite(Number(item.stockValue)) ? Math.max(0, Number(item.stockValue)) : 0,
           sourceId: cleanString(item.sourceId, 100),
+          groupId: cleanString(item.groupId, 120),
+          allianceId: cleanString(item.allianceId, 120),
           mutualConfirmation: Boolean(item.mutualConfirmation),
           note: cleanString(item.note, 280),
           createdAt: cleanString(item.createdAt, 40),
@@ -3255,6 +3433,23 @@
           sample: Boolean(item.sample)
         }))
         .filter((item) => item.memberId && item.name);
+    }
+
+    if (Array.isArray(raw.groupJoinRequests)) {
+      fallback.groupJoinRequests = raw.groupJoinRequests
+        .filter((item) => item && typeof item === 'object')
+        .slice(0, 150)
+        .map((item) => ({
+          id: cleanString(item.id, 100) || makeId('group-join'),
+          groupId: cleanString(item.groupId, 120),
+          groupName: cleanString(item.groupName, 120),
+          groupLabel: cleanString(item.groupLabel, 120),
+          memberId: cleanString(item.memberId, 100),
+          name: cleanString(item.name, 60),
+          status: ['accepted', 'declined'].includes(item.status) ? item.status : 'pending',
+          createdAt: cleanString(item.createdAt, 40) || new Date().toISOString()
+        }))
+        .filter((item) => item.groupId && item.memberId && item.name);
     }
 
     if (Array.isArray(raw.groups)) {
@@ -5158,6 +5353,7 @@
       ['Hours worked (all time)', `${hours.all} hr`, hourPeriods],
       ['Donated (all time)', formatMoney(donated.all), giftPeriods],
       ['Your share of the fund', formatMoney(fund.entitled), 'Local estimate · not a payout'],
+      ['Cancellation estimate', formatMoney(fund.cancellation.estimate), `Up to ${formatMoney(fund.cancellation.cap)} · local only`],
       ['Unbought donation fund', formatMoney(fund.balance), 'Current local balance']
     ] : [
       ['Unbought donation fund', formatMoney(fund.balance), 'Current local balance'],
@@ -5178,6 +5374,22 @@
       ? 'Prototype model (local only): your hours are shown only after both you and the receiver confirm the work, or after a three-member review vote resolves a disagreement. No one can add hours unilaterally. Giving is shown by week, month, year, and all time. Your share is a local, proportional estimate based on recorded contributions; it is not a payout, debt, or legal claim. Every cent of donations, academy tuition, and non-member purchases goes to the Unbought donation fund. Nothing is transmitted.'
       : 'Prototype model (local only): the Unbought donation fund holds locally recorded donations and non-member purchase intents. Academy tuition would join it in a live system. No money moves, no payouts are made, and nothing is transmitted.');
     card.appendChild(model);
+
+    if (signedIn) {
+      const cancel = fund.cancellation;
+      const cancelBlock = createEl('div', 'account-block');
+      cancelBlock.appendChild(createEl('h4', '', 'If you cancel'));
+      cancelBlock.appendChild(createEl('p', 'account-note',
+        `Local estimate: ${formatMoney(cancel.estimate)}. Unbought will cap any cancellation severance at ${formatMoney(cancel.cap)}. The estimate multiplies your share of contributions credited to your groups and alliances (${cancel.memberPercent}%, ${formatMoney(cancel.memberGroupAmount)} of ${formatMoney(cancel.groupFundAmount)}) by those groups' share of the donation fund (${cancel.groupFundPercent}%). This severance check is separate from your group's uncapped slice of unspoken-for money shown on the group profile, so the two numbers can be different. It is a calculation on this device only: no payout, debt, legal claim, or transmission.`));
+      if (!cancel.groupFundAmount) {
+        cancelBlock.appendChild(createEl('p', 'account-note',
+          `No group- or alliance-credited contributions are recorded yet across your ${cancel.groupCount} group${cancel.groupCount === 1 ? '' : 's'} and ${cancel.allianceCount} alliance${cancel.allianceCount === 1 ? '' : 's'}, so the local estimate is ${formatMoney(0)}. Credit a donation to a group or alliance on the Donate page to test the calculation.`));
+      }
+      if (cancel.capped) {
+        cancelBlock.appendChild(createEl('p', 'account-note', 'This estimate reached the local $4,000 cap.'));
+      }
+      card.appendChild(cancelBlock);
+    }
 
     if (signedIn) {
       const hoursNote = createEl('div', 'account-block');
@@ -5569,9 +5781,95 @@
         </dl>
       </div>`),
       section('Local account access', `
-        ${rows([accountDetail('Username', e(credential && credential.username ? credential.username : 'Not set'))])}
-        <p class="account-note">This is a local demo credential, not a real login. A salted password hash is stored only on this device; nothing is transmitted.</p>`)
+        ${rows([
+          accountDetail('Signed in as', state.auth && state.auth.session && state.auth.session.actingAs === 'representative' ? 'Authorized representative' : 'Member'),
+          accountDetail('Username', e(credential && credential.username ? credential.username : 'Not set')),
+          ...(m.powerOfAttorney && m.powerOfAttorney.enabled ? [
+            accountDetail('Power of attorney', e([m.powerOfAttorney.representativeName, m.powerOfAttorney.relationship].filter(Boolean).join(' · ') || 'Recorded locally')),
+            accountDetail('Representative user', e(m.powerOfAttorney.username || 'Not set'))
+          ] : [])
+        ])}
+        <p class="account-note">These are local demo sign-ins, not real logins. Salted password hashes are stored only on this device; nothing is transmitted. A representative sign-in can manage this member’s record locally on their behalf.</p>`)
     ].join('');
+  }
+
+  function initAccountDob(scope) {
+    const hidden = scope && scope.querySelector('input[name="dob"][type="hidden"]');
+    const month = scope && scope.querySelector('[data-account-dob-part="month"]');
+    const day = scope && scope.querySelector('[data-account-dob-part="day"]');
+    const year = scope && scope.querySelector('[data-account-dob-part="year"]');
+    if (!hidden || !month || !day || !year) return;
+    const pad2 = (value) => String(value).padStart(2, '0');
+
+    function syncDob() {
+      hidden.value = year.value && month.value && day.value
+        ? `${year.value}-${month.value}-${day.value}`
+        : '';
+    }
+
+    function refreshDays() {
+      const yearValue = Number(year.value);
+      const monthValue = Number(month.value);
+      const days = yearValue && monthValue ? new Date(yearValue, monthValue, 0).getDate() : 31;
+      const previous = day.value;
+      let options = '<option value="">Day</option>';
+      for (let value = 1; value <= days; value += 1) {
+        options += `<option value="${pad2(value)}">${value}</option>`;
+      }
+      day.innerHTML = options;
+      day.value = Number(previous) <= days ? previous : '';
+      syncDob();
+    }
+
+    [month, day, year].forEach((part) => {
+      part.addEventListener('change', () => {
+        if (part === month || part === year) refreshDays();
+        else syncDob();
+      });
+    });
+    refreshDays();
+  }
+
+  function initAccountAddressSync(scope) {
+    const form = scope && scope.querySelector('[data-account-form]');
+    if (!form) return;
+    const same = form.querySelector('[data-same-address]');
+    if (!same) return;
+    const keys = ['address1', 'address2', 'city', 'county', 'state', 'zip'];
+    const mailing = {};
+    const physical = {};
+    keys.forEach((key) => {
+      mailing[key] = form.querySelector(`[data-mailing-address="${key}"]`);
+      physical[key] = form.querySelector(`[data-physical-address="${key}"]`);
+    });
+    const physicalFields = Object.values(physical).filter(Boolean);
+
+    function setPhysicalLocked(locked) {
+      physicalFields.forEach((input) => {
+        input.readOnly = locked;
+        if (input.tagName === 'SELECT') input.disabled = locked;
+      });
+    }
+
+    function copyPhysical() {
+      keys.forEach((key) => {
+        if (mailing[key] && physical[key]) physical[key].value = mailing[key].value;
+      });
+    }
+
+    same.addEventListener('change', () => {
+      if (same.checked) copyPhysical();
+      setPhysicalLocked(same.checked);
+    });
+    Object.values(mailing).filter(Boolean).forEach((input) => {
+      ['input', 'change'].forEach((eventName) => {
+        input.addEventListener(eventName, () => {
+          if (same.checked) copyPhysical();
+        });
+      });
+    });
+    if (same.checked) copyPhysical();
+    setPhysicalLocked(same.checked);
   }
 
   function renderAccountInfo() {
@@ -5580,10 +5878,36 @@
     const m = state.pledge;
     const s = state.settings || {};
     const e = escapeHtml;
-    const totals = getConfirmedExchangeTotals(m.memberId);
     const notice = state.settings && state.settings.showPrototypeNotices
-      ? `<p class="prototype-note">Prototype: account details, your username, and a salted password hash are stored only on this device. There is no real authentication or server, and nothing is transmitted.</p>`
+      ? `<p class="prototype-note">Prototype: account details, local usernames, and salted password hashes are stored only on this device. There is no real authentication or server, and nothing is transmitted.</p>`
       : '';
+    const dobMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(m.dob || ''));
+    const dobYearValue = dobMatch ? dobMatch[1] : '';
+    const dobMonthValue = dobMatch ? dobMatch[2] : '';
+    const dobDayValue = dobMatch ? dobMatch[3] : '';
+    const dobMonths = [
+      ['01', 'January'], ['02', 'February'], ['03', 'March'], ['04', 'April'],
+      ['05', 'May'], ['06', 'June'], ['07', 'July'], ['08', 'August'],
+      ['09', 'September'], ['10', 'October'], ['11', 'November'], ['12', 'December']
+    ];
+    const minDobYear = dobYearValue && Number(dobYearValue) < 1900 ? Number(dobYearValue) : 1900;
+    let dobYearOptions = '<option value="">Year</option>';
+    for (let year = new Date().getFullYear(); year >= minDobYear; year -= 1) {
+      dobYearOptions += `<option value="${year}"${dobYearValue === String(year) ? ' selected' : ''}>${year}</option>`;
+    }
+    let dobMonthOptions = '<option value="">Month</option>';
+    dobMonths.forEach(([value, label]) => {
+      dobMonthOptions += `<option value="${value}"${dobMonthValue === value ? ' selected' : ''}>${label}</option>`;
+    });
+    const dobMaxDays = dobYearValue && dobMonthValue
+      ? new Date(Number(dobYearValue), Number(dobMonthValue), 0).getDate()
+      : 31;
+    let dobDayOptions = '<option value="">Day</option>';
+    for (let day = 1; day <= dobMaxDays; day += 1) {
+      const value = String(day).padStart(2, '0');
+      dobDayOptions += `<option value="${value}"${dobDayValue === value ? ' selected' : ''}>${day}</option>`;
+    }
+    const sameAddress = Boolean(m.mailingAddress && m.physicalAddress === m.mailingAddress);
     panel.innerHTML = `<section class="account-card account-panel">
       <header class="account-panel-head">
         <div>
@@ -5600,44 +5924,137 @@
         <summary><span>Edit profile &amp; account details</span><span class="account-section-hint">What neighbors see, privacy, and local counts</span></summary>
         <form class="account-form" data-account-form>
           <fieldset>
-            <legend>Basics</legend>
+            <legend>Identity &amp; contact</legend>
             <div class="form-row">
               <div class="field">
-                <label for="account-name">Chosen name</label>
+                <label for="account-name">Chosen name <span class="required-mark" aria-hidden="true">*</span></label>
                 <input type="text" id="account-name" name="name" maxlength="60" value="${e(m.name)}" required>
               </div>
               <div class="field">
-                <label for="account-location">General location</label>
-                <input type="text" id="account-location" name="location" maxlength="80" value="${e(m.location || '')}">
+                <label for="account-location">General location <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="account-location" name="location" maxlength="80" value="${e(m.location || '')}" required>
+              </div>
+            </div>
+            <p class="account-subhead">Full legal name</p>
+            <div class="form-row">
+              <div class="field">
+                <label for="account-first-name">First name <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="account-first-name" name="firstName" autocomplete="given-name" maxlength="40" value="${e(m.firstName || '')}" required>
+              </div>
+              <div class="field">
+                <label for="account-middle-initial">Middle initial <span class="optional">(optional)</span></label>
+                <input type="text" id="account-middle-initial" name="middleInitial" maxlength="2" value="${e(m.middleInitial || '')}">
               </div>
             </div>
             <div class="form-row">
               <div class="field">
-                <label for="account-housing">Housing status</label>
-                <select id="account-housing" name="housingStatus">
-                  ${Object.entries(HOUSING_STATUSES).map(([value, label]) => `<option value="${value}"${m.housingStatus === value ? ' selected' : ''}>${e(label)}</option>`).join('')}
-                </select>
+                <label for="account-last-name">Last name <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="account-last-name" name="lastName" autocomplete="family-name" maxlength="60" value="${e(m.lastName || '')}" required>
               </div>
+              <div class="field">
+                <label for="account-suffix">Suffix <span class="optional">(optional)</span></label>
+                <input type="text" id="account-suffix" name="suffix" maxlength="12" value="${e(m.suffix || '')}" placeholder="Jr., Sr., III, etc.">
+              </div>
+            </div>
+            <p class="account-subhead">Mailing address</p>
+            <div class="form-row">
+              <div class="field">
+                <label for="account-address1">Address 1 <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="account-address1" name="address1" data-mailing-address="address1" autocomplete="address-line1" maxlength="100" value="${e(m.address1 || '')}" required>
+              </div>
+              <div class="field">
+                <label for="account-address2">Address 2 <span class="optional">(optional)</span></label>
+                <input type="text" id="account-address2" name="address2" data-mailing-address="address2" autocomplete="address-line2" maxlength="100" value="${e(m.address2 || '')}">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label for="account-city">City <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="account-city" name="city" data-mailing-address="city" autocomplete="address-level2" maxlength="80" value="${e(m.city || '')}" required>
+              </div>
+              <div class="field">
+                <label for="account-state">State <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="account-state" name="state" data-mailing-address="state" autocomplete="address-level1" maxlength="2" value="${e(m.state || '')}" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label for="account-county">Mailing county <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="account-county" name="county" data-mailing-address="county" maxlength="80" value="${e(m.county || '')}" placeholder="Monroe" required>
+                <p class="field-hint">Private. Used only to identify your area for review board eligibility.</p>
+              </div>
+              <div class="field">
+                <label for="account-zip">ZIP code <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="account-zip" name="zip" data-mailing-address="zip" maxlength="10" inputmode="numeric" autocomplete="postal-code" value="${e(m.zip || '')}" required>
+              </div>
+            </div>
+            <label class="checkbox"><input type="checkbox" name="sameAddress" data-same-address${sameAddress ? ' checked' : ''}> <span>My physical address is the same as my mailing address</span></label>
+            <p class="account-subhead">Physical address</p>
+            <div class="form-row">
+              <div class="field">
+                <label for="account-physical-address1">Address 1 <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="account-physical-address1" name="physicalAddress1" data-physical-address="address1" autocomplete="address-line1" maxlength="100" value="${e(m.physicalAddress1 || '')}" required>
+              </div>
+              <div class="field">
+                <label for="account-physical-address2">Address 2 <span class="optional">(optional)</span></label>
+                <input type="text" id="account-physical-address2" name="physicalAddress2" data-physical-address="address2" autocomplete="address-line2" maxlength="100" value="${e(m.physicalAddress2 || '')}">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label for="account-physical-city">City <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="account-physical-city" name="physicalCity" data-physical-address="city" autocomplete="address-level2" maxlength="80" value="${e(m.physicalCity || '')}" required>
+              </div>
+              <div class="field">
+                <label for="account-physical-state">State <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="account-physical-state" name="physicalState" data-physical-address="state" autocomplete="address-level1" maxlength="2" value="${e(m.physicalState || '')}" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label for="account-physical-county">Physical county <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="account-physical-county" name="physicalCounty" data-physical-address="county" maxlength="80" value="${e(m.physicalCounty || '')}" placeholder="Monroe" required>
+                <p class="field-hint">Your physical county decides which review board votes you can cast.</p>
+              </div>
+              <div class="field">
+                <label for="account-physical-zip">ZIP code <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="text" id="account-physical-zip" name="physicalZip" data-physical-address="zip" maxlength="10" inputmode="numeric" autocomplete="postal-code" value="${e(m.physicalZip || '')}" required>
+              </div>
+            </div>
+            <div class="form-row">
               <div class="field">
                 <label for="account-public-address">Public City, State from</label>
                 <select id="account-public-address" name="publicAddressSource">
                   <option value="mailing"${m.publicAddressSource !== 'physical' ? ' selected' : ''}>Mailing address</option>
                   <option value="physical"${m.publicAddressSource === 'physical' ? ' selected' : ''}>Physical address</option>
                 </select>
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="field">
-                <label for="account-county">Mailing county</label>
-                <input type="text" id="account-county" name="county" maxlength="80" value="${e(m.county || '')}" placeholder="Monroe">
-                <p class="field-hint">Private. Used only to identify your area for review board eligibility.</p>
+                <p class="field-hint">Only the city and state from this address appear on your public resume.</p>
               </div>
               <div class="field">
-                <label for="account-physical-county">Physical county</label>
-                <input type="text" id="account-physical-county" name="physicalCounty" maxlength="80" value="${e(m.physicalCounty || '')}" placeholder="Monroe">
-                <p class="field-hint">Your physical county decides which review board votes you can cast.</p>
+                <label for="account-housing">Housing status</label>
+                <select id="account-housing" name="housingStatus">
+                  ${Object.entries(HOUSING_STATUSES).map(([value, label]) => `<option value="${value}"${m.housingStatus === value ? ' selected' : ''}>${e(label)}</option>`).join('')}
+                </select>
+                <p class="field-hint">Private. Never shown on your public resume.</p>
               </div>
             </div>
+            <p class="account-subhead">Date of birth</p>
+            <div class="form-row dob-fields">
+              <div class="field">
+                <label for="account-dob-month">Month</label>
+                <select id="account-dob-month" data-account-dob-part="month" autocomplete="bday-month" required>${dobMonthOptions}</select>
+              </div>
+              <div class="field">
+                <label for="account-dob-day">Day</label>
+                <select id="account-dob-day" data-account-dob-part="day" autocomplete="bday-day" required>${dobDayOptions}</select>
+              </div>
+              <div class="field">
+                <label for="account-dob-year">Year</label>
+                <select id="account-dob-year" data-account-dob-part="year" autocomplete="bday-year" required>${dobYearOptions}</select>
+              </div>
+            </div>
+            <input type="hidden" name="dob" value="${e(m.dob || '')}">
+            <p class="field-hint">Private and stored only on this device. Members must be 18 or older.</p>
           </fieldset>
           <fieldset>
             <legend>Phone &amp; texts</legend>
@@ -5702,17 +6119,6 @@
               <label class="checkbox"><input type="checkbox" name="removePicture"> <span>Remove current picture</span></label>
             </div>
           </fieldset>
-          <fieldset>
-            <legend>Commons counts</legend>
-            <p class="account-note">These counts are read-only. Amounts donated come from the donate flow; hours and item totals come only from exchanges both parties confirmed. Nothing here can be typed by hand.</p>
-            <dl class="resume-metrics account-derived-metrics">
-              <div><dt>Hours worked</dt><dd>${e(String(totals.hoursWorked))}</dd></div>
-              <div><dt>Hours used</dt><dd>${e(String(totals.hoursUsed))}</dd></div>
-              <div><dt>Items gifted</dt><dd>${e(String(totals.itemsGifted))}</dd></div>
-              <div><dt>Items taken</dt><dd>${e(String(totals.itemsTaken))}</dd></div>
-            </dl>
-            <p class="field-hint">The worker and receiver each confirm the exchange in Exchanges. Matching hour counts are logged; disagreements go to a three-member review. Product counts update only after a goods exchange is confirmed the same way.</p>
-          </fieldset>
           <fieldset class="account-privacy-options">
             <legend>Privacy</legend>
             <label class="checkbox"><input type="checkbox" name="available"${m.available !== false ? ' checked' : ''}> <span>Available for exchanges</span></label>
@@ -5737,6 +6143,8 @@
     </section>`;
     refreshSkillPickers(panel);
     syncPhoneFields(panel);
+    initAccountDob(panel);
+    initAccountAddressSync(panel);
   }
 
   function renderSettings() {
@@ -6028,7 +6436,7 @@
       return;
     }
 
-    const credential = getCredential();
+    const credential = getActiveCredential();
     const guiltyReportsAgainst = reportsAboutMember()
       .filter((report) => report && ['restriction_active', 'access_restored'].includes(report.status)).length;
 
@@ -6249,6 +6657,7 @@
     const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
     const canModerate = isGroupAdmin(group, selfId);
     const rotation = groupAdminRotation(group);
+    const surplus = getGroupSurplusAllowance(group.id);
     const settings = normalizeGroupSettings(group.settings);
     const configuredLocation = cleanString(settings.location, 120);
     const location = settings.online
@@ -6397,12 +6806,15 @@
           <div><dt>Type</dt><dd>${e(groupKindLabel(group))}</dd></div>
           <div><dt>People</dt><dd>${members.length}/${SOCIAL_LIMITS.groupMembers}</dd></div>
           <div><dt>Admin seats</dt><dd>${rotation.seats.length}/${GROUP_ADMIN_SEATS} · staggered weekly</dd></div>
+          <div><dt>Surplus allowance</dt><dd>${e(formatMoney(surplus.amount))} · uncapped local estimate</dd></div>
           ${location ? `<div><dt>Location</dt><dd>${e(location)}</dd></div>` : ''}
           ${SITE_PHASE >= 2 && business.enabled ? `<div><dt>Business</dt><dd>${e(business.brandName || groupDisplayLabel(group))} · ${e(groupBrandLabel(settings))}</dd></div>` : ''}
           <div><dt>Added</dt><dd>${e(formatDate(group.createdAt) || 'Not recorded')}</dd></div>
         </dl>
         <p class="account-note"><strong>Basic Necessities:</strong> ${e(BASIC_NECESSITIES_NOTE)}</p>
         <p class="account-note"><strong>Alliances:</strong> ${e(ALLIANCE_COPY)} Working members vote on alliance terms and guidelines.</p>
+        <p class="account-note"><strong>Surplus spending:</strong> This group has ${e(formatMoney(surplus.groupAmount))} credited locally to Unbought, ${e(String(surplus.percent))}% of the recorded fund. Its uncapped slice of unspoken-for money is ${e(formatMoney(surplus.amount))}. This group surplus slice is separate from any member's capped severance check, so the two amounts can be different. Eventually, admins from all the groups will come together to figure out Unbought spending. This is a planning estimate only; no money moves, is spent, or is transmitted in this prototype.</p>
+        <p class="account-note"><strong>Land search:</strong> Each group is in charge of finding land in their area that they want to collectively buy. Once a group picks a house, they will get in touch with the Unbought housing team — real estate, lawyers, and others, all volunteer — if it is available to buy a house. The local allowance is a guide for that discussion, not a purchase, offer, or commitment, and nothing is transmitted from this prototype.</p>
         ${SITE_PHASE >= 2 && business.enabled ? `<div class="group-business-details">
           <h4>Group business</h4>
           <p class="account-note">${business.brandChoice === 'unbought' ? 'This group records the Unbought Brand' : 'This group records its own brand'} for a collection of related services and goods. It creates industry inside a moneyless society: neighbors trade through mutual consent, not prices. Group brands arrive in Phase 2 on the vernal equinox, ${e(GROUP_BRAND_ROLLOUT_COPY)}.</p>
@@ -7782,6 +8194,123 @@
     }).join('')}</ul>`;
   }
 
+  function getGroupJoinRequests() {
+    if (!Array.isArray(state.groupJoinRequests)) state.groupJoinRequests = [];
+    return state.groupJoinRequests;
+  }
+
+  // Search uses the stored group record directly. normalizeGroup() would add the
+  // signed-in member to an "own" group for display, which would make every local
+  // circle look already joined and hide the request button.
+  function joinableGroups() {
+    return (Array.isArray(state.groups) ? state.groups : [])
+      .filter((group) => group && group.name && !group.left)
+      .map((group) => ({
+        id: cleanString(group.id, 120),
+        name: cleanString(group.name, 120),
+        baseName: cleanString(group.baseName, 120),
+        roman: cleanString(group.roman, 12),
+        kind: cleanString(group.kind, 30),
+        purpose: cleanString(group.purpose, 200),
+        members: Array.isArray(group.members) ? group.members : []
+      }))
+      .filter((group) => group.id);
+  }
+
+  function renderGroupSearchResults(query, results) {
+    if (!results) return;
+    const e = escapeHtml;
+    const q = cleanString(query, 80).toLowerCase();
+    if (!q) {
+      results.innerHTML = '<p class="account-note">Start typing to see group names saved on this device.</p>';
+      return;
+    }
+    const matches = joinableGroups()
+      .filter((group) => [group.name, group.purpose, groupKindLabel(group)]
+        .some((value) => cleanString(value, 120).toLowerCase().includes(q)))
+      .slice(0, 12);
+    if (!matches.length) {
+      results.innerHTML = `<p class="account-note">No saved group matches “${e(cleanString(query, 80))}”. This prototype only searches groups stored here; nothing was contacted.</p>`;
+      return;
+    }
+    const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
+    const requests = getGroupJoinRequests();
+    results.innerHTML = `<ul class="friend-result-list">${matches.map((group) => {
+      const members = Array.isArray(group.members) ? group.members : [];
+      const memberCount = members.length;
+      const alreadyMember = members.some((member) => member && member.memberId === selfId);
+      const full = memberCount >= SOCIAL_LIMITS.groupMembers;
+      const pending = requests.some((request) => request && request.groupId === group.id
+        && request.memberId === selfId && request.status === 'pending');
+      const disabled = alreadyMember || full || pending;
+      const label = alreadyMember ? 'Already a member'
+        : pending ? 'Request pending'
+          : full ? 'Group full' : 'Request to join';
+      const meta = [groupKindLabel(group), `${memberCount}/${SOCIAL_LIMITS.groupMembers} people`]
+        .filter(Boolean).map(e).join(' · ');
+      return `<li class="friend-result">
+        <div><strong><a class="member-link" href="${e(groupProfileUrl(group.id))}">${e(groupDisplayLabel(group))}</a></strong><span class="contribution-meta">${meta}${group.purpose ? ` · ${e(group.purpose)}` : ''}</span></div>
+        <button class="button button--outline button--tiny" type="button" data-group-join-send="${e(group.id)}"${disabled ? ' disabled' : ''}>${label}</button>
+      </li>`;
+    }).join('')}</ul>`;
+  }
+
+  function renderGroupJoinRequestList() {
+    const e = escapeHtml;
+    const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
+    const pending = getGroupJoinRequests()
+      .filter((request) => request && request.memberId === selfId && request.status === 'pending')
+      .slice(0, 20);
+    if (!pending.length) return '<p class="account-note">No join requests recorded.</p>';
+    return `<ul class="friend-request-list">${pending.map((request) => `<li class="friend-request-item">
+      <div><strong><a class="member-link" href="${e(groupProfileUrl(request.groupId))}">${e(request.groupLabel || request.groupName)}</a></strong><span class="contribution-meta">${e(formatDate(request.createdAt))}</span></div>
+      <span class="contribution-meta">Pending locally · nothing was delivered</span>
+    </li>`).join('')}</ul>`;
+  }
+
+  function sendGroupJoinRequest(groupId, trigger) {
+    if (!requireMembership()) return;
+    const group = (Array.isArray(state.groups) ? state.groups : [])
+      .find((item) => item && item.id === groupId && item.name && !item.left);
+    if (!group) return;
+    const selfId = state.pledge.memberId;
+    const members = Array.isArray(group.members) ? group.members : [];
+    if (members.some((member) => member && member.memberId === selfId)) {
+      showToast('You are already in that group.', false);
+      return;
+    }
+    if (members.length >= SOCIAL_LIMITS.groupMembers) {
+      showToast(`That group is at its ${SOCIAL_LIMITS.groupMembers}-person limit.`, false);
+      return;
+    }
+    const requests = getGroupJoinRequests();
+    if (requests.some((request) => request && request.groupId === group.id
+      && request.memberId === selfId && request.status === 'pending')) {
+      showToast('That join request is already pending locally.', false);
+      return;
+    }
+    const request = {
+      id: makeId('group-join'),
+      groupId: group.id,
+      groupName: cleanString(group.name, 120),
+      groupLabel: groupDisplayLabel(group),
+      memberId: selfId,
+      name: cleanString(state.pledge.name, 60) || 'Member',
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    requests.unshift(request);
+    addNotification('social', `Join request: ${request.groupLabel}`,
+      'Recorded locally for the signed-in member only. In a live system the group admins would review it; no request was delivered.',
+      { tab: 'social', sourceId: request.id, groupId: request.groupId });
+    saveState();
+    renderSocial();
+    renderNotifications();
+    announce(`Your request to join ${request.groupLabel} is recorded locally.`);
+    showToast('Join request recorded locally. Nothing was sent.', false);
+    if (trigger instanceof HTMLElement) trigger.focus({ preventScroll: true });
+  }
+
   function sendFriendRequest(memberId, trigger) {
     if (!requireMembership()) return;
     const member = memberDirectory().find((entry) => entry.memberId === memberId);
@@ -7900,10 +8429,12 @@
         <div class="account-block">
           <h4>Groups (max ${SOCIAL_LIMITS.groupMembers} each)</h4>
           ${renderGroupMembership(true)}
-          <p class="field-hint">Town groups split automatically at the cap; this form makes a social or support circle only. Only workers can be admins.</p>
+          <p class="field-hint">Town groups split automatically at the cap; the create option makes a social or support circle only. Only workers can be admins.</p>
+          <h5>Sent join requests</h5>
+          ${renderGroupJoinRequestList()}
           <form class="account-form" data-group-form>
             <div class="form-row">
-              <div class="field">
+              <div class="field" data-group-name-field>
                 <label for="group-name">Group name</label>
                 <input type="text" id="group-name" name="name" maxlength="80" required placeholder="Crew, circle, or class">
               </div>
@@ -7915,17 +8446,25 @@
                 </select>
               </div>
             </div>
-            <div class="field group-member-picker">
+            <div class="field" data-group-search-field hidden>
+              <label for="group-search">Search groups</label>
+              <input type="search" id="group-search" data-group-search maxlength="80" placeholder="Stroudsburg, circle, or class" autocomplete="off">
+              <p class="field-hint">Search group names saved on this device. Request to join is recorded only for the signed-in member; no one else is added and nothing is delivered.</p>
+              <div class="group-search-results" data-group-search-results></div>
+            </div>
+            <div class="field group-member-picker" data-group-member-field>
               <p class="field-label">People in this group</p>
               <p class="field-hint">You are always counted in a social or support circle. Choose current members to include locally; the count comes from this list, not a typed number. Town groups split into Group II, III, XI, and so on at 150 people, and numbered groups are opt-in.</p>
               ${renderGroupMemberOptions()}
               <p class="field-hint" data-group-count-preview>1/${SOCIAL_LIMITS.groupMembers} people · you</p>
             </div>
-            <div class="field">
+            <div class="field" data-group-purpose-field>
               <label for="group-purpose">Purpose <span class="optional">(optional)</span></label>
               <input type="text" id="group-purpose" name="purpose" maxlength="200" placeholder="What this group is for">
             </div>
-            <button type="submit" class="button button--outline button--small">Save group locally</button>
+            <div class="account-form-actions" data-group-form-actions>
+              <button type="submit" class="button button--outline button--small" data-group-submit>Save group locally</button>
+            </div>
           </form>
         </div>
       </div>
@@ -7980,15 +8519,46 @@
     }
 
     const groupForm = panel.querySelector('[data-group-form]');
-    const countPreview = groupForm && groupForm.querySelector('[data-group-count-preview]');
-    if (groupForm && countPreview) {
-      const updateCount = () => {
-        const selected = groupForm.querySelectorAll('[data-group-member]:checked').length;
-        const total = Math.min(SOCIAL_LIMITS.groupMembers, 1 + selected);
-        countPreview.textContent = `${total}/${SOCIAL_LIMITS.groupMembers} people · ${selected ? `you + ${selected} neighbor${selected === 1 ? '' : 's'}` : 'you'}`;
+    if (groupForm) {
+      const countPreview = groupForm.querySelector('[data-group-count-preview]');
+      if (countPreview) {
+        const updateCount = () => {
+          const selected = groupForm.querySelectorAll('[data-group-member]:checked').length;
+          const total = Math.min(SOCIAL_LIMITS.groupMembers, 1 + selected);
+          countPreview.textContent = `${total}/${SOCIAL_LIMITS.groupMembers} people · ${selected ? `you + ${selected} neighbor${selected === 1 ? '' : 's'}` : 'you'}`;
+        };
+        groupForm.querySelectorAll('[data-group-member]').forEach((input) => input.addEventListener('change', updateCount));
+        updateCount();
+      }
+
+      const kindSelect = groupForm.querySelector('[name="kind"]');
+      const nameField = groupForm.querySelector('[data-group-name-field]');
+      const searchField = groupForm.querySelector('[data-group-search-field]');
+      const searchInput = groupForm.querySelector('[data-group-search]');
+      const searchResults = groupForm.querySelector('[data-group-search-results]');
+      const memberField = groupForm.querySelector('[data-group-member-field]');
+      const purposeField = groupForm.querySelector('[data-group-purpose-field]');
+      const actions = groupForm.querySelector('[data-group-form-actions]');
+      const nameInput = groupForm.querySelector('input[name="name"]');
+      const submit = groupForm.querySelector('[data-group-submit]');
+
+      const updateMode = () => {
+        const joining = kindSelect && kindSelect.value === 'joined';
+        if (nameField) nameField.hidden = Boolean(joining);
+        if (searchField) searchField.hidden = !joining;
+        if (memberField) memberField.hidden = Boolean(joining);
+        if (purposeField) purposeField.hidden = Boolean(joining);
+        if (actions) actions.hidden = Boolean(joining);
+        if (nameInput) nameInput.required = !joining;
+        if (submit) submit.textContent = joining ? 'Request to join below' : 'Save group locally';
+        if (joining) renderGroupSearchResults(searchInput ? searchInput.value : '', searchResults);
       };
-      groupForm.querySelectorAll('[data-group-member]').forEach((input) => input.addEventListener('change', updateCount));
-      updateCount();
+
+      if (kindSelect) kindSelect.addEventListener('change', updateMode);
+      if (searchInput) {
+        searchInput.addEventListener('input', () => renderGroupSearchResults(searchInput.value, searchResults));
+      }
+      updateMode();
     }
   }
 
@@ -8053,6 +8623,12 @@
       if (requestAction) {
         event.preventDefault();
         respondToFriendRequest(requestAction.dataset.friendRequestId, requestAction.dataset.friendRequestAction, requestAction);
+        return;
+      }
+      const groupJoinSend = event.target.closest('[data-group-join-send]');
+      if (groupJoinSend) {
+        event.preventDefault();
+        sendGroupJoinRequest(groupJoinSend.dataset.groupJoinSend, groupJoinSend);
         return;
       }
       const groupAction = event.target.closest('[data-group-action]');
@@ -8236,18 +8812,102 @@
 
       if (form.matches('[data-account-form]')) {
         event.preventDefault();
+        const data = new FormData(form);
+        const sameAddress = Boolean(data.get('sameAddress'));
+        const firstName = cleanString(data.get('firstName'), 40);
+        const middleInitial = cleanString(data.get('middleInitial'), 2);
+        const lastName = cleanString(data.get('lastName'), 60);
+        const suffix = cleanString(data.get('suffix'), 12);
+        const fullName = composeFullName({ firstName, middleInitial, lastName, suffix });
         const name = cleanString(data.get('name'), 60);
         const location = cleanString(data.get('location'), 80);
-        if (!name) return;
+        if (!name || !location || !firstName || !lastName || !fullName) return;
+
+        const address1 = cleanString(data.get('address1'), 100);
+        const address2 = cleanString(data.get('address2'), 100);
+        const city = cleanString(data.get('city'), 80);
+        const county = normalizeCounty(data.get('county'));
+        const stateCode = normalizeStateCode(data.get('state'));
+        const zip = normalizeZip(data.get('zip'));
+        if (!address1 || !city || !county || !stateCode || !zip) {
+          announce('Complete every mailing address field before saving.');
+          showToast('Complete every mailing address field before saving.', false);
+          return;
+        }
+        const mailingAddress = composeMailingAddress({ address1, address2, city, state: stateCode, zip });
+
+        const physicalAddress1 = sameAddress ? address1 : cleanString(data.get('physicalAddress1'), 100);
+        const physicalAddress2 = sameAddress ? address2 : cleanString(data.get('physicalAddress2'), 100);
+        const physicalCity = sameAddress ? city : cleanString(data.get('physicalCity'), 80);
+        const physicalCounty = sameAddress ? county : normalizeCounty(data.get('physicalCounty'));
+        const physicalState = sameAddress ? stateCode : normalizeStateCode(data.get('physicalState'));
+        const physicalZip = sameAddress ? zip : normalizeZip(data.get('physicalZip'));
+        if (!physicalAddress1 || !physicalCity || !physicalCounty || !physicalState || !physicalZip) {
+          announce('Complete every physical address field before saving.');
+          showToast('Complete every physical address field before saving.', false);
+          return;
+        }
+        const physicalAddress = sameAddress
+          ? mailingAddress
+          : composeMailingAddress({
+            address1: physicalAddress1,
+            address2: physicalAddress2,
+            city: physicalCity,
+            state: physicalState,
+            zip: physicalZip
+          });
+
+        const cell = cleanString(data.get('cellPhone'), 40);
+        const samePhone = Boolean(data.get('samePhone'));
+        const publicLine = samePhone ? cell : cleanString(data.get('publicPhoneNumber'), 40);
+        const dob = cleanString(data.get('dob'), 10);
+        const age = getAgeFromDob(dob);
+        if (age === null || age < 18) {
+          announce('Enter a valid date of birth. Members must be 18 or older.');
+          showToast('Enter a valid date of birth. Members must be 18 or older.', false);
+          return;
+        }
+        if (data.get('publicPhone') && !publicLine) {
+          announce('Enter a public phone or choose the same as your cell before showing it on your resume.');
+          showToast('Enter a public phone or choose the same as your cell before showing it on your resume.', false);
+          return;
+        }
+
         state.pledge.name = name;
         state.pledge.location = location;
-        state.pledge.county = normalizeCounty(data.get('county'));
-        state.pledge.physicalCounty = normalizeCounty(data.get('physicalCounty'));
+        state.pledge.firstName = firstName;
+        state.pledge.middleInitial = middleInitial;
+        state.pledge.lastName = lastName;
+        state.pledge.suffix = suffix;
+        state.pledge.fullName = fullName;
+        state.pledge.address1 = address1;
+        state.pledge.address2 = address2;
+        state.pledge.city = city;
+        state.pledge.state = stateCode;
+        state.pledge.zip = zip;
+        state.pledge.county = county;
+        state.pledge.mailingAddress = mailingAddress;
+        state.pledge.physicalAddress1 = physicalAddress1;
+        state.pledge.physicalAddress2 = physicalAddress2;
+        state.pledge.physicalCity = physicalCity;
+        state.pledge.physicalState = physicalState;
+        state.pledge.physicalZip = physicalZip;
+        state.pledge.physicalCounty = physicalCounty;
+        state.pledge.physicalAddress = physicalAddress;
+        state.pledge.dob = dob;
         state.pledge.housingStatus = normalizeHousingStatus(data.get('housingStatus'));
         state.pledge.paidSkills = cleanString(data.get('paidSkills'), 400);
         state.pledge.unpaidSkills = cleanString(data.get('unpaidSkills'), 400);
         state.pledge.bio = cleanString(data.get('bio'), 600);
         state.pledge.tagline = cleanString(data.get('tagline'), 90);
+        state.pledge.cellPhone = cell;
+        state.pledge.phone = cell;
+        state.pledge.samePhone = samePhone;
+        state.pledge.publicPhoneNumber = publicLine;
+        state.pledge.receiveTexts = Boolean(data.get('receiveTexts'));
+        state.pledge.publicPhone = Boolean(data.get('publicPhone')) && Boolean(publicLine);
+        state.pledge.available = Boolean(data.get('available'));
+        state.pledge.publicAddressSource = data.get('publicAddressSource') === 'physical' ? 'physical' : 'mailing';
         // Donation amounts are recorded through the donate flow. All commons
         // counts are derived only from mutual confirmation or review votes.
         const confirmedTotals = getConfirmedExchangeTotals(state.pledge.memberId);
@@ -8257,8 +8917,6 @@
         state.pledge.itemsTaken = confirmedTotals.itemsTaken;
         state.pledge.group = getMemberGroups().map(groupDisplayLabel).filter(Boolean).join(', ');
         addMemberToRoster(state.pledge);
-        state.pledge.available = Boolean(data.get('available'));
-        state.pledge.publicAddressSource = data.get('publicAddressSource') === 'physical' ? 'physical' : 'mailing';
         if (data.get('removePicture')) {
           state.pledge.picture = '';
         } else {
@@ -8273,24 +8931,13 @@
             state.pledge.picture = safeProfileImageUrl(photo.dataUrl);
           }
         }
-        if (data.has('cellPhone')) {
-          const cell = cleanString(data.get('cellPhone'), 40);
-          const same = Boolean(data.get('samePhone'));
-          const publicLine = same ? cell : cleanString(data.get('publicPhoneNumber'), 40);
-          state.pledge.cellPhone = cell;
-          state.pledge.phone = cell;
-          state.pledge.samePhone = same;
-          state.pledge.publicPhoneNumber = publicLine;
-          state.pledge.receiveTexts = Boolean(data.get('receiveTexts'));
-          state.pledge.publicPhone = Boolean(data.get('publicPhone')) && Boolean(publicLine);
-        }
         syncTownGroup();
         saveState();
         renderAccountInfo();
         renderSharedMemberViews();
         renderVolunteerStatus();
         renderAccountability();
-        announce('Your account details were saved in this browser.');
+        announce('Your identity and contact details were saved in this browser.');
         showToast('Account details saved locally.', false);
       } else if (form.matches('[data-settings-form]')) {
         event.preventDefault();
@@ -8362,6 +9009,10 @@
         const name = cleanString(data.get('name'), 80);
         const kind = data.get('kind') === 'own' ? 'own' : 'joined';
         const purpose = cleanString(data.get('purpose'), 200);
+        if (kind !== 'own') {
+          showToast('Search for a group and choose Request to join.', false);
+          return;
+        }
         if (!name || !state.pledge) return;
         const members = [{ memberId: state.pledge.memberId, name: state.pledge.name || 'You' }];
         data.getAll('members').forEach((value) => {
@@ -9594,6 +10245,22 @@
       else setPhysicalLocked(false);
     }
 
+    const poaToggle = form && form.querySelector('[data-has-poa]');
+    const poaFields = form && form.querySelector('[data-poa-fields]');
+    const poaInputs = poaFields ? Array.from(poaFields.querySelectorAll('input')) : [];
+    const updatePoaFields = () => {
+      const enabled = Boolean(poaToggle && poaToggle.checked);
+      if (poaFields) poaFields.hidden = !enabled;
+      poaInputs.forEach((input) => {
+        input.disabled = !enabled;
+        input.required = enabled;
+      });
+    };
+    if (poaToggle) {
+      poaToggle.addEventListener('change', updatePoaFields);
+      updatePoaFields();
+    }
+
     if (form) {
       if (form.querySelector('[data-cell-phone]')) syncPhoneFields(form);
       form.addEventListener('submit', (event) => {
@@ -9662,6 +10329,12 @@
         const username = normalizeUsername(data.get('username'));
         const password = String(data.get('password') || '');
         const passwordConfirm = String(data.get('passwordConfirm') || '');
+        const hasPoa = Boolean(data.get('hasPowerOfAttorney'));
+        const poaRepresentativeName = cleanString(data.get('poaRepresentativeName'), 80);
+        const poaRelationship = cleanString(data.get('poaRelationship'), 80);
+        const poaUsername = normalizeUsername(data.get('poaUsername'));
+        const poaPassword = String(data.get('poaPassword') || '');
+        const poaPasswordConfirm = String(data.get('poaPasswordConfirm') || '');
         const agreement = document.getElementById('pledge-agreement');
         const freeAtCost = document.getElementById('pledge-free-atcost');
 
@@ -9724,10 +10397,32 @@
           showPledgeError('Your passwords do not match.', 'pledge-password-confirm');
           return;
         }
-        const existingCredential = getCredential();
-        if (existingCredential && existingCredential.username === username) {
+        const credentials = getCredentials();
+        if (credentials.some((credential) => credential && credential.username === username)) {
           showPledgeError('That username is already used by the account on this device. Sign in instead.', 'pledge-username');
           return;
+        }
+        if (hasPoa) {
+          if (!poaRepresentativeName || !poaRelationship) {
+            showPledgeError('Enter the representative’s full name and relationship or authority for power of attorney.', 'pledge-poa-name');
+            return;
+          }
+          if (!/^[a-z0-9_.-]{3,40}$/.test(poaUsername)) {
+            showPledgeError('Choose a second username of 3–40 letters, numbers, periods, underscores, or hyphens.', 'pledge-poa-username');
+            return;
+          }
+          if (poaUsername === username || credentials.some((credential) => credential && credential.username === poaUsername)) {
+            showPledgeError('That second username is already used on this device. Choose another for the representative.', 'pledge-poa-username');
+            return;
+          }
+          if (poaPassword.length < 8) {
+            showPledgeError('Choose a representative password of at least 8 characters.', 'pledge-poa-password');
+            return;
+          }
+          if (poaPassword !== poaPasswordConfirm) {
+            showPledgeError('The representative passwords do not match.', 'pledge-poa-password-confirm');
+            return;
+          }
         }
 
         const age = getAgeFromDob(dob);
@@ -9788,6 +10483,12 @@
           available: true,
           publicAddressSource: 'mailing',
           publicPhone: showPublicPhone,
+          powerOfAttorney: hasPoa ? {
+            enabled: true,
+            representativeName: poaRepresentativeName,
+            relationship: poaRelationship,
+            username: poaUsername
+          } : null,
           profileTheme: {
             public: { ...PROFILE_THEME_DEFAULTS.public },
             private: { ...PROFILE_THEME_DEFAULTS.private }
@@ -9798,9 +10499,46 @@
         };
         addMemberToRoster(state.pledge);
         const salt = makeId('salt');
+        const memberCredential = {
+          id: makeId('credential'),
+          username,
+          salt,
+          passwordHash: hashPassword(password, salt),
+          role: 'member',
+          label: name,
+          representativeName: '',
+          relationship: ''
+        };
+        const authCredentials = [memberCredential];
+        let activeCredential = memberCredential;
+        if (hasPoa) {
+          const poaSalt = makeId('salt');
+          const representativeCredential = {
+            id: makeId('credential'),
+            username: poaUsername,
+            salt: poaSalt,
+            passwordHash: hashPassword(poaPassword, poaSalt),
+            role: 'representative',
+            label: poaRepresentativeName,
+            representativeName: poaRepresentativeName,
+            relationship: poaRelationship
+          };
+          authCredentials.push(representativeCredential);
+          activeCredential = representativeCredential;
+        }
         state.auth = {
-          credential: { username, salt, passwordHash: hashPassword(password, salt) },
-          session: { signedIn: true, signedInAt: new Date().toISOString() }
+          credential: {
+            username: memberCredential.username,
+            salt: memberCredential.salt,
+            passwordHash: memberCredential.passwordHash
+          },
+          credentials: authCredentials,
+          session: {
+            signedIn: true,
+            signedInAt: new Date().toISOString(),
+            credentialId: activeCredential.id,
+            actingAs: activeCredential.role
+          }
         };
         saveState();
         renderPledge();
@@ -9825,9 +10563,10 @@
 
     if (withdraw) {
       withdraw.addEventListener('click', () => {
+        const cancellation = getSeveranceSummary().cancellation;
         showConfirm({
           title: 'Withdraw your membership?',
-          message: 'Your membership, username, and salted password hash will be removed from this browser. You can still browse offers, but you will need to sign the pledge again to post, request, or manage your track. Your saved track details may remain on this device.',
+          message: `Your membership, local usernames, and salted password hashes will be removed from this browser, including any power-of-attorney representative sign-in. You can still browse offers, but you will need to sign the pledge again to post, request, or manage your track. Your saved track details may remain on this device. A local cancellation estimate of ${formatMoney(cancellation.estimate)} is recorded for the prototype, capped at ${formatMoney(cancellation.cap)}. It is based on your group/alliance share (${cancellation.memberPercent}%) and those groups' share of the donation fund (${cancellation.groupFundPercent}%). It is separate from your group's uncapped slice of unspoken-for money, so the two amounts can be different. No payout occurs and nothing is transmitted.`,
           confirmLabel: 'Withdraw membership',
           tone: 'danger',
           onConfirm: () => {
@@ -9890,11 +10629,12 @@
         const data = new FormData(form);
         const username = normalizeUsername(data.get('username'));
         const password = String(data.get('password') || '');
-        const credential = getCredential();
+        const credential = getCredentials().find((item) => item
+          && item.username === username
+          && hashPassword(password, item.salt) === item.passwordHash);
 
-        if (!credential || username !== credential.username ||
-            hashPassword(password, credential.salt) !== credential.passwordHash) {
-          const message = 'That username or password does not match the account stored in this browser.';
+        if (!credential) {
+          const message = 'That username or password does not match a sign-in stored in this browser.';
           if (errorBox) {
             errorBox.textContent = message;
             errorBox.hidden = false;
@@ -9903,8 +10643,13 @@
           return;
         }
 
-        setSession(true);
-        announce(`Welcome back, ${state.pledge ? state.pledge.name : username}.`);
+        setSession(true, credential);
+        const welcomeName = state.pledge ? state.pledge.name : username;
+        if (credential.role === 'representative') {
+          announce(`Welcome back, ${credential.label || 'authorized representative'}. You are signed in on behalf of ${welcomeName}.`);
+        } else {
+          announce(`Welcome back, ${welcomeName}.`);
+        }
         showToast('Signed in. Opening your dashboard.', false);
         closeDialog(document.getElementById('signin-dialog'));
         window.location.assign('dashboard.html');

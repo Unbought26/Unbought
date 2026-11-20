@@ -512,7 +512,40 @@
               <p class="password-note">Do not reuse a real password. This prototype saves a local hash on this device only—there is no server, no recovery, and no real security.</p>
             </div>
 
-            <p class="pledge-privacy-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Prototype: your name, addresses, cell and public phone numbers, text preference, date of birth, username, and password hash stay in this browser only. Nothing is transmitted, sold, shared, or texted, and no real account is created.</p>
+            <div class="pledge-account-fields pledge-poa-fields">
+              <p class="eyebrow">Power of attorney</p>
+              <label class="checkbox"><input type="checkbox" id="pledge-has-poa" name="hasPowerOfAttorney" data-has-poa> <span>I am applying and taking the pledge with power of attorney for the member named above</span></label>
+              <p class="field-hint">Use this only when a power of attorney gives you authority to act for the member. This prototype does not verify documents, grant legal authority, or send anything.</p>
+              <div class="poa-fields" data-poa-fields hidden>
+                <p class="account-note">The member keeps the username and password above. Add a second user and password for the person with power of attorney; either sign-in can manage this local account on the member’s behalf.</p>
+                <div class="form-row">
+                  <div class="field field--on-blue">
+                    <label for="pledge-poa-name">Representative full name <span class="required-mark" aria-hidden="true">*</span></label>
+                    <input type="text" id="pledge-poa-name" name="poaRepresentativeName" maxlength="80" disabled placeholder="Person with power of attorney">
+                  </div>
+                  <div class="field field--on-blue">
+                    <label for="pledge-poa-relationship">Relationship or authority <span class="required-mark" aria-hidden="true">*</span></label>
+                    <input type="text" id="pledge-poa-relationship" name="poaRelationship" maxlength="80" disabled placeholder="Power of attorney, caregiver, family…">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="field field--on-blue">
+                    <label for="pledge-poa-username">Second user (representative) <span class="required-mark" aria-hidden="true">*</span></label>
+                    <input type="text" id="pledge-poa-username" name="poaUsername" autocomplete="username" maxlength="40" disabled placeholder="3–40 letters, numbers, . _ or -">
+                  </div>
+                  <div class="field field--on-blue">
+                    <label for="pledge-poa-password">Representative password <span class="required-mark" aria-hidden="true">*</span></label>
+                    <input type="password" id="pledge-poa-password" name="poaPassword" autocomplete="new-password" minlength="8" maxlength="200" disabled placeholder="At least 8 characters">
+                  </div>
+                </div>
+                <div class="field field--on-blue">
+                  <label for="pledge-poa-password-confirm">Confirm representative password <span class="required-mark" aria-hidden="true">*</span></label>
+                  <input type="password" id="pledge-poa-password-confirm" name="poaPasswordConfirm" autocomplete="new-password" maxlength="200" disabled placeholder="Repeat representative password">
+                </div>
+              </div>
+            </div>
+
+            <p class="pledge-privacy-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Prototype: your name, addresses, cell and public phone numbers, text preference, date of birth, usernames, and password hashes stay in this browser only. Nothing is transmitted, sold, shared, or texted, and no real account is created.</p>
 
             <p class="form-error" id="pledge-error" role="alert" hidden></p>
 
@@ -611,7 +644,7 @@
       </div>
       <div class="dialog-content">
         <h2 id="signin-dialog-title">Sign in to your commons account.</h2>
-        <p id="signin-dialog-intro">Use the username and password you created when you signed the pledge. Only your username and salted password hash are stored in this browser; it is a prototype, not a secure login.</p>
+        <p id="signin-dialog-intro">Use the member username and password created with the pledge, or the second username and password created for an authorized representative. Only local usernames and salted password hashes are stored in this browser; it is a prototype, not a secure login.</p>
         <form class="signin-form" id="signin-form">
           <div class="field">
             <label for="signin-username">Username <span class="required-mark" aria-hidden="true">*</span></label>

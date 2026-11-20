@@ -300,6 +300,32 @@ em {
   max-width: none;
 }
 
+.section-head--compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem clamp(1rem, 3vw, 2.5rem);
+  max-width: none;
+  margin-bottom: clamp(1rem, 2vw, 1.35rem);
+}
+
+.section-head--compact h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.1vw, 1.7rem);
+}
+
+.section-head--compact .eyebrow {
+  margin: 0;
+}
+
+.section-head--compact > p {
+  margin: 0;
+  max-width: 64ch;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
 .section-head-aside {
   margin: 0 0 0.35rem;
   color: var(--muted);
@@ -1909,6 +1935,24 @@ em {
   border-top: 1px solid rgba(255, 255, 255, 0.16);
 }
 .pledge-account-fields .eyebrow { margin-bottom: -0.3rem; color: var(--amber-light); }
+.pledge-poa-fields {
+  border-top-color: rgba(217, 155, 38, 0.45);
+  padding-top: 1rem;
+}
+.poa-fields {
+  display: grid;
+  gap: 0.9rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(217, 155, 38, 0.45);
+  border-radius: var(--radius-sm);
+  background: rgba(217, 155, 38, 0.1);
+}
+.poa-fields .account-note {
+  margin: 0;
+  color: #F7E6C4;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
 .password-note {
   margin: -0.2rem 0 0;
   color: var(--on-blue);
@@ -2454,6 +2498,48 @@ em {
   font-weight: 800;
   letter-spacing: 0.075em;
   text-transform: uppercase;
+}
+
+.filter-panel > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: fit-content;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #F8FAFC;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.filter-panel > summary::-webkit-details-marker {
+  display: none;
+}
+
+.filter-panel > summary::before {
+  content: "+";
+  display: inline-grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #FFFFFF;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.filter-panel[open] > summary {
+  margin-bottom: 0.9rem;
+}
+
+.filter-panel[open] > summary::before {
+  content: "−";
 }
 
 .filter-grid {
@@ -6551,6 +6637,14 @@ em {
   font-size: 0.85rem;
   font-weight: 700;
 }
+.account-form .account-subhead {
+  margin: 0.9rem 0 0.45rem;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 .account-form fieldset:last-of-type { margin-bottom: 0.5rem; }
 
 .profile-section .section-head { margin-bottom: 1.5rem; }
@@ -8600,8 +8694,268 @@ body[data-directory-scope="goods"] .product-price--nonmember .product-price-valu
   text-align: right;
 }
 
+/* Donation fund stages and the local surplus wishlist */
+.fund-flow-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fund-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-height: 100%;
+  padding: 1.1rem 1.1rem 1.2rem;
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--blue);
+  border-radius: 14px;
+  background: var(--card);
+}
+
+.fund-stage-number {
+  color: var(--blue-deep, var(--blue));
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.fund-stage h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.fund-stage p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.fund-stage a {
+  color: var(--blue-deep, var(--blue));
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.fund-flow-rule {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--amber-deep, var(--amber));
+  border-radius: 12px;
+  background: var(--sand);
+}
+
+.fund-flow-rule .icon {
+  flex: 0 0 auto;
+  width: 1.4rem;
+  height: 1.4rem;
+  color: var(--amber-deep, var(--amber));
+}
+
+.fund-flow-rule h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.fund-flow-rule p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.fund-flow-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.fund-flow-note .icon {
+  flex: 0 0 auto;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.15rem;
+}
+
+.wishlist-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.wishlist-side {
+  display: grid;
+  gap: 1rem;
+}
+
+.wishlist-card {
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 18px);
+  background: var(--card);
+}
+
+.wishlist-card--primary {
+  border-top: 4px solid var(--amber-deep, var(--amber));
+}
+
+.wishlist-card h3 {
+  margin: 0.5rem 0 0.35rem;
+}
+
+.wishlist-card .form-hint,
+.wishlist-card .field-hint {
+  line-height: 1.6;
+}
+
+.wishlist-gate {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: var(--sand);
+}
+
+.wishlist-gate p {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.wishlist-field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.wishlist-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.wishlist-suggestion {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--sand);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.wishlist-suggestion:hover,
+.wishlist-suggestion:focus-visible {
+  border-color: var(--blue);
+  color: var(--blue-deep, var(--blue));
+}
+
+.wishlist-owned,
+.wishlist-cycle,
+#wishlist-public {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.wishlist-owned h4 {
+  margin: 0 0 0.2rem;
+}
+
+.wishlist-cycle-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--sand);
+}
+
+.wishlist-cycle-step {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.wishlist-cycle-copy strong,
+.wishlist-cycle-copy .contribution-meta {
+  display: block;
+}
+
+.wishlist-cycle-copy .contribution-meta {
+  margin-top: 0.1rem;
+}
+
+.wishlist-item {
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--sand);
+}
+
+.wishlist-item-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.wishlist-item-top strong {
+  font-size: 0.92rem;
+}
+
+.wishlist-item .contribution-meta {
+  display: block;
+  margin: 0.35rem 0 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.wishlist-item-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-top: 0.55rem;
+}
+
+@media (max-width: 900px) {
+  .wishlist-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 640px) {
-  .exchange-sides {
+  .exchange-sides,
+  .wishlist-field-row {
     grid-template-columns: 1fr;
   }
 }
@@ -8709,6 +9063,10 @@ body[data-directory-scope="goods"] .product-price--nonmember .product-price-valu
   margin: 0 0 0.8rem;
   padding: 0;
   list-style: none;
+}
+
+.group-search-results {
+  margin-top: 0.6rem;
 }
 
 .friend-result,

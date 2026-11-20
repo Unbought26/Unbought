@@ -83,76 +83,7 @@
 
   <main id="main">
 
-    <!-- ============================================================
-         HERO
-         ============================================================ -->
-    <section class="hero" id="top" aria-labelledby="hero-title">
-      <div class="hero-glow" aria-hidden="true"></div>
-      <div class="container hero-grid">
-        <div class="hero-copy">
-          <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Free Labor Directory</p>
-          <h1 id="hero-title">Paid-Level Skill. <span class="mark">Freely Given.</span></h1>
-          <p class="hero-lede">Repairs, care, tutoring, design, hauling, and trades offered by neighbors at no charge. Unbought labor is free at the point of use—because survival should never be for sale. Browse the offers below or post your own.</p>
-
-          <div class="hero-actions">
-            <a class="button button--primary" href="#services">Browse the Directory <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
-            <a class="button button--outline" href="#standard">Read the Free Labor Standard</a>
-          </div>
-
-          <ul class="hero-assurances" aria-label="Our commitments">
-            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> No invoices</li>
-            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Requester covers materials</li>
-            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Consent first</li>
-            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Open to everyone</li>
-          </ul>
-        </div>
-
-        <div class="hero-art" aria-label="Unbought emblem and guiding principles">
-          <div class="hero-art-orbit hero-art-orbit--one" aria-hidden="true"></div>
-          <div class="hero-art-orbit hero-art-orbit--two" aria-hidden="true"></div>
-          <div class="hero-seal">
-            <img src="assets/logo.png" alt="" width="170" height="170" aria-hidden="true">
-            <p class="hero-seal-kicker">The Unbought seal</p>
-            <p class="hero-seal-quote">“I am because <em>we are.</em>”</p>
-          </div>
-          <div class="hero-art-footer">
-            <div>
-              <span class="hero-fact-number">0</span>
-              <span class="hero-fact-label">currency required</span>
-            </div>
-            <div>
-              <span class="hero-fact-number">4</span>
-              <span class="hero-fact-label">pillars of shared life</span>
-            </div>
-            <div>
-              <span class="hero-fact-number">1</span>
-              <span class="hero-fact-label">rule: consent</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="container">
-        <div class="values-strip" aria-label="The four pillars in brief">
-          <div class="value-item">
-            <span class="value-icon value-icon--blue"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-hammer"></use></svg></span>
-            <div><strong>Free labor</strong><span>Paid-level skill, freely given</span></div>
-          </div>
-          <div class="value-item">
-            <span class="value-icon value-icon--amber"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-basket"></use></svg></span>
-            <div><strong>Free goods</strong><span>No price tag. No swap required.</span></div>
-          </div>
-          <div class="value-item">
-            <span class="value-icon value-icon--red"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-book"></use></svg></span>
-            <div><strong>Free education</strong><span>Mentorship without tuition</span></div>
-          </div>
-          <div class="value-item">
-            <span class="value-icon value-icon--blue"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-house"></use></svg></span>
-            <div><strong>Community land</strong><span>Held for people, not profit</span></div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <span id="top" aria-hidden="true"></span>
 
     <!-- ============================================================
          FREE LABOR STANDARD
@@ -199,12 +130,12 @@
          ============================================================ -->
     <section class="section section--tint directory-section" id="services" aria-labelledby="services-title">
       <div class="container">
-        <div class="section-head section-head--split">
+        <div class="section-head section-head--compact">
           <div>
             <p class="eyebrow">Free labor directory</p>
             <h2 id="services-title">The commons, in plain sight.</h2>
           </div>
-          <p class="section-head-aside">Every listing is an offer, not an advertisement. Labor is always free; a suggested donation price, when a neighbor sets one, goes to the Unbought donation fund and members still get it free. Search by title, neighbor, or price, choose a pillar and its service titles, narrow by location or online format, sort the results, then request a connection with mutual consent.</p>
+          <p>Labor is free; suggested donation prices go to the Unbought donation fund. Search, filter, sort, and request a connection with mutual consent.</p>
         </div>
 
         <div class="filter-bar labor-filters" aria-labelledby="filter-title">
@@ -217,9 +148,11 @@
               <button class="text-button text-button--muted" id="clear-filters" type="button">Reset filters</button>
             </div>
           </div>
-          <div class="filter-grid">
-            <div class="field">
-              <label for="search-filter">Search services</label>
+          <details class="filter-panel">
+            <summary>Search &amp; filters</summary>
+            <div class="filter-grid">
+              <div class="field">
+                <label for="search-filter">Search services</label>
               <input type="search" id="search-filter" name="search" placeholder="Title, skill, or neighbor" autocomplete="off" aria-label="Search free labor listings">
             </div>
             <div class="field">
@@ -301,6 +234,7 @@
               <p>Labor is never charged. If supplies cannot be found free, the requester pays their exact receipt price. No markup. Ever.</p>
             </div>
           </div>
+          </details>
           <p class="results-status" id="results-status" role="status" aria-live="polite" aria-atomic="true">Showing all offerings.</p>
           <div class="active-filters" id="active-filters" hidden></div>
         </div>

@@ -34,7 +34,11 @@ Then visit <http://localhost:8000/>.
 
 Prototype sign-in accepts a locally created username and password. Passwords are
 stored only in the browser as a salted prototype hash; this is not real account
-security and must be replaced before any production deployment.
+security and must be replaced before any production deployment. When power of
+attorney applies, the pledge form can also create a second local username and
+password for the authorized representative. Either sign-in can manage the
+member’s local record on their behalf. The prototype does not verify legal
+documents, grant legal authority, or transmit anything.
 
 ## Header and navigation
 
@@ -67,15 +71,18 @@ fields copy the mailing fields and lock until the box is cleared. Birthdate uses
 separate month, day, and year selectors and is stored as one ISO date. Career and
 unpaid skills use a search box with suggested skills; members can also type a
 custom skill and press Enter. Chosen skills are saved as comma-separated values and
-shown as removable chips.
+shown as removable chips. Settings edits every field in the private profile’s
+Identity &amp; contact block—legal name parts, both structured addresses and
+counties, ZIP codes, birthdate, availability, and phone choices—rather than
+showing a read-only duplicate.
 
 The phone section asks for a required cell phone, an optional public phone, whether
 the public phone is the same as the cell phone, whether the chosen phone number
 should appear on the public resume, and whether the member wants text messages.
 When “same as cell” is checked, the public phone mirrors the cell phone and locks
 until the box is cleared. The text preference is stored locally only; no texts are
-sent in this prototype. These fields can also be edited in Settings and on the
-signed-in private profile.
+sent in this prototype. These fields are shown on the signed-in private profile and
+edited in Settings.
 
 The public resume is a filtered projection. It shows the chosen first name,
 picture, tag line, bio, profession, City/State from the member-selected mailing or
@@ -125,9 +132,44 @@ payout, stock issuance, or payment occurs, and nothing is transmitted.
 
 `donate.html` catalogues the same ledger: whole-dollar amount and frequency,
 optional chosen name and note, local timestamp and intent ID, member link only when
-signed in, and a guest email only for a future local thank-you. It also explains
-that donations, academy tuition, non-member purchases, and mutually confirmed
-hours share the same accounting model while sensitive profile fields stay private.
+signed in, and a guest email only for a future local thank-you. Signed-in members
+may credit an intent to one of their groups or alliances; that source is stored as
+`groupId` or `allianceId` for local share calculations only. It also explains that
+donations, academy tuition, non-member purchases, and mutually confirmed hours
+share the same accounting model while sensitive profile fields stay private.
+
+The published allocation plan runs in stages. Every dollar starts with pre-rollout
+operations: licensing, web hosting, database set up, and social media awareness.
+Once the Land Trust account is formed and initial start-up costs are paid, the fund
+builds in an account while seeking accountants until the first plot of land, house,
+or warehouse can be bought. After that, a separate housing-stability account keeps
+the Land Trust alive, obtains resources, and keeps the lights on. Vacant houses will
+be furnished for members to stay free or for non-members to stay for donations
+decided by surrounding Groups. Any budget that has leftover money sends it to the
+surplus fund; money that is spoken for, including savings for taxes and utilities,
+stays in an active checking fund.
+
+Once the balance sheet is organized and producing a surplus, that surplus goes to a
+local member wishlist. Members search a fixed catalog, may type their own item, add
+an example `http(s)` link, and label each entry as need, want, or nice to have with a
+priority number from 1 to 20. Each item also has a local wishlist group: Active
+working members, Disabled, Over 65, Homeless, Under 25, or Confirmed report within
+the last year, in that order. Each priority list is first come, first served: the
+waitlist picks the earliest saved item on each list and cycles through the six
+lists. Need/want/nice and the item number remain visible as local priority labels,
+and matching titles tally with other lists. Whoever listed an item as a need sees
+it first. After seven days, unless the item is marked perishable, it appears in the
+public wishlist. No item is bought, delivered, or transmitted, and wishlists never
+appear on a public resume. The wishlist is separate from the closed Basic
+Necessities list.
+
+When a member withdraws, the prototype shows a cancellation estimate capped at
+$4,000. It multiplies the member's share of contributions credited to their groups
+and alliances by those groups' share of the Unbought donation fund. The calculation
+appears in the member account panel and in the withdrawal confirmation. That capped
+severance check is separate from a group's uncapped slice of unspoken-for money, so
+the two amounts can be different. Both are local estimates only, with no payout,
+debt, legal claim, or transmission.
 
 ## Chosen name in other forms
 
@@ -276,8 +318,11 @@ description, provider, or service title; filter by city, two-letter state, ZIP
 prefix, and in-person/online format; and sort by featured, newest, title,
 service title, location, or nearest to a ZIP entered in the sort controls.
 Active filters can be removed one at a time. Custom titles entered by members
-also appear as filter choices. Both directories have a required search field.
-They use compact linked cards (photo, tags, title, description, and location); the
+also appear as filter choices. Both directory pages open straight into the
+directory without a separate hero block, use a compact section head, and keep
+search and filters collapsed behind a “Search & filters” disclosure until needed.
+Both directories have a required search field. They use compact linked cards
+(photo, tags, title, description, and location); the
 whole card is the link, no card text is underlined, and clicking it opens the
 details dialog with more information. Cards also support `?listing=<id>` deep links
 so an opened card can be restored from a local link. Existing tags and badges stay
@@ -362,9 +407,12 @@ delivers nothing.
 
 Dashboard → Friends & Groups automatically places the member in the main town group
 named after their town (for example, "Stroudsburg Group I"). Other groups are social
-or support circles the member creates or joins. Groups decide how mutual aid works
-within Basic Necessities and whether to accept an alliance with another group in
-the Unbought network. Town group names link to
+or support circles the member creates or joins. The group form opens in join mode:
+members search group names saved on this device and each Request to join button
+records a pending request only for the signed-in member; no one else is added and
+nothing is delivered. Create mode still saves a local social circle. Groups decide
+how mutual aid works within Basic Necessities and whether to accept an alliance with
+another group in the Unbought network. Town group names link to
 `group.html?group=<id>`, and group counts come from `group.members`, not a typed
 number. When a town group reaches 150 people, another Stroudsburg group is created
 with a Roman numeral ending: II, III, … XI. The first member of a new numbered group
@@ -390,6 +438,17 @@ attached to the post; there are no separate group comments and no Group involvem
 block. Offers come only from that group’s members’ Free Stuff and Free Labor posts;
 scraped listing comments are not shown. Group profiles show the member list, admin
 seats, group chat, group offers, and local details only.
+
+Each group profile also shows an uncapped local surplus allowance: the group's slice
+of unspoken-for money. It is the group's share of locally credited contributions to
+Unbought applied to the current local fund balance as a surplus proxy; it is not a
+budget, payment, or promise. It is separate from a member's capped severance check.
+Eventually the admins from all groups will come together to figure out Unbought
+spending. Each group is in charge of finding land in its own area that it wants to
+collectively buy; the allowance only guides that local discussion. Once a group picks
+a house, it would contact the all-volunteer Unbought housing team (real estate,
+lawyers, and others) to check whether the house is available to buy. No contact is
+made or transmitted by the prototype.
 
 ## Group brands and businesses (Phase 2)
 
@@ -435,7 +494,9 @@ Every footer carries “Built on Consent.” exactly once. The public fund name 
 “Unbought donation fund”; internal `severanceFund`, `severance_purchase`, and
 `getSeveranceSummary()` keys remain only for older local data compatibility. The
 working name “Unbought Community Trust” appears only in `future.html`, and
-“Free Goods Fund” is donation priority #4.
+“Free Goods Fund” is donation priority #4. The donation-fund stages, surplus
+wishlist, and $4,000 cancellation estimate are local planning records; they open no
+accounts, buy no items, and pay no one.
 
 ## Hosting
 

@@ -83,76 +83,7 @@
 
   <main id="main">
 
-    <!-- ============================================================
-         HERO
-         ============================================================ -->
-    <section class="hero" id="top" aria-labelledby="hero-title">
-      <div class="hero-glow" aria-hidden="true"></div>
-      <div class="container hero-grid">
-        <div class="hero-copy">
-          <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Free Stuff Directory</p>
-          <h1 id="hero-title">Take What You Need. <span class="mark mark--blue">Leave What You Can.</span></h1>
-          <p class="hero-lede">Groceries, furniture, tech, tools, solar panels, raw materials, cars, gift cards from independent businesses, and more in the Unbought commons. Pledged members share and request items through mutual aid; people who do not take the pledge may record a local purchase intent for goods. Amounts are tracked for the Unbought donation fund in this prototype, with no real payment processed. Browse or add an offering.</p>
-
-          <div class="hero-actions">
-            <a class="button button--primary" href="#services">Browse Free Stuff <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
-            <a class="button button--outline" href="#policy">Read the Goods Policy</a>
-          </div>
-
-          <ul class="hero-assurances" aria-label="Our commitments">
-            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Free for pledged members</li>
-            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> No means test</li>
-            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> No deposit</li>
-            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Open to everyone</li>
-          </ul>
-        </div>
-
-        <div class="hero-art" aria-label="Unbought emblem and guiding principles">
-          <div class="hero-art-orbit hero-art-orbit--one" aria-hidden="true"></div>
-          <div class="hero-art-orbit hero-art-orbit--two" aria-hidden="true"></div>
-          <div class="hero-seal">
-            <img src="assets/logo.png" alt="" width="170" height="170" aria-hidden="true">
-            <p class="hero-seal-kicker">The Unbought seal</p>
-            <p class="hero-seal-quote">“I am because <em>we are.</em>”</p>
-          </div>
-          <div class="hero-art-footer">
-            <div>
-              <span class="hero-fact-number">0</span>
-              <span class="hero-fact-label">currency required</span>
-            </div>
-            <div>
-              <span class="hero-fact-number">4</span>
-              <span class="hero-fact-label">pillars of shared life</span>
-            </div>
-            <div>
-              <span class="hero-fact-number">1</span>
-              <span class="hero-fact-label">rule: consent</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="container">
-        <div class="values-strip" aria-label="The four pillars in brief">
-          <div class="value-item">
-            <span class="value-icon value-icon--blue"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-hammer"></use></svg></span>
-            <div><strong>Free labor</strong><span>Paid-level skill, freely given</span></div>
-          </div>
-          <div class="value-item">
-            <span class="value-icon value-icon--amber"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-basket"></use></svg></span>
-            <div><strong>Free goods</strong><span>No price tag. No swap required.</span></div>
-          </div>
-          <div class="value-item">
-            <span class="value-icon value-icon--red"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-book"></use></svg></span>
-            <div><strong>Free education</strong><span>Mentorship without tuition</span></div>
-          </div>
-          <div class="value-item">
-            <span class="value-icon value-icon--blue"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-house"></use></svg></span>
-            <div><strong>Community land</strong><span>Held for people, not profit</span></div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <span id="top" aria-hidden="true"></span>
 
     <!-- ============================================================
          FREE GOODS POLICY
@@ -199,12 +130,12 @@
          ============================================================ -->
     <section class="section section--tint directory-section" id="services" aria-labelledby="services-title">
       <div class="container">
-        <div class="section-head section-head--split">
+        <div class="section-head section-head--compact">
           <div>
             <p class="eyebrow">Free stuff directory</p>
             <h2 id="services-title">The commons, in plain sight.</h2>
           </div>
-          <p class="section-head-aside">Every listing is an offer, not an advertisement. Members request goods with mutual consent; non-members may record a local purchase intent at the suggested donation price, which is shown on each card and searchable in the filters. The amount goes to the Unbought donation fund. No real payment is processed and nothing is transmitted.</p>
+          <p>Every listing is an offer. Members request through mutual consent; suggested donation prices go to the Unbought donation fund. Search, filter, and sort locally.</p>
         </div>
 
         <div class="market-shell">
@@ -214,10 +145,12 @@
                 <h3 id="filter-title">Filter results</h3>
                 <button class="filter-reset" id="clear-filters" type="button">Clear all</button>
               </div>
-              <div class="filter-note">
-                <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-basket"></use></svg>
-                <p>Members request through mutual consent. Non-members may record a purchase intent in this prototype; the amount is tracked locally for the Unbought donation fund and no real payment is processed.</p>
-              </div>
+              <details class="filter-panel">
+                <summary>Search &amp; filters</summary>
+                <div class="filter-note">
+                  <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-basket"></use></svg>
+                  <p>Members request through mutual consent. Non-members may record a purchase intent in this prototype; the amount is tracked locally for the Unbought donation fund and no real payment is processed.</p>
+                </div>
               <div class="facet-groups">
                 <fieldset class="facet-group">
                   <legend>Search listings</legend>
@@ -267,6 +200,7 @@
                   <div id="facet-options"></div>
                 </fieldset>
               </div>
+              </details>
             </div>
           </aside>
 
