@@ -810,10 +810,10 @@
   // A small local sample directory so the prototype can demonstrate member
   // search and the request flow. These are not real accounts; nothing is sent.
   const LOCAL_MEMBER_DIRECTORY = Object.freeze([
-    { id: 'sample-member-maya', name: 'Maya Torres', profession: 'Baker', cityState: 'Stroudsburg, PA' },
-    { id: 'sample-member-jordan', name: 'Jordan Lee', profession: 'Electrician', cityState: 'East Stroudsburg, PA' },
-    { id: 'sample-member-sam', name: 'Sam Rivera', profession: 'Care worker', cityState: 'Scranton, PA' },
-    { id: 'sample-member-ana', name: 'Ana Patel', profession: 'Teacher', cityState: 'Stroudsburg, PA' }
+    { id: 'sample-member-maya', name: 'Maya Torres', profession: 'Baker', cityState: 'Stroudsburg, PA', physicalCounty: 'Monroe', physicalState: 'PA' },
+    { id: 'sample-member-jordan', name: 'Jordan Lee', profession: 'Electrician', cityState: 'East Stroudsburg, PA', physicalCounty: 'Monroe', physicalState: 'PA' },
+    { id: 'sample-member-sam', name: 'Sam Rivera', profession: 'Care worker', cityState: 'Scranton, PA', physicalCounty: 'Lackawanna', physicalState: 'PA' },
+    { id: 'sample-member-ana', name: 'Ana Patel', profession: 'Teacher', cityState: 'Stroudsburg, PA', physicalCounty: 'Monroe', physicalState: 'PA' }
   ]);
 
   const SKILL_OPTIONS = Object.freeze({
@@ -1013,6 +1013,18 @@
       ? [city, [state, zip].filter(Boolean).join(' ')].filter(Boolean).join(', ')
       : '';
     return [...street, locality].filter(Boolean).join(', ').slice(0, 240);
+  }
+
+  // Counties are private eligibility data, never part of a public resume.
+  // "Monroe County" and "Monroe" are treated as the same county.
+  function normalizeCounty(value) {
+    return cleanString(value, 80).trim().replace(/\s+county\s*$/i, '').trim();
+  }
+
+  function countyKey(county, stateCode) {
+    const name = normalizeCounty(county).toLowerCase();
+    const code = normalizeStateCode(stateCode);
+    return name && code ? `${name}|${code}` : '';
   }
 
   function splitSkillList(value) {
@@ -1627,6 +1639,43 @@
           showToast('Guidelines saved locally.', false);
           return;
         }
+        if (form.matches('[data-group-review-vote-form]')) {
+          event.preventDefault();
+          if (!requireMembership() || !form.reportValidity()) return;
+          const group = getGroupById(form.dataset.groupId);
+          if (!group || !isGroupAdmin(group, state.pledge.memberId)) {
+            showToast('Only a current admin can run a review board vote.', false);
+            return;
+          }
+          const proposal = cleanString(new FormData(form).get('proposal'), 800);
+          if (!proposal) return;
+          state.groupPosts = Array.isArray(state.groupPosts) ? state.groupPosts : [];
+          state.groupPosts.push({
+            id: makeId('group-review-vote'),
+            groupId: group.id,
+            memberId: state.pledge.memberId,
+            name: state.pledge.name || 'Member',
+            title: 'Review board vote',
+            body: `Proposed review board change: ${proposal}\n\nReply "Agree" or "Disagree" in this chat. An Agreed outcome closes this group's review board to alliances outside its ZIP code only.`,
+            picture: [],
+            createdAt: new Date().toISOString(),
+            comments: [],
+            guidelineVote: true,
+            reviewBoardVote: true,
+            proposal
+          });
+          state.groupPosts = state.groupPosts.slice(-500);
+          addNotification('groupPost', `Review board vote opened: ${groupDisplayLabel(group)}`,
+            'Opened in group chat locally by a current admin. Members reply on this device only.',
+            { tab: '', sourceId: group.id });
+          saveState();
+          renderGroupProfile();
+          renderNotifications();
+          form.reset();
+          announce('Review board vote opened in group chat locally.');
+          showToast('Review board vote opened in group chat.', false);
+          return;
+        }
         if (form.matches('[data-group-guideline-vote-form]')) {
           event.preventDefault();
           if (!requireMembership() || !form.reportValidity()) return;
@@ -1682,7 +1731,13 @@
           post.outcomeBy = state.pledge.name || 'Admin';
           post.outcomeById = state.pledge.memberId;
           post.outcomeAt = new Date().toISOString();
-          addNotification('groupPost', `Guideline outcome recorded: ${groupDisplayLabel(group)}`,
+          if (post.reviewBoardVote && outcome === 'Agreed') {
+            group.settings = normalizeGroupSettings(group.settings);
+            group.settings.reviewBoard.openToAlliance = false;
+            group.settings.reviewBoard.optOutOutcome = outcome;
+            group.settings.reviewBoard.optOutAt = post.outcomeAt;
+          }
+          addNotification('groupPost', `${post.reviewBoardVote ? 'Review board' : 'Guideline'} outcome recorded: ${groupDisplayLabel(group)}`,
             `Recorded locally as “${outcome}” by ${post.outcomeBy}.`,
             { tab: '', sourceId: group.id });
           saveState();
@@ -2046,6 +2101,164 @@
     return allReports().filter((report) => isRespondent(report));
   }
 
+  // Review board eligibility. Voters must be impartial and geographically
+  // connected to the case: no parties, friends of parties, observers, or care
+  // circle members, and the voter's physical-address county must match the
+  // physical-address county of at least one involved party.
+  function reviewMemberStatus(memberId) {
+    const id = cleanString(memberId, 100);
+    if (!id) return { track: '', standing: '' };
+    if (state.pledge && state.pledge.memberId === id) {
+      return {
+        track: cleanString(state.track, 30).toLowerCase(),
+        standing: cleanString(state.pledge.status, 30).toLowerCase()
+      };
+    }
+    const rosterEntry = getMemberRoster().find((item) => item && item.memberId === id);
+    if (rosterEntry) {
+      return {
+        track: cleanString(rosterEntry.track, 30).toLowerCase(),
+        standing: cleanString(rosterEntry.standing, 30).toLowerCase()
+      };
+    }
+    const member = memberDirectory().find((item) => item && item.memberId === id);
+    return {
+      track: cleanString(member && member.track, 30).toLowerCase(),
+      standing: cleanString(member && member.standing, 30).toLowerCase()
+    };
+  }
+
+  function reviewPartyMemberIds(report) {
+    if (!report) return [];
+    const ids = [report.reporterMemberId, report.respondentMemberId]
+      .map((id) => cleanString(id, 100))
+      .filter(Boolean);
+    const selfName = cleanString(state.pledge && state.pledge.name, 60).trim().toLowerCase();
+    if (selfName && state.pledge && state.pledge.memberId) {
+      [report.reporterName, report.respondentName].forEach((name) => {
+        if (cleanString(name, 80).trim().toLowerCase() === selfName) ids.push(state.pledge.memberId);
+      });
+    }
+    return [...new Set(ids)];
+  }
+
+  function reviewMemberLocation(memberId, snapshotCounty, snapshotState) {
+    const member = findMemberById(cleanString(memberId, 100));
+    const county = normalizeCounty(member && member.physicalCounty) || normalizeCounty(snapshotCounty);
+    const stateCode = normalizeStateCode(member && member.physicalState) || normalizeStateCode(snapshotState);
+    return { county, state: stateCode, key: countyKey(county, stateCode) };
+  }
+
+  function groupsContainingMember(memberId) {
+    const id = cleanString(memberId, 100);
+    if (!id) return [];
+    return (Array.isArray(state.groups) ? state.groups : [])
+      .filter((group) => group && group.name && !group.left)
+      .map(normalizeGroup)
+      .filter((group) => group.members.some((member) => member && member.memberId === id));
+  }
+
+  function hasRecentReportAgainst(memberId) {
+    const id = cleanString(memberId, 100);
+    if (!id) return false;
+    const member = findMemberById(id);
+    const name = cleanString(member && member.name, 80).trim().toLowerCase();
+    const cutoff = Date.now() - (365 * DAY_MS);
+    return allReports().some((report) => {
+      if (!report) return false;
+      const created = Date.parse(report.createdAt);
+      if (Number.isNaN(created) || created < cutoff) return false;
+      if (cleanString(report.respondentMemberId, 100) === id) return true;
+      return Boolean(name && cleanString(report.respondentName, 80).trim().toLowerCase() === name);
+    });
+  }
+
+  function groupZipCode(group) {
+    const settings = normalizeGroupSettings(group && group.settings);
+    if (settings.online) return '';
+    return zipFromAddress(settings.location || (group && group.location) || '');
+  }
+
+  function reviewVoteBlockReason(report, memberId) {
+    if (!isMember() || !report) return 'Only signed-in pledged members can vote on review board cases.';
+    const id = cleanString(memberId, 100);
+    if (!id) return 'Only pledged members can vote on review board cases.';
+
+    const partyIds = reviewPartyMemberIds(report);
+    if (partyIds.includes(id)) return 'Involved parties do not vote on their own case.';
+
+    const friends = Array.isArray(state.friends) ? state.friends : [];
+    if (friends.some((friend) => partyIds.includes(cleanString(friend && friend.memberId, 100)))) {
+      return 'Friends of involved parties do not vote on the case.';
+    }
+
+    const standing = reviewMemberStatus(id);
+    if (standing.track === 'care' || standing.standing === 'care') {
+      return 'Care Circle members do not vote on review board cases.';
+    }
+    if (['observer', 'observe_only'].includes(standing.track) || ['observer', 'observe_only'].includes(standing.standing)) {
+      return 'Observers do not vote on review board cases.';
+    }
+
+    // Group and alliance membership are additional routes into the same review
+    // board. A group member with a recent report against them cannot use the
+    // group route, and a group may vote to close its board to outside-ZIP
+    // alliances only.
+    const voterGroups = groupsContainingMember(id);
+    const voterGroupIds = voterGroups.map((group) => group.id);
+    const partyGroups = partyIds.flatMap((partyId) => groupsContainingMember(partyId));
+    if (partyGroups.some((group) => voterGroupIds.includes(group.id))) {
+      if (hasRecentReportAgainst(id)) {
+        return 'Group members with a report against them in the last year do not vote on review board cases.';
+      }
+      return '';
+    }
+    for (const partyGroup of partyGroups) {
+      const settings = normalizeGroupSettings(partyGroup.settings);
+      const ally = voterGroups.find((group) => settings.alliances.includes(group.id));
+      if (!ally) continue;
+      const groupZip = groupZipCode(partyGroup);
+      const allyZip = groupZipCode(ally);
+      const outsideZip = Boolean(groupZip && allyZip && groupZip !== allyZip);
+      if (!settings.reviewBoard.openToAlliance && outsideZip) {
+        return 'This group voted to keep its review board closed to alliances outside its ZIP code.';
+      }
+      return '';
+    }
+
+    const voter = reviewMemberLocation(id);
+    if (!voter.key) return 'Your physical-address county is not on file, so county eligibility cannot be confirmed.';
+    const partyKeys = [
+      reviewMemberLocation(report.reporterMemberId, report.reporterCounty, report.reporterState).key,
+      reviewMemberLocation(report.respondentMemberId, report.respondentCounty, report.respondentState).key
+    ].filter(Boolean);
+    if (!partyKeys.length) return 'The involved parties’ physical-address counties are not on file.';
+    if (!partyKeys.includes(voter.key)) {
+      return 'Voting is open only to members whose physical address is in the same county as one of the involved parties.';
+    }
+    return '';
+  }
+
+  // A local notice is created once per member per case when voting opens and
+  // that member is actually eligible to cast a ballot.
+  function notifyEligibleVoters(report) {
+    if (!isMember() || !report || report.status !== 'board_review') return;
+    const memberId = cleanString(state.pledge.memberId, 100);
+    if (!memberId || reviewVoteBlockReason(report, memberId)) return;
+    const sent = Array.isArray(report.votingNotices) ? report.votingNotices : [];
+    if (sent.includes(memberId)) return;
+    report.votingNotices = [...sent, memberId].slice(-50);
+    addNotification(
+      'review',
+      'You are eligible to vote in a review board case',
+      `${cleanString(report.typeLabel || report.type, 80) || 'A case'} is open for member review. Read the case file and cast your vote in the Review Board. Nothing was transmitted.`,
+      { tab: 'review', sourceId: cleanString(report.id, 100) }
+    );
+    saveState();
+    renderNotifications();
+    updateHeaderNotificationBadge();
+  }
+
   // Move cases whose evidence-gathering window has ended into voting. This is
   // called on load and on render so the demo stays consistent across reloads.
   function syncReportPhases() {
@@ -2057,6 +2270,7 @@
       if (report.responseDeadlineAt && !Number.isNaN(deadline) && now < deadline) return;
       report.status = 'board_review';
       report.votingEndsAt = new Date(now + (VOTING_DAYS * DAY_MS)).toISOString();
+      notifyEligibleVoters(report);
       changed = true;
     });
     if (changed) saveState();
@@ -2508,12 +2722,14 @@
           address1,
           address2,
           city,
+          county: normalizeCounty(raw.pledge.county),
           state: stateCode,
           mailingAddress,
           physicalAddress: cleanString(raw.pledge.physicalAddress, 240),
           physicalAddress1: cleanString(raw.pledge.physicalAddress1, 100) || parsedPhysicalAddress.address1,
           physicalAddress2: cleanString(raw.pledge.physicalAddress2, 100) || parsedPhysicalAddress.address2,
           physicalCity: cleanString(raw.pledge.physicalCity, 80) || parsedPhysicalAddress.city,
+          physicalCounty: normalizeCounty(raw.pledge.physicalCounty),
           physicalState: normalizeStateCode(raw.pledge.physicalState) || parsedPhysicalAddress.state,
           physicalZip: normalizeZip(raw.pledge.physicalZip || parsedPhysicalAddress.zip),
           housingStatus: normalizeHousingStatus(raw.pledge.housingStatus),
@@ -2560,9 +2776,14 @@
           const profession = normalizeProfession(item.profession);
           return {
             memberId: cleanString(item.memberId, 100),
+            name: cleanString(item.name, 60),
             profession,
             professionKey: profession.toLowerCase(),
+            cityState: cleanString(item.cityState, 100),
             zip: normalizeZip(item.zip),
+            county: normalizeCounty(item.county),
+            physicalCounty: normalizeCounty(item.physicalCounty),
+            physicalState: normalizeStateCode(item.physicalState),
             signedAt: cleanString(item.signedAt, 40),
             standing: cleanString(item.standing, 30) || 'active',
             track: cleanString(item.track, 30)
@@ -2746,8 +2967,12 @@
           id: cleanString(item.id, 100) || makeId('report'),
           reporterMemberId: cleanString(item.reporterMemberId, 100),
           reporterName: cleanString(item.reporterName, 60),
+          reporterCounty: normalizeCounty(item.reporterCounty),
+          reporterState: normalizeStateCode(item.reporterState),
           respondentName: cleanString(item.respondentName, 80),
           respondentMemberId: cleanString(item.respondentMemberId, 100),
+          respondentCounty: normalizeCounty(item.respondentCounty),
+          respondentState: normalizeStateCode(item.respondentState),
           type: cleanString(item.type, 40),
           typeLabel: hasOwn(REPORT_TYPES, item.type) ? REPORT_TYPES[item.type].label : cleanString(item.typeLabel, 80),
           route: item.route === 'criminal' ? 'criminal' : 'board',
@@ -2791,6 +3016,9 @@
           })) : [],
           votingEndsAt: cleanString(item.votingEndsAt, 40),
           demoVotingClosed: Boolean(item.demoVotingClosed),
+          votingNotices: Array.isArray(item.votingNotices)
+            ? item.votingNotices.map((id) => cleanString(id, 100)).filter(Boolean).slice(0, 50)
+            : [],
           reflectionDays: REFLECTION_OPTIONS.includes(Number(item.reflectionDays)) ? Number(item.reflectionDays) : null,
           restrictionStart: cleanString(item.restrictionStart, 40),
           restrictionEnd: cleanString(item.restrictionEnd, 40),
@@ -5233,7 +5461,9 @@
         accountDetail('Full legal name', e(m.fullName || 'Not shared')),
         accountDetail('General location', e(m.location || 'Not shared')),
         accountDetail('Mailing address', e(m.mailingAddress || 'Not shared')),
+        accountDetail('Mailing county', e(m.county || 'Not shared')),
         accountDetail('Physical address', e(m.physicalAddress || 'Not shared')),
+        accountDetail('Physical county, State', e([m.physicalCounty, m.physicalState].filter(Boolean).join(', ') || 'Not shared')),
         accountDetail('Public City, State', e(`${publicCity}, ${publicState}`)),
         accountDetail('ZIP code', e(m.zip || 'Not shared')),
         accountDetail('Housing status', e(hasOwn(HOUSING_STATUSES, m.housingStatus) ? HOUSING_STATUSES[m.housingStatus] : 'Not shared')),
@@ -5319,6 +5549,18 @@
                   <option value="mailing"${m.publicAddressSource !== 'physical' ? ' selected' : ''}>Mailing address</option>
                   <option value="physical"${m.publicAddressSource === 'physical' ? ' selected' : ''}>Physical address</option>
                 </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label for="account-county">Mailing county</label>
+                <input type="text" id="account-county" name="county" maxlength="80" value="${e(m.county || '')}" placeholder="Monroe">
+                <p class="field-hint">Private. Used only to identify your area for review board eligibility.</p>
+              </div>
+              <div class="field">
+                <label for="account-physical-county">Physical county</label>
+                <input type="text" id="account-physical-county" name="physicalCounty" maxlength="80" value="${e(m.physicalCounty || '')}" placeholder="Monroe">
+                <p class="field-hint">Your physical county decides which review board votes you can cast.</p>
               </div>
             </div>
           </fieldset>
@@ -5827,7 +6069,7 @@
         ${post.title ? `<h4>${e(post.title)}</h4>` : ''}
         ${picture ? `<img class="chat-picture" src="${e(safeProfileImageUrl(picture.dataUrl))}" alt="Local picture for ${e(post.title || 'this group post')}">` : ''}
         <p>${e(post.body)}</p>
-        ${post.guidelineVote ? `<p class="contribution-meta guideline-vote-tally">Guideline vote · ${agreeVotes} agree · ${disagreeVotes} disagree · run by ${e(post.name)}</p>` : ''}
+        ${post.guidelineVote ? `<p class="contribution-meta guideline-vote-tally">${post.reviewBoardVote ? 'Review board vote' : 'Guideline vote'} · ${agreeVotes} agree · ${disagreeVotes} disagree · run by ${e(post.name)}</p>` : ''}
         ${post.guidelineVote && post.outcome ? `<p class="contribution-meta guideline-outcome">Admin outcome: ${e(post.outcome)} · chosen by ${e(post.outcomeBy || 'an admin')}${post.outcomeNote ? ` · ${e(post.outcomeNote)}` : ''}</p>` : ''}
         <div class="notification-actions">
           <button class="button button--ghost button--tiny button--report" type="button" data-report-context data-report-area="Group chat" data-report-detail="${e(post.title ? `${post.title} · ` : '')}${e(groupDisplayLabel(group))}" data-report-name="${e(post.name)}" data-report-member-id="${e(post.memberId || '')}" data-report-source-id="${e(post.id)}" aria-label="Report a concern about a post from ${e(post.name)}">Report</button>
@@ -5968,6 +6210,14 @@
             <p class="field-hint">Opens a group chat post where members reply “Agree” or “Disagree”. The vote stays on this device.</p>
           </div>
           <button type="submit" class="button button--primary button--small">Start guideline vote in chat</button>
+        </form>
+        <form class="account-form group-review-vote-form" data-group-review-vote-form data-group-id="${e(group.id)}">
+          <div class="field">
+            <label for="group-review-vote-${e(domId(group.id))}">Review board alliance vote</label>
+            <textarea id="group-review-vote-${e(domId(group.id))}" name="proposal" rows="2" maxlength="800" required placeholder="Why should this group close its review board to outside alliances?"></textarea>
+            <p class="field-hint">Opens a group chat post where working members reply “Agree” or “Disagree”. An Agreed outcome closes this group’s review board to alliances outside its ZIP code only. Allied groups in the same ZIP code are always included.</p>
+          </div>
+          <button type="submit" class="button button--outline button--small">Start review board vote in chat</button>
         </form>` : '<p class="account-note">Only a current admin can change group community guidelines or run a guideline vote.</p>'}
         ${(() => {
           if (!canModerate) {
@@ -6102,6 +6352,19 @@
               <p class="field-hint">When Online is checked, the group profile shows “Online” instead of an address.</p>
             </fieldset>
             <fieldset class="field">
+              <legend>Alliances &amp; review board <span class="badge badge--amber">Phase 2</span></legend>
+              <div class="field">
+                <label for="group-alliances">Allied group IDs</label>
+                <input type="text" id="group-alliances" name="alliances" maxlength="500" value="${e(settings.alliances.join(', '))}" placeholder="group-id-one, group-id-two">
+                <p class="field-hint">Separate allied group IDs with commas. Working members vote on alliance terms and guidelines; members of allied groups may vote on this group’s review board cases.</p>
+              </div>
+              <label class="checkbox">
+                <input type="checkbox" id="group-review-open-alliance" name="reviewOpenToAlliance" ${settings.reviewBoard.openToAlliance ? 'checked' : ''}>
+                <span>Open this group’s review board votes to allied groups</span>
+              </label>
+              <p class="field-hint">Closing this requires a group vote by working members and only applies to alliances outside this group’s ZIP code. Allied groups within the ZIP code are always included. ${e(settings.reviewBoard.optOutOutcome ? `Recorded outcome: ${settings.reviewBoard.optOutOutcome}.` : '')}</p>
+            </fieldset>
+            <fieldset class="field">
               <legend>Group business <span class="badge badge--amber">Phase 2</span></legend>
               <label class="checkbox">
                 <input type="checkbox" id="group-business-enabled" name="businessEnabled" ${business.enabled ? 'checked' : ''}>
@@ -6196,6 +6459,12 @@
       group.settings = {
         location: cleanString(data.get('location'), 120),
         online: Boolean(data.get('online')),
+        alliances: cleanString(data.get('alliances'), 500).split(',').map((id) => cleanString(id, 120)).filter(Boolean).slice(0, 50),
+        reviewBoard: {
+          openToAlliance: Boolean(data.get('reviewOpenToAlliance')),
+          optOutOutcome: current.reviewBoard.optOutOutcome,
+          optOutAt: current.reviewBoard.optOutAt
+        },
         business: {
           enabled,
           brandName: cleanString(data.get('brandName'), 80),
@@ -6877,9 +7146,18 @@
     const src = raw && typeof raw === 'object' ? raw : {};
     const business = src.business && typeof src.business === 'object' ? src.business : {};
     const coop = business.coop && typeof business.coop === 'object' ? business.coop : {};
+    const reviewBoard = src.reviewBoard && typeof src.reviewBoard === 'object' ? src.reviewBoard : {};
     return {
       location: cleanString(src.location, 120),
       online: Boolean(src.online),
+      alliances: Array.isArray(src.alliances)
+        ? src.alliances.map((id) => cleanString(id, 120)).filter(Boolean).slice(0, 50)
+        : [],
+      reviewBoard: {
+        openToAlliance: reviewBoard.openToAlliance !== false,
+        optOutOutcome: cleanString(reviewBoard.optOutOutcome, 40),
+        optOutAt: cleanString(reviewBoard.optOutAt, 40)
+      },
       business: {
         enabled: Boolean(business.enabled),
         brandName: cleanString(business.brandName, 80),
@@ -7852,6 +8130,8 @@
         if (!name) return;
         state.pledge.name = name;
         state.pledge.location = location;
+        state.pledge.county = normalizeCounty(data.get('county'));
+        state.pledge.physicalCounty = normalizeCounty(data.get('physicalCounty'));
         state.pledge.housingStatus = normalizeHousingStatus(data.get('housingStatus'));
         state.pledge.paidSkills = cleanString(data.get('paidSkills'), 400);
         state.pledge.unpaidSkills = cleanString(data.get('unpaidSkills'), 400);
@@ -7865,6 +8145,7 @@
         state.pledge.itemsGifted = confirmedTotals.itemsGifted;
         state.pledge.itemsTaken = confirmedTotals.itemsTaken;
         state.pledge.group = getMemberGroups().map(groupDisplayLabel).filter(Boolean).join(', ');
+        addMemberToRoster(state.pledge);
         state.pledge.available = Boolean(data.get('available'));
         state.pledge.publicPhone = Boolean(data.get('publicPhone'));
         state.pledge.publicAddressSource = data.get('publicAddressSource') === 'physical' ? 'physical' : 'mailing';
@@ -8268,12 +8549,18 @@
 
     const now = new Date();
     const isCriminal = meta.route === 'criminal';
+    const reporterPlace = reviewMemberLocation(state.pledge.memberId);
+    const respondentPlace = reviewMemberLocation(cleanString(data.get('respondentMemberId'), 100));
     const report = {
       id: makeId('report'),
       reporterMemberId: state.pledge.memberId,
       reporterName: state.pledge.name,
+      reporterCounty: reporterPlace.county,
+      reporterState: reporterPlace.state,
       respondentName: cleanString(data.get('respondentName'), 80),
       respondentMemberId: cleanString(data.get('respondentMemberId'), 100),
+      respondentCounty: respondentPlace.county,
+      respondentState: respondentPlace.state,
       contextArea: cleanString(data.get('contextArea'), 80) || 'Dashboard',
       contextDetail: cleanString(data.get('contextDetail'), 160),
       sourceId: cleanString(data.get('sourceId'), 100),
@@ -8295,6 +8582,7 @@
       votes: [],
       votingEndsAt: '',
       demoVotingClosed: false,
+      votingNotices: [],
       reflectionDays: null,
       restrictionStart: '',
       restrictionEnd: '',
@@ -8549,6 +8837,7 @@
     const report = allReports().find((item) => item.id === reportId);
     if (!report || report.status !== 'board_review') return;
     if (report.votes.some((vote) => vote.memberId === state.pledge.memberId)) return;
+    if (reviewVoteBlockReason(report, state.pledge.memberId)) return;
     if (report.demoVotingClosed || (report.votingEndsAt && Date.now() > Date.parse(report.votingEndsAt))) return;
 
     const verdict = data.verdict === 'guilty' ? 'guilty' : data.verdict === 'not_guilty' ? 'not_guilty' : '';
@@ -8599,6 +8888,7 @@
     };
     report.status = 'board_review';
     report.votingEndsAt = new Date(now.getTime() + (VOTING_DAYS * DAY_MS)).toISOString();
+    notifyEligibleVoters(report);
     saveState();
     renderAccountability();
     announce('Your plea and evidence were recorded. Member voting is now open.');
@@ -8751,6 +9041,7 @@
     const aboutMe = reportsAboutMember();
     const restriction = getActiveRestriction();
     const openReports = reports.filter((report) => report && ['response_period', 'board_review'].includes(report.status));
+    openReports.filter((report) => report.status === 'board_review').forEach(notifyEligibleVoters);
     const resolved = reports.filter((report) => report && ['restriction_active', 'not_guilty', 'access_restored'].includes(report.status)).slice(0, 8);
     const e = escapeHtml;
 
@@ -8810,7 +9101,7 @@
     html += `</div>`;
 
     html += `<div class="account-block"><h4>Member review board · open cases</h4>
-      <p class="account-note">Each case opens with a ${RESPONSE_DAYS}-day response period so the reported member can gather evidence and plead. After that, voting is open for ${VOTING_DAYS} days—every vote counts. Vote guilty or not guilty; if guilty, choose a reflection period (30, 90, or 180 days), and always explain why. The full case file, votes, reasons, and comments are stored in this browser only for this local prototype.</p>`;
+      <p class="account-note">Each case opens with a ${RESPONSE_DAYS}-day response period so the reported member can gather evidence and plead. After that, voting is open for ${VOTING_DAYS} days. To keep review impartial, involved parties, friends of involved parties, Observers, and Care Circle members do not vote; they are still encouraged to provide evidence and join the conversation below. Voting is open to members whose physical address is in the same county as an involved party; in cross-state cases, both parties’ counties are eligible. Vote guilty or not guilty; if guilty, choose a reflection period (30, 90, or 180 days), and always explain why. The full case file, votes, reasons, and comments are stored in this browser only for this local prototype.</p>`;
     if (!openReports.length) {
       html += `<p class="account-note">No cases are open for review right now.</p>`;
     } else {
@@ -8821,7 +9112,9 @@
         const notGuilty = votes.filter((vote) => vote.verdict === 'not_guilty').length;
         const alreadyVoted = votes.some((vote) => vote.memberId === member.memberId);
         const isResponsePhase = report.status === 'response_period';
-        const canVote = !isResponsePhase && !alreadyVoted && (!report.votingEndsAt || Date.now() <= Date.parse(report.votingEndsAt)) && !report.demoVotingClosed;
+        const voteBlockReason = isResponsePhase ? '' : reviewVoteBlockReason(report, member.memberId);
+        const votingClosed = report.demoVotingClosed || (report.votingEndsAt && Date.now() > Date.parse(report.votingEndsAt));
+        const canVote = !isResponsePhase && !alreadyVoted && !voteBlockReason && !votingClosed;
         html += `<li class="case-item case-item--review">
           <div class="case-item-head"><strong>${e(report.typeLabel || report.type)}</strong><span class="case-status ${isResponsePhase ? 'case-status--response' : ''}">${e(reportStatusLabel(report.status))}</span></div>
           <p class="contribution-meta">Filed ${e(formatDate(report.createdAt))} · ${e(getReportContextSummary(report))} · ${e(isResponsePhase ? responseRemaining(report) : votingRemaining(report))} · ${votes.length} vote${votes.length === 1 ? '' : 's'}</p>
@@ -8834,7 +9127,9 @@
                   <p class="contribution-meta"><strong>${e(vote.name || 'Member')}</strong> · voted ${e(vote.verdict === 'guilty' ? 'guilty' : 'not guilty')}${vote.verdict === 'guilty' && vote.reflectionDays ? ` · ${vote.reflectionDays} days` : ''} · ${e(formatDate(vote.votedAt))}</p>
                   <p>${e(vote.reason || 'No reason was recorded for this vote.')}</p>
                 </li>`).join('')}</ul>` : ''}
-              ${alreadyVoted ? `<p class="account-note">You already voted on this case. Your verdict and reason are listed above.</p>` : canVote ? `
+              ${alreadyVoted ? `<p class="account-note">You already voted on this case. Your verdict and reason are listed above.</p>`
+                : voteBlockReason ? `<p class="account-note vote-eligibility-note"><strong>You are not eligible to vote in this case.</strong> ${e(voteBlockReason)} You are still encouraged to provide evidence and join the conversation in the review board below.</p>`
+                : canVote ? `
                 <form class="account-form vote-form" data-vote-form data-id="${e(report.id)}">
                   <fieldset class="vote-fieldset"><legend>1. Your verdict</legend>
                     <label class="radio-choice"><input type="radio" name="verdict" value="guilty" required> Guilty</label>
@@ -8956,6 +9251,7 @@
         if (!isMember() || report.status !== 'response_period' || !isRespondent(report)) return;
         report.status = 'board_review';
         report.votingEndsAt = new Date(Date.now() + (VOTING_DAYS * DAY_MS)).toISOString();
+        notifyEligibleVoters(report);
         saveState();
         renderAccountability();
         announce('Response skipped. Member voting is now open.');
@@ -9132,6 +9428,7 @@
       address1: document.getElementById('pledge-address1'),
       address2: document.getElementById('pledge-address2'),
       city: document.getElementById('pledge-city'),
+      county: document.getElementById('pledge-county'),
       state: document.getElementById('pledge-state'),
       zip: document.getElementById('pledge-zip')
     };
@@ -9139,6 +9436,7 @@
       address1: document.getElementById('pledge-physical-address1'),
       address2: document.getElementById('pledge-physical-address2'),
       city: document.getElementById('pledge-physical-city'),
+      county: document.getElementById('pledge-physical-county'),
       state: document.getElementById('pledge-physical-state'),
       zip: document.getElementById('pledge-physical-zip')
     };
@@ -9209,12 +9507,14 @@
         const address1 = cleanString(data.get('address1'), 100);
         const address2 = cleanString(data.get('address2'), 100);
         const city = cleanString(data.get('city'), 80);
+        const county = normalizeCounty(data.get('county'));
         const stateCode = normalizeStateCode(data.get('state'));
         const zip = normalizeZip(data.get('zip'));
         const mailingAddress = composeMailingAddress({ address1, address2, city, state: stateCode, zip });
         const physicalAddress1 = cleanString(data.get('physicalAddress1'), 100);
         const physicalAddress2 = cleanString(data.get('physicalAddress2'), 100);
         const physicalCity = cleanString(data.get('physicalCity'), 80);
+        const physicalCounty = normalizeCounty(data.get('physicalCounty'));
         const physicalState = normalizeStateCode(data.get('physicalState'));
         const physicalZip = normalizeZip(data.get('physicalZip'));
         const physicalAddress = sameAddress && sameAddress.checked
@@ -9257,8 +9557,8 @@
           return;
         }
 
-        if (!firstName || !lastName || !name || !location || !address1 || !city || !stateCode || !physicalAddress || !phone) {
-          showPledgeError('Please complete your first name, last name, chosen name, mailing address, physical address, phone number, and general location.', 'pledge-first-name');
+        if (!firstName || !lastName || !name || !location || !address1 || !city || !county || !stateCode || !physicalAddress || !physicalCounty || !phone) {
+          showPledgeError('Please complete your first name, last name, chosen name, mailing address and county, physical address and county, phone number, and general location.', 'pledge-first-name');
           return;
         }
         if (!hasOwn(HOUSING_STATUSES, housingStatus)) {
@@ -9275,6 +9575,10 @@
         }
         if (!(sameAddress && sameAddress.checked) && !physicalZip) {
           showPledgeError('Please enter a 5-digit ZIP code for your physical address.', 'pledge-physical-zip');
+          return;
+        }
+        if (!(sameAddress && sameAddress.checked) && !physicalCounty) {
+          showPledgeError('Please enter a county for your physical address.', 'pledge-physical-county');
           return;
         }
 
@@ -9321,12 +9625,14 @@
           address1,
           address2,
           city,
+          county,
           state: stateCode,
           mailingAddress,
           physicalAddress,
           physicalAddress1,
           physicalAddress2,
           physicalCity,
+          physicalCounty,
           physicalState,
           physicalZip,
           housingStatus,

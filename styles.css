@@ -6810,6 +6810,13 @@ em {
 .case-status--criminal { background: var(--red-soft); color: var(--red-deep); }
 .case-referral { padding: 0.6rem 0.75rem; border-radius: 10px; background: var(--red-soft); color: var(--muted-dark); }
 .case-tally { padding: 0.5rem 0.7rem; border-radius: 10px; background: var(--blue-soft); color: var(--blue-deep); }
+.vote-eligibility-note {
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--amber);
+  border-radius: 8px;
+  background: var(--amber-soft);
+  color: var(--muted-dark);
+}
 .case-item details { margin-top: 0.6rem; }
 .case-item details summary { cursor: pointer; font-weight: 600; color: var(--blue-deep); }
 
@@ -8069,7 +8076,8 @@ body[data-directory-scope="goods"] .goods-attributes .form-grid {
 .commandment-list h3,
 .consequence-step h3,
 .standing-card h3,
-.therapy-note h3 {
+.therapy-note h3,
+.review-board-note h3 {
   margin: 0 0 0.35rem;
   font-family: var(--sans);
   font-size: 0.98rem;
@@ -8079,7 +8087,8 @@ body[data-directory-scope="goods"] .goods-attributes .form-grid {
 .commandment-list p,
 .consequence-step p,
 .standing-card p,
-.therapy-note p {
+.therapy-note p,
+.review-board-note p {
   margin: 0;
   color: var(--muted-dark);
   font-size: 0.86rem;
@@ -8101,7 +8110,8 @@ body[data-directory-scope="goods"] .goods-attributes .form-grid {
   background: #fff;
 }
 
-.therapy-note {
+.therapy-note,
+.review-board-note {
   margin-top: 1rem;
   padding: 1.1rem 1.2rem;
   border: 1px solid var(--amber-light);

@@ -53,14 +53,15 @@ locally. Results are plain local links; the search sends no query to a server.
 ## Member data and public resume
 
 The local member record stores full legal name, chosen name, mailing and physical
-addresses, housing status, birthdate, phone, profession, career/paid skills, unpaid
+addresses with county, housing status, birthdate, phone, profession, career/paid skills, unpaid
 skills, bio, locally resized picture, chosen tag line, private group/crew, donation
 count, confirmed hours worked, hours used, items gifted, items taken, reports made
 against the member, availability, and public-sharing choices. The full record is
 visible only in the Dashboard and in the signed-in member profile.
 
 The pledge and Settings forms keep both addresses as structured fields: Address 1,
-Address 2, City, State, and ZIP. When “same as mailing” is checked, the physical
+Address 2, City, County, State, and ZIP. County is private and exists only for
+review board eligibility. When “same as mailing” is checked, the physical
 fields copy the mailing fields and lock until the box is cleared. Birthdate uses
 separate month, day, and year selectors and is stored as one ISO date. Career and
 unpaid skills use a search box with suggested skills; members can also type a
@@ -71,8 +72,9 @@ The public resume is a filtered projection. It shows the chosen first name,
 picture, tag line, bio, profession, City/State from the member-selected mailing or
 physical address, both skill lists, confirmed hours worked, items gifted, other
 commons totals, availability, and a phone number only when the member opts in. It
-never includes the legal name, street or mailing addresses, ZIP, housing status,
-birthdate, group/crew, report count, amounts donated, comments, or interactions.
+never includes the legal name, street or mailing addresses, county, ZIP, housing
+status, birthdate, group/crew, report count, amounts donated, comments, or
+interactions.
 Member IDs are never displayed; they remain storage and report attributes only.
 Seed and founder status appears as a public tag, with pending labels marked as
 pending before rollout.
@@ -196,6 +198,20 @@ while enrolled, Care Circle members may use basic necessities with no labor
 obligation and limits are reviewable with evidence, and Observers may read,
 explore, and donate. Consequence steps are unnumbered.
 
+Review board voting is impartial and local. Involved parties, friends of
+involved parties, Observers, and Care Circle members cannot vote on a case, but
+are encouraged to provide evidence and join the review board conversation.
+Voting is open to members whose physical-address county matches an involved
+party's county; if one party is in State A and the other in State B, members in
+both respective counties may vote. Members of the same group may also vote
+unless they have a report against them from the last year. Members of allied
+groups may vote too, unless the group voted to close its review board to
+alliances outside its own ZIP code; alliances within that ZIP code are always
+included. Working members of groups and alliances vote on alliance terms and
+guidelines. County fields are captured on the pledge and editable in Settings,
+are used only for eligibility, and are never projected to a public resume.
+Cases and votes remain in this browser only.
+
 The guidelines are linked from every footer site map, the FAQ, the pledge
 agreement, and the member account panel. Current group admins can delete group
 chat posts and replies, require an impartial review of a member, change group
@@ -311,8 +327,9 @@ message, or report is uploaded or transmitted by this prototype.
 
 ## Notifications, social circles, and local conversations
 
-Dashboard → Notifications holds local drafts created by the signed-in member’s own
-actions: messages, requests, comments, group posts, and social chat drafts. Each
+Dashboard → Notifications holds local drafts: messages, requests, comments, group
+posts, social chat drafts, and a one-time notice when a review board case opens and
+the member is eligible to vote (excluded members get no vote notice). Each
 notice is one whole list-item link: clicking the item marks it read and opens its target.
 Notices can also be marked read all at once. Listing-comment notices point back to
 the comment on Free Labor or Free Stuff instead. A live system would notify
