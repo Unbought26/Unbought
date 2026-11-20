@@ -1,0 +1,3 @@
+# Supabase CLI project configuration.
+# The repo is already initialized; do not run `supabase init` again.
+project_id = "hwobregmctityeqhsvmj"

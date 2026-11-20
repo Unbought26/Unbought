@@ -2,10 +2,12 @@
    UNBOUGHT — app.js
    Vanilla JavaScript for the Unbought community prototype.
 
-   Everything is stored in one versioned localStorage key. No network calls,
-   no analytics, no third-party code. All user-generated text is inserted with
-   textContent / value assignments rather than HTML strings, so a saved listing
-   can never inject markup into the page.
+   The full prototype record is stored in one versioned localStorage key. When
+   supabase-config.js is configured, a small public-data bridge shares listings,
+   group cards, and community chat content. Pledge records, private profile
+   fields, messages, reports, donations, and passwords never leave the browser.
+   All user-generated text is inserted with textContent / value assignments
+   rather than HTML strings, so a saved listing can never inject markup.
 
    Contents:
      01. Data & constants
@@ -25,6 +27,7 @@
      01. Data & constants
      ------------------------------------------------------------------------ */
   const STORAGE_KEY = 'unbought:v1';
+  const PUBLIC_SYNC_PUSHED_KEY = 'unbought:supabase-pushed:v1';
   const SVG_NS = 'http://www.w3.org/2000/svg';
   const reportEvidenceDrafts = new WeakMap();
   const reportEvidencePending = new WeakMap();
@@ -3815,6 +3818,9 @@
   let confirmAction = null;
   let currentInquiryType = 'waitlist';
 
+  let publicSyncTimer = null;
+  let suppressPublicSync = false;
+
   function saveState() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -3823,6 +3829,354 @@
         storageWarningShown = true;
         showToast('Local storage is full or blocked. Changes will last only for this visit.');
       }
+    }
+    if (!suppressPublicSync) queuePublicSync();
+  }
+
+  function getPushedPublicIds() {
+    try {
+      const raw = localStorage.getItem(PUBLIC_SYNC_PUSHED_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter((id) => typeof id === 'string') : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function markPushedPublicIds(ids) {
+    if (!Array.isArray(ids) || !ids.length) return;
+    try {
+      const merged = Array.from(new Set(getPushedPublicIds().concat(ids))).slice(-5000);
+      localStorage.setItem(PUBLIC_SYNC_PUSHED_KEY, JSON.stringify(merged));
+    } catch (error) {
+      // Sync bookkeeping is best-effort. The next save can retry safely.
+    }
+  }
+
+  function publicSyncBridge() {
+    return typeof window !== 'undefined' ? window.UnboughtSupabase : null;
+  }
+
+  function publicSyncSnapshot() {
+    const pushed = new Set(getPushedPublicIds());
+    const groups = [];
+    const listings = [];
+    const channels = [];
+    const threads = [];
+    const posts = [];
+
+    (Array.isArray(state.groups) ? state.groups : []).forEach((group) => {
+      if (!group || typeof group !== 'object') return;
+      const id = cleanString(group.id, 100);
+      const name = cleanString(group.name, 120);
+      const key = `public_groups:${id}`;
+      if (!id || !name || pushed.has(key)) return;
+      const kind = group.kind === 'town' ? 'town' : group.kind === 'joined' ? 'joined' : 'own';
+      const settings = group.settings && typeof group.settings === 'object' ? group.settings : {};
+      groups.push({
+        id,
+        kind,
+        name,
+        base_name: cleanString(group.baseName, 120) || name,
+        purpose: cleanString(group.purpose, 200),
+        location_label: cleanString(settings.locationLabel || settings.location, 80),
+        created_at: cleanString(group.createdAt, 40) || new Date().toISOString()
+      });
+    });
+
+    (Array.isArray(state.listings) ? state.listings : []).forEach((listing) => {
+      if (!isValidListing(listing)) return;
+      const id = cleanString(listing.id, 100);
+      const key = `public_listings:${id}`;
+      if (!id || pushed.has(key)) return;
+      const purchase = normalizeNonmemberPurchase(listing.nonmemberPurchase);
+      const price = purchase.enabled && Number.isFinite(Number(purchase.price))
+        ? Number(purchase.price)
+        : null;
+      listings.push({
+        id,
+        pillar: hasOwn(PILLARS, listing.pillar) ? listing.pillar : 'goods',
+        exchange: hasOwn(EXCHANGES, listing.exchange) ? listing.exchange : 'free',
+        title: cleanString(listing.title, 80),
+        description: cleanString(listing.description, 400),
+        location_label: cleanString(listing.location, 80),
+        provider: cleanString(listing.provider, 60),
+        category: cleanString(listing.category, 60),
+        scope: hasOwn(SCOPE_LABELS, listing.scope) ? listing.scope : '',
+        nsfw: Boolean(listing.nsfw),
+        nonmember_price: price,
+        created_at: cleanString(listing.createdAt, 40) || new Date().toISOString()
+      });
+    });
+
+    (Array.isArray(state.communityChannels) ? state.communityChannels : []).forEach((channel) => {
+      if (!channel || typeof channel !== 'object') return;
+      const id = cleanString(channel.id, 100);
+      const name = cleanString(channel.name, 60);
+      const key = `public_community_channels:${id}`;
+      if (!id || !name || pushed.has(key)) return;
+      channels.push({
+        id,
+        name,
+        purpose: cleanString(channel.purpose, 200),
+        created_by: cleanString(channel.createdBy, 60),
+        created_at: cleanString(channel.createdAt, 40) || new Date().toISOString()
+      });
+    });
+
+    (Array.isArray(state.communityThreads) ? state.communityThreads : []).forEach((thread) => {
+      if (!thread || typeof thread !== 'object') return;
+      const id = cleanString(thread.id, 100);
+      const subject = cleanString(thread.subject, 120);
+      const key = `public_community_threads:${id}`;
+      if (!id || !subject || pushed.has(key)) return;
+      threads.push({
+        id,
+        channel_id: cleanString(thread.channelId, 100) || 'channel-general',
+        subject,
+        created_by: cleanString(thread.createdBy, 60),
+        created_at: cleanString(thread.createdAt, 40) || new Date().toISOString()
+      });
+    });
+
+    (Array.isArray(state.chats) ? state.chats : []).forEach((chat) => {
+      if (!chat || typeof chat !== 'object') return;
+      const id = cleanString(chat.id, 100);
+      const body = cleanString(chat.body, 1200);
+      const key = `public_community_posts:${id}`;
+      if (!id || !body || pushed.has(key)) return;
+      posts.push({
+        id,
+        channel: cleanString(chat.channel, 40) || 'general',
+        channel_id: cleanString(chat.channelId, 100) || `channel-${communityChannelSlug(chat.channel || 'general')}`,
+        thread_id: cleanString(chat.threadId, 100),
+        subject: cleanString(chat.subject, 120),
+        body,
+        author_name: cleanString(chat.name, 60) || 'Neighbor',
+        nsfw: Boolean(chat.nsfw),
+        created_at: cleanString(chat.createdAt, 40) || new Date().toISOString()
+      });
+    });
+
+    return { groups, listings, channels, threads, posts };
+  }
+
+  function queuePublicSync() {
+    const bridge = publicSyncBridge();
+    if (!bridge || !bridge.isConfigured()) return;
+    clearTimeout(publicSyncTimer);
+    publicSyncTimer = setTimeout(() => {
+      void pushPublicData();
+    }, 700);
+  }
+
+  async function pushPublicData() {
+    const bridge = publicSyncBridge();
+    if (!bridge || !bridge.isConfigured()) return;
+    const snapshot = publicSyncSnapshot();
+    const hasRows = Object.keys(snapshot).some((key) => snapshot[key].length);
+    if (!hasRows) return;
+    const result = await bridge.pushPublicData(snapshot);
+    if (result && result.ok && Array.isArray(result.pushed)) markPushedPublicIds(result.pushed);
+  }
+
+  function mergePublicData(snapshot) {
+    if (!snapshot || typeof snapshot !== 'object') return false;
+    let changed = false;
+
+    const groupMap = new Map(
+      (Array.isArray(state.groups) ? state.groups : [])
+        .filter((item) => item && typeof item === 'object' && item.id)
+        .map((item) => [item.id, item])
+    );
+    (Array.isArray(snapshot.groups) ? snapshot.groups : []).forEach((row) => {
+      if (!row || typeof row !== 'object') return;
+      const id = cleanString(row.id, 100);
+      const name = cleanString(row.name, 120);
+      if (!id || !name) return;
+      const location = cleanString(row.location_label, 80);
+      const existing = groupMap.get(id);
+      if (existing) {
+        if (existing.name !== name) existing.name = name;
+        if (location) existing.publicLocation = location;
+      } else {
+        state.groups.push({
+          id,
+          kind: ['town', 'joined', 'own'].includes(row.kind) ? row.kind : 'joined',
+          name,
+          baseName: cleanString(row.base_name, 120) || name,
+          roman: '',
+          ordinal: 0,
+          overflow: false,
+          seedEligible: false,
+          purpose: cleanString(row.purpose, 200),
+          guidelines: '',
+          settings: normalizeGroupSettings({}),
+          members: [],
+          admins: [],
+          left: false,
+          createdAt: cleanString(row.created_at, 40),
+          publicLocation: location
+        });
+      }
+      changed = true;
+    });
+
+    const listingMap = new Map(
+      (Array.isArray(state.listings) ? state.listings : [])
+        .filter((item) => item && typeof item === 'object' && item.id)
+        .map((item) => [item.id, item])
+    );
+    (Array.isArray(snapshot.listings) ? snapshot.listings : []).forEach((row) => {
+      if (!row || typeof row !== 'object') return;
+      const id = cleanString(row.id, 100);
+      const title = cleanString(row.title, 80);
+      const description = cleanString(row.description, 400);
+      const location = cleanString(row.location_label, 80);
+      const provider = cleanString(row.provider, 60);
+      if (!id || !title || !description || !location || !provider) return;
+      const pillar = hasOwn(PILLARS, row.pillar) ? row.pillar : 'goods';
+      const exchange = hasOwn(EXCHANGES, row.exchange) ? row.exchange : 'free';
+      const purchase = normalizeNonmemberPurchase({
+        enabled: row.nonmember_price !== null && row.nonmember_price !== undefined,
+        price: row.nonmember_price
+      });
+      const existing = listingMap.get(id);
+      if (existing) {
+        existing.pillar = pillar;
+        existing.exchange = exchange;
+        existing.title = title;
+        existing.description = description;
+        existing.location = location;
+        existing.provider = provider;
+        existing.category = cleanString(row.category, 60);
+        existing.scope = hasOwn(SCOPE_LABELS, row.scope) ? row.scope : '';
+        existing.nsfw = Boolean(row.nsfw);
+        existing.nonmemberPurchase = purchase;
+      } else {
+        const listing = normalizeStoredListing({
+          id,
+          memberId: '',
+          title,
+          pillar,
+          exchange,
+          category: cleanString(row.category, 60),
+          provider,
+          location,
+          description,
+          nsfw: Boolean(row.nsfw),
+          scope: hasOwn(SCOPE_LABELS, row.scope) ? row.scope : '',
+          nonmemberPurchase: purchase,
+          note: 'Shared from the commons · consent first',
+          createdAt: cleanString(row.created_at, 40),
+          status: 'active',
+          photos: [],
+          comments: [],
+          details: []
+        });
+        listing.isUser = false;
+        state.listings.unshift(listing);
+      }
+      changed = true;
+    });
+
+    const channelIds = new Set(
+      (Array.isArray(state.communityChannels) ? state.communityChannels : [])
+        .filter((item) => item && item.id)
+        .map((item) => item.id)
+    );
+    (Array.isArray(snapshot.channels) ? snapshot.channels : []).forEach((row) => {
+      if (!row || typeof row !== 'object') return;
+      const id = cleanString(row.id, 100);
+      const name = cleanString(row.name, 60);
+      if (!id || !name || channelIds.has(id)) return;
+      state.communityChannels.push({
+        id,
+        name,
+        purpose: cleanString(row.purpose, 200),
+        createdBy: cleanString(row.created_by, 60),
+        createdAt: cleanString(row.created_at, 40)
+      });
+      channelIds.add(id);
+      changed = true;
+    });
+
+    const threadIds = new Set(
+      (Array.isArray(state.communityThreads) ? state.communityThreads : [])
+        .filter((item) => item && item.id)
+        .map((item) => item.id)
+    );
+    (Array.isArray(snapshot.threads) ? snapshot.threads : []).forEach((row) => {
+      if (!row || typeof row !== 'object') return;
+      const id = cleanString(row.id, 100);
+      const subject = cleanString(row.subject, 120);
+      if (!id || !subject || threadIds.has(id)) return;
+      state.communityThreads.push({
+        id,
+        channelId: cleanString(row.channel_id, 100) || 'channel-general',
+        subject,
+        createdBy: cleanString(row.created_by, 60),
+        createdAt: cleanString(row.created_at, 40)
+      });
+      threadIds.add(id);
+      changed = true;
+    });
+
+    const chatIds = new Set(
+      (Array.isArray(state.chats) ? state.chats : [])
+        .filter((item) => item && item.id)
+        .map((item) => item.id)
+    );
+    (Array.isArray(snapshot.posts) ? snapshot.posts : []).forEach((row) => {
+      if (!row || typeof row !== 'object') return;
+      const id = cleanString(row.id, 100);
+      const body = cleanString(row.body, 1200);
+      const author = cleanString(row.author_name, 60) || 'Neighbor';
+      if (!id || !body || chatIds.has(id)) return;
+      state.chats.push({
+        id,
+        memberId: '',
+        name: author,
+        channel: cleanString(row.channel, 40) || 'general',
+        channelId: cleanString(row.channel_id, 100) || `channel-${communityChannelSlug(row.channel || 'general')}`,
+        threadId: cleanString(row.thread_id, 100),
+        subject: cleanString(row.subject, 120),
+        nsfw: Boolean(row.nsfw),
+        picture: [],
+        body,
+        createdAt: cleanString(row.created_at, 40)
+      });
+      chatIds.add(id);
+      changed = true;
+    });
+
+    return changed;
+  }
+
+  async function loadPublicData() {
+    const bridge = publicSyncBridge();
+    if (!bridge || !bridge.isConfigured()) return;
+    const snapshot = await bridge.fetchPublicData();
+    if (!snapshot) return;
+
+    const remoteKeys = [];
+    ['groups', 'listings', 'channels', 'threads', 'posts'].forEach((kind) => {
+      const table = kind === 'groups' ? 'public_groups'
+        : kind === 'listings' ? 'public_listings'
+          : kind === 'channels' ? 'public_community_channels'
+            : kind === 'threads' ? 'public_community_threads'
+              : 'public_community_posts';
+      (Array.isArray(snapshot[kind]) ? snapshot[kind] : []).forEach((row) => {
+        if (row && row.id) remoteKeys.push(`${table}:${cleanString(row.id, 100)}`);
+      });
+    });
+    markPushedPublicIds(remoteKeys);
+
+    suppressPublicSync = true;
+    try {
+      if (mergePublicData(snapshot)) saveState();
+    } finally {
+      suppressPublicSync = false;
     }
   }
 
@@ -7816,7 +8170,7 @@
             <p class="eyebrow">The Commons</p>
             <h3 id="commons-title">Everything you can take part in</h3>
           </div>
-          <p class="commons-intro-copy">Pick a doorway from the menu, or use these shortcuts. Everything you write here stays in this browser; nothing is sent to other people.</p>
+          <p class="commons-intro-copy">Pick a doorway from the menu, or use these shortcuts. Public listings and community posts are shared through Supabase when connected; private notes, messages, and records stay in this browser.</p>
         </div>
         <nav class="commons-links" aria-label="Commons shortcuts">
           <a class="commons-link" href="freelabor.html">
@@ -12423,7 +12777,7 @@
           renderAuthUi();
 
           const postStatus = document.getElementById('post-status');
-          if (postStatus) postStatus.textContent = 'For pledged members. Stored only on this device. Nothing is transmitted.';
+          if (postStatus) postStatus.textContent = 'For pledged members. Public listing details are shared through Supabase when connected; photos, comments, and private details stay on this device.';
 
           const landStatus = document.getElementById('land-inquiry-status');
           if (landStatus) landStatus.textContent = '';
@@ -12472,7 +12826,12 @@
     });
   }
 
-  function init() {
+  async function init() {
+    try {
+      await loadPublicData();
+    } catch (error) {
+      console.warn('Unbought public data sync was skipped.', error);
+    }
     initPhaseGating();
     initHeader();
     initPledgePage();
@@ -12523,8 +12882,8 @@
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init, { once: true });
+    document.addEventListener('DOMContentLoaded', () => { void init(); }, { once: true });
   } else {
-    init();
+    void init();
   }
 })();

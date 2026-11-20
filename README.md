@@ -3,9 +3,14 @@
 Unbought is a local-first, static prototype for a mutual-aid community built around
 consent, free labor, free goods, and shared accountability.
 
-The current site is a front-end prototype. It uses `localStorage` for demonstration
-data, and no account, pledge, exchange, donation, or waiting-list information is
-transmitted to a server.
+The current site is a front-end prototype. It uses `localStorage` for the full
+member record. A public-data-only Supabase bridge shares group cards, Free Labor
+and Free Stuff listings, and community chat content. Pledge records, account
+details, messages, reports, donations, waiting-list entries, photos, and private
+profile fields are never transmitted.
+
+See `supabase/README.md` for the schema, security notes, and setup steps. The site
+remains hosted on GitHub Pages; Supabase is only a backend for shared public data.
 
 The sample Newsboard posts are general updates about the movement and rollout
 process, not a coding changelog. A future blog service will replace them.
@@ -21,6 +26,7 @@ process, not a coding changelog. A future blog service will replace them.
 - `dashboard.html` — Member dashboard, full private record, and Exchanges
 - `profile.html` — Public member resume with a private record for the signed-in member
 - `group.html?group=<id>` — Group profile with members, worker admins, chat, and offers
+- `supabase-config.js`, `supabase-sync.js`, `supabase/` — Public-data-only Supabase bridge and migration
 
 ## Running locally
 
@@ -432,9 +438,10 @@ and the receiving person covers registration and titling fees; those fees are
 paid to the state, not to Unbought. Weapons, medication, recalled goods, and
 unsafe items remain excluded.
 
-Attributes are stored as structured fields on each listing, ready for a future
-shared database. All listings and filters still operate only in this browser;
-nothing is transmitted.
+Attributes are stored as structured fields on each listing. When Supabase is
+configured, the public listing fields are shared there; photos, comments, and
+private listing details stay in this browser. Filters operate on the merged local
+and public listing set.
 
 ## Photos on posts
 

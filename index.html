@@ -8,6 +8,8 @@
   <title>How It Works — Unbought</title>
   <link rel="icon" type="image/png" href="assets/logo.png">
   <link rel="stylesheet" href="styles.css">
+  <script src="supabase-config.js"></script>
+  <script src="supabase-sync.js" defer></script>
   <script src="app.js" defer></script>
   <script src="quotes.js" defer></script>
 </head>
@@ -93,7 +95,7 @@
         <div class="hero-copy">
           <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> A consent-based, currency-free mutual aid society</p>
           <h1 id="hero-title">You Don’t Need <span class="mark">Money</span> to Survive. You Need <span class="mark mark--blue">Community.</span></h1>
-          <p class="hero-lede">Unbought is where pledged members offer skilled labor freely and share goods through a mutual-aid commons, teach and learn without tuition, and build community land trusts together. Browsing is open to everyone. People who do not take the pledge may record a local purchase intent for goods or services; no real payment is processed and nothing is transmitted.</p>
+          <p class="hero-lede">Unbought is where pledged members offer skilled labor freely and share goods through a mutual-aid commons, teach and learn without tuition, and build community land trusts together. Browsing is open to everyone. Public listings and community posts are shared through Supabase; pledges, private details, messages, reports, and donation records stay in this browser. No real payment is processed.</p>
 
           <div class="hero-actions">
             <a class="button button--primary" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span> <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>

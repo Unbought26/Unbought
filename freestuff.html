@@ -8,6 +8,8 @@
   <title>Free Stuff — Unbought</title>
   <link rel="icon" type="image/png" href="assets/logo.png">
   <link rel="stylesheet" href="styles.css">
+  <script src="supabase-config.js"></script>
+  <script src="supabase-sync.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body data-directory-scope="goods">
@@ -267,7 +269,7 @@
             <p>Offer food, clothing, tools, supplies, or household goods. Everything posted here is free: no price, no deposit, and no swap required.</p>
             <div class="post-principle">
               <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-spark"></use></svg>
-              <p>Listings are saved in this browser for the demo. In a live community, a peer host would review them with you before publishing.</p>
+              <p>Public listing details are shared through Supabase when connected. Photos, comments, and private details stay in this browser. In a live community, a peer host would review them with you before publishing.</p>
             </div>
           </div>
 
@@ -353,7 +355,7 @@
 
             <div class="post-actions">
               <button class="button button--primary" type="submit">Publish listing <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-plus"></use></svg></button>
-              <p class="form-hint" id="post-status" role="status">For pledged members. Stored only on this device. Nothing is transmitted.</p>
+              <p class="form-hint" id="post-status" role="status">For pledged members. Public listing details are shared through Supabase when connected; photos, comments, and private details stay on this device.</p>
             </div>
           </form>
         </section>

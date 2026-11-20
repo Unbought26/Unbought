@@ -51,7 +51,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
 endobj
 8 0 obj
-<< /Length 2157 >>
+<< /Length 2875 >>
 stream
 BT /F2 12 Tf 1 0 0 1 54 744 Tm (4. First house and scaling) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 724 Tm ([ ] The first house goes where the most Unbought members live.) Tj ET
@@ -68,13 +68,20 @@ BT /F1 10 Tf 1 0 0 1 54 559 Tm ([ ] Finish group admin rotation: 7 seats, stagge
 BT /F1 10 Tf 1 0 0 1 54 544 Tm (reports.) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 529 Tm ([ ] Test alliance terms, review board county rules, and anonymous voting.) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 514 Tm ([ ] Keep public resume limited: no member IDs, addresses, donations, or group chat replies.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 489 Tm (6. Safety and copy boundaries) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 469 Tm ([ ] No real auth, payments, email, wage API, stock issue, payouts, police reports, uploads,) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 454 Tm (or server transmission.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 439 Tm ([ ] NSFW is a content tag only; no porn and no prostitution; voting is anonymous.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 424 Tm ([ ] Preserve the exact pledge copy, the donation nudge, and the rollout date language.) Tj ET
-BT /F1 9 Tf 1 0 0 1 54 399 Tm (Working file for the next planning pass. Nothing in this document is a promise of housing,) Tj ET
-BT /F1 9 Tf 1 0 0 1 54 385 Tm (funding, or a payout.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 489 Tm (6. Supabase public-data bridge) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 469 Tm ([ ] Run supabase/migrations/20261120120000_public_data_only.sql in the Supabase SQL Editor.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 454 Tm ([ ] Keep supabase-config.js public-only; never add a service_role key, database password, or) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 439 Tm (connection string.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 424 Tm ([ ] Confirm only listings, group cards, and community chat posts sync; private records stay) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 409 Tm (local.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 394 Tm ([ ] After the schema exists, re-run browser QA and confirm public rows load.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 369 Tm (7. Safety and copy boundaries) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 349 Tm ([ ] No real auth, payments, email, wage API, stock issue, payouts, police reports, or) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 334 Tm (uploads. Only public directory data is transmitted to Supabase.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 319 Tm ([ ] NSFW is a content tag only; no porn and no prostitution; voting is anonymous.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 304 Tm ([ ] Preserve the exact pledge copy, the donation nudge, and the rollout date language.) Tj ET
+BT /F1 9 Tf 1 0 0 1 54 279 Tm (Working file for the next planning pass. Nothing in this document is a promise of housing,) Tj ET
+BT /F1 9 Tf 1 0 0 1 54 265 Tm (funding, or a payout.) Tj ET
 endstream
 endobj
 xref
@@ -91,5 +98,5 @@ xref
 trailer
 << /Size 8 /Root 1 0 R >>
 startxref
-5661
+6379
 %%EOF
