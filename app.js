@@ -7689,7 +7689,8 @@
         <span class="donate-nudge-icon" aria-hidden="true"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-heart"></use></svg></span>
         <div>
           <p><strong>A small way to say thanks.</strong> If you have received goods or services you would have otherwise paid for, consider leaving a small donation. Every bit helps to fund this initiative.</p>
-          <a class="button button--amber button--small" href="donate.html">Support the commons <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+          <a class="button button--amber button--small" href="donate.html">Read the fund plan <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+          <p class="account-note">Giving is not open yet. The fund plan explains the bank account and legal steps.</p>
         </div>
       </div>` : ''}
     </section>`;
@@ -7832,7 +7833,7 @@
           </a>
           <a class="commons-link" href="donate.html">
             <span class="commons-link-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-heart"></use></svg></span>
-            <span class="commons-link-copy"><strong>Donations</strong><small>Support the work. Track your giving here.</small></span>
+            <span class="commons-link-copy"><strong>Donations</strong><small>Read the fund plan. Giving is not open yet.</small></span>
           </a>
         </nav>
       </section>

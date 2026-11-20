@@ -404,8 +404,8 @@
     if (memberNote) {
       memberNote.hidden = false;
       memberNote.textContent = member
-        ? `Signed in as ${member.name}. Your donation intents will be tracked in your account and recorded for the Unbought donation fund, with contribution and stock value in this prototype. Academy tuition and non-member purchases go to the same fund.`
-        : 'Donating without an account is welcome. Your intent is recorded locally for the Unbought donation fund. If you provide an email, it is kept locally for a future thank-you note; no email is sent in this prototype.';
+        ? `Signed in as ${member.name}. Giving is not open yet. When it opens, your donation intents will be tracked in your account and recorded for the Unbought donation fund, with contribution and stock value in this prototype. Academy tuition and non-member purchases will go to the same fund.`
+        : 'Giving is not open yet. When it opens, guests will be able to leave a local intent for the Unbought donation fund. If you provide an email, it will be kept locally for a future thank-you note; no email is sent in this prototype.';
     }
     if (member && nameInput && !nameInput.value.trim()) {
       nameInput.value = member.name || '';
@@ -415,8 +415,8 @@
       const hint = document.getElementById('donation-email-hint');
       if (hint) {
         hint.textContent = member
-          ? 'Optional for members (your account can track this donation).'
-          : 'Required here if you donate without an account. It is stored locally for a possible future thank-you email; no email is sent in this prototype.';
+          ? 'Optional for members when giving opens (your account can track this donation).'
+          : 'When giving opens, this is required if you leave an intent without an account. It is stored locally for a possible future thank-you email; no email is sent in this prototype.';
       }
     }
     if (sourceField) sourceField.hidden = !member;
@@ -426,6 +426,10 @@
 
   function updateStatus() {
     if (!statusBox) return;
+    if (form.hidden) {
+      statusBox.textContent = 'Giving is closed. No donation intents are recorded.';
+      return;
+    }
     const intents = visibleIntents();
     if (!intents.length) {
       statusBox.textContent = getMember()

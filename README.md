@@ -16,7 +16,7 @@ process, not a coding changelog. A future blog service will replace them.
 - `pledge.html` — The Pledge and sign-up
 - `freelabor.html` — Free Labor directory and post form
 - `freestuff.html` — Free Stuff directory and post form
-- `donate.html` — Donation form and closing call to action
+- `donate.html` — Donation fund plan and status; giving is closed until a bank account, lawyer, and accountant are in place
 - `future.html` — What’s to Come, donation information, and waiting list
 - `dashboard.html` — Member dashboard, full private record, and Exchanges
 - `profile.html` — Public member resume with a private record for the signed-in member
@@ -158,19 +158,22 @@ balance, and the member's share of it. The stored `severanceFund` key and
 `severance_purchase` contribution type are retained only for older local data. No
 payout, stock issuance, or payment occurs, and nothing is transmitted.
 
-`donate.html` catalogues the same ledger: whole-dollar amount and frequency,
+`donate.html` explains the same ledger model: whole-dollar amount and frequency,
 optional chosen name and note, local timestamp and intent ID, member link only when
 signed in, and a guest email only for a future local thank-you. Signed-in members
-may credit an intent to one of their groups or alliances; that source is stored as
-`groupId` or `allianceId` for local share calculations only. It also explains that
-donations, academy tuition, non-member purchases, and mutually confirmed hours
+may credit a future intent to one of their groups or alliances; that source is
+stored as `groupId` or `allianceId` for local share calculations only. Giving is
+closed in this build: the local intent form is hidden, all donation calls to action
+say “Read the fund plan,” and no payment channel is advertised. It also explains
+that donations, academy tuition, non-member purchases, and mutually confirmed hours
 share the same accounting model while sensitive profile fields stay private.
 
 The published allocation plan runs in stages. Every dollar starts with pre-rollout
 operations: licensing, web hosting, database set up, and social media awareness.
 The beta plan is to get the database, mailer, and social channels running for free
-first, then consider a Patreon-style pledge stream and legal help from a volunteer
-lawyer to set the fund up. Once the Land Trust account is formed and initial
+first, then open a dedicated account for the Unbought donation fund and let it sit
+until a lawyer and accountant are on board. No pledge service or giving link is
+published before that. Once the Land Trust account is formed and initial
 start-up costs are paid, the fund builds in an account while seeking accountants
 until the first plot of land, house, or warehouse can be bought. The first house
 will be where the most Unbought members live; scaling means groups keep scouting

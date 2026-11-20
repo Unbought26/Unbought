@@ -15,7 +15,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
 endobj
 6 0 obj
-<< /Length 2513 >>
+<< /Length 2810 >>
 stream
 BT /F2 19 Tf 1 0 0 1 54 744 Tm (Unbought - Next Steps) Tj ET
 BT /F1 11 Tf 1 0 0 1 54 714 Tm (Local prototype handoff to-do) Tj ET
@@ -27,21 +27,24 @@ BT /F1 10 Tf 1 0 0 1 54 621 Tm ([ ] Confirm the availability gate: Unavailable m
 BT /F1 10 Tf 1 0 0 1 54 606 Tm (labor or product requests.) Tj ET
 BT /F2 12 Tf 1 0 0 1 54 581 Tm (2. Beta funding path, before March 20, 2027) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 561 Tm ([ ] Get the database, mailer, and social channels rolling for free first.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 546 Tm ([ ] Once that free stack is stable, consider a Patreon-style pledge stream.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 531 Tm ([ ] Recruit a volunteer lawyer to help set the fund up legally.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 516 Tm ([ ] Keep every dollar focused first on pre-rollout operations: licensing, web hosting,) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 501 Tm (database setup, and social media awareness.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 486 Tm ([ ] Record all amounts locally only; no payments, accounts, receipts, or transmission in the) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 471 Tm (prototype.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 446 Tm (3. Fund structure and accounts) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 426 Tm ([ ] Form the legal structure and connect with an accountant before accepting anything.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 411 Tm ([ ] After the Land Trust account exists and start-up costs are paid, funnel money into an) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 396 Tm (account while seeking a first plot of land, house, or warehouse.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 381 Tm ([ ] After the first acquisition, keep a separate account for Land Trust survival: resources,) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 366 Tm (taxes, utilities, and lights on.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 351 Tm ([ ] Put leftover budget into the surplus fund; keep spoken-for money in active checking.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 336 Tm ([ ] Keep the Free Goods Fund as donation priority #4 and keep all public copy on the) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 321 Tm (Unbought donation fund name.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 546 Tm ([ ] Keep donations closed. Do not publish a pledge service, payment link, or donation call) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 531 Tm (to action yet.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 516 Tm ([ ] Open a dedicated bank account for the Unbought donation fund and let it sit until a) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 501 Tm (lawyer and accountant are on board.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 486 Tm ([ ] Keep every future dollar focused first on pre-rollout operations: licensing, web) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 471 Tm (hosting, database setup, and social media awareness.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 456 Tm ([ ] Record no giving intents in the live prototype; all site donation links now say "Read) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 441 Tm (the fund plan.") Tj ET
+BT /F2 12 Tf 1 0 0 1 54 416 Tm (3. Fund structure and accounts) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 396 Tm ([ ] Recruit a volunteer lawyer and accountant before opening any giving channel.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 381 Tm ([ ] Form the legal structure and connect with an accountant before accepting anything.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 366 Tm ([ ] After the Land Trust account exists and start-up costs are paid, funnel money into an) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 351 Tm (account while seeking a first plot of land, house, or warehouse.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 336 Tm ([ ] After the first acquisition, keep a separate account for Land Trust survival: resources,) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 321 Tm (taxes, utilities, and lights on.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 306 Tm ([ ] Put leftover budget into the surplus fund; keep spoken-for money in active checking.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 291 Tm ([ ] Keep the Free Goods Fund as donation priority #4 and keep all public copy on the) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 276 Tm (Unbought donation fund name.) Tj ET
 endstream
 endobj
 7 0 obj
@@ -76,17 +79,17 @@ endstream
 endobj
 xref
 0 8
-0000000000 65535 f 
-0000000009 00000 n 
-0000000058 00000 n 
-0000000121 00000 n 
-0000000218 00000 n 
-0000000320 00000 n 
-0000000456 00000 n 
-0000003020 00000 n 
-0000003156 00000 n 
+0000000000 65535 f
+0000000009 00000 n
+0000000058 00000 n
+0000000121 00000 n
+0000000218 00000 n
+0000000320 00000 n
+0000000456 00000 n
+0000003317 00000 n
+0000003453 00000 n
 trailer
 << /Size 8 /Root 1 0 R >>
 startxref
-5364
+5661
 %%EOF

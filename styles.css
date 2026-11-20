@@ -5592,6 +5592,13 @@ em {
   font-size: 0.8rem;
   line-height: 1.55;
 }
+.donation-closed-notice {
+  margin-top: 0.9rem;
+  border-left-color: var(--blue);
+  background: var(--blue-mist);
+}
+.donation-closed-notice p { color: var(--blue-deep); }
+.donation-closed-notice .icon { color: var(--blue); }
 
 .donation-aside .donation-warning {
   background: rgba(255, 255, 255, 0.08);
