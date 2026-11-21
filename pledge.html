@@ -241,7 +241,7 @@
             <p class="eyebrow">What taking the pledge means</p>
             <h3>Take the Pledge to join the commons.</h3>
             <p>Taking the pledge is a commitment to show up as a neighbor, not a customer: offer what you can, ask for what you need without shame, respect every boundary, and help keep this commons free from profit and gatekeeping. You can browse labor and goods without an account; posting offers, requesting help, messaging, and managing a track require membership. Your pledge and private details stay in this browser. Public listings and community posts are shared through Supabase when connected, and you can withdraw at any time.</p>
-            <p class="phase-minimum-note"><strong>Phase 1 minimum:</strong> joining asks for a pledge of at least 1 hour per week. We cannot offer housing yet, so the ask is intentionally small. Members who cannot work are still welcome in the Care Circle with no labor obligation.</p>
+            <p class="phase-minimum-note"><strong>Phase 1 minimum:</strong> joining asks for a pledge of at least 4 hours per month (about 1 hour per week). We cannot offer housing yet, so the ask is intentionally small. Members who cannot work can choose the Care Circle option in the form and have no labor obligation.</p>
             <ul class="signature-notes">
               <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Membership stored locally in this prototype</li>
               <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-people"></use></svg> Manage your track, requests, and neighbor communication</li>
@@ -402,6 +402,24 @@
                 <option value="homeless">Homeless</option>
               </select>
               <p class="form-hint">Private profile detail. Never shown on your public resume.</p>
+            </div>
+
+            <div class="field field--on-blue">
+              <label for="pledge-monthly-hours">Monthly work-hours pledge <span class="required-mark" aria-hidden="true">*</span></label>
+              <select id="pledge-monthly-hours" name="monthlyHours" required>
+                <option value="" selected>Choose one</option>
+                <option value="care">I cannot work right now — Care Circle (no labor obligation)</option>
+                <option value="4">4 hours per month — Phase 1 minimum</option>
+                <option value="6">6 hours per month</option>
+                <option value="8">8 hours per month</option>
+                <option value="10">10 hours per month</option>
+                <option value="12">12 hours per month</option>
+                <option value="16">16 hours per month</option>
+                <option value="20">20 hours per month</option>
+                <option value="30">30 hours per month</option>
+                <option value="40">40 hours per month</option>
+              </select>
+              <p class="field-hint">This is the time you are willing to offer each month, not hours logged by hand. The minimum pledge is 4 hours per month. Logged hours still require mutual confirmation or review.</p>
             </div>
 
             <div class="form-row">

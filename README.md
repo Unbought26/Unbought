@@ -158,6 +158,11 @@ party are excluded. Only matching or review-decided hours count toward the membe
 totals. The same rule applies to the thank-you nudge: it appears only after a
 service or product is actually confirmed or logged in Exchanges.
 
+The Pledge form also records a separate monthly work-hours commitment, stored as
+`state.pledge.monthlyHours`. Members choose a fixed option from 4 hours per month
+upward; the Care Circle option records no labor obligation for members who cannot
+work. This pledge is a stated intention only and never becomes logged hours.
+
 The member account panel is the only place that shows hours worked and amounts
 donated by week, month, year, and all time, the current Unbought donation fund
 balance, and the member's share of it. The stored `severanceFund` key and
@@ -442,6 +447,13 @@ Attributes are stored as structured fields on each listing. When Supabase is
 configured, the public listing fields are shared there; photos, comments, and
 private listing details stay in this browser. Filters operate on the merged local
 and public listing set.
+
+Members can edit their own listings with “Edit my listing” on the card or in the
+details dialog. The post form opens prefilled, and saving keeps the original ID,
+posting date, requests, comments, and report links. Edits are local-only in this
+build: the Supabase table is append-only, so the already-shared public row is not
+updated and a reload will not overwrite the member's edited copy. Photos, comments,
+and private details are never synced.
 
 ## Photos on posts
 

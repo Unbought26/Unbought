@@ -2654,6 +2654,17 @@
     return Number.isFinite(number) && number > 0 ? Math.round(number * 100) / 100 : 0;
   }
 
+  // A member's monthly pledge is a commitment, not a logged-hours counter.
+  // The form offers fixed choices starting at the Phase 1 minimum of four hours.
+  const MONTHLY_HOUR_CHOICES = Object.freeze([4, 6, 8, 10, 12, 16, 20, 30, 40]);
+
+  function normalizeMonthlyHours(value) {
+    if (value === 'care') return 'care';
+    const hours = Number(value);
+    if (!Number.isFinite(hours) || hours < 4) return null;
+    return MONTHLY_HOUR_CHOICES.includes(hours) ? hours : Math.round(hours);
+  }
+
   function normalizeHousingStatus(value) {
     const status = cleanString(value, 30);
     if (hasOwn(HOUSING_STATUSES, status)) return status;
@@ -3013,6 +3024,7 @@
             .filter((detail) => detail.label && detail.value)
         : [],
       isUser: true,
+      localEdit: Boolean(item.localEdit),
       createdAt: cleanString(item.createdAt, 40),
       status: cleanString(item.status, 30) || 'active'
     };
@@ -3079,6 +3091,7 @@
           physicalState: normalizeStateCode(raw.pledge.physicalState) || parsedPhysicalAddress.state,
           physicalZip: normalizeZip(raw.pledge.physicalZip || parsedPhysicalAddress.zip),
           housingStatus: normalizeHousingStatus(raw.pledge.housingStatus),
+          monthlyHours: normalizeMonthlyHours(raw.pledge.monthlyHours),
           phone: cellPhone,
           cellPhone,
           publicPhoneNumber,
@@ -3814,6 +3827,10 @@
   let storageWarningShown = false;
   let toastTimer = null;
   let currentListingId = null;
+  let editingListingId = null;
+  let postDialogDefaults = null;
+  let postSubmitDefaultHtml = '';
+  let postStatusDefaultText = '';
   let currentRequestMode = 'mutual';
   let confirmAction = null;
   let currentInquiryType = 'waitlist';
@@ -4042,6 +4059,10 @@
         price: row.nonmember_price
       });
       const existing = listingMap.get(id);
+      // A locally edited listing keeps its edited fields. The public copy in
+      // Supabase is append-only in this build, so a reload must not revert a
+      // member's own changes to a row that cannot be updated there yet.
+      if (existing && existing.localEdit === true) return;
       if (existing) {
         existing.pillar = pillar;
         existing.exchange = exchange;
@@ -4747,6 +4768,12 @@
     actions.appendChild(reportButton);
 
     if (listing.isUser) {
+      const editButton = createEl('button', 'button button--ghost button--tiny', 'Edit my listing');
+      editButton.type = 'button';
+      editButton.dataset.editListing = listing.id;
+      editButton.setAttribute('aria-label', `Edit my listing: ${listing.title}`);
+      actions.appendChild(editButton);
+
       const removeWrap = createEl('div', 'listing-remove');
       const removeButton = createEl('button');
       removeButton.type = 'button';
@@ -5288,6 +5315,13 @@
       return;
     }
 
+    const editButton = event.target.closest('[data-edit-listing]');
+    if (editButton) {
+      event.preventDefault();
+      openEditListing(editButton.dataset.editListing, editButton);
+      return;
+    }
+
     const removeButton = event.target.closest('[data-remove-listing]');
     if (removeButton) {
       confirmRemoveListing(removeButton.dataset.removeListing, removeButton);
@@ -5446,7 +5480,7 @@
     dialog.innerHTML = `
       <div class="dialog-shell">
         <div class="dialog-top">
-          <p class="eyebrow">Add to the commons</p>
+          <p class="eyebrow" id="post-dialog-eyebrow">Add to the commons</p>
           <button class="icon-button" type="button" data-dialog-close aria-label="Close the posting form">
             <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
           </button>
@@ -5458,8 +5492,16 @@
           <div id="post-form-mount"></div>
         </div>
       </div>`;
+    postDialogDefaults = {
+      eyebrow: dialog.querySelector('#post-dialog-eyebrow').textContent,
+      title: dialog.querySelector('#post-dialog-title').textContent,
+      intro: dialog.querySelector('#post-dialog-intro').textContent
+    };
     document.body.appendChild(dialog);
     dialog.querySelector('#post-form-mount').appendChild(form);
+    dialog.addEventListener('close', () => {
+      editingListingId = null;
+    });
     if (card) card.hidden = true;
     return dialog;
   }
@@ -5657,10 +5699,148 @@
     });
   }
 
+  function setPostFieldValue(id, value) {
+    const field = document.getElementById(id);
+    if (field) field.value = value === null || value === undefined ? '' : String(value);
+  }
+
+  function syncPostPurchaseFields() {
+    const toggle = document.getElementById('post-nonmember-enabled');
+    const priceField = document.getElementById('post-nonmember-price-field');
+    const priceInput = document.getElementById('post-nonmember-price');
+    const enabled = Boolean(toggle && toggle.checked);
+    if (priceField) priceField.hidden = !enabled;
+    if (priceInput) {
+      priceInput.disabled = !enabled;
+      priceInput.required = enabled;
+    }
+  }
+
+  function resetPostDialogForm() {
+    const form = document.getElementById('post-form');
+    if (!form) return;
+    form.reset();
+    fillOwnNameField(document.getElementById('post-provider'));
+    buildGoodsPostFields(false);
+    buildLaborJobTitleOptions();
+    syncCustomJobTitleField();
+    syncPostLocationMode();
+    syncPostPurchaseFields();
+    setPostFieldValue('post-location', '');
+    postPhotoDrafts.set(form, []);
+    postPhotoPending.set(form, false);
+    const photoInput = document.getElementById('post-photos');
+    if (photoInput) photoInput.value = '';
+    renderPostPhotos(form, []);
+    const submitButton = $('button[type="submit"]', form);
+    if (submitButton) {
+      submitButton.disabled = false;
+      if (postSubmitDefaultHtml) submitButton.innerHTML = postSubmitDefaultHtml;
+    }
+    const eyebrow = document.getElementById('post-dialog-eyebrow');
+    const title = document.getElementById('post-dialog-title');
+    const intro = document.getElementById('post-dialog-intro');
+    if (postDialogDefaults) {
+      if (eyebrow) eyebrow.textContent = postDialogDefaults.eyebrow;
+      if (title) title.textContent = postDialogDefaults.title;
+      if (intro) intro.textContent = postDialogDefaults.intro;
+    }
+    const status = document.getElementById('post-status');
+    if (status) status.textContent = postStatusDefaultText || 'For pledged members. Public listing details are shared through Supabase when connected; photos, comments, and private details stay on this device.';
+  }
+
+  function openEditListing(id, trigger) {
+    const listing = state.listings.find((item) => item && item.id === id && item.isUser);
+    if (!listing) return;
+    if (state.pledge && listing.memberId && listing.memberId !== state.pledge.memberId) return;
+    const postDialog = document.getElementById('post-dialog');
+    if (!postDialog) return;
+    const listingDialog = document.getElementById('listing-dialog');
+    if (listingDialog && listingDialog.open) closeDialog(listingDialog, { restoreFocus: false });
+
+    resetPostDialogForm();
+    editingListingId = listing.id;
+
+    const form = document.getElementById('post-form');
+    const purchase = normalizeNonmemberPurchase(listing.nonmemberPurchase);
+    const setChecked = (id, checked) => {
+      const control = document.getElementById(id);
+      if (control) control.checked = Boolean(checked);
+    };
+
+    setPostFieldValue('post-title-input', listing.title);
+    setPostFieldValue('post-provider', listing.provider || (state.pledge ? state.pledge.name : ''));
+    setPostFieldValue('post-description', listing.description);
+    setChecked('post-nsfw', listing.nsfw);
+
+    const modeSelect = document.getElementById('post-location-mode');
+    if (modeSelect) {
+      const mode = hasOwn(LOCATION_MODES, listing.locationMode)
+        ? listing.locationMode
+        : listing.location === 'Online'
+          ? 'online'
+          : listing.zip && !listing.city ? 'zip' : 'cityStateZip';
+      modeSelect.value = mode;
+    }
+    setPostFieldValue('post-city', listing.city || '');
+    setPostFieldValue('post-state', listing.state || '');
+    setPostFieldValue('post-zip', listing.zip || '');
+    setPostFieldValue('post-location', listing.location || '');
+    syncPostLocationMode();
+
+    if (listing.pillar === 'goods') {
+      setPostFieldValue('post-category', listing.category);
+      buildGoodsPostFields(false);
+      setPostFieldValue('post-condition', listing.condition);
+      setPostFieldValue('post-color', listing.color);
+      setPostFieldValue('post-brand', listing.brand);
+      const attributes = listing.attributes && typeof listing.attributes === 'object' ? listing.attributes : {};
+      Object.keys(attributes).forEach((key) => setPostFieldValue(`post-facet-${key}`, attributes[key]));
+    } else {
+      setPostFieldValue('post-pillar', listing.pillar);
+      buildLaborJobTitleOptions();
+      const jobSelect = document.getElementById('post-job-title');
+      if (jobSelect) {
+        const known = Array.from(jobSelect.options).some((option) => option.value === listing.jobTitle);
+        jobSelect.value = known ? listing.jobTitle : '__custom';
+        if (!known) setPostFieldValue('post-job-title-custom', listing.jobTitle);
+      }
+      syncCustomJobTitleField();
+      setPostFieldValue('post-exchange', listing.exchange);
+      setPostFieldValue('post-scope', listing.scope);
+    }
+
+    setChecked('post-nonmember-enabled', purchase.enabled);
+    setPostFieldValue('post-nonmember-price', purchase.enabled ? purchase.price : '');
+    syncPostPurchaseFields();
+
+    if (form) {
+      const photos = cleanPostPhotos(listing.photos);
+      postPhotoDrafts.set(form, photos);
+      renderPostPhotos(form, photos);
+      const submitButton = $('button[type="submit"]', form);
+      if (submitButton) submitButton.textContent = 'Save changes';
+    }
+    const eyebrow = document.getElementById('post-dialog-eyebrow');
+    const title = document.getElementById('post-dialog-title');
+    const intro = document.getElementById('post-dialog-intro');
+    const status = document.getElementById('post-status');
+    if (eyebrow) eyebrow.textContent = 'Edit your listing';
+    if (title) title.textContent = 'Edit your listing';
+    if (intro) intro.textContent = 'Update the details neighbors see. Requests, comments, and the original posting date stay with this listing.';
+    if (status) status.textContent = 'Saving updates this listing in this browser. Public details already shared are not changed in Supabase in this build; photos, comments, and private details stay on this device.';
+
+    openDialog(postDialog);
+    announce(`Editing your listing ${listing.title}.`);
+    if (trigger instanceof HTMLElement) trigger.blur();
+  }
+
   function initPostForm() {
     const form = document.getElementById('post-form');
     if (!form) return;
     const dialog = buildPostDialog(form);
+    const submitButton = $('button[type="submit"]', form);
+    if (submitButton) postSubmitDefaultHtml = submitButton.innerHTML;
 
     // The provider is the signed-in member, so carry their chosen name over
     // instead of asking them to type it again.
@@ -5703,6 +5883,7 @@
     const photoPreview = document.getElementById('post-photos-preview');
     const postStatus = document.getElementById('post-status');
     const defaultStatus = postStatus ? postStatus.textContent : '';
+    postStatusDefaultText = defaultStatus;
 
     if (photoInput) {
       photoInput.addEventListener('change', async () => {
@@ -5739,7 +5920,7 @@
         event.preventDefault();
         if (!requireMembership('Sign the Unbought Pledge to become a member before posting to the commons.')) return;
         if (!requireFullAccess('Full access is paused during your reflection period. Posting is unavailable until you complete the reflection and treatment requirements.')) return;
-        fillProviderName();
+        resetPostDialogForm();
         openDialog(dialog);
       });
     });
@@ -5875,11 +6056,16 @@
         status: 'active'
       };
 
+      const editingListing = editingListingId
+        ? state.listings.find((item) => item && item.id === editingListingId && item.isUser)
+        : null;
+
       // A written-in title is a note for whoever maintains the live site. The
       // prototype cannot send it anywhere, so it lands in the local suggestion
-      // box with the context needed to add the title to the list later.
+      // box with the context needed to add the title to the list later. Edits do
+      // not create a second suggestion for the same title.
       const customTitleForMaintainer = pillar !== 'goods' && jobTitleChoice === '__custom';
-      if (customTitleForMaintainer) {
+      if (customTitleForMaintainer && !editingListing) {
         state.suggestions = Array.isArray(state.suggestions) ? state.suggestions : [];
         state.suggestions.unshift({
           id: makeId('suggestion'),
@@ -5896,7 +6082,23 @@
           { tab: 'suggestions', sourceId: listing.id });
       }
 
-      state.listings.unshift(listing);
+      if (editingListing) {
+        const preserved = {
+          id: editingListing.id,
+          memberId: editingListing.memberId || state.pledge.memberId,
+          createdAt: editingListing.createdAt,
+          comments: getListingComments(editingListing),
+          isUser: true,
+          localEdit: true,
+          status: 'active'
+        };
+        Object.assign(editingListing, listing, preserved);
+        addNotification('listing', 'Listing updated locally',
+          `Your changes to ${listing.title} were saved in this browser. Public details already shared are not changed in Supabase in this build.`,
+          { sourceId: editingListing.id });
+      } else {
+        state.listings.unshift(listing);
+      }
       saveState();
 
       resetFilters();
@@ -5913,21 +6115,27 @@
       closeDialog(dialog, { restoreFocus: false });
       const postStatus = document.getElementById('post-status');
       if (postStatus) {
-        postStatus.textContent = customTitleForMaintainer
-          ? 'Published. Your custom title was saved locally in Dashboard → Suggestions for the site maintainer. Nothing was transmitted.'
-          : 'Published. Your listing is now in the directory above.';
+        postStatus.textContent = editingListing
+          ? 'Changes saved in this browser. Public details already shared are not changed in Supabase in this build.'
+          : customTitleForMaintainer
+            ? 'Published. Your custom title was saved locally in Dashboard → Suggestions for the site maintainer. Nothing was transmitted.'
+            : 'Published. Your listing is now in the directory above.';
       }
-      showToast(customTitleForMaintainer
-        ? 'Listing published; custom title saved locally for the maintainer.'
-        : 'Listing published to this browser.', false);
-      announce(`Your listing “${listing.title}” was published. It is at the top of the directory.`);
-      focusListingTitle(listing.id);
+      showToast(editingListing
+        ? 'Listing changes saved in this browser.'
+        : customTitleForMaintainer
+          ? 'Listing published; custom title saved locally for the maintainer.'
+          : 'Listing published to this browser.', false);
+      announce(editingListing
+        ? `Your listing “${listing.title}” was updated in this browser.`
+        : `Your listing “${listing.title}” was published. It is at the top of the directory.`);
+      focusListingTitle(editingListing ? editingListing.id : listing.id);
     });
 
     if (window.location.hash === '#post-trigger' || window.location.hash === '#post-form') {
       if (requireMembership('Sign the Unbought Pledge to become a member before posting to the commons.') &&
           requireFullAccess('Full access is paused during your reflection period. Posting is unavailable until you complete the reflection and treatment requirements.')) {
-        fillProviderName();
+        resetPostDialogForm();
         openDialog(dialog);
       }
     }
@@ -11280,6 +11488,7 @@
         const dob = cleanString(data.get('dob'), 10);
         const profession = normalizeProfession(data.get('profession'));
         const housingStatus = normalizeHousingStatus(data.get('housingStatus'));
+        const monthlyHours = normalizeMonthlyHours(data.get('monthlyHours'));
         const paidSkills = cleanString(data.get('paidSkills'), 400);
         const unpaidSkills = cleanString(data.get('unpaidSkills'), 400);
         const note = cleanString(data.get('note'), 240);
@@ -11323,6 +11532,10 @@
         }
         if (!hasOwn(HOUSING_STATUSES, housingStatus)) {
           showPledgeError('Please choose your housing status.', 'pledge-housing');
+          return;
+        }
+        if (monthlyHours === null) {
+          showPledgeError('Please choose a monthly work-hours pledge of at least 4 hours per month, or choose the Care Circle option if you cannot work.', 'pledge-monthly-hours');
           return;
         }
         if (!profession) {
@@ -11418,6 +11631,7 @@
           physicalState,
           physicalZip,
           housingStatus,
+          monthlyHours,
           phone: cellPhone,
           cellPhone,
           publicPhoneNumber,
@@ -11667,7 +11881,7 @@
             <select id="contributor-hours" name="hours" required>
               ${[1, 2, 3, 4, 5, 6, 8, 10, 12, 20, 30, 40].map((hours) => `<option value="${hours}"${hours === 1 ? ' selected' : ''}>${hours} hour${hours === 1 ? '' : 's'} per week</option>`).join('')}
             </select>
-            <p class="field-hint">Phase 1 minimum: 1 hour per week. Choose a sustainable amount; you can change it later. Logged hours still require mutual confirmation or review.</p>
+            <p class="field-hint">Phase 1 minimum: 4 hours per month (about 1 hour per week). Choose a sustainable amount; you can change it later. Logged hours still require mutual confirmation or review.</p>
           </div>
           <div class="field">
             <label for="contributor-availability">Availability <span class="optional">(optional)</span></label>
