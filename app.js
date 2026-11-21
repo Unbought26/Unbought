@@ -2655,14 +2655,14 @@
   }
 
   // A member's monthly pledge is a commitment, not a logged-hours counter.
-  // The form offers fixed choices starting at the Phase 1 minimum of four hours.
-  const MONTHLY_HOUR_CHOICES = Object.freeze([4, 6, 8, 10, 12, 16, 20, 30, 40]);
-
+  // Members type any whole number of hours; the Phase 1 minimum is four.
+  // The legacy 'care' value is still accepted for older local records.
   function normalizeMonthlyHours(value) {
     if (value === 'care') return 'care';
+    if (value === '' || value === null || value === undefined) return null;
     const hours = Number(value);
     if (!Number.isFinite(hours) || hours < 4) return null;
-    return MONTHLY_HOUR_CHOICES.includes(hours) ? hours : Math.round(hours);
+    return Math.round(hours);
   }
 
   function normalizeHousingStatus(value) {
@@ -11410,6 +11410,21 @@
       else setPhysicalLocked(false);
     }
 
+    const careToggle = form && form.querySelector('[data-care-circle]');
+    const monthlyHoursInput = document.getElementById('pledge-monthly-hours');
+    const updateMonthlyHoursField = () => {
+      const inCare = Boolean(careToggle && careToggle.checked);
+      if (monthlyHoursInput) {
+        monthlyHoursInput.disabled = inCare;
+        monthlyHoursInput.required = !inCare;
+        if (inCare) monthlyHoursInput.value = '';
+      }
+    };
+    if (careToggle) {
+      careToggle.addEventListener('change', updateMonthlyHoursField);
+      updateMonthlyHoursField();
+    }
+
     const poaToggle = form && form.querySelector('[data-has-poa]');
     const poaFields = form && form.querySelector('[data-poa-fields]');
     const poaInputs = poaFields ? Array.from(poaFields.querySelectorAll('input')) : [];
@@ -11488,7 +11503,8 @@
         const dob = cleanString(data.get('dob'), 10);
         const profession = normalizeProfession(data.get('profession'));
         const housingStatus = normalizeHousingStatus(data.get('housingStatus'));
-        const monthlyHours = normalizeMonthlyHours(data.get('monthlyHours'));
+        const careCircleNoLabor = Boolean(data.get('careCircleNoLabor'));
+        const monthlyHours = careCircleNoLabor ? 'care' : normalizeMonthlyHours(data.get('monthlyHours'));
         const paidSkills = cleanString(data.get('paidSkills'), 400);
         const unpaidSkills = cleanString(data.get('unpaidSkills'), 400);
         const note = cleanString(data.get('note'), 240);
@@ -11535,7 +11551,7 @@
           return;
         }
         if (monthlyHours === null) {
-          showPledgeError('Please choose a monthly work-hours pledge of at least 4 hours per month, or choose the Care Circle option if you cannot work.', 'pledge-monthly-hours');
+          showPledgeError('Enter at least 4 hours per month, or check the Care Circle box if you cannot work.', 'pledge-monthly-hours');
           return;
         }
         if (!profession) {

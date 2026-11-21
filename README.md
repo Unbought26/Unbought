@@ -159,9 +159,10 @@ totals. The same rule applies to the thank-you nudge: it appears only after a
 service or product is actually confirmed or logged in Exchanges.
 
 The Pledge form also records a separate monthly work-hours commitment, stored as
-`state.pledge.monthlyHours`. Members choose a fixed option from 4 hours per month
-upward; the Care Circle option records no labor obligation for members who cannot
-work. This pledge is a stated intention only and never becomes logged hours.
+`state.pledge.monthlyHours`. Members type any whole number of hours at or above the
+Phase 1 minimum of 4 per month; the explicit Care Circle checkbox records no labor
+obligation for members who cannot work and disables the hours field. This pledge is
+a stated intention only and never becomes logged hours.
 
 The member account panel is the only place that shows hours worked and amounts
 donated by week, month, year, and all time, the current Unbought donation fund
