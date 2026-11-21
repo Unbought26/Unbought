@@ -161,8 +161,10 @@ service or product is actually confirmed or logged in Exchanges.
 The Pledge form also records a separate monthly work-hours commitment, stored as
 `state.pledge.monthlyHours`. Members type any whole number of hours at or above the
 Phase 1 minimum of 4 per month; the explicit Care Circle checkbox records no labor
-obligation for members who cannot work and disables the hours field. This pledge is
-a stated intention only and never becomes logged hours.
+obligation for members who cannot work and disables the hours field. Members can
+change this commitment later in Dashboard → Settings → Pledge commitment, with the
+same 4-hour minimum and Care Circle exception. This pledge is a stated intention
+only and never becomes logged hours.
 
 The member account panel is the only place that shows hours worked and amounts
 donated by week, month, year, and all time, the current Unbought donation fund

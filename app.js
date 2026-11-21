@@ -6757,6 +6757,22 @@
     setPhysicalLocked(same.checked);
   }
 
+  function initAccountPledgeFields(scope) {
+    const form = scope && scope.querySelector('[data-pledge-form]');
+    if (!form) return;
+    const careToggle = form.querySelector('[data-account-care-circle]');
+    const hoursInput = form.querySelector('[data-account-monthly-hours]');
+    if (!careToggle || !hoursInput) return;
+    const updateHoursField = () => {
+      const inCare = Boolean(careToggle.checked);
+      hoursInput.disabled = inCare;
+      hoursInput.required = !inCare;
+      if (inCare) hoursInput.value = '';
+    };
+    careToggle.addEventListener('change', updateHoursField);
+    updateHoursField();
+  }
+
   function renderAccountInfo() {
     const panel = document.getElementById('settings-panel');
     if (!panel || !isMember()) return;
@@ -6792,6 +6808,10 @@
       const value = String(day).padStart(2, '0');
       dobDayOptions += `<option value="${value}"${dobDayValue === value ? ' selected' : ''}>${day}</option>`;
     }
+    const monthlyHoursValue = m.monthlyHours === 'care' || m.monthlyHours === null || m.monthlyHours === undefined
+      ? ''
+      : e(String(m.monthlyHours));
+    const careCircleChecked = m.monthlyHours === 'care';
     const sameAddress = Boolean(m.mailingAddress && m.physicalAddress === m.mailingAddress);
     panel.innerHTML = `<section class="account-card account-panel">
       <header class="account-panel-head">
@@ -7014,7 +7034,22 @@
           </div>
         </form>
       </details>
-      <p class="account-note">Changes are saved only on this device; nothing is transmitted. Your resume hides your legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated, and shows your phone only if you opt in. Hours and item counts are never typed here; they appear only after mutual confirmation or review. To withdraw your membership, use the button in the pledge section.</p>
+      <div class="settings-block pledge-settings">
+        <h4>Pledge commitment</h4>
+        <p class="account-note">Change the monthly work hours you pledged. This is a commitment, not hours logged by hand.</p>
+        <form class="account-form" data-pledge-form>
+          <div class="field">
+            <label for="account-monthly-hours">Monthly work-hours pledge <span class="required-mark" aria-hidden="true">*</span></label>
+            <input type="number" id="account-monthly-hours" name="monthlyHours" data-account-monthly-hours min="4" step="1" inputmode="numeric" required placeholder="4" value="${monthlyHoursValue}">
+            <label class="checkbox"><input type="checkbox" name="careCircleNoLabor" data-account-care-circle${careCircleChecked ? ' checked' : ''}> <span>I cannot work right now — Care Circle (no labor obligation)</span></label>
+            <p class="field-hint">Type any whole number of hours at or above the 4-hour monthly minimum. Checking Care Circle removes the labor obligation and disables the hours field. Logged hours still require mutual confirmation or review.</p>
+          </div>
+          <div class="account-form-actions">
+            <button type="submit" class="button button--primary button--small">Save pledge</button>
+          </div>
+        </form>
+      </div>
+      <p class="account-note">Changes are saved only on this device; nothing is transmitted. Your resume hides your legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated, and shows your phone only if you opt in. Logged hours and item counts are never typed here; they appear only after mutual confirmation or review. To withdraw your membership, use the button in the pledge section.</p>
       <div class="settings-block">
         <h4>Local preferences</h4>
         <p class="account-note">These settings only change how this prototype behaves on this device. Nothing is sent anywhere.</p>
@@ -7031,6 +7066,7 @@
     syncPhoneFields(panel);
     initAccountDob(panel);
     initAccountAddressSync(panel);
+    initAccountPledgeFields(panel);
   }
 
   function renderSettings() {
@@ -9877,6 +9913,28 @@
         renderExchanges();
         announce(finalized ? 'Three anonymous votes are in; the majority hours were logged locally.' : 'Your anonymous review vote was saved locally.');
         showToast(finalized ? 'Review resolved and hours logged locally.' : 'Review vote saved locally.', false);
+        return;
+      }
+
+      if (form.matches('[data-pledge-form]')) {
+        event.preventDefault();
+        const careCircleNoLabor = Boolean(data.get('careCircleNoLabor'));
+        const monthlyHours = careCircleNoLabor ? 'care' : normalizeMonthlyHours(data.get('monthlyHours'));
+        if (monthlyHours === null) {
+          const message = 'Enter at least 4 hours per month, or check the Care Circle box if you cannot work.';
+          announce(message);
+          showToast(message, false);
+          const hoursField = form.querySelector('[data-account-monthly-hours]');
+          if (hoursField) hoursField.focus({ preventScroll: true });
+          return;
+        }
+        state.pledge.monthlyHours = monthlyHours;
+        saveState();
+        renderAccountInfo();
+        announce(careCircleNoLabor
+          ? 'Your Care Circle pledge was saved in this browser.'
+          : `Your monthly pledge of ${monthlyHours} hours was saved in this browser.`);
+        showToast('Pledge saved locally.', false);
         return;
       }
 
