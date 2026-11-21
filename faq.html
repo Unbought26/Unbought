@@ -62,7 +62,7 @@
         <div class="section-head">
           <p class="eyebrow"><span class="badge badge--soft">Good questions</span> Frequently asked</p>
           <h1 id="faq-page-title">The honest answers, in plain language.</h1>
-          <p>Unbought is a prototype for a consent-based, currency-free mutual aid society. Nothing here processes payments, sends messages to other people, or uploads your information.</p>
+          <p>Unbought is a prototype for a consent-based, currency-free mutual aid society. Nothing here processes payments or sends messages to other people. Public listings and community posts are shared through Supabase; pledges, private details, messages, reports, and donation records stay in this browser.</p>
         </div>
 
         <div class="faq-groups">
@@ -78,11 +78,11 @@
             </details>
             <details>
               <summary>Is this a real service right now?</summary>
-              <p>Not yet. There is no shared database, no real accounts, no payment processing, and no server transmission. You can explore the full experience locally; a future backend can use the same structured records.</p>
+              <p>Not yet. There are no real accounts or payment processing. A public-data-only Supabase bridge shares listings, group cards, and community posts; pledges, private details, messages, reports, and donation records stay in this browser.</p>
             </details>
             <details>
               <summary>How does site search work?</summary>
-              <p>The search in the header is on every page. It looks through page copy, Free Labor and Free Stuff listings, current members, and saved groups in this browser. Results are local links; nothing is searched or sent on a server.</p>
+              <p>The search in the header is on every page. It looks through page copy, Free Labor and Free Stuff listings, current members, and saved groups in this browser. Results are local links; the search itself sends nothing.</p>
             </details>
             <details>
               <summary>Why the Poconos?</summary>
@@ -114,7 +114,7 @@
             </details>
             <details>
               <summary>What can each membership track access?</summary>
-              <p>Active Contributors take part in the full commons. Apprentices may use Basic Necessities only while enrolled. Care Circle members may use Basic Necessities with no labor obligation, and any limit is reviewable with evidence. Observers may read, explore, and donate. These boundaries are part of the Community Guidelines and are enforced locally in this prototype.</p>
+              <p>Active Contributors take part in the full commons. Apprentices may use Basic Necessities only while enrolled. Care Circle members may use Basic Necessities with no labor obligation, and any limit is reviewable with evidence. Observers may read and explore. These boundaries are part of the Community Guidelines and are enforced locally in this prototype.</p>
             </details>
             <details>
               <summary>What are Basic Necessities, and who decides how mutual aid works?</summary>
@@ -138,7 +138,7 @@
             </details>
             <details>
               <summary>Do seed members get a thank-you message?</summary>
-              <p>Yes, in the plan. A live system would email seed members automatically, thanking them for starting the movement and suggesting ways to help — from talking to other professionals and posting on social media to scouting donated housing, starting a donation-revenue Unbought business, donating, volunteering services, and offering skills. In this prototype your dashboard shows the draft locally; no email is sent and nothing is transmitted.</p>
+              <p>Yes, in the plan. A live system would email seed members automatically, thanking them for starting the movement and suggesting ways to help — from talking to other professionals and posting on social media to scouting donated housing, starting a donation-revenue Unbought business, volunteering services, and offering skills. In this prototype your dashboard shows the draft locally; no email is sent and nothing is transmitted.</p>
             </details>
           </section>
 
@@ -322,7 +322,7 @@
     <div class="container footer-utility">
       <div class="footer-utility-copy">
         <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
-        <p>Your pledge, track, listings, waiting-list entry, and donation intents stay in this browser.</p>
+        <p>Public listing details and community posts are shared through Supabase when connected; pledges, private details, messages, reports, and donation records stay in this browser.</p>
       </div>
       <button class="button button--ghost-light button--small" id="reset-demo" type="button">
         <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>
@@ -344,11 +344,13 @@
           <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
         </button>
       </div>
-      <h2 id="confirm-title">Are you sure?</h2>
-      <p id="confirm-message"></p>
-      <div class="dialog-actions">
-        <button class="button button--outline" type="button" data-confirm-cancel>Cancel</button>
-        <button class="button button--primary" type="button" data-confirm-accept>Confirm</button>
+      <div class="dialog-content">
+        <h2 id="confirm-title">Are you sure?</h2>
+        <p id="confirm-message"></p>
+        <div class="dialog-actions">
+          <button class="button button--ghost" type="button" id="confirm-cancel">Cancel</button>
+          <button class="button button--primary" type="button" id="confirm-accept">Confirm</button>
+        </div>
       </div>
     </div>
   </dialog>

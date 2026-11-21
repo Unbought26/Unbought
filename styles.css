@@ -288,8 +288,13 @@ em {
   margin-bottom: clamp(1.75rem, 3.5vw, 2.75rem);
 }
 
+.section-head h1,
 .section-head h2 {
   margin-top: 0.35rem;
+}
+
+.section-head h1 {
+  font-size: clamp(1.9rem, 3.5vw, 2.75rem);
 }
 
 .section-head--split {
@@ -3211,6 +3216,8 @@ em {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
+  scrollbar-width: thin;
+  scrollbar-color: var(--blue) var(--sand);
 }
 
 .review-table {
@@ -5956,7 +5963,7 @@ em {
 }
 
 .phase-number {
-  color: var(--border);
+  color: #B8C4D9;
   font-family: var(--serif);
   font-size: 2.35rem;
   font-weight: 700;
@@ -6713,6 +6720,14 @@ em {
 .resume-availability.is-available { border-color: #BFD8C9; background: var(--green-soft); color: var(--green); }
 .resume-section { margin-top: 1.4rem; padding-top: 1.1rem; border-top: 1px solid var(--border); }
 .resume-section h3 { margin: 0 0 0.6rem; font-size: 1rem; }
+.group-profile .resume-section > h3 {
+  margin-bottom: 0.7rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.14rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
 .resume-skills { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0; padding: 0; list-style: none; }
 .resume-skills li {
   padding: 0.35rem 0.65rem;
@@ -7128,6 +7143,21 @@ em {
   font-size: 0.7rem;
 }
 .mailbox-tab[aria-selected="true"] .mailbox-count { background: rgba(255,255,255,0.22); }
+@media (max-width: 640px) {
+  .mailbox-tabs {
+    display: flex;
+    gap: 0.35rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+  }
+  .mailbox-tab {
+    flex: 0 0 auto;
+    min-width: 5.75rem;
+    padding: 0.6rem 0.75rem;
+    scroll-snap-align: start;
+  }
+}
 .message-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.25rem; }
 
 .account-details { display: grid; gap: 0.4rem; margin: 0.75rem 0; }
@@ -8170,7 +8200,7 @@ body[data-directory-scope="goods"] .goods-attributes .form-grid {
 
   .faq-fab {
     right: 0.8rem;
-    bottom: 0.8rem;
+    bottom: 4.5rem;
     width: 44px;
     height: 44px;
     font-size: 1.5rem;
@@ -9171,7 +9201,8 @@ body[data-directory-scope="goods"] .product-price--nonmember .product-price-valu
    29. Notifications, social circles, and local listing conversations
    -------------------------------------------------------------------------- */
 .button--tiny {
-  padding: 0.25rem 0.5rem;
+  min-height: 32px;
+  padding: 0.3rem 0.55rem;
   font-size: 0.72rem;
 }
 
@@ -9220,7 +9251,7 @@ body[data-directory-scope="goods"] .product-price--nonmember .product-price-valu
 }
 
 .notification-item:hover { border-color: #B6C3DF; background: var(--blue-mist); }
-.notification-item:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.notification-item:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
 
 .notification-actions,
 .comment-actions {
@@ -9530,6 +9561,7 @@ body[data-directory-scope="goods"] .product-card .listing-title:hover {
 .profile-themed fieldset {
   border-color: currentColor;
   background: rgba(255, 255, 255, 0.35);
+  background: color-mix(in srgb, currentColor 8%, transparent);
 }
 .profile-themed .member-link,
 .profile-themed .group-link,

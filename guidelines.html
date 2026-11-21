@@ -68,7 +68,7 @@
         <div class="guidelines-callout" role="note">
           <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg>
           <div>
-            <strong>Prototype boundary.</strong> This is a local-first model of community accountability. In this build nothing is reported to a server, no authority is contacted, and no enforcement action is carried out. Cases, reviews, and votes are recorded only in this browser.
+            <strong>Prototype boundary.</strong> This is a local-first model of community accountability. In this build no private report is sent to a server, no authority is contacted, and no enforcement action is carried out. Cases, reviews, and votes are recorded only in this browser.
           </div>
         </div>
 
@@ -109,15 +109,11 @@
             </li>
             <li>
               <h3>Be honest in the prototype.</h3>
-              <p>There are no real accounts, payments, messages to other people, or uploads. Say plainly when an action is only recorded locally. Do not present a local note, intent, or vote as if it reached someone else or has legal force.</p>
+              <p>There are no real accounts, payments, messages to other people, or uploads to a server. Say plainly when an action is only recorded locally. Do not present a local note, intent, or vote as if it reached someone else or has legal force.</p>
             </li>
             <li>
-              <h3>Accept review and answer for harm.</h3>
-              <p>If you are reported or a guideline is broken, community members review the facts. Attach relevant local evidence when you have it, respond in your own words, and do not retaliate against a reporter, reviewer, or voter. Retaliation is its own violation.</p>
-            </li>
-            <li>
-              <h3>Protect the commons for the next person.</h3>
-              <p>Invite people in, share skills, and leave the space safer than you found it. When the community decides a limit or a revocation is needed, accept the outcome and use the reflection period to come back right, if and when the community allows it.</p>
+              <h3>Accept review and protect the commons.</h3>
+              <p>If you are reported or a guideline is broken, community members review the facts. Attach relevant local evidence when you have it, respond in your own words, and accept the outcome without retaliating against a reporter, reviewer, or voter. Retaliation is its own violation. Invite people in, share skills, and leave the space safer than you found it. When a limit or revocation is needed, use the reflection period to come back right, if and when the community allows it.</p>
             </li>
           </ol>
         </section>
@@ -125,6 +121,7 @@
         <section class="review-board-note" role="note" aria-labelledby="basic-necessities-title">
           <h2 id="basic-necessities-title">Basic Necessities</h2>
           <p>Basic Necessities are Food, Health Care, Dental, Mental Health, Shelter, Clothing, Gas Cards, Uber Gift cards, spot on the waitlist for land, access to the Academy. No luxury items or nice to haves. Groups can decide how mutual aid will work within these limits.</p>
+          <h3>Alliances</h3>
           <p>Alliances are other groups within the Unbought network. Groups decide whether to accept an alliance between them, and working members vote on alliance terms and guidelines.</p>
         </section>
 
@@ -141,14 +138,14 @@
             </article>
             <article class="consequence-step">
               <div>
-                <h3>Why weren't you working?</h3>
-                <p>Before any limit is set, community members review why. A recent tragedy, moving, loss of ability to work, illness, caregiving, or another reason may mean you belong in the care circle instead of being treated as noncompliant.</p>
+                <h3>What changed?</h3>
+                <p>Before any limit is set, community members review what happened. A recent tragedy, moving, loss of ability to work, illness, caregiving, or another reason may mean you belong in the Care Circle instead of being treated as noncompliant.</p>
               </div>
             </article>
             <article class="consequence-step">
               <div>
                 <h3>The care circle</h3>
-                <p>In the care circle you can access Basic Necessities only. If you can prove with evidence that you cannot work, the community may adjust that limit. The evidence stays local in this prototype; nothing is transmitted.</p>
+                <p>In the care circle you can access Basic Necessities only. If you can share evidence that you are unable to meet the pledge, the community may adjust that limit. The evidence stays local in this prototype; nothing is transmitted.</p>
               </div>
             </article>
             <article class="consequence-step">
@@ -160,7 +157,7 @@
             <article class="consequence-step">
               <div>
                 <h3>Repeated offenses and exile</h3>
-                <p>Repeated offenses can result in “exile” — revocation of membership. Community members review every case, and a revocation requires a major vote of the majority, not a decision by one person.</p>
+                <p>Repeated offenses can result in “exile” — revocation of membership. Community members review every case, and a revocation requires a majority vote, not a decision by one person.</p>
               </div>
             </article>
             <article class="consequence-step">
@@ -282,7 +279,7 @@
     <div class="container footer-utility">
       <div class="footer-utility-copy">
         <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
-        <p>Your pledge, track, listings, waiting-list entry, and donation intents stay in this browser.</p>
+        <p>Public listing details and community posts are shared through Supabase when connected; pledges, private details, messages, reports, and donation records stay in this browser.</p>
       </div>
       <button class="button button--ghost-light button--small" id="reset-demo" type="button">
         <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>
@@ -304,11 +301,13 @@
           <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
         </button>
       </div>
-      <h2 id="confirm-title">Are you sure?</h2>
-      <p id="confirm-message"></p>
-      <div class="dialog-actions">
-        <button class="button button--outline" type="button" data-confirm-cancel>Cancel</button>
-        <button class="button button--primary" type="button" data-confirm-accept>Confirm</button>
+      <div class="dialog-content">
+        <h2 id="confirm-title">Are you sure?</h2>
+        <p id="confirm-message"></p>
+        <div class="dialog-actions">
+          <button class="button button--ghost" type="button" id="confirm-cancel">Cancel</button>
+          <button class="button button--primary" type="button" id="confirm-accept">Confirm</button>
+        </div>
       </div>
     </div>
   </dialog>

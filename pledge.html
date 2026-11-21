@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="The Unbought Pledge. Read the five commitments and sign in by signing the pledge. This prototype stores your membership locally; nothing is transmitted.">
+  <meta name="description" content="The Unbought Pledge: read the five commitments and create a local prototype membership. Membership details stay in this browser.">
   <meta name="theme-color" content="#1E3A8A">
   <title>The Pledge — Unbought</title>
   <link rel="icon" type="image/png" href="assets/logo.png">
@@ -207,7 +207,7 @@
                     <li><strong>If I can work or create:</strong> <span>I offer real, practical skills, labor, or mentorship freely, with no expectation of direct repayment.</span></li>
                     <li><strong>If I provide goods:</strong> <span>I offer them freely, with no price tag, deposit, or swap requirement.</span></li>
                     <li><strong>If a project needs materials:</strong> <span>I ask the person requesting the work to cover their exact receipt price when the materials cannot be found free on Unbought. I add no markup and take no profit, and the worker never has to front the cost.</span></li>
-                    <li><strong>If I cannot work:</strong> <span>due to age, disability, illness, or capacity, I accept care without shame, knowing my presence and humanity are enough.</span></li>
+                    <li><strong>If I cannot work due to age, disability, illness, or capacity:</strong> <span>I accept care without shame, knowing my presence and humanity are enough.</span></li>
                   </ul>
                 </div>
               </li>
@@ -411,7 +411,7 @@
                 <input type="checkbox" id="pledge-care-circle" name="careCircleNoLabor" data-care-circle>
                 <span>I cannot work right now — Care Circle (no labor obligation)</span>
               </label>
-              <p class="field-hint">Type the number of hours you are willing to offer each month. The minimum is 4 hours per month. This is a commitment, not hours logged by hand; logged hours still require mutual confirmation or review.</p>
+              <p class="field-hint">Type any whole number of hours at or above the 4-hour monthly minimum. Checking Care Circle removes the labor obligation and disables the hours field. This is a commitment, not hours logged by hand; logged hours still require mutual confirmation or review.</p>
             </div>
 
             <div class="form-row">
@@ -631,7 +631,7 @@
     <div class="container footer-utility">
       <div class="footer-utility-copy">
         <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
-        <p>Your pledge, track, listings, waiting-list entry, and donation intents stay in this browser.</p>
+        <p>Public listing details and community posts are shared through Supabase when connected; pledges, private details, messages, reports, and donation records stay in this browser.</p>
       </div>
       <button class="button button--ghost-light button--small" id="reset-demo" type="button">
         <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>

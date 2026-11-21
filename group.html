@@ -150,7 +150,7 @@
     <div class="container footer-utility">
       <div class="footer-utility-copy">
         <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
-        <p>Your pledge, track, listings, waiting-list entry, and donation intents stay in this browser.</p>
+        <p>Public listing details and community posts are shared through Supabase when connected; pledges, private details, messages, reports, and donation records stay in this browser.</p>
       </div>
       <button class="button button--ghost-light button--small" id="reset-demo" type="button">
         <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>
@@ -172,11 +172,13 @@
           <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
         </button>
       </div>
-      <h2 id="confirm-title">Are you sure?</h2>
-      <p id="confirm-message"></p>
-      <div class="dialog-actions">
-        <button class="button button--outline" type="button" data-confirm-cancel>Cancel</button>
-        <button class="button button--primary" type="button" data-confirm-accept>Confirm</button>
+      <div class="dialog-content">
+        <h2 id="confirm-title">Are you sure?</h2>
+        <p id="confirm-message"></p>
+        <div class="dialog-actions">
+          <button class="button button--ghost" type="button" id="confirm-cancel">Cancel</button>
+          <button class="button button--primary" type="button" id="confirm-accept">Confirm</button>
+        </div>
       </div>
     </div>
   </dialog>

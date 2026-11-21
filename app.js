@@ -832,13 +832,34 @@
     return /^#[0-9a-f]{6}$/i.test(color) ? color : fallback;
   }
 
+  function hexLuminance(hex) {
+    const channels = [1, 3, 5].map((index) => {
+      const channel = parseInt(hex.slice(index, index + 2), 16) / 255;
+      return channel <= 0.03928 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+    });
+    return (channels[0] * 0.2126) + (channels[1] * 0.7152) + (channels[2] * 0.0722);
+  }
+
+  function themeContrast(background, content) {
+    const lighter = Math.max(hexLuminance(background), hexLuminance(content));
+    const darker = Math.min(hexLuminance(background), hexLuminance(content));
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+
+  // Keep member-chosen colors, but never let a low-contrast pair make the whole
+  // resume unreadable. This also repairs themes saved before this check existed.
+  function readableProfileTheme(backgroundValue, contentValue, fallback) {
+    const background = validThemeColor(backgroundValue, fallback.background);
+    const content = validThemeColor(contentValue, fallback.content);
+    if (themeContrast(background, content) >= 4.5) return { background, content };
+    const readableContent = hexLuminance(background) > 0.35 ? '#1f2937' : '#ffffff';
+    return { background, content: readableContent };
+  }
+
   function getProfileTheme(member, scope) {
     const defaults = PROFILE_THEME_DEFAULTS[scope] || PROFILE_THEME_DEFAULTS.public;
     const stored = member && member.profileTheme && member.profileTheme[scope];
-    return {
-      background: validThemeColor(stored && stored.background, defaults.background),
-      content: validThemeColor(stored && stored.content, defaults.content)
-    };
+    return readableProfileTheme(stored && stored.background, stored && stored.content, defaults);
   }
 
   function profileThemeStyle(theme) {
@@ -1679,18 +1700,14 @@
       if (!requireMembership() || !form.reportValidity()) return;
       const data = new FormData(form);
       state.pledge.profileTheme = state.pledge.profileTheme || {};
-      state.pledge.profileTheme.public = {
-        background: validThemeColor(data.get('publicBackground'), PROFILE_THEME_DEFAULTS.public.background),
-        content: validThemeColor(data.get('publicContent'), PROFILE_THEME_DEFAULTS.public.content)
-      };
-      state.pledge.profileTheme.private = {
-        background: validThemeColor(data.get('privateBackground'), PROFILE_THEME_DEFAULTS.private.background),
-        content: validThemeColor(data.get('privateContent'), PROFILE_THEME_DEFAULTS.private.content)
-      };
+      state.pledge.profileTheme.public = readableProfileTheme(
+        data.get('publicBackground'), data.get('publicContent'), PROFILE_THEME_DEFAULTS.public);
+      state.pledge.profileTheme.private = readableProfileTheme(
+        data.get('privateBackground'), data.get('privateContent'), PROFILE_THEME_DEFAULTS.private);
       saveState();
       renderProfile();
-      announce('Profile colors saved in this browser.');
-      showToast('Profile colors saved locally.', false);
+      announce('Profile colors saved in this browser. Low-contrast pairs are adjusted for readability.');
+      showToast('Profile colors saved locally. Low-contrast pairs are adjusted.', false);
     });
     document.addEventListener('click', (event) => {
       const reset = event.target.closest('[data-profile-theme-reset]');
@@ -5274,6 +5291,8 @@
     const detail = buildListingCard(listing, { modal: true, idPrefix: 'detail' });
     detail.classList.add('listing-detail-card');
     content.replaceChildren(detail);
+    const dialogTitle = document.getElementById('listing-dialog-title');
+    if (dialogTitle) dialogTitle.textContent = cleanString(listing.title, 80) || 'Listing details';
     dialog._returnFocus = trigger instanceof HTMLElement ? trigger : null;
     openDialog(dialog);
   }
@@ -5488,7 +5507,7 @@
         <div class="dialog-content">
           <h2 id="post-dialog-title">${escapeHtml(heading)}</h2>
           <p id="post-dialog-intro">${escapeHtml(intro)}</p>
-          <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Posting is for pledged members. No porn and no prostitution; there are free websites that can serve you outside of Unbought. Tag anything else unsuitable for minors as NSFW. Listings stay in this browser; nothing is sent to a provider or published online.</p>
+          <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Posting is for pledged members. No porn and no prostitution; there are free websites that can serve you outside of Unbought. Tag anything else unsuitable for minors as NSFW. Public listing details are shared through Supabase when connected; photos, comments, and private details stay in this browser.</p>
           <div id="post-form-mount"></div>
         </div>
       </div>`;
@@ -7049,7 +7068,7 @@
           </div>
         </form>
       </div>
-      <p class="account-note">Changes are saved only on this device; nothing is transmitted. Your resume hides your legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated, and shows your phone only if you opt in. Logged hours and item counts are never typed here; they appear only after mutual confirmation or review. To withdraw your membership, use the button in the pledge section.</p>
+      <p class="account-note">Changes are saved only on this device; nothing is transmitted. Your resume hides your legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated, and shows your phone only if you opt in. Logged hours and item counts are never typed here; they appear only after mutual confirmation or review. To withdraw your membership, use the Withdraw membership button on the <a href="pledge.html#withdraw-pledge">Pledge page</a>.</p>
       <div class="settings-block">
         <h4>Local preferences</h4>
         <p class="account-note">These settings only change how this prototype behaves on this device. Nothing is sent anywhere.</p>
@@ -7067,6 +7086,20 @@
     initAccountDob(panel);
     initAccountAddressSync(panel);
     initAccountPledgeFields(panel);
+  }
+
+  function refreshSettingsPanel(focusSelector) {
+    const panel = document.getElementById('settings-panel');
+    const panelScroll = panel ? panel.scrollTop : 0;
+    const pageScroll = window.scrollY;
+    renderAccountInfo();
+    const refreshed = document.getElementById('settings-panel');
+    if (refreshed) refreshed.scrollTop = panelScroll;
+    window.scrollTo(0, pageScroll);
+    const focusTarget = refreshed && focusSelector ? refreshed.querySelector(focusSelector) : null;
+    if (focusTarget && typeof focusTarget.focus === 'function') {
+      focusTarget.focus({ preventScroll: true });
+    }
   }
 
   function renderSettings() {
@@ -7671,7 +7704,7 @@
           if (!standing.length) return '';
           return `<p class="contribution-meta">Standing admins recorded: ${standing.map((id) => {
             const member = members.find((entry) => entry.memberId === id);
-            return member ? memberNameLink(member.name, member.memberId) : e(id);
+            return member ? memberNameLink(member.name, member.memberId) : 'Former member';
           }).join(', ')}</p>`;
         })()}
         ${group.guidelines ? `<p class="group-guidelines"><strong>Group community guidelines</strong><span>${e(group.guidelines)}</span></p>` : ''}
@@ -7800,7 +7833,7 @@
           ${business.brandChoice === 'unbought' ? `<p class="account-note">Because this group chose the Unbought Brand, the Unbought legal guild and administrative guild will work with you to ensure safety. No request leaves this browser in the prototype.</p>` : `<p class="account-note">This group uses its own brand. Using the Unbought Brand is optional.</p>`}
         </div>` : ''}
       </div>
-      <p class="account-note">This is a local prototype group. Membership, names, and the count are stored only in this browser; nothing was sent, and no invitations were delivered.</p>
+      <p class="account-note">This is a local prototype group. Public group-card details are shared through Supabase when connected; member names, membership records, and the count stay in this browser, and no invitations were delivered.</p>
     </section>`;
   }
 
@@ -8528,7 +8561,7 @@
           message.toName ? `<button class="button button--ghost button--small button--report" type="button" data-report-context data-report-area="Dashboard messages" data-report-detail="Message to ${e(message.toName)}" data-report-name="${e(message.toName)}" data-report-source-id="${e(message.id)}" aria-label="Report a concern about the message to ${e(message.toName)}">Report</button>` : ''
         ].filter(Boolean).join('');
         return `<li class="contribution-item">
-          <strong>${e(message.name)}${message.toName ? ` → ${e(message.toName)}` : ''}</strong>
+          <strong>${memberNameLink(message.name, message.memberId)}${message.toName ? ` → ${memberNameLinkByName(message.toName)}` : ''}</strong>
           <span>${e(message.body)}</span>
           <span class="contribution-meta">${e(formatDate(message.createdAt))} · ${e(message.status || 'recorded')}${message.starred ? ' · Starred' : ''}</span>
           <span class="message-actions">${actions}</span>
@@ -9510,7 +9543,7 @@
     panel.innerHTML = `<section class="account-card">
       <p class="eyebrow">Social circles</p>
       <h3>Friends &amp; groups</h3>
-      <p class="account-note">Your town group is added automatically as the main group. When it reaches the local limit, another Stroudsburg group opens with a Roman numeral; neighbors may choose Group I, II, III, XI, and so on. A numbered group has no seed status, and the first member of a new group is not a seed member. Every other group is a social or support circle. Seven admin seats rotate each week for workers only, staggered across one-to-seven-week cycles. This prototype has one local account, so friends, groups, and chat audiences are saved only on this device; no invitations or messages are sent, and each group stays capped at ${SOCIAL_LIMITS.groupMembers} people.</p>
+      <p class="account-note">Your town group is added automatically as the main group. When it reaches the local limit, another Stroudsburg group opens with a Roman numeral; neighbors may choose Group I, II, III, XI, and so on. A numbered group has no seed status, and the first member of a new group is not a seed member. Every other group is a social or support circle. Seven admin seats rotate each week for workers only, staggered across one- to seven-week cycles. This prototype has one local account, so friends, groups, and chat audiences are saved only on this device; no invitations or messages are sent, and each group stays capped at ${SOCIAL_LIMITS.groupMembers} people.</p>
       <div class="social-grid">
         <div class="account-block">
           <h4>Friends (${friends.length}/${SOCIAL_LIMITS.friends})</h4>
@@ -9820,6 +9853,16 @@
       noticeLink.click();
     });
 
+    dash.addEventListener('change', (event) => {
+      const form = event.target instanceof Element ? event.target.closest('[data-vote-form]') : null;
+      if (!form || event.target.name !== 'verdict') return;
+      const guilty = Boolean(form.querySelector('input[name="verdict"]:checked[value="guilty"]'));
+      form.querySelectorAll('input[name="reflectionDays"]').forEach((input) => {
+        input.required = guilty;
+        if (!guilty) input.checked = false;
+      });
+    });
+
     dash.addEventListener('submit', async (event) => {
       const form = event.target;
       if (!(form instanceof HTMLFormElement)) return;
@@ -9930,7 +9973,7 @@
         }
         state.pledge.monthlyHours = monthlyHours;
         saveState();
-        renderAccountInfo();
+        refreshSettingsPanel('[data-pledge-form] button[type="submit"]');
         announce(careCircleNoLabor
           ? 'Your Care Circle pledge was saved in this browser.'
           : `Your monthly pledge of ${monthlyHours} hours was saved in this browser.`);
@@ -10061,7 +10104,7 @@
         }
         syncTownGroup();
         saveState();
-        renderAccountInfo();
+        refreshSettingsPanel('[data-account-form] button[type="submit"]');
         renderSharedMemberViews();
         renderVolunteerStatus();
         renderAccountability();
@@ -10074,9 +10117,8 @@
           showPrototypeNotices: Boolean(data.get('showPrototypeNotices'))
         };
         saveState();
-        renderSettings();
+        refreshSettingsPanel('[data-settings-form] button[type="submit"]');
         renderDashboardGate();
-        renderAccountInfo();
         announce('Your settings were saved in this browser.');
         showToast('Settings saved locally.', false);
       } else if (form.matches('[data-community-channel-form]')) {
@@ -10217,9 +10259,10 @@
           starred: false
         };
         state.messages.push(message);
+        const recipient = memberDirectory().find((member) => member.name === toName);
         addNotification('message', `Message recorded to ${toName}`,
           'Saved locally as a draft. In a live system the recipient would be notified; no message was delivered.',
-          { tab: 'messages', sourceId: message.id });
+          { tab: 'messages', sourceId: message.id, memberId: recipient && recipient.memberId });
         state.messages = state.messages.slice(-300);
         activeMessageFolder = 'sent';
         saveState();
@@ -10838,7 +10881,12 @@
 
     const verdict = data.verdict === 'guilty' ? 'guilty' : data.verdict === 'not_guilty' ? 'not_guilty' : '';
     if (!verdict) return;
-    const days = REFLECTION_OPTIONS.includes(Number(data.reflectionDays)) ? Number(data.reflectionDays) : REFLECTION_OPTIONS[0];
+    if (verdict === 'guilty' && !REFLECTION_OPTIONS.includes(Number(data.reflectionDays))) {
+      announce('Choose a 30, 90, or 180-day reflection period before submitting a guilty vote.');
+      showToast('Choose a reflection period before submitting a guilty vote.', false);
+      return;
+    }
+    const days = verdict === 'guilty' ? Number(data.reflectionDays) : null;
 
     report.votes = Array.isArray(report.votes) ? report.votes : [];
     report.votes.push({
@@ -10934,7 +10982,7 @@
       <p class="case-file-label">Case file · stored in this browser only</p>
       <dl class="case-file-meta">
         <div><dt>Report type</dt><dd>${e(report.typeLabel || report.type)}</dd></div>
-        <div><dt>Filed by</dt><dd>${e(report.reporterName || 'Member')}${report.reporterMemberId ? ` · ${e(report.reporterMemberId)}` : ''}</dd></div>
+        <div><dt>Filed by</dt><dd>${e(report.reporterName || 'Member')}</dd></div>
         <div><dt>Reported member</dt><dd>${e(report.respondentName || 'not specified')}</dd></div>
         <div><dt>Reported from</dt><dd>${e(getReportContextSummary(report))}</dd></div>
         ${report.occurredAt ? `<div><dt>When it happened</dt><dd>${e(report.occurredAt)}</dd></div>` : ''}
@@ -10973,7 +11021,7 @@
       <p class="case-file-section-title">Member comments (${comments.length})</p>
       ${comments.length ? `<ul class="comment-list">${comments.map((comment) => `
         <li class="comment-item">
-          <p class="contribution-meta"><strong>${e(comment.name || 'Member')}</strong> · ${e(formatDate(comment.createdAt))}</p>
+          <p class="contribution-meta"><strong>${memberNameLink(comment.name, comment.memberId)}</strong> · ${e(formatDate(comment.createdAt))}</p>
           <p>${e(comment.text)}</p>
         </li>`).join('')}</ul>` : `<p class="account-note">No comments yet. Members can voice their opinions below.</p>`}
       <form class="account-form comment-form" data-comment-form data-id="${e(report.id)}">
@@ -12968,7 +13016,8 @@
     const dialog = document.getElementById('confirm-dialog');
     const title = document.getElementById('confirm-title');
     const message = document.getElementById('confirm-message');
-    const accept = document.getElementById('confirm-accept');
+    const accept = document.getElementById('confirm-accept')
+      || dialog && dialog.querySelector('[data-confirm-accept]');
     if (!dialog || !title || !message || !accept) return;
 
     title.textContent = options.title || 'Are you sure?';
@@ -12982,8 +13031,10 @@
 
   function initConfirmDialog() {
     const dialog = document.getElementById('confirm-dialog');
-    const accept = document.getElementById('confirm-accept');
-    const cancel = document.getElementById('confirm-cancel');
+    const accept = document.getElementById('confirm-accept')
+      || dialog && dialog.querySelector('[data-confirm-accept]');
+    const cancel = document.getElementById('confirm-cancel')
+      || dialog && dialog.querySelector('[data-confirm-cancel]');
     if (!dialog || !accept) return;
 
     accept.addEventListener('click', () => {
@@ -13080,9 +13131,10 @@
     });
   }
 
-  // A small always-visible question mark keeps the FAQ one tap away on every
-  // page, including the FAQ itself.
+  // A small always-visible question mark keeps the FAQ one tap away. The FAQ
+  // already has its own page open, so it gets no duplicate button.
   function initFaqButton() {
+    if (document.body.classList.contains('faq-page')) return;
     if (document.getElementById('faq-fab')) return;
     const link = document.createElement('a');
     link.id = 'faq-fab';
