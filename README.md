@@ -33,6 +33,7 @@ process, not a coding changelog. A future blog service will replace them.
 
 - `index.html` — How It Works, with the Newsboard near the top
 - `pledge.html` — The Pledge and sign-up
+- `safety-standards.html` — Versioned Labor & Product Safety Standards and the local acknowledgment record
 - `freelabor.html` — Free Labor directory and post form
 - `freestuff.html` — Free Stuff directory and post form
 - `donate.html` — Redirect to the donation plan on `future.html`; giving stays closed until a dedicated bank account and donation service are ready
@@ -85,6 +86,10 @@ When enabled, the bridge uploads:
 - `private_web_developers`: only the Auth user ID and local member ID for
   opted-in members who offered Web development. No volunteer note or other
   personal detail is uploaded.
+
+Safety standards acknowledgments are **not** part of private sync. They stay in
+`unbought:v1` on the member's device with the member ID, version, label, date,
+and source (pledge, post, edit, request, or settings).
 
 The RLS policies allow an authenticated user to insert and manage only their own
 member, waitlist, and web-developer rows. The seven current web-developer admins
@@ -479,6 +484,25 @@ invitation beta, and the vernal-equinox rollout. It is linked from every footer
 site map, and `app.js` adds a
 small fixed question-mark button to every page so the FAQ is always one tap
 away. The FAQ uses native `<details>` accordions and needs no extra script.
+
+## Safety standards acknowledgment
+
+`safety-standards.html` is the canonical, versioned copy of the Labor & Product
+Safety Standards. The current version is `2026-11-22`, labeled “Labor & Product
+Safety Standards, Nov 22, 2026”. Members check a required box when they sign the
+pledge. Pledged members are also asked to acknowledge the current version before
+posting, editing, or requesting a labor or goods exchange, and after a version
+change. If a member has already acknowledged the current version, the action
+continues without another prompt.
+
+The acknowledgment record is local-only: it stores an ID, standards version and
+label, local member ID, chosen name, accepted time, and source in
+`state.safetyAcknowledgments`. It is never sent to Supabase and is not part of
+the private sync allowlist. Dashboard → Settings shows the recorded date and
+version, offers **Review standards**, and can download the record as
+`unbought-safety-acknowledgment.txt`. The copy says plainly that this is a record
+of reading the rules, not legal advice, not medical or legal guidance, and not a
+promise of legal protection. No database migration is needed for this feature.
 
 ## Free Labor directory and service titles
 

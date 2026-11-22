@@ -24,7 +24,8 @@ The site still lives on GitHub Pages.
 Pledge records, legal names, usernames, passwords or password hashes, addresses,
 phone numbers, birthdates, private profile fields, messages, reports, donation
 records or amounts, waitlist entries, photos, listing comments, group chats,
-social chats, and group settings are never part of the public bridge.
+social chats, group settings, and safety standards acknowledgment records are
+never part of the public bridge.
 
 ## Private opt-in sync: what can sync
 
@@ -45,7 +46,9 @@ After explicit consent, the private bridge can upload:
 
 The private bridge never uploads a password, password hash, salt, local demo
 username, message, report text, evidence, reason, reporter identity, donation,
-photo, listing comment, group chat, or social chat. Supabase Auth handles the
+photo, listing comment, group chat, social chat, or safety standards
+acknowledgment record. Acknowledgments stay in `unbought:v1` on the device;
+no database column or migration is needed for them. Supabase Auth handles the
 password; no password or hash is written to a private table. The report flag is
 the sole minimal exception: no reporter ID or timestamp is stored, only the
 reported local member ID and the status.

@@ -9898,6 +9898,48 @@ body[data-directory-scope="goods"] .product-card .listing-title:hover {
   margin-top: 0.55rem;
 }
 
+.dialog--safety-standards .dialog-content {
+  max-height: min(68vh, 680px);
+}
+
+.safety-standards-summary {
+  margin: 1rem 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--blue-mist);
+}
+
+.safety-standards-summary h3 {
+  margin: 0.9rem 0 0.35rem;
+  color: var(--blue-deep);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.safety-standards-summary h3:first-child {
+  margin-top: 0;
+}
+
+.safety-standards-summary ul {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.safety-standards-summary li + li {
+  margin-top: 0.35rem;
+}
+
+.safety-standards-summary p {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
 @media (max-width: 640px) {
   .pledge-restriction-inner {
     align-items: stretch;

@@ -37,6 +37,14 @@
   const postPhotoDrafts = new WeakMap();
   const postPhotoPending = new WeakMap();
   let reportDialog = null;
+  let safetyStandardsDialog = null;
+  let pendingSafetyAction = null;
+  let safetyAcknowledgmentSource = 'site';
+
+  // Versioned safety standards. When the rules change, bump the version so
+  // members are asked to acknowledge the new text before posting or editing.
+  const SAFETY_STANDARDS_VERSION = '2026-11-22';
+  const SAFETY_STANDARDS_LABEL = 'Labor & Product Safety Standards, Nov 22, 2026';
 
   // Basic Necessities are a closed list for limited-access tracks and safety
   // limits. Groups may choose how mutual aid happens, not what counts as a
@@ -1023,6 +1031,7 @@
       anonymousVotes: [],
       notifications: [],
       groupAdminReads: [],
+      safetyAcknowledgments: [],
       friends: [],
       friendRequests: [{
         id: 'sample-friend-request-maya',
@@ -2663,7 +2672,7 @@
         const required = pledgeHourRequirement(pledge);
         pledge.firstMonthChecked = true;
         freezePledgeForShortfall(pledge, monthKeyFromDate(pledge.signedAt), earned, required,
-          `Your first month ended with ${earned} of ${required} pledged hours. Only offering labor is available until ${Math.max(0, Math.round((required - earned) * 100) / 100)} more hours are confirmed.`);
+          `Your first month ended with ${earned} of ${required} pledged hours. Only offering labor is available until the pledged hours are completed.`);
         changed = true;
       }
     } else if (pledge.status === 'frozen') {
@@ -2704,7 +2713,7 @@
           const total = hoursSince(pledge.memberId, pledge.signedAt);
           if (required > 0 && total < required) {
             freezePledgeForShortfall(pledge, monthKeyFromDate(pledge.signedAt), total, required,
-              `Your first month ended with ${total} of ${required} pledged hours. Only offering labor is available until ${Math.max(0, Math.round((required - total) * 100) / 100)} more hours are confirmed.`);
+              `Your first month ended with ${total} of ${required} pledged hours. Only offering labor is available until the pledged hours are completed.`);
           } else {
             addNotification('pledge', 'First month complete',
               `You confirmed ${total} of ${required} pledged hours in your first month. Full access continues.`,
@@ -2722,7 +2731,7 @@
             const logged = hoursInMonth(pledge.memberId, lastMonth);
             if (logged < required) {
               freezePledgeForShortfall(pledge, lastMonth, logged, required,
-                `You confirmed ${logged} of ${required} pledged hours in ${lastMonth}. Only offering labor is available until ${Math.round((required - logged) * 100) / 100} more hour${Math.round((required - logged) * 100) / 100 === 1 ? '' : 's'} are made up, or until Observer status after ${PLEDGE_FREEZE_DAYS} days.`);
+                `You confirmed ${logged} of ${required} pledged hours in ${lastMonth}. Only offering labor is available until the pledged hours are completed. After ${PLEDGE_FREEZE_DAYS} days frozen, you become an Observer.`);
               changed = true;
             }
           }
@@ -2826,8 +2835,7 @@
       return `You are in your first month. Confirm ${weekly} hour${weekly === 1 ? '' : 's'} of labor to unlock member tools. Until then you can only offer your labor.`;
     }
     if (pledge.status === 'frozen') {
-      const deficit = cleanHours(pledge.pledgeDeficitHours);
-      return `Your pledge is frozen. You can still offer your labor, but other member tools are paused until ${deficit} more hour${deficit === 1 ? '' : 's'} are confirmed.`;
+      return 'Your pledge is frozen. You can still offer your labor, but other member tools are paused until the pledged hours are completed.';
     }
     if (pledge.status === 'observer' || state.track === 'observer' || pledge.reviewRequired) {
       return 'Observers read and explore without member tools. Your re-pledge must be approved by three active members first.';
@@ -2842,6 +2850,206 @@
       return 'Your Care Circle has Basic Necessities only. You can offer labor or record a volunteer role; full access can be confirmed locally with disability proof.';
     }
     return '';
+  }
+
+  function getSafetyAcknowledgments() {
+    return Array.isArray(state.safetyAcknowledgments) ? state.safetyAcknowledgments : [];
+  }
+
+  function currentMemberSafetyAcknowledgment() {
+    const memberId = state.pledge ? cleanString(state.pledge.memberId, 100) : '';
+    if (!memberId) return null;
+    return getSafetyAcknowledgments()
+      .filter((record) => record && record.memberId === memberId && record.version === SAFETY_STANDARDS_VERSION)
+      .sort((a, b) => Date.parse(b.acceptedAt) - Date.parse(a.acceptedAt))[0] || null;
+  }
+
+  function hasCurrentSafetyAcknowledgment() {
+    return Boolean(currentMemberSafetyAcknowledgment());
+  }
+
+  function recordSafetyAcknowledgment(source) {
+    if (!isMember() || !state.pledge) return false;
+    if (hasCurrentSafetyAcknowledgment()) return true;
+    if (!Array.isArray(state.safetyAcknowledgments)) state.safetyAcknowledgments = [];
+    state.safetyAcknowledgments.push({
+      id: makeId('safety-ack'),
+      version: SAFETY_STANDARDS_VERSION,
+      label: SAFETY_STANDARDS_LABEL,
+      memberId: cleanString(state.pledge.memberId, 100),
+      name: cleanString(state.pledge.name, 80),
+      acceptedAt: new Date().toISOString(),
+      source: cleanString(source, 40) || 'site'
+    });
+    state.safetyAcknowledgments = state.safetyAcknowledgments.slice(-100);
+    return true;
+  }
+
+  function buildSafetyStandardsDialog() {
+    if (safetyStandardsDialog) return safetyStandardsDialog;
+
+    const dialog = document.createElement('dialog');
+    dialog.className = 'dialog dialog--safety-standards';
+    dialog.id = 'safety-standards-dialog';
+    dialog.setAttribute('aria-labelledby', 'safety-standards-title');
+    dialog.setAttribute('aria-describedby', 'safety-standards-intro');
+    dialog.innerHTML = `
+      <div class="dialog-shell">
+        <div class="dialog-top">
+          <p class="eyebrow">Safety standards</p>
+          <button class="icon-button" type="button" data-dialog-close aria-label="Close the safety standards acknowledgment">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+          </button>
+        </div>
+        <div class="dialog-content">
+          <h2 id="safety-standards-title">Read and acknowledge the labor and product standards</h2>
+          <p id="safety-standards-intro">${SAFETY_STANDARDS_LABEL}. These are the current rules for keeping labor and goods exchanges clear, honest, and safe. The full text is also on the <a href="safety-standards.html" target="_blank" rel="noopener">Safety Standards page</a>.</p>
+          <div class="safety-standards-summary" role="note">
+            <h3>Free labor standards</h3>
+            <ul>
+              <li>Labor is never charged: no fee, discount, tip jar, wage, invoice, or debt between neighbors.</li>
+              <li>Only exact, receipt-backed material costs may be repaid when supplies cannot be found free. Unbought adds no markup.</li>
+              <li>Both people agree in plain language on scope, timing, and boundaries. Anyone can stop at any time.</li>
+              <li>Medical, dental, mental-health, and legal offers must say <strong>General Peer Education</strong> or <strong>Licensed Clinical/Legal Service</strong> with active licensure. Never claim a qualification you do not hold.</li>
+              <li>No medical records or diagnoses are collected here. Peer support is not emergency care: call <strong>911</strong> for an emergency or <strong>988</strong> for the Suicide &amp; Crisis Lifeline.</li>
+            </ul>
+            <h3>Product safety standards</h3>
+            <ul>
+              <li>Goods are free for pledged members. No proof of need, income check, or intake form is required.</li>
+              <li>Items must be clean, usable, within date, and free of recalls. No weapons, medication, recalled products, or unsafe goods.</li>
+              <li>Describe goods honestly. Every exchange starts with a clear description and ongoing mutual consent; either person can decline or stop.</li>
+              <li>No real payment is processed in this prototype. Non-member purchase intents are local records only.</li>
+            </ul>
+            <h3>Accountability boundary</h3>
+            <p>Safety reports stay local. Report text, evidence, reasons, and reporter identity are never uploaded. This acknowledgment record is stored on this device and is not part of private sync. It is a record that you read the rules, not legal advice or a promise of legal protection.</p>
+          </div>
+          <form class="account-form" data-safety-ack-form>
+            <label class="checkbox">
+              <input type="checkbox" name="safetyAck" required>
+              <span>I have read the labor and product safety standards above and the full Safety Standards page. I will follow them when I offer, request, or share labor and goods, and I understand that my acknowledgment is recorded on this device with a date and the standards version.</span>
+            </label>
+            <p class="field-hint" data-safety-source-note></p>
+            <div class="dialog-actions">
+              <button class="button button--ghost" type="button" data-dialog-close>Not now</button>
+              <button class="button button--primary" type="submit">I have read and acknowledge these standards</button>
+            </div>
+          </form>
+        </div>
+      </div>`;
+    document.body.appendChild(dialog);
+
+    dialog.querySelectorAll('[data-dialog-close]').forEach((button) => {
+      button.addEventListener('click', () => {
+        pendingSafetyAction = null;
+        closeDialog(dialog);
+      });
+    });
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) {
+        pendingSafetyAction = null;
+        closeDialog(dialog);
+      }
+    });
+    dialog.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape' || event.isComposing) return;
+      event.preventDefault();
+      pendingSafetyAction = null;
+      closeDialog(dialog);
+    });
+
+    dialog.querySelector('[data-safety-ack-form]').addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!requireMembership('Sign the Unbought Pledge before acknowledging the safety standards.')) return;
+      if (!event.currentTarget.reportValidity()) return;
+      if (!recordSafetyAcknowledgment(safetyAcknowledgmentSource)) {
+        showToast('Could not record your acknowledgment.', true);
+        return;
+      }
+      saveStatePrivateOnly();
+      closeDialog(dialog);
+      announce('Safety standards acknowledged. Your record was saved on this device.');
+      showToast('Safety standards acknowledged.', false);
+      const action = pendingSafetyAction;
+      pendingSafetyAction = null;
+      if (typeof action === 'function') action();
+      refreshSettingsPanel();
+    });
+
+    safetyStandardsDialog = dialog;
+    return dialog;
+  }
+
+  function openSafetyStandardsDialog(source, onAccepted) {
+    if (!isMember()) {
+      requireMembership('Sign the Unbought Pledge before acknowledging the safety standards.');
+      return;
+    }
+    safetyAcknowledgmentSource = cleanString(source, 40) || 'site';
+    pendingSafetyAction = typeof onAccepted === 'function' ? onAccepted : null;
+    const dialog = buildSafetyStandardsDialog();
+    const form = dialog.querySelector('[data-safety-ack-form]');
+    if (form) form.reset();
+    const note = dialog.querySelector('[data-safety-source-note]');
+    if (note) {
+      note.textContent = safetyAcknowledgmentSource === 'post'
+        ? 'Acknowledgment is required before posting a labor or goods offer.'
+        : safetyAcknowledgmentSource === 'edit'
+          ? 'Acknowledgment is required before editing a listing.'
+          : safetyAcknowledgmentSource === 'request'
+            ? 'Acknowledgment is required before requesting a labor or goods exchange.'
+            : 'This record is kept on this device. Nothing is uploaded.';
+    }
+    openDialog(dialog);
+  }
+
+  function requireSafetyAcknowledgment(onAccepted, source) {
+    if (!isMember()) {
+      requireMembership('Sign the Unbought Pledge before using the commons.');
+      return;
+    }
+    if (hasCurrentSafetyAcknowledgment()) {
+      if (typeof onAccepted === 'function') onAccepted();
+      return;
+    }
+    openSafetyStandardsDialog(source, onAccepted);
+  }
+
+  function downloadSafetyAcknowledgment() {
+    const memberId = state.pledge ? cleanString(state.pledge.memberId, 100) : '';
+    const records = getSafetyAcknowledgments()
+      .filter((record) => record && memberId && record.memberId === memberId)
+      .sort((a, b) => Date.parse(a.acceptedAt) - Date.parse(b.acceptedAt));
+    if (!records.length) {
+      showToast('No acknowledgment record has been saved yet.', true);
+      return;
+    }
+    const lines = [
+      'UNBOUGHT — SAFETY STANDARDS ACKNOWLEDGMENT RECORD',
+      'This is a local record that the member acknowledged the posted standards.',
+      'It is not legal advice or a guarantee of legal protection.',
+      '',
+      `Member: ${state.pledge.name || ''}`,
+      `Local member ID: ${memberId}`,
+      '',
+      ...records.map((record, index) => [
+        `Record ${index + 1}`,
+        `Standards: ${record.label || record.version}`,
+        `Version: ${record.version}`,
+        `Acknowledged: ${record.acceptedAt}`,
+        `Context: ${record.source || 'site'}`,
+        ''
+      ].join('\n')).flat()
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'unbought-safety-acknowledgment.txt';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showToast('Acknowledgment record downloaded.', false);
   }
 
   function getEligiblePledgeReviewers(applicantMemberId, seed) {
@@ -4333,6 +4541,22 @@
           status: ['pending', 'accepted', 'declined', 'expired'].includes(item.status) ? item.status : 'pending'
         }))
         .filter((item) => item.groupId && item.memberId);
+    }
+
+    if (Array.isArray(raw.safetyAcknowledgments)) {
+      fallback.safetyAcknowledgments = raw.safetyAcknowledgments
+        .filter((item) => item && typeof item === 'object')
+        .slice(-100)
+        .map((item) => ({
+          id: cleanString(item.id, 120) || makeId('safety-ack'),
+          version: cleanString(item.version, 40),
+          label: cleanString(item.label, 160),
+          memberId: cleanString(item.memberId, 100),
+          name: cleanString(item.name, 80),
+          acceptedAt: cleanString(item.acceptedAt, 40),
+          source: cleanString(item.source, 40)
+        }))
+        .filter((item) => item.memberId && item.version && item.acceptedAt);
     }
 
     if (Array.isArray(raw.anonymousVotes)) {
@@ -6518,7 +6742,8 @@
 
     const requestButton = event.target.closest('[data-request-listing]');
     if (requestButton) {
-      openConsentDialog(requestButton.dataset.requestListing, requestButton);
+      const listingId = requestButton.dataset.requestListing;
+      requireSafetyAcknowledgment(() => openConsentDialog(listingId, requestButton), 'request');
       return;
     }
 
@@ -6526,7 +6751,8 @@
     if (editButton) {
       event.preventDefault();
       if (!requireListingManageAccess(findListing(editButton.dataset.editListing))) return;
-      openEditListing(editButton.dataset.editListing, editButton);
+      const listingId = editButton.dataset.editListing;
+      requireSafetyAcknowledgment(() => openEditListing(listingId, editButton), 'edit');
       return;
     }
 
@@ -7152,8 +7378,10 @@
       trigger.addEventListener('click', (event) => {
         event.preventDefault();
         if (!requirePostAccess('Full access is paused during your reflection period. Posting is unavailable until you complete the reflection and treatment requirements.')) return;
-        resetPostDialogForm();
-        openDialog(dialog);
+        requireSafetyAcknowledgment(() => {
+          resetPostDialogForm();
+          openDialog(dialog);
+        }, 'post');
       });
     });
 
@@ -7162,6 +7390,10 @@
       if (postPhotoPending.get(form)) return;
       if (!requirePostAccess('Full access is paused during your reflection period. Posting is unavailable until you complete the reflection and treatment requirements.')) return;
       if (!form.reportValidity()) return;
+      if (!hasCurrentSafetyAcknowledgment()) {
+        requireSafetyAcknowledgment(null, 'post-submit');
+        return;
+      }
 
       const titleInput = document.getElementById('post-title-input');
       const providerInput = document.getElementById('post-provider');
@@ -7366,8 +7598,10 @@
 
     if (window.location.hash === '#post-trigger' || window.location.hash === '#post-form') {
       if (requirePostAccess('Full access is paused during your reflection period. Posting is unavailable until you complete the reflection and treatment requirements.')) {
-        resetPostDialogForm();
-        openDialog(dialog);
+        requireSafetyAcknowledgment(() => {
+          resetPostDialogForm();
+          openDialog(dialog);
+        }, 'post');
       }
     }
   }
@@ -8075,6 +8309,10 @@
     const e = escapeHtml;
     const cloudEnabled = Boolean(state.cloud && state.cloud.enabled);
     const cloudEmail = state.cloud ? cleanString(state.cloud.email, 160) : '';
+    const safetyAck = currentMemberSafetyAcknowledgment();
+    const safetyAckText = safetyAck
+      ? `Recorded ${formatDate(safetyAck.acceptedAt)} · ${safetyAck.label}`
+      : 'No acknowledgment recorded yet.';
     const notice = state.settings && state.settings.showPrototypeNotices
       ? `<p class="prototype-note">Prototype: account details, local usernames, and salted password hashes are stored only on this device and are never uploaded. Local sign-ins are not real accounts; optional private sync uses Supabase Auth after you explicitly opt in.</p>`
       : '';
@@ -8378,6 +8616,15 @@
             <button type="button" class="button button--outline button--small" id="private-sync-stop">Turn off private sync</button>
             <button type="button" class="button button--ghost button--small" id="private-sync-delete">Delete my cloud copy</button>
           </div>
+        </div>
+      </div>
+      <div class="settings-block safety-acknowledgment-settings">
+        <h4>Safety standards acknowledgment</h4>
+        <p class="account-note">Members acknowledge the <a href="safety-standards.html">Labor &amp; Product Safety Standards</a> before posting or editing an offer. The record stays on this device with the date and standards version. It is not part of private sync, and it is a record that you read the rules, not legal advice or a promise of legal protection.</p>
+        <p class="account-note" id="safety-ack-status" role="status">${e(safetyAckText)}</p>
+        <div class="account-form-actions">
+          <button type="button" class="button button--outline button--small" data-open-safety-standards>Review standards</button>
+          <button type="button" class="button button--ghost button--small" data-download-safety-ack>Download my acknowledgment record</button>
         </div>
       </div>
       <p class="account-note">Changes are saved on this device. They are sent only if you turn on optional private sync above. Your resume hides your legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated, and shows your phone only if you opt in. Logged hours and item counts are never typed here; they appear only after mutual confirmation or review. To withdraw your membership, use the Withdraw membership button on the <a href="pledge.html#withdraw-pledge">Pledge page</a>.</p>
@@ -11374,6 +11621,18 @@
         requestPledgeReview();
         return;
       }
+      const safetyReview = event.target.closest('[data-open-safety-standards]');
+      if (safetyReview) {
+        event.preventDefault();
+        openSafetyStandardsDialog('settings');
+        return;
+      }
+      const safetyDownload = event.target.closest('[data-download-safety-ack]');
+      if (safetyDownload) {
+        event.preventDefault();
+        downloadSafetyAcknowledgment();
+        return;
+      }
       const privateSyncNow = event.target.closest('#private-sync-now');
       if (privateSyncNow) {
         event.preventDefault();
@@ -13438,6 +13697,12 @@
           return;
         }
 
+        const safetyAck = document.getElementById('pledge-safety-ack');
+        if (!safetyAck || !safetyAck.checked) {
+          showPledgeError('Please confirm you read the Labor & Product Safety Standards before signing.', 'pledge-safety-ack');
+          return;
+        }
+
         if (!firstName || !lastName || !name || !location || !address1 || !city || !county || !stateCode || !physicalAddress || !physicalCounty || !cellPhone) {
           showPledgeError('Please complete your first name, last name, chosen name, mailing address and county, physical address and county, cell phone number, and general location.', 'pledge-first-name');
           return;
@@ -13644,6 +13909,7 @@
             actingAs: activeCredential.role
           }
         };
+        recordSafetyAcknowledgment('pledge');
         saveState();
         renderPledge();
         renderTrackGate();
@@ -13705,6 +13971,9 @@
 
             const docsAck = document.getElementById('pledge-docs-ack');
             if (docsAck) docsAck.checked = false;
+
+            const safetyAck = document.getElementById('pledge-safety-ack');
+            if (safetyAck) safetyAck.checked = false;
 
             const firstField = document.getElementById('pledge-agreement') || (form ? form.querySelector('input, textarea, button') : null);
             if (firstField) firstField.focus({ preventScroll: true });
