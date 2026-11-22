@@ -13069,9 +13069,9 @@
 
     resetButton.addEventListener('click', () => {
       showConfirm({
-        title: 'Demo Reset / Clear Local Data',
-        message: 'This removes your pledge and membership, account credentials, track, listings and listing comments, requests, inquiries, donation intents, contributions, Unbought donation fund records, volunteer offers, reports and votes, notifications, friends, groups, social chat drafts, messages, suggestions, waiting-list entry, and settings from this browser. It cannot be undone.',
-        confirmLabel: 'Clear local data',
+        title: 'Clear this browser\'s demo data',
+        message: 'This removes your pledge and membership, account credentials, track, listings and listing comments, requests, inquiries, donation intents, contributions, Unbought donation fund records, volunteer offers, reports and votes, notifications, friends, groups, social chat drafts, messages, suggestions, waiting-list entry, and settings from this browser. It cannot be undone. Public listings and community posts already shared through Supabase are not affected; this prototype has no public-post delete tool.',
+        confirmLabel: 'Clear browser data',
         tone: 'danger',
         onConfirm: () => {
           try {
@@ -13124,8 +13124,8 @@
           document.dispatchEvent(new CustomEvent('unbought:reset'));
 
           resetButton.focus({ preventScroll: true });
-          announce('All local demo data has been cleared. The page is back to its starting state.');
-          showToast('Local demo data cleared.', false);
+          announce('All local demo data has been cleared. Public posts already shared through Supabase are unchanged.');
+          showToast('Local demo data cleared. Public posts unchanged.', false);
         }
       });
     });
