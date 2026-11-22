@@ -15,48 +15,47 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
 endobj
 6 0 obj
-<< /Length 3254 >>
+<< /Length 3211 >>
 stream
 BT /F2 19 Tf 1 0 0 1 54 744 Tm (Unbought - Next Steps) Tj ET
 BT /F1 11 Tf 1 0 0 1 54 714 Tm (Sweep-complete handoff to-do) Tj ET
 BT /F2 12 Tf 1 0 0 1 54 686 Tm (1. Published and verified prototype) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 666 Tm ([x] main, pages, origin/main, and origin/pages all point to 6eadd0b; Pages serves the main) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 651 Tm (root.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 636 Tm ([x] Browser sweep passed locally and live: home, pledge, dashboard, profile, donate, Free) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 621 Tm (Labor, Free Stuff, group, guidelines, FAQ, and future.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 606 Tm ([x] Final polish is live: compact directory headings, readable profile themes, responsive) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 591 Tm (message tabs, standardized dialogs, and balanced copy.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 576 Tm ([x] Availability gate: Unavailable members keep listings visible but receive no labor or) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 561 Tm (product requests.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 536 Tm (2. Beta funding path, before March 20, 2027) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 516 Tm ([ ] Get the database, mailer, and social channels rolling for free first.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 501 Tm ([ ] Keep donations closed. Do not publish a pledge service, payment link, or donation call) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 486 Tm (to action yet.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 471 Tm ([ ] Open a dedicated bank account for the Unbought donation fund and leave it unused until a) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 456 Tm (lawyer and accountant are on board.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 441 Tm ([ ] Keep every future dollar focused first on pre-rollout operations: licensing, web) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 426 Tm (hosting, database setup, and social media awareness.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 411 Tm ([x] Giving status is closed and no intents are recorded; all active giving CTAs say "Read) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 396 Tm (the fund plan.") Tj ET
-BT /F1 10 Tf 1 0 0 1 54 381 Tm ([x] Public copy uses the "Unbought donation fund" name and keeps Free Goods Fund as donation) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 366 Tm (priority #4.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 341 Tm (3. Fund structure and accounts) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 321 Tm ([ ] Recruit a volunteer lawyer and accountant before opening any giving channel.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 306 Tm ([ ] Form the legal structure and connect with an accountant before accepting anything.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 291 Tm ([ ] After the Land Trust account exists and start-up costs are paid, funnel money into an) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 276 Tm (account while seeking a first plot of land, house, or warehouse.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 261 Tm ([ ] After the first acquisition, keep a separate account for Land Trust survival: resources,) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 246 Tm (taxes, utilities, and lights on.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 231 Tm ([ ] Put leftover budget into the surplus fund; keep spoken-for money in active checking.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 216 Tm ([ ] Keep the Free Goods Fund as donation priority #4 and keep all public copy on the) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 201 Tm (Unbought donation fund name.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 666 Tm ([x] main, pages, origin/main, and origin/pages are kept in sync; Pages serves the main root.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 651 Tm ([x] Browser sweep passed locally and live: home, pledge, dashboard, profile, donate, Free) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 636 Tm (Labor, Free Stuff, group, guidelines, FAQ, and future.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 621 Tm ([x] Final polish is live: compact directory headings, readable profile themes, responsive) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 606 Tm (message tabs, standardized dialogs, and balanced copy.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 591 Tm ([x] Availability gate: Unavailable members keep listings visible but receive no labor or) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 576 Tm (product requests.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 551 Tm (2. Beta funding path, before March 20, 2027) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 531 Tm ([ ] Get the database, mailer, and social channels rolling for free first.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 516 Tm ([ ] Keep donations closed. Do not publish a pledge service, payment link, or donation call) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 501 Tm (to action yet.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 486 Tm ([ ] Open a dedicated bank account for the Unbought donation fund and leave it unused until a) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 471 Tm (lawyer and accountant are on board.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 456 Tm ([ ] Keep every future dollar focused first on pre-rollout operations: licensing, web) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 441 Tm (hosting, database setup, and social media awareness.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 426 Tm ([x] Giving status is closed and no intents are recorded; all active giving CTAs say "Read) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 411 Tm (the fund plan.") Tj ET
+BT /F1 10 Tf 1 0 0 1 54 396 Tm ([x] Public copy uses the "Unbought donation fund" name and keeps Free Goods Fund as donation) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 381 Tm (priority #4.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 356 Tm (3. Fund structure and accounts) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 336 Tm ([ ] Recruit a volunteer lawyer and accountant before opening any giving channel.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 321 Tm ([ ] Form the legal structure and connect with an accountant before accepting anything.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 306 Tm ([ ] After the Land Trust account exists and start-up costs are paid, funnel money into an) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 291 Tm (account while seeking a first plot of land, house, or warehouse.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 276 Tm ([ ] After the first acquisition, keep a separate account for Land Trust survival: resources,) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 261 Tm (taxes, utilities, and lights on.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 246 Tm ([ ] Put leftover budget into the surplus fund; keep spoken-for money in active checking.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 231 Tm ([ ] Keep the Free Goods Fund as donation priority #4 and keep all public copy on the) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 216 Tm (Unbought donation fund name.) Tj ET
 endstream
 endobj
 7 0 obj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
 endobj
 8 0 obj
-<< /Length 3493 >>
+<< /Length 4156 >>
 stream
 BT /F2 12 Tf 1 0 0 1 54 744 Tm (4. First house and scaling) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 724 Tm ([ ] The first house goes where the most Unbought members live.) Tj ET
@@ -81,18 +80,25 @@ BT /F1 10 Tf 1 0 0 1 54 424 Tm (threads, and community posts.) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 409 Tm ([x] Live-site console is clean; the former 401 errors are gone.) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 394 Tm ([x] supabase-config.js is public-only; no service_role key, database password, or connection) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 379 Tm (string.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 364 Tm ([x] Only public directory data syncs; pledges, private details, messages, reports,) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 349 Tm (donations, and waitlist entries stay local.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 334 Tm ([x] Member listing edits are local-only; public Supabase rows remain append-only in Phase 1.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 309 Tm (7. Safety and copy boundaries) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 289 Tm ([x] No real auth, payments, email, wage API, stock issue, payouts, police reports, or) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 274 Tm (uploads. Only public directory data is transmitted.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 259 Tm ([x] NSFW is a content tag only; no porn and no prostitution; voting is anonymous.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 244 Tm ([x] Exact pledge copy, donation nudge, and March 20, 2027 rollout language are preserved.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 229 Tm ([x] FAQ, dashboard, group, and profile footers now distinguish public Supabase data from) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 214 Tm (private local-only records.) Tj ET
-BT /F1 9 Tf 1 0 0 1 54 189 Tm (Working file for the next planning pass. The Supabase bridge is live; everything else remains) Tj ET
-BT /F1 9 Tf 1 0 0 1 54 175 Tm (prototype planning, not a promise of housing, funding, or a payout.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 364 Tm ([x] Public bridge remains unchanged: only public directory data is shared automatically.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 349 Tm ([x] Member listing edits are local-only; public Supabase rows remain append-only in Phase 1.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 324 Tm (7. Private opt-in sync) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 304 Tm ([ ] Run supabase/migrations/20261122000000_private_opt_in_sync.sql in Supabase SQL Editor;) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 289 Tm (it also reasserts public insert grants.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 274 Tm ([x] Private sync is off by default in Dashboard -> Settings and requires Supabase Auth plus) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 259 Tm (an explicit consent checkbox.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 244 Tm ([x] Only member ID, account details, pledge details, and waitlist entries upload after) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 229 Tm (opt-in; only the member and admins can read them.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 214 Tm ([x] No password, hash, or salt is stored in localStorage or private tables; Supabase Auth) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 199 Tm (handles passwords.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 184 Tm ([x] Settings offers Sync now, Turn off private sync, and Delete my cloud copy; local) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 169 Tm (sign-out stops sync and withdrawal deletes the cloud copy.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 154 Tm ([x] Messages, reports, donations, photos, comments, and chats are never transmitted.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 129 Tm (8. Safety and copy boundaries) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 109 Tm ([x] Local demo sign-in is not real auth; there are no payments, email, wage API, stock) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 94 Tm (issue, payouts, or police reports. Public data is shared; private data uploads only after) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 79 Tm (opt-in.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 64 Tm ([x] NSFW is a content tag only; no porn and no prostitution; voting is anonymous.) Tj ET
 endstream
 endobj
 xref
@@ -104,10 +110,10 @@ xref
 0000000218 00000 n
 0000000320 00000 n
 0000000456 00000 n
-0000003761 00000 n
-0000003897 00000 n
+0000003718 00000 n
+0000003854 00000 n
 trailer
 << /Size 8 /Root 1 0 R >>
 startxref
-7441
+8061
 %%EOF

@@ -1,6 +1,7 @@
 /* ==========================================================================
    Unbought — What's to Come waiting list
-   Stores one planning-stage entry in this browser. No network requests.
+   Stores one planning-stage entry in this browser. It is sent only through
+   the separate opt-in private sync bridge after explicit consent.
    ========================================================================== */
 (function () {
   'use strict';
@@ -90,6 +91,12 @@
     }
   }
 
+  function notifyChange() {
+    document.dispatchEvent(new CustomEvent('unbought:waitlist-change', {
+      detail: { hasEntry: Boolean(saved) }
+    }));
+  }
+
   function selectedInterests() {
     return Array.from(form.querySelectorAll('input[name="interests"]:checked')).map((input) => input.value);
   }
@@ -156,7 +163,7 @@
     receipt.hidden = false;
     form.hidden = true;
     syncEntryActions();
-    setStatus(`You’re on the waiting list, ${saved.name}. Your entry stays in this browser.`);
+    setStatus(`You’re on the waiting list, ${saved.name}. Your entry stays in this browser unless optional private sync is on.`);
   }
 
   function showForm(options = {}) {
@@ -232,6 +239,7 @@
     }
     syncEntryActions();
     showForm({ fill: false, focus: false });
+    notifyChange();
     setStatus('Your waiting list entry was removed from this browser.');
     announce('Waiting list entry removed from this browser.');
     if (dialog && dialog.open) window.requestAnimationFrame(focusDialog);
@@ -283,7 +291,8 @@
 
     saved = entry;
     renderReceipt();
-    announce(`Waiting list entry saved for ${entry.name}. It stays in this browser.`);
+    notifyChange();
+    announce(`Waiting list entry saved for ${entry.name}. It is sent only if optional private sync is on.`);
   });
 
   [editButton, inlineEditButton].forEach((button) => {
@@ -321,7 +330,8 @@
       errorBox.hidden = true;
     }
     syncEntryActions();
-    setStatus('Stored only on this device. Nothing is transmitted.');
+    notifyChange();
+    setStatus('Stored in this browser. Optional private sync sends it only after you opt in.');
     showForm();
   });
 

@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="styles.css">
   <script src="supabase-config.js"></script>
   <script src="supabase-sync.js" defer></script>
+  <script src="private-sync.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body class="faq-page">
@@ -62,7 +63,7 @@
         <div class="section-head">
           <p class="eyebrow"><span class="badge badge--soft">Good questions</span> Frequently asked</p>
           <h1 id="faq-page-title">The honest answers, in plain language.</h1>
-          <p>Unbought is a prototype for a consent-based, currency-free mutual aid society. Nothing here processes payments or sends messages to other people. Public listings and community posts are shared through Supabase; pledges, private details, messages, reports, and donation records stay in this browser.</p>
+          <p>Unbought is a prototype for a consent-based, currency-free mutual aid society. Nothing here processes payments or sends messages to other people. Public listings and community posts are shared through Supabase; pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, reports, and donation records always stay here.</p>
         </div>
 
         <div class="faq-groups">
@@ -70,7 +71,7 @@
             <h2 id="faq-basics">The basics</h2>
             <details>
               <summary>What is Unbought?</summary>
-              <p>A practice of sharing labor, goods, care, education, and land without money changing hands between neighbors. The site is a local-first prototype: public listings and community posts can be shared through Supabase, while pledges, private details, messages, reports, and donation records stay in this browser.</p>
+              <p>A practice of sharing labor, goods, care, education, and land without money changing hands between neighbors. The site is a local-first prototype: public listings and community posts can be shared through Supabase, while pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, reports, and donation records always stay here.</p>
             </details>
             <details>
               <summary>What does “Built on Consent” mean?</summary>
@@ -78,7 +79,7 @@
             </details>
             <details>
               <summary>Is this a real service right now?</summary>
-              <p>Not yet. There are no real accounts or payment processing. A public-data-only Supabase bridge shares listings, group cards, and community posts; pledges, private details, messages, reports, and donation records stay in this browser.</p>
+              <p>Not yet. There are no local real accounts or payment processing; optional private sync uses a separate Supabase Auth account. A public-data-only Supabase bridge shares listings, group cards, and community posts; pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, reports, and donation records always stay here.</p>
             </details>
             <details>
               <summary>How does site search work?</summary>
@@ -94,7 +95,11 @@
             <h2 id="faq-membership">Membership and privacy</h2>
             <details>
               <summary>What does taking the pledge do?</summary>
-              <p>It records your membership locally, along with the legal name and contact details the prototype needs to model real intake. It is not a legal contract and nothing is transmitted.</p>
+              <p>It records your membership locally, along with the legal name and contact details the prototype needs to model real intake. It is not a legal contract. Those details are sent only if you explicitly turn on optional private sync in Dashboard → Settings.</p>
+            </details>
+            <details>
+              <summary>Can I choose whether my private details are stored online?</summary>
+              <p>Yes. Private sync is off by default. Dashboard → Settings has a “Sync my private data” section. Turning it on requires a separate Supabase Auth email and password plus an explicit consent checkbox. Only then are your member ID, account details, pledge details, and waiting-list entry uploaded, where only you and site admins can read them. Passwords are handled by Supabase Auth; no local password hash is uploaded. You can sync now, turn sync off, or delete your cloud copy at any time. Public listing and community-post sync is separate and unchanged.</p>
             </details>
             <details>
               <summary>What does my public profile show?</summary>
@@ -198,7 +203,7 @@
             <h2 id="faq-safety">Safety and accountability</h2>
             <details>
               <summary>How do safety reports work?</summary>
-              <p>Reports are tied to the thing you were looking at — a listing, a comment on a listing, a message, community or social chat, a profile, or a dashboard item — so you never have to type someone’s name into a report form. You can attach local messages, pictures, or other files as evidence. Everything stays in this browser and nothing is transmitted.</p>
+              <p>Reports are tied to the thing you were looking at — a listing, a comment on a listing, a message, community or social chat, a profile, or a dashboard item — so you never have to type someone’s name into a report form. You can attach local messages, pictures, or other files as evidence. Reports and evidence always stay in this browser; they are not part of optional private sync.</p>
             </details>
             <details>
               <summary>Who is allowed to vote in a review board case?</summary>
@@ -322,7 +327,7 @@
     <div class="container footer-utility">
       <div class="footer-utility-copy">
         <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
-        <p>Public listing details and community posts are shared through Supabase when connected; pledges, private details, messages, reports, and donation records stay in this browser.</p>
+        <p>Public listing details and community posts are shared through Supabase when connected; pledges and private details can optionally sync with your permission; messages, reports, and donation records stay in this browser.</p>
       </div>
       <button class="button button--ghost-light button--small" id="reset-demo" type="button">
         <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>

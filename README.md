@@ -5,12 +5,15 @@ consent, free labor, free goods, and shared accountability.
 
 The current site is a front-end prototype. It uses `localStorage` for the full
 member record. A public-data-only Supabase bridge shares group cards, Free Labor
-and Free Stuff listings, and community chat content. Pledge records, account
-details, messages, reports, donations, waiting-list entries, photos, and private
-profile fields are never transmitted.
+and Free Stuff listings, and community chat content. A separate private sync
+bridge is off by default: after explicit opt-in and Supabase Auth sign-in, it can
+upload the member ID, account details, pledge details, and waiting-list entry.
+Row Level Security limits those private rows to the member and site admins.
+Messages, reports, donations, photos, group chats, social chats, and local
+password hashes are never transmitted.
 
 See `supabase/README.md` for the schema, security notes, and setup steps. The site
-remains hosted on GitHub Pages; Supabase is only a backend for shared public data.
+remains hosted on GitHub Pages.
 
 The sample Newsboard posts are general updates about the movement and rollout
 process, not a coding changelog. A future blog service will replace them.
@@ -26,7 +29,7 @@ process, not a coding changelog. A future blog service will replace them.
 - `dashboard.html` — Member dashboard, full private record, and Exchanges
 - `profile.html` — Public member resume with a private record for the signed-in member
 - `group.html?group=<id>` — Group profile with members, worker admins, chat, and offers
-- `supabase-config.js`, `supabase-sync.js`, `supabase/` — Public-data-only Supabase bridge and migration
+- `supabase-config.js`, `supabase-sync.js`, `private-sync.js`, `supabase/` — Public bridge and opt-in private sync
 
 ## Running locally
 
@@ -40,11 +43,41 @@ Then visit <http://localhost:8000/>.
 
 Prototype sign-in accepts a locally created username and password. Passwords are
 stored only in the browser as a salted prototype hash; this is not real account
-security and must be replaced before any production deployment. When power of
-attorney applies, the pledge form can also create a second local username and
-password for the authorized representative. Either sign-in can manage the
-member’s local record on their behalf. The prototype does not verify legal
-documents, grant legal authority, or transmit anything.
+security. That hash is never uploaded. When power of attorney applies, the pledge
+form can also create a second local username and password for the authorized
+representative. Either sign-in can manage the member’s local record on their
+behalf. The prototype does not verify legal documents or grant legal authority.
+Private cloud sync uses a separate Supabase Auth account and never uploads the
+local demo hash.
+
+## Optional private sync
+
+Private sync is off by default and lives in **Dashboard → Settings → Private cloud sync**.
+A member must enter a Supabase Auth email and password and check an explicit
+consent box before any private record is uploaded. There are two actions: **Sign
+in & sync** for an existing Supabase Auth account, and **Create account & sync**
+for a new one. Supabase Auth owns the password; no password, password hash, or
+salt is stored in `unbought:v1` or in any private table.
+
+When enabled, the bridge uploads:
+
+- `private_members`: member ID, chosen name, legal name fields, email, location,
+  mailing and physical addresses, phones and phone preferences, birthdate,
+  housing status, profession, skills, monthly pledge, pledge status, signature
+  time, and consent time.
+- `private_waitlist_entries`: one planning-stage waiting-list entry per user.
+
+The RLS policies allow an authenticated user to insert and manage only their own
+row. Site admins listed in `private_admin_roles` may read, update, and delete
+private rows but cannot insert on a member’s behalf. Anonymous users have no
+access. Applying `supabase/migrations/20261122000000_private_opt_in_sync.sql` is
+required before this feature works.
+
+The Settings panel also offers **Sync now**, **Turn off private sync**, and
+**Delete my cloud copy**. Turning sync off keeps the local records and signs out
+of Supabase Auth; deleting removes the Supabase rows. Signing out locally or
+withdrawing membership also stops private sync, and withdrawal deletes the cloud
+copy. These actions never affect the separate public directory bridge.
 
 ## Header and navigation
 
@@ -586,11 +619,13 @@ transmitted.
 
 ## Prototype boundaries
 
-This build is static and local-first. There is no real authentication, payment
-processing, email delivery, wage API, stock issuance, payout, police report, server
-upload, or server transmission. Copy across the site says plainly that nothing is
-transmitted. `SITE_PHASE = 1` hides Phase 2 features such as the Unbought Academy and
-group brands/business settings.
+This build is static and local-first. The local demo sign-in is not real
+authentication, and there is no payment processing, email delivery, wage API,
+stock issuance, payout, or police report. Public directory data is shared through
+the always-on public bridge; private records are transmitted only after explicit
+opt-in. Messages, reports, donations, photos, and local password hashes always
+stay on the device. `SITE_PHASE = 1` hides Phase 2 features such as the Unbought
+Academy and group brands/business settings.
 Every footer carries “Built on Consent.” exactly once. The public fund name is
 “Unbought donation fund”; internal `severanceFund`, `severance_purchase`, and
 `getSeveranceSummary()` keys remain only for older local data compatibility. The

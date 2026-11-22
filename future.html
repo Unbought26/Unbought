@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="styles.css">
   <script src="supabase-config.js"></script>
   <script src="supabase-sync.js" defer></script>
+  <script src="private-sync.js" defer></script>
   <script src="app.js" defer></script>
   <script src="waitlist.js" defer></script>
 </head>
@@ -576,19 +577,19 @@
         <div class="waitlist-copy">
           <p class="eyebrow">The waiting list</p>
           <h2 id="waitlist-title">Put your name on what comes next.</h2>
-          <p class="lead">One entry, saved only in this browser. Tell us which parts of Unbought you want to hear about, and we will use that to shape the first Academy guilds and the land trust conversation.</p>
+          <p class="lead">One entry, saved in this browser. It is sent only if you turn on optional private sync in Dashboard → Settings. Tell us which parts of Unbought you want to hear about, and we will use that to shape the first Academy guilds and the land trust conversation.</p>
           <ul class="waitlist-points">
             <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-book"></use></svg><span><strong>Academy:</strong> mentor guilds, apprenticeships, and open curriculum.</span></li>
             <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-house"></use></svg><span><strong>Land:</strong> community land trust, housing, and resident governance.</span></li>
             <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-heart"></use></svg><span><strong>Donations:</strong> trust formation and where gifts would go.</span></li>
           </ul>
-          <p class="waitlist-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> This is a planning-stage prototype. Your entry is stored locally and nothing is transmitted, sold, or shared.</p>
+          <p class="waitlist-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> This is a planning-stage prototype. Your entry is stored locally and sent only if you explicitly turn on optional private sync in Dashboard → Settings, where only you and site admins can read it.</p>
         </div>
 
         <div class="waitlist-card">
           <span class="badge badge--soft">One local entry</span>
           <h3>Your place in what comes next.</h3>
-          <p class="form-hint">Open the short form to tell us which parts of Unbought you want to hear about. It opens as a pop-up and stays in this browser.</p>
+          <p class="form-hint">Open the short form to tell us which parts of Unbought you want to hear about. It opens as a pop-up and stays in this browser unless you turn on optional private sync.</p>
           <div class="waitlist-card-actions">
             <button class="button button--primary" id="waitlist-open" type="button" data-waitlist-trigger>
               <span data-waitlist-label>Join the waiting list</span> <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-plus"></use></svg>
@@ -596,7 +597,7 @@
             <button class="button button--outline button--small" id="waitlist-inline-edit" type="button" hidden>Edit my entry</button>
             <button class="button button--ghost button--small" id="waitlist-inline-withdraw" type="button" hidden>Withdraw from the list</button>
           </div>
-          <p class="form-hint" id="waitlist-inline-status" role="status">Stored only on this device. Nothing is transmitted.</p>
+          <p class="form-hint" id="waitlist-inline-status" role="status">Stored in this browser. Optional private sync sends it only after you opt in.</p>
         </div>
       </div>
     </section>
@@ -727,7 +728,7 @@
     <div class="container footer-utility">
       <div class="footer-utility-copy">
         <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
-        <p>Public listing details and community posts are shared through Supabase when connected; pledges, private details, messages, reports, and donation records stay in this browser.</p>
+        <p>Public listing details and community posts are shared through Supabase when connected; pledges and private details can optionally sync with your permission; messages, reports, and donation records stay in this browser.</p>
       </div>
       <button class="button button--ghost-light button--small" id="reset-demo" type="button">
         <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>
@@ -752,7 +753,7 @@
       </div>
       <div class="dialog-content">
         <h2 id="waitlist-dialog-title">Waiting list</h2>
-        <p id="waitlist-dialog-intro">One entry, saved only in this browser. Tell us which parts of Unbought you want to hear about so we can shape the first Academy guilds and the land trust conversation. Nothing is transmitted, sold, or shared.</p>
+        <p id="waitlist-dialog-intro">One entry, saved in this browser. It is sent only if you turn on optional private sync in Dashboard → Settings, where only you and site admins can read it. Tell us which parts of Unbought you want to hear about so we can shape the first Academy guilds and the land trust conversation.</p>
 
         <div class="waitlist-receipt" id="waitlist-receipt" tabindex="-1" role="status" hidden>
           <span class="badge badge--green">On the list</span>
@@ -764,7 +765,7 @@
             <button class="button button--outline button--small" id="waitlist-edit" type="button">Edit my entry</button>
             <button class="button button--ghost button--small" id="waitlist-withdraw" type="button">Withdraw from the list</button>
           </div>
-          <p class="waitlist-receipt-note">This entry stays in this browser. It is not a housing application, a course enrollment, or a financial commitment.</p>
+          <p class="waitlist-receipt-note">This entry stays in this browser unless optional private sync is on. It is not a housing application, a course enrollment, or a financial commitment.</p>
         </div>
 
         <form class="waitlist-form" id="waitlist-form">
@@ -812,7 +813,7 @@
 
           <div class="post-actions">
             <button class="button button--primary" type="submit">Add my name <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-plus"></use></svg></button>
-            <p class="form-hint" id="waitlist-status" role="status">Stored only on this device.</p>
+            <p class="form-hint" id="waitlist-status" role="status">Stored in this browser. Optional private sync is off unless you turn it on.</p>
           </div>
         </form>
       </div>

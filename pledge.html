@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="styles.css">
   <script src="supabase-config.js"></script>
   <script src="supabase-sync.js" defer></script>
+  <script src="private-sync.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body class="pledge-page">
@@ -84,7 +85,7 @@
           <h1 id="pledge-page-title">The Pledge.</h1>
           <p class="pledge-intro-lede">In a world where we have monetized survival, mass production, and AI, should we be asking why representative currency gets to dictate our morals and work-life balance? When the job market is drastically insufficient to support the cost of living countrywide, shouldn’t we wonder whether there is a better way? A moneyless society won’t fix every problem. But if it makes the world better, or even just solves some of our problems, isn’t it worth giving it a shot?</p>
           <p class="pledge-intro-lede pledge-intro-pledge">I take the pledge to try a different kind of system. To cut the corporate fuel that drives cortisol spikes in every home. To cooperate and build a sense of social responsibility so we can ALL thrive. To turn back to the village and get in touch with my human nature.</p>
-          <p class="pledge-intro-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Prototype: this is a local, browser-only account. Your username and salted password hash stay on this device—never on a server. Do not reuse a real password. Nothing is transmitted.</p>
+          <p class="pledge-intro-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Prototype: this is a local, browser-only account. Your username and salted password hash stay on this device and are never uploaded. Do not reuse a real password. Optional private sync uses a separate Supabase Auth account.</p>
         </div>
 
         <div class="pledge-signin-panel">
@@ -95,7 +96,7 @@
             <span data-auth-label>Sign in</span> <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg>
           </button>
           <a class="text-link" id="pledge-to-dashboard-link" href="dashboard.html" hidden>Go straight to your dashboard <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
-          <p class="form-hint">Your account lives only in this browser. Nothing is transmitted.</p>
+          <p class="form-hint">Your local demo account lives only in this browser. Optional private sync uses a separate Supabase Auth account.</p>
         </div>
       </div>
     </section>
@@ -116,7 +117,7 @@
             <span class="walkthrough-number" aria-hidden="true">1</span>
             <div>
               <h3>Sign the pledge</h3>
-              <p>Create a local username and password with the form below. Your details stay in this browser.</p>
+              <p>Create a local username and password with the form below. Your details stay in this browser unless you turn on optional private sync in Settings.</p>
             </div>
           </article>
           <article class="walkthrough-step">
@@ -171,7 +172,7 @@
             <p class="eyebrow">The Unbought Pledge</p>
             <h2 id="pledge-title">A pledge you can hear, read, and sign.</h2>
           </div>
-          <p class="section-head-aside">Watch a short Alan Watts talk or read the five commitments in full. They turn the question above into a practice: dignity beyond price, giving without scorekeeping, consent, shared learning, and accountability. Members must be 18 or older; your details stay in this browser—not on a server, not for sale.</p>
+          <p class="section-head-aside">Watch a short Alan Watts talk or read the five commitments in full. They turn the question above into a practice: dignity beyond price, giving without scorekeeping, consent, shared learning, and accountability. Members must be 18 or older; your details stay in this browser unless you turn on optional private sync—not for sale.</p>
         </div>
 
         <div class="pledge-grid">
@@ -240,7 +241,7 @@
           <div class="signature-copy">
             <p class="eyebrow">What taking the pledge means</p>
             <h3>Take the Pledge to join the commons.</h3>
-            <p>Taking the pledge is a commitment to show up as a neighbor, not a customer: offer what you can, ask for what you need without shame, respect every boundary, and help keep this commons free from profit and gatekeeping. You can browse labor and goods without an account; posting offers, requesting help, messaging, and managing a track require membership. Your pledge and private details stay in this browser. Public listings and community posts are shared through Supabase when connected, and you can withdraw at any time.</p>
+            <p>Taking the pledge is a commitment to show up as a neighbor, not a customer: offer what you can, ask for what you need without shame, respect every boundary, and help keep this commons free from profit and gatekeeping. You can browse labor and goods without an account; posting offers, requesting help, messaging, and managing a track require membership. Your pledge and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings. Public listings and community posts are shared through Supabase when connected, and you can withdraw at any time.</p>
             <p class="phase-minimum-note"><strong>Phase 1 minimum:</strong> joining asks for a pledge of at least 4 hours per month (about 1 hour per week). We cannot offer housing yet, so the ask is intentionally small. Members who cannot work can check the Care Circle box in the form and have no labor obligation.</p>
             <ul class="signature-notes">
               <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Membership stored locally in this prototype</li>
@@ -418,7 +419,7 @@
               <div class="field field--on-blue">
                 <label for="pledge-cell-phone">Cell phone <span class="required-mark" aria-hidden="true">*</span></label>
                 <input type="tel" id="pledge-cell-phone" name="cellPhone" data-cell-phone autocomplete="tel" maxlength="40" required placeholder="Your mobile number">
-                <p class="field-hint">Private. In this prototype it is stored only on this device.</p>
+                <p class="field-hint">Private. Stored on this device and included in optional private sync only if you turn it on.</p>
               </div>
               <div class="field field--on-blue dob-field">
                 <p class="address-group-title">Date of birth <span class="required-mark" aria-hidden="true">*</span></p>
@@ -469,7 +470,7 @@
                 <label class="checkbox"><input type="checkbox" id="pledge-same-phone" name="samePhone" data-same-phone checked> <span>Public phone is the same as my cell phone</span></label>
                 <label class="checkbox"><input type="checkbox" id="pledge-public-phone-opt-in" name="publicPhone"> <span>Show my public phone number on my public resume</span></label>
                 <label class="checkbox"><input type="checkbox" id="pledge-receive-texts" name="receiveTexts"> <span>I want to receive texts at my cell number</span></label>
-                <p class="field-hint">Prototype: no texts are sent and nothing is transmitted. The text choice is recorded locally only.</p>
+                <p class="field-hint">No texts are sent. The text choice is recorded locally and included in optional private sync only if you turn it on.</p>
               </div>
             </div>
 
@@ -557,13 +558,13 @@
               </div>
             </div>
 
-            <p class="pledge-privacy-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Prototype: your name, addresses, cell and public phone numbers, text preference, date of birth, usernames, and password hashes stay in this browser only. Nothing is transmitted, sold, shared, or texted, and no real account is created.</p>
+            <p class="pledge-privacy-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Prototype: your name, addresses, cell and public phone numbers, text preference, date of birth, and usernames stay in this browser unless you turn on optional private sync in Dashboard → Settings. Local password hashes are never uploaded; private sync uses Supabase Auth. Nothing is sold or texted.</p>
 
             <p class="form-error" id="pledge-error" role="alert" hidden></p>
 
             <div class="form-actions form-actions--stack">
               <button class="button button--amber" type="submit">Sign pledge &amp; sign in <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></button>
-              <p class="form-hint">Your pledge creates your community membership in this prototype. Contact details are stored locally and structured for a future shared database. Nothing is transmitted.</p>
+              <p class="form-hint">Your pledge creates your community membership in this prototype. Contact details are stored locally and are sent only if you explicitly turn on optional private sync in Dashboard → Settings.</p>
             </div>
           </form>
         </div>
@@ -631,7 +632,7 @@
     <div class="container footer-utility">
       <div class="footer-utility-copy">
         <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
-        <p>Public listing details and community posts are shared through Supabase when connected; pledges, private details, messages, reports, and donation records stay in this browser.</p>
+        <p>Public listing details and community posts are shared through Supabase when connected; pledges and private details can optionally sync with your permission; messages, reports, and donation records stay in this browser.</p>
       </div>
       <button class="button button--ghost-light button--small" id="reset-demo" type="button">
         <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>

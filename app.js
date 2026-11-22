@@ -4,8 +4,10 @@
 
    The full prototype record is stored in one versioned localStorage key. When
    supabase-config.js is configured, a small public-data bridge shares listings,
-   group cards, and community chat content. Pledge records, private profile
-   fields, messages, reports, donations, and passwords never leave the browser.
+   group cards, and community chat content. Pledge records and private profile
+   fields stay local unless a member explicitly turns on optional private sync
+   in Dashboard → Settings; messages, reports, donations, local password hashes,
+   and photos never leave the browser.
    All user-generated text is inserted with textContent / value assignments
    rather than HTML strings, so a saved listing can never inject markup.
 
@@ -978,6 +980,13 @@
       auth: {
         credential: null,
         session: { signedIn: false, signedInAt: null }
+      },
+      cloud: {
+        enabled: false,
+        email: '',
+        consentedAt: null,
+        lastSyncedAt: null,
+        lastResult: ''
       },
       track: null,
       trackDetails: {},
@@ -3242,6 +3251,16 @@
       fallback.auth.session = { signedIn: true, signedInAt: fallback.pledge.signedAt, credentialId: '', actingAs: 'member' };
     }
 
+    if (raw.cloud && typeof raw.cloud === 'object' && !Array.isArray(raw.cloud)) {
+      fallback.cloud = {
+        enabled: Boolean(raw.cloud.enabled && raw.cloud.consentedAt),
+        email: cleanString(raw.cloud.email, 160),
+        consentedAt: cleanString(raw.cloud.consentedAt, 40) || null,
+        lastSyncedAt: cleanString(raw.cloud.lastSyncedAt, 40) || null,
+        lastResult: cleanString(raw.cloud.lastResult, 200)
+      };
+    }
+
     if (typeof raw.track === 'string' && hasOwn(TRACKS, raw.track)) {
       fallback.track = raw.track;
     }
@@ -3853,7 +3872,11 @@
   let currentInquiryType = 'waitlist';
 
   let publicSyncTimer = null;
+  let privateSyncTimer = null;
+  let privateSyncGeneration = 0;
+  let privatePushInFlight = null;
   let suppressPublicSync = false;
+  let suppressPrivateSync = false;
 
   function saveState() {
     try {
@@ -3865,6 +3888,7 @@
       }
     }
     if (!suppressPublicSync) queuePublicSync();
+    if (!suppressPrivateSync && state.cloud && state.cloud.enabled) queuePrivateSync();
   }
 
   function getPushedPublicIds() {
@@ -4012,6 +4036,262 @@
     if (!hasRows) return;
     const result = await bridge.pushPublicData(snapshot);
     if (result && result.ok && Array.isArray(result.pushed)) markPushedPublicIds(result.pushed);
+  }
+
+  /* ------------------------------------------------------------------------
+      Private opt-in sync. The public bridge above stays public-only; these
+      helpers run only after a member explicitly enables private sync.
+     ------------------------------------------------------------------------ */
+  function privateBridge() {
+    return typeof window !== 'undefined' ? window.UnboughtPrivateSync : null;
+  }
+
+  function saveStatePrivateOnly() {
+    const previousPublic = suppressPublicSync;
+    const previousPrivate = suppressPrivateSync;
+    suppressPublicSync = true;
+    suppressPrivateSync = true;
+    try {
+      saveState();
+    } finally {
+      suppressPublicSync = previousPublic;
+      suppressPrivateSync = previousPrivate;
+    }
+  }
+
+  function localWaitlistEntry() {
+    try {
+      const raw = localStorage.getItem('unbought:waitlist:v1');
+      const parsed = raw ? JSON.parse(raw) : null;
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function privateMemberSnapshot() {
+    const pledge = state.pledge;
+    if (!pledge || !state.cloud || !state.cloud.enabled || !state.cloud.consentedAt) return null;
+    return {
+      member_id: cleanString(pledge.memberId, 100),
+      chosen_name: cleanString(pledge.name, 60),
+      legal_first_name: cleanString(pledge.firstName, 40),
+      legal_middle_initial: cleanString(pledge.middleInitial, 2),
+      legal_last_name: cleanString(pledge.lastName, 60),
+      legal_suffix: cleanString(pledge.suffix, 12),
+      legal_full_name: cleanString(pledge.fullName, 100),
+      email: cleanString(state.cloud.email, 160),
+      location_label: cleanString(pledge.location, 80),
+      address1: cleanString(pledge.address1, 100),
+      address2: cleanString(pledge.address2, 100),
+      city: cleanString(pledge.city, 80),
+      state: cleanString(pledge.state, 2),
+      zip: cleanString(pledge.zip, 10),
+      county: cleanString(pledge.county, 60),
+      mailing_address: cleanString(pledge.mailingAddress, 240),
+      physical_address1: cleanString(pledge.physicalAddress1, 100),
+      physical_address2: cleanString(pledge.physicalAddress2, 100),
+      physical_city: cleanString(pledge.physicalCity, 80),
+      physical_state: cleanString(pledge.physicalState, 2),
+      physical_zip: cleanString(pledge.physicalZip, 10),
+      physical_county: cleanString(pledge.physicalCounty, 60),
+      physical_address: cleanString(pledge.physicalAddress, 240),
+      dob: cleanString(pledge.dob, 10),
+      housing_status: cleanString(pledge.housingStatus, 40),
+      profession: cleanString(pledge.profession, 80),
+      paid_skills: cleanString(pledge.paidSkills, 240),
+      unpaid_skills: cleanString(pledge.unpaidSkills, 240),
+      cell_phone: cleanString(pledge.cellPhone, 40),
+      public_phone: cleanString(pledge.publicPhoneNumber, 40),
+      public_phone_opt_in: Boolean(pledge.publicPhone),
+      receive_texts: Boolean(pledge.receiveTexts),
+      monthly_hours: pledge.monthlyHours === 'care' ? 'care' : Number(pledge.monthlyHours) || null,
+      pledge_status: cleanString(pledge.status, 40) || 'active',
+      signed_at: cleanString(pledge.signedAt, 40) || null,
+      sync_consented_at: cleanString(state.cloud.consentedAt, 40)
+    };
+  }
+
+  function privateWaitlistSnapshot() {
+    const entry = localWaitlistEntry();
+    if (!entry || !state.cloud || !state.cloud.enabled || !state.cloud.consentedAt) return null;
+    return {
+      member_id: state.pledge ? cleanString(state.pledge.memberId, 100) : '',
+      name: cleanString(entry.name, 120),
+      contact: cleanString(entry.contact, 160),
+      location: cleanString(entry.location, 120),
+      note: cleanString(entry.note, 600),
+      interests: Array.isArray(entry.interests) ? entry.interests.slice(0, 20) : [],
+      agreed: true,
+      saved_at: cleanString(entry.savedAt, 40) || new Date().toISOString()
+    };
+  }
+
+  function privateSnapshot() {
+    return { member: privateMemberSnapshot(), waitlist: privateWaitlistSnapshot() };
+  }
+
+  function renderPrivateSyncStatus(message) {
+    const status = document.getElementById('private-sync-status');
+    if (!status) return;
+    const bridge = privateBridge();
+    const configured = bridge && bridge.isConfigured();
+    const enabled = Boolean(state.cloud && state.cloud.enabled);
+    const email = state.cloud ? cleanString(state.cloud.email, 160) : '';
+
+    let text = message || cleanString(state.cloud && state.cloud.lastResult, 200);
+    if (!configured) text = 'Private sync is not configured on this deployment.';
+    else if (!enabled) text = text || 'Private sync is off. Your private records stay in this browser.';
+    else if (email) text = `${text || 'Private sync is on.'} Signed in as ${email}.`;
+
+    status.textContent = text;
+
+    const active = document.getElementById('private-sync-active');
+    const setup = document.getElementById('private-sync-setup');
+    if (active) active.hidden = !enabled;
+    if (setup) setup.hidden = enabled;
+
+    const syncNow = document.getElementById('private-sync-now');
+    if (syncNow) syncNow.hidden = !enabled;
+
+    const lastSynced = document.getElementById('private-sync-last');
+    if (lastSynced) {
+      const when = state.cloud && state.cloud.lastSyncedAt ? formatDate(state.cloud.lastSyncedAt) : '';
+      lastSynced.textContent = when ? `Last synced ${when}.` : 'Not synced yet.';
+    }
+  }
+
+  function setPrivateSyncResult(message) {
+    if (!state.cloud) return;
+    state.cloud.lastResult = cleanString(message, 200);
+    saveStatePrivateOnly();
+    renderPrivateSyncStatus(message);
+  }
+
+  function queuePrivateSync() {
+    if (!state.cloud || !state.cloud.enabled) return;
+    const bridge = privateBridge();
+    if (!bridge || !bridge.isConfigured()) return;
+    clearTimeout(privateSyncTimer);
+    privateSyncTimer = setTimeout(() => {
+      void pushPrivateData();
+    }, 700);
+  }
+
+  async function pushPrivateData(options = {}) {
+    const bridge = privateBridge();
+    if (!bridge || !bridge.isConfigured()) return { ok: false, error: 'Private sync is not configured.' };
+    if (!state.cloud || !state.cloud.enabled) return { ok: false, error: 'Private sync is off.' };
+
+    const generation = privateSyncGeneration;
+    if (options.quiet !== true) setPrivateSyncResult('Syncing private data...');
+    const pushPromise = bridge.pushPrivate(privateSnapshot());
+    privatePushInFlight = pushPromise;
+    let result;
+    try {
+      result = await pushPromise;
+    } finally {
+      if (privatePushInFlight === pushPromise) privatePushInFlight = null;
+    }
+
+    // A disable/delete may have completed while the push was in flight. Never
+    // write a status or show a toast that would undo that result.
+    if (generation !== privateSyncGeneration) return { ok: false, error: 'Private sync was turned off.' };
+
+    if (result && result.ok) {
+      state.cloud.lastSyncedAt = new Date().toISOString();
+      setPrivateSyncResult('Private data synced. Only you and site admins can read it.');
+      if (options.announce !== false) {
+        announce('Private data synced.');
+        showToast('Private data synced.', false);
+      }
+    } else {
+      setPrivateSyncResult(result && result.error ? result.error : 'Private sync failed.');
+      if (options.announce !== false) showToast('Private sync failed.', true);
+    }
+    return result;
+  }
+
+  async function enablePrivateSync(email, password, createAccount, consented) {
+    const bridge = privateBridge();
+    if (!bridge || !bridge.isConfigured()) return { ok: false, error: 'Private sync is not configured.' };
+    if (!consented) return { ok: false, error: 'Check the consent box before turning on private sync.' };
+
+    const authResult = createAccount
+      ? await bridge.signUp(email, password)
+      : await bridge.signIn(email, password);
+    if (!authResult || !authResult.ok) return authResult;
+
+    const previous = state.cloud ? { ...state.cloud } : null;
+    state.cloud.enabled = true;
+    state.cloud.email = cleanString(email, 160);
+    state.cloud.consentedAt = new Date().toISOString();
+    state.cloud.lastResult = 'Private sync enabled.';
+    saveStatePrivateOnly();
+    renderPrivateSyncStatus('Private sync enabled.');
+
+    const pushResult = await pushPrivateData({ announce: false });
+    if (!pushResult.ok) {
+      if (previous) {
+        state.cloud.enabled = previous.enabled;
+        state.cloud.email = previous.email;
+        state.cloud.consentedAt = previous.consentedAt;
+        state.cloud.lastSyncedAt = previous.lastSyncedAt;
+        state.cloud.lastResult = pushResult.error || 'Private sync could not be enabled.';
+        saveStatePrivateOnly();
+        renderPrivateSyncStatus(state.cloud.lastResult);
+      }
+      return pushResult;
+    }
+    return { ok: true, email: state.cloud.email };
+  }
+
+  async function disablePrivateSync(deleteCopy) {
+    const bridge = privateBridge();
+    if (!bridge) return { ok: false, error: 'Private sync is not available.' };
+
+    // Stop queued and in-flight uploads before touching the remote copy. A push
+    // that finishes after the delete would otherwise recreate the deleted rows.
+    clearTimeout(privateSyncTimer);
+    privateSyncTimer = null;
+    privateSyncGeneration += 1;
+    state.cloud.enabled = false;
+    state.cloud.consentedAt = null;
+    saveStatePrivateOnly();
+
+    // Let any already-running upload finish before deleting, so the delete is
+    // always the last write to the private tables.
+    if (privatePushInFlight) {
+      try {
+        await privatePushInFlight;
+      } catch (error) {
+        // The push path already reports its own failure.
+      }
+    }
+
+    let remoteError = '';
+    if (deleteCopy) {
+      const removed = await bridge.deletePrivate();
+      if (!removed.ok) remoteError = removed.error || 'Could not delete your private cloud copy.';
+    }
+
+    const signedOut = await bridge.signOut();
+    if (!signedOut.ok && !remoteError) remoteError = signedOut.error || 'Could not sign out of private sync.';
+
+    state.cloud.email = '';
+    state.cloud.lastSyncedAt = null;
+    state.cloud.lastResult = remoteError
+      ? `${remoteError} Private sync is off on this device.`
+      : deleteCopy
+        ? 'Private sync is off. Your cloud copy was deleted.'
+        : 'Private sync is off. Your private records stay in this browser.';
+    saveStatePrivateOnly();
+    renderPrivateSyncStatus(state.cloud.lastResult);
+    announce(state.cloud.lastResult);
+
+    if (remoteError) return { ok: false, error: remoteError, localCleared: true };
+    showToast(deleteCopy ? 'Private sync off; cloud copy deleted.' : 'Private sync off.', false);
+    return { ok: true };
   }
 
   function mergePublicData(snapshot) {
@@ -6497,7 +6777,7 @@
           <p class="account-subtitle">${e(VOLUNTEER_ACCESS_COPY)}</p>
         </div>
       </header>
-      <p class="account-note">Your recorded role${roles ? `: <strong>${e(roles)}</strong>` : ''} gives you local access to the member-area tools on this device. No real website, server, or admin access is granted, and nothing is transmitted.</p>
+      <p class="account-note">Your recorded role${roles ? `: <strong>${e(roles)}</strong>` : ''} gives you local access to the member-area tools on this device. It grants no Supabase admin access; optional private sync uses a separate Supabase Auth account only after you opt in.</p>
       <ul class="volunteer-duty-list">${duties.map((duty) => `<li>${e(duty)}</li>`).join('')}</ul>
     </section>`;
   }
@@ -6693,7 +6973,7 @@
             accountDetail('Representative user', e(m.powerOfAttorney.username || 'Not set'))
           ] : [])
         ])}
-        <p class="account-note">These are local demo sign-ins, not real logins. Salted password hashes are stored only on this device; nothing is transmitted. A representative sign-in can manage this member’s record locally on their behalf.</p>`)
+        <p class="account-note">These are local demo sign-ins, not real logins. Salted password hashes are stored only on this device and are never uploaded. Optional private sync uses a separate Supabase Auth account. A representative sign-in can manage this member’s record locally on their behalf.</p>`)
     ].join('');
   }
 
@@ -6798,8 +7078,10 @@
     const m = state.pledge;
     const s = state.settings || {};
     const e = escapeHtml;
+    const cloudEnabled = Boolean(state.cloud && state.cloud.enabled);
+    const cloudEmail = state.cloud ? cleanString(state.cloud.email, 160) : '';
     const notice = state.settings && state.settings.showPrototypeNotices
-      ? `<p class="prototype-note">Prototype: account details, local usernames, and salted password hashes are stored only on this device. There is no real authentication or server, and nothing is transmitted.</p>`
+      ? `<p class="prototype-note">Prototype: account details, local usernames, and salted password hashes are stored only on this device and are never uploaded. Local sign-ins are not real accounts; optional private sync uses Supabase Auth after you explicitly opt in.</p>`
       : '';
     const dobMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(m.dob || ''));
     const dobYearValue = dobMatch ? dobMatch[1] : '';
@@ -6978,7 +7260,7 @@
               </div>
             </div>
             <input type="hidden" name="dob" value="${e(m.dob || '')}">
-            <p class="field-hint">Private and stored only on this device. Members must be 18 or older.</p>
+            <p class="field-hint">Private and stored on this device. It is included in optional private sync only if you turn it on. Members must be 18 or older.</p>
           </fieldset>
           <fieldset>
             <legend>Phone &amp; texts</legend>
@@ -6986,7 +7268,7 @@
               <div class="field">
                 <label for="account-cell-phone">Cell phone</label>
                 <input type="tel" id="account-cell-phone" name="cellPhone" data-cell-phone autocomplete="tel" maxlength="40" value="${e(m.cellPhone || m.phone || '')}">
-                <p class="field-hint">Private. Stored only on this device.</p>
+                <p class="field-hint">Private. Stored on this device and sent only if you turn on optional private sync.</p>
               </div>
               <div class="field">
                 <label for="account-public-phone">Public phone <span class="optional">(optional)</span></label>
@@ -6997,7 +7279,7 @@
             <label class="checkbox"><input type="checkbox" name="samePhone" data-same-phone${m.samePhone !== false ? ' checked' : ''}> <span>Public phone is the same as my cell phone</span></label>
             <label class="checkbox"><input type="checkbox" name="publicPhone"${m.publicPhone ? ' checked' : ''}> <span>Show my public phone number on my public resume</span></label>
             <label class="checkbox"><input type="checkbox" name="receiveTexts"${m.receiveTexts ? ' checked' : ''}> <span>I want to receive texts at my cell number</span></label>
-            <p class="field-hint">In this prototype no texts are sent and nothing is transmitted. The text choice is recorded locally only.</p>
+            <p class="field-hint">No texts are sent. The text choice is recorded locally and is included in optional private sync only if you turn it on.</p>
           </fieldset>
           <fieldset>
             <legend>Profile &amp; skills</legend>
@@ -7068,7 +7350,40 @@
           </div>
         </form>
       </div>
-      <p class="account-note">Changes are saved only on this device; nothing is transmitted. Your resume hides your legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated, and shows your phone only if you opt in. Logged hours and item counts are never typed here; they appear only after mutual confirmation or review. To withdraw your membership, use the Withdraw membership button on the <a href="pledge.html#withdraw-pledge">Pledge page</a>.</p>
+      <div class="settings-block private-sync-settings">
+        <h4>Private cloud sync <span class="optional">(optional)</span></h4>
+        <p class="account-note">Off by default. If you turn it on, your member ID, account details, pledge details, and waiting-list entry are sent to Supabase, where only you and site admins can read them. Passwords are handled by Supabase Auth; no password or local hash is uploaded.</p>
+        <p class="account-note" id="private-sync-status" role="status">${cloudEnabled ? 'Private sync is on.' : 'Private sync is off. Your private records stay in this browser.'}</p>
+        <div id="private-sync-setup"${cloudEnabled ? ' hidden' : ''}>
+          <form class="account-form" data-private-signin-form>
+            <div class="form-row">
+              <div class="field">
+                <label for="private-sync-email">Cloud sign-in email <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="email" id="private-sync-email" name="email" autocomplete="email" maxlength="160" required value="${e(cloudEmail)}">
+              </div>
+              <div class="field">
+                <label for="private-sync-password">Cloud password <span class="required-mark" aria-hidden="true">*</span></label>
+                <input type="password" id="private-sync-password" name="password" autocomplete="new-password" minlength="8" required>
+                <p class="field-hint">Supabase stores this password. Unbought never saves it on this device.</p>
+              </div>
+            </div>
+            <label class="checkbox"><input type="checkbox" name="privateSyncConsent" required> <span>I understand this sends my private details to Supabase, where only I and site admins can read them.</span></label>
+            <div class="account-form-actions">
+              <button type="submit" class="button button--primary button--small" data-private-sync-mode="signin">Sign in &amp; sync</button>
+              <button type="submit" class="button button--outline button--small" data-private-sync-mode="signup">Create account &amp; sync</button>
+            </div>
+          </form>
+        </div>
+        <div id="private-sync-active"${cloudEnabled ? '' : ' hidden'}>
+          <p class="account-note" id="private-sync-last"></p>
+          <div class="account-form-actions">
+            <button type="button" class="button button--primary button--small" id="private-sync-now">Sync now</button>
+            <button type="button" class="button button--outline button--small" id="private-sync-stop">Turn off private sync</button>
+            <button type="button" class="button button--ghost button--small" id="private-sync-delete">Delete my cloud copy</button>
+          </div>
+        </div>
+      </div>
+      <p class="account-note">Changes are saved on this device. They are sent only if you turn on optional private sync above. Your resume hides your legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated, and shows your phone only if you opt in. Logged hours and item counts are never typed here; they appear only after mutual confirmation or review. To withdraw your membership, use the Withdraw membership button on the <a href="pledge.html#withdraw-pledge">Pledge page</a>.</p>
       <div class="settings-block">
         <h4>Local preferences</h4>
         <p class="account-note">These settings only change how this prototype behaves on this device. Nothing is sent anywhere.</p>
@@ -7086,6 +7401,7 @@
     initAccountDob(panel);
     initAccountAddressSync(panel);
     initAccountPledgeFields(panel);
+    renderPrivateSyncStatus();
   }
 
   function refreshSettingsPanel(focusSelector) {
@@ -7489,7 +7805,7 @@
             <div class="field">
               <label for="profile-cell-phone">Cell phone</label>
               <input type="tel" id="profile-cell-phone" name="cellPhone" data-cell-phone autocomplete="tel" maxlength="40" value="${e(m.cellPhone || m.phone || '')}">
-              <p class="field-hint">Private. Stored only on this device.</p>
+              <p class="field-hint">Private. Stored on this device and sent only if you turn on optional private sync.</p>
             </div>
             <div class="field">
               <label for="profile-public-phone">Public phone <span class="optional">(optional)</span></label>
@@ -7505,7 +7821,7 @@
             <label class="checkbox"><input type="checkbox" name="available"${m.available !== false ? ' checked' : ''}> <span>Available for labor and product requests</span></label>
             <p class="field-hint">When this is off, neighbors can still see your offers but cannot send labor or product requests.</p>
           </fieldset>
-          <p class="field-hint">In this prototype no texts are sent and nothing is transmitted. Always private: legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, amounts donated, listing comment text, group chats, group interactions, and other private interactions.</p>
+          <p class="field-hint">No texts are sent. Member details are sent only if you turn on optional private sync; reports, donations, listing comments, group chats, and other interactions are never sent. Always private here: legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated.</p>
           <div class="account-form-actions">
             <button type="submit" class="button button--primary button--small">Save privacy choices</button>
           </div>
@@ -9751,6 +10067,50 @@
     initDashboardTabs();
 
     dash.addEventListener('click', (event) => {
+      const privateSyncNow = event.target.closest('#private-sync-now');
+      if (privateSyncNow) {
+        event.preventDefault();
+        void pushPrivateData();
+        return;
+      }
+      const privateSyncStop = event.target.closest('#private-sync-stop');
+      if (privateSyncStop) {
+        event.preventDefault();
+        showConfirm({
+          title: 'Turn off private sync?',
+          message: 'This signs you out of private sync and stops future uploads. Your private copy in Supabase stays unless you choose “Delete my cloud copy.” Your details remain in this browser.',
+          confirmLabel: 'Turn off sync',
+          tone: 'danger',
+          onConfirm: () => {
+            void disablePrivateSync(false).then((result) => {
+              if (result && !result.ok) {
+                setPrivateSyncResult(result.error || 'Could not turn off private sync.');
+                showToast('Could not turn off private sync.', true);
+              }
+            });
+          }
+        });
+        return;
+      }
+      const privateSyncDelete = event.target.closest('#private-sync-delete');
+      if (privateSyncDelete) {
+        event.preventDefault();
+        showConfirm({
+          title: 'Delete your private cloud copy?',
+          message: 'This permanently removes your member record and waiting-list entry from Supabase, then turns off private sync. Your local records stay in this browser. This cannot be undone.',
+          confirmLabel: 'Delete cloud copy',
+          tone: 'danger',
+          onConfirm: () => {
+            void disablePrivateSync(true).then((result) => {
+              if (result && !result.ok) {
+                setPrivateSyncResult(result.error || 'Could not delete your private cloud copy.');
+                showToast('Could not delete your private cloud copy.', true);
+              }
+            });
+          }
+        });
+        return;
+      }
       const requestSend = event.target.closest('[data-friend-request-send]');
       if (requestSend) {
         event.preventDefault();
@@ -9870,6 +10230,34 @@
       if (!form.reportValidity()) return;
       const data = new FormData(form);
       const now = new Date().toISOString();
+
+      if (form.matches('[data-private-signin-form]')) {
+        event.preventDefault();
+        if (!data.get('privateSyncConsent')) {
+          setPrivateSyncResult('Check the consent box before turning on private sync.');
+          return;
+        }
+        const createAccount = Boolean(event.submitter && event.submitter.dataset.privateSyncMode === 'signup');
+        const buttons = form.querySelectorAll('button[type="submit"]');
+        buttons.forEach((button) => { button.disabled = true; });
+        setPrivateSyncResult(createAccount ? 'Creating your private sync account...' : 'Signing in to private sync...');
+        try {
+          const result = await enablePrivateSync(
+            data.get('email'), data.get('password'), createAccount, Boolean(data.get('privateSyncConsent'))
+          );
+          if (result && result.ok) {
+            refreshSettingsPanel('[data-private-sync-now]');
+            announce('Private sync is on. Your private records were uploaded for you and site admins only.');
+            showToast('Private sync enabled.', false);
+          } else {
+            setPrivateSyncResult(result && result.error ? result.error : 'Could not enable private sync.');
+            showToast('Private sync could not be enabled.', true);
+          }
+        } finally {
+          buttons.forEach((button) => { button.disabled = false; });
+        }
+        return;
+      }
 
       if (form.matches('[data-confirm-hours]')) {
         event.preventDefault();
@@ -11859,13 +12247,20 @@
         const cancellation = getSeveranceSummary().cancellation;
         showConfirm({
           title: 'Withdraw your membership?',
-          message: `Your membership, local usernames, and salted password hashes will be removed from this browser, including any power-of-attorney representative sign-in. You can still browse offers, but you will need to sign the pledge again to post, request, or manage your track. Your saved track details may remain on this device. A local cancellation estimate of ${formatMoney(cancellation.estimate)} is recorded for the prototype, capped at ${formatMoney(cancellation.cap)}. It is based on your group/alliance share (${cancellation.memberPercent}%) and those groups' share of the donation fund (${cancellation.groupFundPercent}%). It is separate from your group's uncapped slice of unspoken-for money, so the two amounts can be different. No payout occurs and nothing is transmitted.`,
+          message: `Your membership, local usernames, and salted password hashes will be removed from this browser, including any power-of-attorney representative sign-in. If private sync is on, your private cloud copy is deleted too. You can still browse offers, but you will need to sign the pledge again to post, request, or manage your track. Your saved track details may remain on this device. A local cancellation estimate of ${formatMoney(cancellation.estimate)} is recorded for the prototype, capped at ${formatMoney(cancellation.cap)}. It is based on your group/alliance share (${cancellation.memberPercent}%) and those groups' share of the donation fund (${cancellation.groupFundPercent}%). It is separate from your group's uncapped slice of unspoken-for money, so the two amounts can be different. No payout occurs and no donation data is transmitted.`,
           confirmLabel: 'Withdraw membership',
           tone: 'danger',
-          onConfirm: () => {
+          onConfirm: async () => {
+            const hadPrivateSync = Boolean(state.cloud && state.cloud.enabled);
             state.pledge = null;
             state.auth = { credential: null, session: { signedIn: false, signedInAt: null } };
-            saveState();
+            saveStatePrivateOnly();
+            if (hadPrivateSync) {
+              const removed = await disablePrivateSync(true);
+              if (!removed.ok) {
+                showToast('Membership withdrawn, but the private cloud copy could not be deleted. Check Settings.', true);
+              }
+            }
             renderPledge();
             renderTrackGate();
             renderTrackPanel(state.track);
@@ -11950,15 +12345,22 @@
     }
 
     if (signout) {
-      signout.addEventListener('click', () => {
+      signout.addEventListener('click', async () => {
+        const hadPrivateSync = Boolean(state.cloud && state.cloud.enabled);
+        if (hadPrivateSync) {
+          const stopped = await disablePrivateSync(false);
+          if (!stopped.ok) showToast('Signed out locally, but private sync could not be stopped here.', true);
+        }
         setSession(false);
         renderAuthUi();
         renderPledge();
         renderSharedMemberViews();
         renderVolunteerStatus();
         renderDashboard();
-        announce('You are signed out. Your membership details remain on this device.');
-        showToast('Signed out of this browser.', false);
+        announce(hadPrivateSync
+          ? 'You are signed out of this browser and private sync is off. Your cloud copy remains until you delete it in Settings.'
+          : 'You are signed out. Your membership details remain on this device.');
+        showToast(hadPrivateSync ? 'Signed out; private sync off.' : 'Signed out of this browser.', false);
       });
     }
   }
@@ -13070,10 +13472,18 @@
     resetButton.addEventListener('click', () => {
       showConfirm({
         title: 'Clear this browser\'s demo data',
-        message: 'This removes your pledge and membership, account credentials, track, listings and listing comments, requests, inquiries, donation intents, contributions, Unbought donation fund records, volunteer offers, reports and votes, notifications, friends, groups, social chat drafts, messages, suggestions, waiting-list entry, and settings from this browser. It cannot be undone. Public listings and community posts already shared through Supabase are not affected; this prototype has no public-post delete tool.',
+        message: 'This removes your pledge and membership, account credentials, track, listings and listing comments, requests, inquiries, donation intents, contributions, Unbought donation fund records, volunteer offers, reports and votes, notifications, friends, groups, social chat drafts, messages, suggestions, waiting-list entry, and settings from this browser. It cannot be undone. If private sync was on, this signs you out and clears its session here, but it does not delete your private cloud copy; use “Delete my cloud copy” in Settings first. Public listings and community posts already shared through Supabase are not affected; this prototype has no public-post delete tool.',
         confirmLabel: 'Clear browser data',
         tone: 'danger',
-        onConfirm: () => {
+        onConfirm: async () => {
+          const privateBridge = privateBridge();
+          if (privateBridge && state.cloud && state.cloud.enabled) {
+            try {
+              await privateBridge.signOut();
+            } catch (error) {
+              // Clear the local session below even if the network is unavailable.
+            }
+          }
           try {
             localStorage.removeItem(STORAGE_KEY);
             Object.keys(localStorage)
@@ -13204,6 +13614,23 @@
     renderSharedMemberViews();
     renderAuthUi();
     renderNewsFeeds();
+    document.addEventListener('unbought:waitlist-change', (event) => {
+      const removed = event && event.detail && event.detail.hasEntry === false;
+      if (removed && state.cloud && state.cloud.enabled) {
+        const bridge = privateBridge();
+        if (bridge && typeof bridge.deletePrivateWaitlist === 'function') {
+          void bridge.deletePrivateWaitlist().then((result) => {
+            if (!result || !result.ok) {
+              setPrivateSyncResult(result && result.error
+                ? result.error
+                : 'Could not remove the waiting-list entry from your cloud copy.');
+            }
+          });
+        }
+        return;
+      }
+      queuePrivateSync();
+    });
     document.addEventListener('unbought:donation-recorded', () => {
       // donation.js writes to shared state; reload to reflect in account UI
       try {

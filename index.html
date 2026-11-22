@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="styles.css">
   <script src="supabase-config.js"></script>
   <script src="supabase-sync.js" defer></script>
+  <script src="private-sync.js" defer></script>
   <script src="app.js" defer></script>
   <script src="quotes.js" defer></script>
 </head>
@@ -95,7 +96,7 @@
         <div class="hero-copy">
           <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> A consent-based, currency-free mutual aid society</p>
           <h1 id="hero-title">You Don’t Need <span class="mark">Money</span> to Survive. You Need <span class="mark mark--blue">Community.</span></h1>
-          <p class="hero-lede">Unbought is where pledged members offer skilled labor freely and share goods through a mutual-aid commons, teach and learn without tuition, and build community land trusts together. Browsing is open to everyone. Public listings and community posts are shared through Supabase; pledges, private details, messages, reports, and donation records stay in this browser. No real payment is processed.</p>
+          <p class="hero-lede">Unbought is where pledged members offer skilled labor freely and share goods through a mutual-aid commons, teach and learn without tuition, and build community land trusts together. Browsing is open to everyone. Public listings and community posts are shared through Supabase; pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, reports, and donation records always stay here. No real payment is processed.</p>
 
           <div class="hero-actions">
             <a class="button button--primary" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span> <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
@@ -441,7 +442,7 @@
             <p class="eyebrow">Membership</p>
             <h2 id="pledge-title">Signing the pledge is how you join.</h2>
           </div>
-          <p class="section-head-aside">The pledge is our membership agreement. Read the five commitments, then complete the sign-up form with your details, a username, and a password to open your dashboard. Your membership details stay in this browser—not on a server, not for sale.</p>
+          <p class="section-head-aside">The pledge is our membership agreement. Read the five commitments, then complete the sign-up form with your details, a username, and a password to open your dashboard. Your membership details stay in this browser unless you turn on optional private sync—not for sale.</p>
         </div>
 
         <div class="membership-grid">
@@ -463,7 +464,7 @@
               <a class="button button--primary" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span> <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
               <a class="button button--outline" href="pledge.html">Read the five commitments</a>
             </div>
-            <p class="form-hint">Prototype: local username and salted password hash only—no real account, payment, or server. Nothing is transmitted.</p>
+            <p class="form-hint">Prototype: local username and salted password hash only—no real account or payment. The hash is never uploaded; optional private sync uses a separate Supabase Auth account.</p>
           </div>
         </div>
       </div>
@@ -714,7 +715,7 @@
           <ul>
             <li>The pledge film is a placeholder with English captions; a fully described and translated production is still to come.</li>
             <li>No live support inbox, assisted sign-up line, or moderation queue exists yet.</li>
-            <li>Listings, membership records, and waiting-list entries are stored only in this browser, so there is no shared service or account recovery.</li>
+            <li>Listings, membership records, and waiting-list entries are stored in this browser by default, and optional private sync is off until you choose it. Local demo accounts have no account recovery.</li>
           </ul>
           <h3>Reporting a barrier</h3>
           <p>Before launch, Unbought will publish a named accessibility steward and a direct reporting channel. This prototype has no outbound support inbox, so the commitment is documented here rather than implied.</p>
@@ -815,7 +816,7 @@
     <div class="container footer-utility">
       <div class="footer-utility-copy">
         <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
-        <p>Public listing details and community posts are shared through Supabase when connected; pledges, private details, messages, reports, and donation records stay in this browser.</p>
+        <p>Public listing details and community posts are shared through Supabase when connected; pledges and private details can optionally sync with your permission; messages, reports, and donation records stay in this browser.</p>
       </div>
       <button class="button button--ghost-light button--small" id="reset-demo" type="button">
         <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>
