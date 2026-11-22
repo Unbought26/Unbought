@@ -43,7 +43,7 @@
     if (!isConfigured()) return null;
     if (clientPromise) return clientPromise;
 
-    clientPromise = import('https://esm.sh/@supabase/supabase-js@2.49.8')
+    clientPromise = import('./vendor/supabase/supabase-js-2.49.8.bundle.mjs')
       .then(({ createClient }) => createClient(normalizedUrl(), publishableKey(), {
         auth: {
           persistSession: true,
@@ -218,6 +218,28 @@
           )
         });
       }
+      if (snapshot && typeof snapshot === 'object') {
+        const developerMemberId = String(
+          snapshot.webDeveloper && snapshot.webDeveloper.member_id ? snapshot.webDeveloper.member_id : ''
+        ).trim().slice(0, 100);
+        if (developerMemberId) {
+          // Only the Auth user ID and local member ID are stored. The site
+          // adds this row when an opted-in member offers Web development and
+          // removes it when that offer or private sync is removed.
+          jobs.push({
+            label: 'web-developer pool row',
+            query: client.from('private_web_developers').upsert(
+              { user_id: userId, member_id: developerMemberId },
+              { onConflict: 'user_id' }
+            )
+          });
+        } else {
+          jobs.push({
+            label: 'web-developer pool row',
+            query: client.from('private_web_developers').delete().eq('user_id', userId)
+          });
+        }
+      }
       if (!jobs.length) return { ok: true, pushed: [], skipped: true };
 
       const pushed = [];
@@ -275,6 +297,7 @@
         }
       }
       const results = await Promise.all([
+        client.from('private_web_developers').delete().eq('user_id', userId),
         client.from('private_members').delete().eq('user_id', userId),
         client.from('private_waitlist_entries').delete().eq('user_id', userId)
       ]);

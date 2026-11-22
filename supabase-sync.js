@@ -8,14 +8,20 @@
    group cards, Free Labor/Free Stuff listings, community channels, community
    threads, and community chat posts.
 
-   It does NOT sync pledge records, passwords, legal names, addresses, phone
-   numbers, birthdates, messages, reports, donations, waitlist entries, photos,
-   listing comments, group chats, or social chats.
+   Anonymous visitors can read public data. Shared-content writes go through
+   validated database functions and require a signed-in, pledged Supabase Auth
+   member. No client-supplied member ID is trusted for a write.
+
+   This file does NOT sync pledge records, passwords, legal names, addresses,
+   phone numbers, birthdates, messages, reports, donations, waitlist entries,
+   photos, listing comments, group chats, or social chats.
    ========================================================================== */
 (() => {
   'use strict';
 
   const CONFIG = window.UNBOUGHT_SUPABASE || {};
+  const SDK_URL = './vendor/supabase/supabase-js-2.49.8.bundle.mjs';
+  const AUTH_STORAGE_KEY = 'unbought:private-auth';
   const TABLES = Object.freeze({
     groups: 'public_groups',
     listings: 'public_listings',
@@ -23,6 +29,7 @@
     threads: 'public_community_threads',
     posts: 'public_community_posts'
   });
+  const KINDS = Object.freeze(Object.keys(TABLES));
 
   let clientPromise = null;
 
@@ -50,13 +57,15 @@
     if (!isConfigured()) return null;
     if (clientPromise) return clientPromise;
 
-    clientPromise = import('https://esm.sh/@supabase/supabase-js@2.49.8')
+    clientPromise = import(SDK_URL)
       .then(({ createClient }) => {
         const client = createClient(normalizedUrl(), publishableKey(), {
           auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-            detectSessionInUrl: false
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: false,
+            storageKey: AUTH_STORAGE_KEY,
+            flowType: 'pkce'
           }
         });
         setStatus('connected');
@@ -72,19 +81,23 @@
     return clientPromise;
   }
 
-  async function fetchPublicData() {
+  function selectedKinds(kinds) {
+    if (!Array.isArray(kinds) || !kinds.length) return KINDS.slice();
+    return KINDS.filter((kind) => kinds.includes(kind));
+  }
+
+  async function fetchPublicData(kinds) {
     const client = await getClient();
     if (!client) return null;
 
-    const results = await Promise.all([
-      client.from(TABLES.groups).select('*').order('created_at', { ascending: true }).limit(1000),
-      client.from(TABLES.listings).select('*').order('created_at', { ascending: true }).limit(1000),
-      client.from(TABLES.channels).select('*').order('created_at', { ascending: true }).limit(1000),
-      client.from(TABLES.threads).select('*').order('created_at', { ascending: true }).limit(1000),
-      client.from(TABLES.posts).select('*').order('created_at', { ascending: true }).limit(1000)
-    ]);
+    const chosen = selectedKinds(kinds);
+    if (!chosen.length) return {};
 
-    const failed = results.find((result) => result.error);
+    const results = await Promise.all(chosen.map((kind) => (
+      client.from(TABLES[kind]).select('*').order('created_at', { ascending: true }).limit(1000)
+    )));
+
+    const failed = results.find((result) => result && result.error);
     if (failed) {
       setStatus('error');
       console.warn('Unbought public data could not be loaded.', failed.error);
@@ -92,50 +105,54 @@
     }
 
     setStatus('connected');
-    return {
-      groups: results[0].data || [],
-      listings: results[1].data || [],
-      channels: results[2].data || [],
-      threads: results[3].data || [],
-      posts: results[4].data || []
-    };
+    const data = {};
+    chosen.forEach((kind, index) => {
+      data[kind] = (results[index] && results[index].data) || [];
+    });
+    return data;
+  }
+
+  function writeError(error) {
+    const code = error && error.code ? String(error.code) : '';
+    const raw = error && error.message ? String(error.message) : '';
+    if (code === '42501' || code === '401' || /signed-in|pledged member|permission denied/i.test(raw)) {
+      return 'Sign in as a pledged member before changing shared site content.';
+    }
+    if (code === '22023' || /invalid/i.test(raw)) return 'That shared content could not be saved because a field was invalid.';
+    return raw || 'Shared site content could not be saved.';
   }
 
   async function pushPublicData(snapshot) {
     const client = await getClient();
-    if (!client) return { ok: false, pushed: [] };
+    if (!client) return { ok: false, pushed: [], error: 'Public data sync is not configured.' };
 
-    const batches = [
-      [TABLES.groups, (snapshot && snapshot.groups) || []],
-      [TABLES.listings, (snapshot && snapshot.listings) || []],
-      [TABLES.channels, (snapshot && snapshot.channels) || []],
-      [TABLES.threads, (snapshot && snapshot.threads) || []],
-      [TABLES.posts, (snapshot && snapshot.posts) || []]
-    ].filter((entry) => entry[1].length);
+    const batches = [];
+    selectedKinds().forEach((kind) => {
+      const rows = snapshot && Array.isArray(snapshot[kind]) ? snapshot[kind] : [];
+      rows.forEach((row) => {
+        if (row && row.id) batches.push({ kind, table: TABLES[kind], row });
+      });
+    });
 
     if (!batches.length) return { ok: true, pushed: [] };
 
     const pushed = [];
-    let failed = false;
-
-    for (const [table, rows] of batches) {
-      const { error } = await client.from(table).insert(rows);
+    for (const batch of batches) {
+      const { error } = await client.rpc('unbought_write_public_data', {
+        p_kind: batch.kind,
+        p_row: batch.row
+      });
       if (error) {
-        // Duplicate IDs mean the row already exists in Supabase. Treat them as
-        // synced so a later save does not retry the same insert forever.
-        if (error.code === '23505') {
-          rows.forEach((row) => pushed.push(`${table}:${row.id}`));
-        } else {
-          failed = true;
-          console.warn(`Unbought public data could not be saved to ${table}.`, error);
-        }
-      } else {
-        rows.forEach((row) => pushed.push(`${table}:${row.id}`));
+        const message = writeError(error);
+        setStatus('error');
+        console.warn('Unbought shared content could not be saved.', error);
+        return { ok: false, pushed, error: message };
       }
+      pushed.push(`${batch.table}:${batch.row.id}`);
     }
 
-    setStatus(failed ? 'error' : 'connected');
-    return { ok: !failed, pushed };
+    setStatus('connected');
+    return { ok: true, pushed };
   }
 
   window.UnboughtSupabase = {

@@ -3,14 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Unbought is a consent-based mutual aid society. Pledged members share labor and goods through the commons; non-members may record local purchase intents, with amounts tracked for the Unbought donation fund in this prototype.">
+  <meta name="description" content="Unbought is a consent-based mutual aid prototype. Browse Free Labor and Free Stuff, sign the local pledge, use your dashboard, and choose what syncs. Future plans live on What’s to Come.">
   <meta name="theme-color" content="#1E3A8A">
   <title>How It Works — Unbought</title>
   <link rel="icon" type="image/png" href="assets/logo.png">
   <link rel="stylesheet" href="styles.css">
   <script src="supabase-config.js"></script>
   <script src="supabase-sync.js" defer></script>
-  <script src="private-sync.js" defer></script>
   <script src="app.js" defer></script>
   <script src="quotes.js" defer></script>
 </head>
@@ -62,7 +61,7 @@
         <img src="assets/logo.png" alt="Unbought Emblem" width="48" height="48">
         <span class="brand-text">
           <span class="brand-name">Unbought</span>
-          <span class="brand-tagline">Free Labor. Free Goods. Free Education. Free Land.</span>
+          <span class="brand-tagline">Free Labor. Free Goods. Shared Care.</span>
         </span>
       </a>
 
@@ -71,7 +70,7 @@
           <li><a href="index.html" aria-current="page">How It Works</a></li>
           <li><a href="freelabor.html">Free Labor</a></li>
           <li><a href="freestuff.html">Free Stuff</a></li>
-          <li><a href="donate.html">Donate</a></li>
+          <li><a href="future.html#donations">Future funding</a></li>
           <li><a href="future.html">What’s to Come</a></li>
         </ul>
       </nav>
@@ -96,28 +95,28 @@
         <div class="hero-copy">
           <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> A consent-based, currency-free mutual aid society</p>
           <h1 id="hero-title">You Don’t Need <span class="mark">Money</span> to Survive. You Need <span class="mark mark--blue">Community.</span></h1>
-          <p class="hero-lede">Unbought is where pledged members offer skilled labor freely and share goods through a mutual-aid commons, teach and learn without tuition, and build community land trusts together. Browsing is open to everyone. Public listings and community posts are shared through Supabase; pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, report text and evidence, and donation records stay here. With optional private sync on, only a minimal open/settled flag is sent for a reported admin. No real payment is processed.</p>
+          <p class="hero-lede">The working beta is open to anyone, anywhere. You can browse Free Labor and Free Stuff, sign a local pledge, post offers when signed in, and use your dashboard. Public listings and community posts are shared through Supabase; pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings. Messages, report text, evidence, and donation records stay here. Beta features are limited while we build the prototype; plans live on <a href="future.html">What’s to Come</a>.</p>
 
           <div class="hero-actions">
             <a class="button button--primary" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span> <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
             <a class="button button--outline" href="#explore">Explore the Commons</a>
           </div>
 
-          <ul class="hero-assurances" aria-label="Our commitments">
-            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Free labor</li>
-            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Commons goods for members</li>
-            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Free education</li>
-            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Land in trust</li>
+          <ul class="hero-assurances" aria-label="What works now">
+            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Free labor directory</li>
+            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Free goods directory</li>
+            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Local pledge &amp; dashboard</li>
+            <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-check"></use></svg> Clear docs on every page</li>
           </ul>
         </div>
 
         <div class="hero-art" aria-label="Unbought emblem and guiding principles">
-          <div class="hero-art-orbit hero-art-orbit--one" aria-hidden="true"></div>
-          <div class="hero-art-orbit hero-art-orbit--two" aria-hidden="true"></div>
           <div class="hero-seal">
-            <img src="assets/logo.png" alt="" width="170" height="170" aria-hidden="true">
-            <p class="hero-seal-kicker">The Unbought seal</p>
-            <p class="hero-seal-quote">“I am because <em>we are.</em>”</p>
+            <img src="assets/logo.png" alt="" width="88" height="88" aria-hidden="true">
+            <div>
+              <p class="hero-seal-kicker">The Unbought seal</p>
+              <p class="hero-seal-quote">“I am because <em>we are.</em>”</p>
+            </div>
           </div>
           <div class="hero-art-footer">
             <div>
@@ -137,22 +136,22 @@
       </div>
 
       <div class="container">
-        <div class="values-strip" aria-label="The four pillars in brief">
+        <div class="values-strip" aria-label="What works now in four quick notes">
           <div class="value-item">
             <span class="value-icon value-icon--blue"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-hammer"></use></svg></span>
-            <div><strong>Free labor</strong><span>Paid-level skill, freely given</span></div>
+            <div><strong>Free labor</strong><span>Search and post skill offers</span></div>
           </div>
           <div class="value-item">
             <span class="value-icon value-icon--amber"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-basket"></use></svg></span>
-            <div><strong>Goods &amp; services</strong><span>Mutual aid for members · non-member purchases support the Unbought donation fund</span></div>
+            <div><strong>Free goods</strong><span>Browse and list useful items</span></div>
           </div>
           <div class="value-item">
             <span class="value-icon value-icon--red"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-book"></use></svg></span>
-            <div><strong>Free education</strong><span>Mentorship without tuition</span></div>
+            <div><strong>Consent first</strong><span>A clear yes before every exchange</span></div>
           </div>
           <div class="value-item">
-            <span class="value-icon value-icon--blue"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-house"></use></svg></span>
-            <div><strong>Community land</strong><span>Held for people, not profit</span></div>
+            <span class="value-icon value-icon--blue"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg></span>
+            <div><strong>Docs, always</strong><span>FAQ button on every page</span></div>
           </div>
         </div>
       </div>
@@ -167,6 +166,13 @@
           <p class="eyebrow"><span class="badge badge--soft">Start here</span> Three steps to the commons</p>
           <h2 id="start-here-title">See it, try it, then join it.</h2>
           <p>You can browse freely. When you are ready, the pledge turns reading into participation—all locally in this prototype.</p>
+          <aside class="docs-callout" aria-label="Read this before you join">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg>
+            <div>
+              <h3>One minute of reading saves a lot of confusion.</h3>
+              <p><strong>What works now:</strong> directories, pledge, dashboard, and opt-in sync. <strong>What stays local:</strong> private details, messages, report text, and donation records. <strong>Where plans live:</strong> <a href="future.html">What’s to Come</a>. Details: <a href="faq.html">FAQ</a> and <a href="guidelines.html">Community Guidelines</a>.</p>
+            </div>
+          </aside>
         </div>
 
         <div class="walkthrough-steps">
@@ -174,7 +180,7 @@
             <span class="walkthrough-number" aria-hidden="true">1</span>
             <div>
               <h3>Read how it works</h3>
-              <p>Start with the Newsboard and the four pillars below. No account needed.</p>
+              <p>Start with the short docs callout above, the Newsboard, and the tools below. No account needed.</p>
             </div>
           </article>
           <article class="walkthrough-step">
@@ -205,7 +211,7 @@
             <p class="eyebrow"><span class="badge badge--amber">Public updates</span> Above-board transparency</p>
             <h2 id="newsboard-title">The newsboard.</h2>
           </div>
-          <p class="section-head-aside">General updates about the movement, the pledge, and the rollout, shared across the site. This board is public—no membership needed. In the live site, posts will come from a blog service.</p>
+          <p class="section-head-aside">Short notes about what works now and where to find the docs. This board is public—no membership needed. The sample posts show the kind of update that belongs here.</p>
         </div>
 
         <div class="newsboard-feed" data-news-feed></div>
@@ -225,8 +231,8 @@
         <div class="vision-copy">
           <p class="eyebrow">Why we exist</p>
           <h2 id="vision-title">We are opting out of the marketplace—not out of each other.</h2>
-          <p class="lead">Unbought is a neighbor-built society where survival does not require a price tag. We practice the economy we actually need: one where labor is a gift, goods circulate freely, education is a commons, and land is held in trust for the people who live on it.</p>
-          <p>We are not anti-work. We are anti-extraction. We believe paid-level skill should be shared without a paywall, that materials should never carry hidden profit, and that every person—working or not—deserves care, belonging, and a place to call home.</p>
+          <p class="lead">Unbought is a neighbor-built prototype where survival does not require a price tag. Today that means labor and goods shared through consent, a local pledge, and a dashboard that keeps records in your browser.</p>
+          <p>We are not anti-work. We are anti-extraction. We believe paid-level skill should be shared without a paywall, that materials should never carry hidden profit, and that every person—working or not—deserves care and belonging. Longer-range plans are collected on <a href="future.html">What’s to Come</a>, not mixed into the working tools.</p>
 
           <div class="ubuntu-callout">
             <svg class="ubuntu-mark" aria-hidden="true" focusable="false"><use href="#icon-people"></use></svg>
@@ -296,11 +302,11 @@
               </div>
             </div>
             <h3 id="pillar-2-title">Free Goods &amp; Production</h3>
-            <p>Tools, food, clothing, furniture, seeds, and handmade goods move freely through the community. Shared workshops and tool libraries help neighbors repair, grow, and make what they need—turning scarcity thinking into collective abundance.</p>
+            <p>Food, clothing, furniture, seeds, and handmade goods can be offered freely through the community, with no swap required. Post a listing, browse what neighbors share, and request an item through mutual consent.</p>
             <ul class="pillar-list">
               <li>Free physical goods, no swap required</li>
-              <li>Tool libraries and shared workshops</li>
-              <li>Community production, not private scarcity</li>
+              <li>Post and browse local listings now</li>
+              <li>Search, filter, and sort the goods directory</li>
             </ul>
             <a class="text-link" href="freestuff.html">Find Free Stuff <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
           </article>
@@ -309,33 +315,33 @@
             <div class="pillar-top">
               <span class="pillar-icon pillar-icon--red"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-book"></use></svg></span>
               <div class="pillar-meta">
-                <span class="badge badge--amber">Phase 2 · Coming next</span>
+                <span class="badge badge--green">Works now</span>
                 <span class="pillar-number" aria-hidden="true">03</span>
               </div>
             </div>
-            <h3 id="pillar-3-title">Unbought Academy (Free Mentorship)</h3>
-            <p>Professionals and tradespeople teach apprentices online or in local guilds. Learning happens through real community projects, and completed work earns Peer-Verified Skill Badges—portable recognition without tuition, debt, or institutional gatekeeping.</p>
+            <h3 id="pillar-3-title">Member dashboard</h3>
+            <p>Your pledge, track, hours, requests, notifications, and settings live in one place. Switch between a public resume and a private profile, and turn optional sync on only if you want a cloud copy.</p>
             <ul class="pillar-list">
-              <li>One-to-one and guild mentorship</li>
-              <li>Learn by building real community projects</li>
-              <li>Peer-verified badges, no tuition</li>
+              <li>Track your pledge and confirmed hours</li>
+              <li>Manage requests, groups, and notifications</li>
+              <li>Choose local-only or opt-in sync</li>
             </ul>
-            <a class="text-link" href="future.html#academy">Explore the Academy plan <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+            <a class="text-link" href="dashboard.html">Open your dashboard <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
           </article>
 
           <article class="pillar-card pillar-card--featured" aria-labelledby="pillar-4-title">
             <div class="pillar-top">
-              <span class="pillar-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-house"></use></svg></span>
-              <span class="badge badge--amber">Phase 3 · In planning</span>
+              <span class="pillar-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg></span>
+              <span class="badge badge--green">Works now</span>
             </div>
-            <h3 id="pillar-4-title">Community Land Trusts &amp; Housing</h3>
-            <p>We are building toward land and homes held permanently outside the speculative market. Community land trusts keep housing affordable across generations, with residents and neighbors sharing governance—not absentee landlords.</p>
+            <h3 id="pillar-4-title">Docs &amp; guidelines</h3>
+            <p>Every page has an FAQ button. The guidelines explain consent, pledge freezes, care circles, and review in plain language before you sign anything.</p>
             <ul class="pillar-list">
-              <li>Land held for community use, not resale profit</li>
-              <li>Resident voice in stewardship decisions</li>
-              <li>Waitlist and land-donation conversations open</li>
+              <li>FAQ button on every page</li>
+              <li>Community Guidelines with clear consequences</li>
+              <li>Newsboard notes about current behavior</li>
             </ul>
-            <a class="text-link" href="future.html#land">Visit the Land Trust plan <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+            <a class="text-link" href="guidelines.html">Read the guidelines <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
           </article>
         </div>
       </div>
@@ -426,7 +432,7 @@
           <p class="manifesto-sign">— A note from the founder of Unbought</p>
           <div class="manifesto-actions">
             <a class="button button--primary" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span> <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
-            <a class="button button--outline" href="future.html#waitlist">Join the Waiting List</a>
+            <a class="button button--outline" href="future.html">See What’s to Come</a>
           </div>
         </div>
       </div>
@@ -459,7 +465,7 @@
           <div class="membership-join">
             <p class="eyebrow">How joining works</p>
             <h3>Browse freely. Participate as a member.</h3>
-            <p>Anyone can browse labor, goods, and this page. Posting, requesting, messaging, and your dashboard require the pledge. Phase 1 asks for at least 4 hours per month (about 1 hour per week) because housing is not available yet; the Care Circle has no labor obligation for people who cannot work. A missed month freezes the pledge and pauses service requests until the hours are made up; more than 30 days frozen makes you an Observer, and a re-pledge needs three active-member approvals.</p>
+            <p>Anyone can browse labor, goods, and this page. Posting, requesting, messaging, and your dashboard require the pledge. The Care Circle has no labor obligation for people who cannot work. First-month and pledge-standing details are explained in the Newsboard, FAQ, and Community Guidelines.</p>
             <div class="membership-actions">
               <a class="button button--primary" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span> <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
               <a class="button button--outline" href="pledge.html">Read the five commitments</a>
@@ -488,9 +494,9 @@
           <a class="text-link text-link--compact" id="track-pledge-link" href="pledge.html">Take the Pledge</a>
         </div>
 
-        <p class="track-access-note"><strong>Basic Necessities:</strong> Food, Health Care, Dental, Mental Health, Shelter, Clothing, Gas Cards, Uber Gift cards, spot on the waitlist for land, access to the Academy. No luxury items or nice to haves. Groups can decide how mutual aid will work within these limits.</p>
+        <p class="track-access-note"><strong>Basic Necessities:</strong> Food, Health Care, Dental, Mental Health, Shelter, Clothing, Gas Cards, and Uber Gift cards. No luxury items or nice to haves.</p>
 
-        <p class="track-access-note">Track differences are about access and capacity, not rank. Observers read, explore, and donate. Contributors may request labor and goods. Care Circle members receive Basic Necessities only. Academy apprentices learn through real projects with Basic-Necessities-only access agreed with a mentor. The Phase 1 minimum pledge is 4 hours per month (about 1 hour per week); missing it freezes the pledge until the hours are made up, and more than 30 days frozen converts the member to Observer with a three-member re-pledge review. Full-time and part-time paths arrive with land development in Phase 3.</p>
+        <p class="track-access-note">Track differences are about access and capacity, not rank. Observers read and explore. Contributors may request labor and goods. Care Circle members start with Basic Necessities, with full access for members 65+ who have no outside paid job. Freezes, care-circle support, and re-pledge reviews are peer-based and consensual—there is no hierarchy. Full rules are in the FAQ and Community Guidelines.</p>
 
         <fieldset class="track-fieldset">
           <legend class="sr-only">Choose your membership track</legend>
@@ -504,7 +510,7 @@
                 </span>
                 <span class="track-name">Active Contributor</span>
                 <span class="track-desc">Offer a real paid-level skill, trade, or care task and pledge at least 4 hours per month (about 1 hour per week).</span>
-                <span class="track-access"><strong>Access:</strong> request labor, goods, and start a housing conversation.</span>
+                <span class="track-access"><strong>Access:</strong> request labor and goods through mutual consent.</span>
                 <span class="track-best">Best for: people with time and a craft to share</span>
               </span>
             </label>
@@ -517,8 +523,8 @@
                   <span class="track-check" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span>
                 </span>
                 <span class="track-name">Apprentice <span class="track-subname">(Skill-Builder)</span></span>
-                <span class="track-desc">Learn a trade through Unbought Academy mentorship, then give it back to the community.</span>
-                <span class="track-access"><strong>Access:</strong> Basic Necessities only while enrolled in the Academy; community projects are agreed with a mentor.</span>
+                <span class="track-desc">Build a skill alongside neighbors, then give what you learn back to the commons.</span>
+                <span class="track-access"><strong>Access:</strong> Basic Necessities only while you are learning; projects are agreed with a mentor.</span>
                 <span class="track-best">Best for: curious learners ready to practice</span>
               </span>
             </label>
@@ -532,8 +538,8 @@
                 </span>
                 <span class="track-name">Care Circle Member</span>
                 <span class="track-desc">Receive support without proving productivity, and request a peer Welcome &amp; Care Circle chat.</span>
-                <span class="track-access"><strong>Access:</strong> Basic Necessities only, with no labor obligation; limits can be reviewed with evidence.</span>
-                <span class="track-best">Best for: people unable to work due to age, disability, illness, or capacity</span>
+                <span class="track-access"><strong>Access:</strong> Basic Necessities only, with no labor obligation; full access can be confirmed locally without storing proof details. Members 65+ are automatically in the Care Circle with full access when no outside paid job is recorded, and may still work.</span>
+                <span class="track-best">Best for: people unable to work right now due to disability, illness, or capacity</span>
               </span>
             </label>
 
@@ -545,8 +551,8 @@
                   <span class="track-check" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span>
                 </span>
                 <span class="track-name">Observer</span>
-                <span class="track-desc">Read, explore, and donate while learning the philosophy before requesting or offering services.</span>
-                <span class="track-access"><strong>Access:</strong> read, explore, and donate.</span>
+                <span class="track-desc">Read and explore while learning the philosophy before requesting or offering services.</span>
+                <span class="track-access"><strong>Access:</strong> read and explore.</span>
                 <span class="track-best">Best for: listening, learning, and taking your time</span>
               </span>
             </label>
@@ -575,7 +581,7 @@
             <p class="eyebrow">Find your part</p>
             <h2 id="explore-title">One commons, four doors.</h2>
           </div>
-          <p class="section-head-aside">Start with what you need or what you can offer. Free labor and free goods are in progress. Education and land are the next phases we are building toward together.</p>
+          <p class="section-head-aside">Start with what you need or what you can offer. The tools that work now are below; plans have one home on <a href="future.html">What’s to Come</a>.</p>
         </div>
 
         <div class="explore-grid">
@@ -595,20 +601,20 @@
             <span class="text-link">Browse free goods <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></span>
           </a>
 
-          <a class="explore-card" href="future.html">
+          <a class="explore-card" href="pledge.html">
             <span class="explore-icon explore-icon--red" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-book"></use></svg></span>
-            <span class="explore-kicker">Phase 2 &amp; 3</span>
-            <h3>What’s to Come</h3>
-            <p>Unbought Academy mentorship and the community land trust are next. See the plan and join the waiting list.</p>
-            <span class="text-link">See what’s next <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></span>
+            <span class="explore-kicker">Works now</span>
+            <h3>Pledge &amp; dashboard</h3>
+            <p>Sign locally, choose a track, and manage your records. Optional private sync is off until you ask for it.</p>
+            <span class="text-link">Start here <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></span>
           </a>
 
-          <a class="explore-card" href="donate.html">
+          <a class="explore-card" href="faq.html">
             <span class="explore-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-heart"></use></svg></span>
-            <span class="explore-kicker">Trust in formation</span>
-            <h3>Donate</h3>
-            <p>See exactly where gifts go: legal formation, land, operations, and the Free Goods Fund. No payment is processed here.</p>
-            <span class="text-link">Read the fund plan <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></span>
+            <span class="explore-kicker">Read first</span>
+            <h3>Plain-language docs</h3>
+            <p>FAQ, Community Guidelines, and short Newsboard notes explain what each tool does before you use it.</p>
+            <span class="text-link">Open the FAQ <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></span>
           </a>
         </div>
       </div>
@@ -649,7 +655,7 @@
             <span class="volunteer-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-scale"></use></svg></span>
             <span class="volunteer-tag">Keep us out of jail</span>
             <h3>Legal counsel</h3>
-            <p>Lawyers and paralegals help form the trust, review agreements, and keep the commons on the right side of the law.</p>
+            <p>Lawyers and paralegals review agreements, records, and boundaries so the prototype stays honest and safe.</p>
           </article>
 
           <article class="volunteer-card">
@@ -677,7 +683,7 @@
             <span class="volunteer-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-shield"></use></svg></span>
             <span class="volunteer-tag">Steward resources</span>
             <h3>Finance &amp; bookkeeping</h3>
-            <p>Pay the bills, track donations to the Unbought donation fund, and keep exact-cost reimbursements so money never becomes a hidden hierarchy.</p>
+            <p>Keep local records, exact-cost reimbursements, and plain accounts so money never becomes a hidden hierarchy.</p>
           </article>
 
           <article class="volunteer-card">
@@ -713,12 +719,12 @@
         <div class="accessibility-card">
           <h3>Known prototype limits</h3>
           <ul>
-            <li>The pledge film is a placeholder with English captions; a fully described and translated production is still to come.</li>
+            <li>The pledge film is a placeholder with English captions; this prototype has no translated production.</li>
             <li>No live support inbox, assisted sign-up line, or moderation queue exists yet.</li>
             <li>Listings, membership records, and waiting-list entries are stored in this browser by default, and optional private sync is off until you choose it. Local demo accounts have no account recovery.</li>
           </ul>
           <h3>Reporting a barrier</h3>
-          <p>Before launch, Unbought will publish a named accessibility steward and a direct reporting channel. This prototype has no outbound support inbox, so the commitment is documented here rather than implied.</p>
+          <p>This prototype has no outbound support inbox. Use the FAQ and dashboard suggestions to record a barrier locally; named support plans are listed on <a href="future.html">What’s to Come</a>.</p>
           <p class="accessibility-note">If a page, form, or interaction blocks you, that is a defect to fix—not a failure on your part.</p>
         </div>
       </div>
@@ -730,26 +736,25 @@
     <section class="section closing-cta" id="take-action" aria-labelledby="cta-title">
       <div class="container closing-cta-inner">
         <div class="closing-cta-copy">
-          <p class="eyebrow eyebrow--light">The invitation</p>
+          <p class="eyebrow eyebrow--light">Open to everyone</p>
           <h2 id="cta-title">Ready to Take Your Power Back?</h2>
           <p>No bosses. No gatekeeping. No currency. Watch or read the Unbought Pledge, see what we are building next, and start building a world based on mutual care.</p>
           <div class="closing-cta-actions">
             <a class="button button--amber" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span> <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
             <a class="button button--outline" href="future.html">See What’s to Come</a>
-            <a class="button button--outline" href="donate.html">Read the fund plan</a>
             <button class="button button--outline" type="button" data-volunteer-trigger>Volunteer with us</button>
           </div>
         </div>
-        <aside class="closing-cta-card" aria-labelledby="cta-fund-title">
-          <span class="badge badge--amber">Trust in formation</span>
-          <h3 id="cta-fund-title">Where donations go</h3>
+        <aside class="closing-cta-card" aria-labelledby="cta-docs-title">
+          <span class="badge badge--amber">Start here</span>
+          <h3 id="cta-docs-title">The short reading list</h3>
           <ol class="cta-fund-list">
-            <li><span class="cta-fund-number" aria-hidden="true">1</span><div><strong>Legal &amp; trust formation</strong><p>Cooperative counsel, fiscal sponsorship, and the agreements that protect the commons.</p></div></li>
-            <li><span class="cta-fund-number" aria-hidden="true">2</span><div><strong>Real estate &amp; land</strong><p>Due diligence, stewardship planning, and land held for community use.</p></div></li>
-            <li><span class="cta-fund-number" aria-hidden="true">3</span><div><strong>Website &amp; operations</strong><p>Hosting, insurance, accounting, and the unglamorous costs of staying alive.</p></div></li>
-            <li><span class="cta-fund-number" aria-hidden="true">4</span><div><strong>Free Goods Fund</strong><p>Any excess buys products neighbors can claim at no cost on the Free Stuff page.</p></div></li>
+            <li><span class="cta-fund-number" aria-hidden="true">1</span><div><strong>Newsboard</strong><p>What works right now in the working beta.</p></div></li>
+            <li><span class="cta-fund-number" aria-hidden="true">2</span><div><strong>FAQ</strong><p>Privacy, sync, badges, and everyday questions.</p></div></li>
+            <li><span class="cta-fund-number" aria-hidden="true">3</span><div><strong>Community Guidelines</strong><p>Consent, freezes, care circles, and review.</p></div></li>
+            <li><span class="cta-fund-number" aria-hidden="true">4</span><div><strong>What’s to Come</strong><p>The only page for future plans.</p></div></li>
           </ol>
-          <a class="text-link" href="donate.html">Read the fund plan <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+          <a class="text-link" href="faq.html">Open the FAQ <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
         </aside>
       </div>
     </section>
@@ -766,10 +771,10 @@
           <img src="assets/logo.png" alt="Unbought Emblem" width="56" height="56">
           <span class="brand-text">
             <span class="brand-name">Unbought</span>
-            <span class="brand-tagline">Built on Consent.</span>
+            <span class="brand-tagline">Free Labor. Free Goods. Shared Care.</span>
           </span>
         </a>
-        <p class="footer-tagline">Free Labor. Free Goods. Free Education. Free Land.</p>
+        <p class="footer-tagline">Free Labor. Free Goods. Shared Care.</p>
         <p class="footer-mission">A consent-based, currency-free mutual aid society. Every person has inherent worth, whether or not they can work.</p>
       </div>
 
@@ -782,7 +787,7 @@
             <li><a href="#why-unbought">Why Unbought</a></li>
             <li><a href="freelabor.html">Free Labor</a></li>
             <li><a href="freestuff.html">Free Stuff</a></li>
-            <li><a href="donate.html">Donate</a></li>
+            <li><a href="future.html#donations">Future funding</a></li>
             <li><a href="faq.html">FAQ</a></li>
             <li><a href="guidelines.html">Community Guidelines</a></li>
           </ul>
@@ -806,7 +811,7 @@
             <li data-pledge-nav><a href="pledge.html">Five commitments</a></li>
             <li><a href="freelabor.html#care-circle">Anti-bias review</a></li>
             <li><a href="future.html#land">Phase 3 status</a></li>
-            <li><a href="donate.html">Donations &amp; trust</a></li>
+            <li><a href="future.html#donations">Future donations</a></li>
             <li><a href="#accessibility">Accessibility Statement</a></li>
           </ul>
         </div>

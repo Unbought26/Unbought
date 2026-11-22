@@ -13,10 +13,18 @@ rotating web-developer admins. Messages, report text and evidence, donations,
 photos, group chats, social chats, and local password hashes are never
 transmitted. The only report-related exception after opt-in is a minimal flag
 containing the reported member's local ID and an `open`/`settled` status, used
-to pause a reported admin's access.
+to pause a reported admin's access. Public rows are anon-readable, but shared
+content can be published only by a signed-in pledged member; the member identity
+comes from Supabase Auth, not from a client-supplied ID.
 
 See `supabase/README.md` for the schema, security notes, and setup steps. The site
 remains hosted on GitHub Pages.
+
+The current beta is a soft launch: it is open to anyone, anywhere,
+with no Pocono-only membership limit. Features are intentionally limited while
+the prototype is still being built. A dedicated bank account connected to a
+donation service is planned before the full vernal-equinox rollout on March 20,
+2027 at 4:25pm Eastern; giving stays closed until that is ready.
 
 The sample Newsboard posts are general updates about the movement and rollout
 process, not a coding changelog. A future blog service will replace them.
@@ -27,12 +35,12 @@ process, not a coding changelog. A future blog service will replace them.
 - `pledge.html` — The Pledge and sign-up
 - `freelabor.html` — Free Labor directory and post form
 - `freestuff.html` — Free Stuff directory and post form
-- `donate.html` — Donation fund plan and status; giving is closed until a bank account, lawyer, and accountant are in place
+- `donate.html` — Redirect to the donation plan on `future.html`; giving stays closed until a dedicated bank account and donation service are ready
 - `future.html` — What’s to Come, donation information, and waiting list
 - `dashboard.html` — Member dashboard, full private record, and Exchanges
 - `profile.html` — Public member resume with a private record for the signed-in member
 - `group.html?group=<id>` — Group profile with members, worker admins, chat, and offers
-- `supabase-config.js`, `supabase-sync.js`, `private-sync.js`, `supabase/` — Public bridge and opt-in private sync
+- `supabase-config.js`, `supabase-sync.js`, `private-sync.js`, `supabase/`, `vendor/supabase/` — Pinned SDK, public bridge, and opt-in private sync
 
 ## Running locally
 
@@ -66,27 +74,33 @@ When enabled, the bridge uploads:
 
 - `private_members`: member ID, chosen name, legal name fields, email, location,
   mailing and physical addresses, phones and phone preferences, birthdate,
-  housing status, profession, skills, monthly pledge, pledge status, frozen
-  pledge fields, Observer fields, re-pledge flag, signature time, and consent
-  time.
+  housing status, profession, skills, monthly pledge, pledge status, first-month
+  and probation fields, Care Circle result, outside-job flag, active-role flag,
+  frozen pledge fields, Observer fields, re-pledge flag, signature time, and
+  consent time. No disability proof, document, diagnosis, or note is stored.
 - `private_waitlist_entries`: one planning-stage waiting-list entry per user.
 - `private_admin_report_flags`: the reported member's local ID and an
   `open`/`settled` status only. No reporter ID, report text, evidence, reason,
   or timestamp is uploaded.
+- `private_web_developers`: only the Auth user ID and local member ID for
+  opted-in members who offered Web development. No volunteer note or other
+  personal detail is uploaded.
 
 The RLS policies allow an authenticated user to insert and manage only their own
-member and waitlist rows. The seven current web-developer admins derived from
-`private_admin_roles` may read, update, and delete private rows but cannot insert
-on a member’s behalf; that rotation is separate from the local group admin seats.
-Anonymous users have no access. Applying
+member, waitlist, and web-developer rows. The seven current web-developer admins
+derived from `private_web_developers` may read, update, and delete private rows
+but cannot insert on a member’s behalf; that rotation is separate from the local
+group admin seats. Anonymous users have no access. Applying
 `supabase/migrations/20261122000000_private_opt_in_sync.sql` is required before
 this feature works.
 
-Before running that migration, replace the example rows in its
-`WEB DEVELOPER ADMIN POOL` block with real Supabase Auth user UUIDs for more than
-seven web developers. Seven seats are active at a time, each for seven days,
-staggered one day apart. The active seven are recomputed from the current date on
-every access check, so there is no cron job and no manual admin SQL after setup.
+There is no developer list to edit. After opting into private sync, recording the
+local **Web development** volunteer offer automatically adds a member to the
+pool; deleting the cloud copy removes them. Seven seats are active at a time,
+each for seven days, staggered one day apart. The active seven are recomputed
+from the current date on every access check, so there is no cron job and no
+manual admin SQL. If there are seven or fewer web developers in the pool, no
+private admin seats are active.
 
 When a member files a report after opting in, the app sends an `open` flag for
 the reported member ID. A `not_guilty` finding or restored access sends
@@ -221,16 +235,24 @@ same 4-hour minimum and Care Circle exception. The pledge is a stated intention
 and never becomes logged hours by itself; only mutual confirmation or a
 three-member hour review logs hours.
 
-Each month is checked after it ends. If confirmed hours fall short of the pledge,
-the pledge status becomes `frozen` and service requests are blocked until the
-shortfall is made up; hours logged after the freeze count toward that deficit.
-If the pledge stays frozen for more than 30 days, the member becomes an Observer.
-A re-pledge is accepted only after three impartial active members approve it:
-Observers, Care Circle members, apprentices, students, frozen members, and the
-applicant cannot serve on that review. Care Circle members with no labor
-obligation are exempt from freezing. These status changes and local anonymous
-review ballots stay in the browser; optional private sync carries only the
-resulting status fields.
+The first month is probationary. Confirming one week of the monthly pledge
+unlocks normal member tools; the full month is checked on day 30. If a month ends
+short, the pledge status becomes `frozen` and only offering labor stays available
+until the shortfall is made up; hours logged after the freeze count toward that
+deficit. If the pledge stays frozen for more than 30 days, the member becomes an
+Observer. A re-pledge is accepted only after three impartial active members
+approve it: Observers, Care Circle members, apprentices, students, frozen members,
+and the applicant cannot serve on that review. Care Circle members with no labor
+obligation are exempt from freezing.
+
+The Care Circle is offered when someone cannot keep a labor pledge. Basic
+Necessities are the base; full access can be confirmed locally with disability
+proof, but no diagnosis, document, or note is stored or uploaded. Members 65 or
+older are automatically in the Care Circle. With no outside paid job or business
+they keep retired full access; with one they move to Basic Necessities and are
+asked to take an active role in Unbought. Nothing in the site says a 65+ member
+cannot work. These status changes and local anonymous review ballots stay in the
+browser; optional private sync carries only the resulting status fields.
 
 The member account panel is the only place that shows hours worked and amounts
 donated by week, month, year, and all time, the current Unbought donation fund
@@ -238,21 +260,19 @@ balance, and the member's share of it. The stored `severanceFund` key and
 `severance_purchase` contribution type are retained only for older local data. No
 payout, stock issuance, or payment occurs, and nothing is transmitted.
 
-`donate.html` explains the same ledger model: whole-dollar amount and frequency,
-optional chosen name and note, local timestamp and intent ID, member link only when
-signed in, and a guest email only for a future local thank-you. Signed-in members
-may credit a future intent to one of their groups or alliances; that source is
-stored as `groupId` or `allianceId` for local share calculations only. Giving is
-closed in this build: the local intent form is hidden, all donation calls to action
-say “Read the fund plan,” and no payment channel is advertised. It also explains
-that donations, academy tuition, non-member purchases, and mutually confirmed hours
-share the same accounting model while sensitive profile fields stay private.
+`donate.html` is a redirect-only page to `future.html#donations`. All donation
+plans, priorities, and status updates live on `future.html`; no intent form or
+payment channel is advertised in this build. Older local donation ledger keys are
+kept only so existing browser data still loads safely.
 
 The published allocation plan runs in stages. Every dollar starts with pre-rollout
 operations: licensing, web hosting, database set up, and social media awareness.
-The beta plan is to get the database, mailer, and social channels running for free
-first, then open a dedicated account for the Unbought donation fund and let it sit
-until a lawyer and accountant are on board. No pledge service or giving link is
+The soft-launch beta is open to anyone, anywhere, with fewer
+features while the prototype is still being built. The practical plan is to get
+the database, mailer, and social channels running for free first, then open a
+dedicated Unbought donation fund bank account and connect it to a donation
+service before the vernal-equinox rollout. The account stays unused until a
+lawyer and accountant are on board, and no pledge service or giving link is
 published before that. Once the Land Trust account is formed and initial
 start-up costs are paid, the fund builds in an account while seeking accountants
 until the first plot of land, house, or warehouse can be bought. The first house
@@ -398,11 +418,10 @@ This applies to review board cases, group guideline votes, and hour-review votes
 ## Basic Necessities and alliances
 
 Basic Necessities are Food, Health Care, Dental, Mental Health, Shelter,
-Clothing, Gas Cards, Uber Gift cards, spot on the waitlist for land, access to
-the Academy. No luxury items or nice to haves. Groups can decide how mutual aid
-will work within these limits. The same closed definition is used in
-`guidelines.html`, the FAQ, the How It Works track note, the Academy roadmap,
-the track panels, and group profiles.
+Clothing, Gas Cards, and Uber Gift cards. No luxury items or nice to haves.
+Groups can decide how mutual aid will work within these limits. The same closed
+definition is used in `guidelines.html`, the FAQ, the How It Works track note,
+the Academy roadmap, the track panels, and group profiles.
 
 Alliances are other groups within the Unbought network. Groups decide whether
 to accept an alliance between them, and working members vote on alliance terms
@@ -455,8 +474,9 @@ and in the standing levels on `guidelines.html`.
 ## FAQ and help button
 
 `faq.html` answers common questions about membership, privacy, local-only
-prototype data, goods and labor, safety reporting, member labels, and the
-Poconos rollout. It is linked from every footer site map, and `app.js` adds a
+prototype data, goods and labor, safety reporting, member labels, the open
+invitation beta, and the vernal-equinox rollout. It is linked from every footer
+site map, and `app.js` adds a
 small fixed question-mark button to every page so the FAQ is always one tap
 away. The FAQ uses native `<details>` accordions and needs no extra script.
 
@@ -502,9 +522,9 @@ their readable location label, and the same fields are derived from it so every
 offer can be filtered the same way. Nearest-ZIP sorting compares the first five
 ZIP digits as a local approximation; it is not a map or a real distance service.
 
-Because this rollout is in the Poconos, location placeholders across the site
-use Pocono-area towns in Pennsylvania (Stroudsburg, East Stroudsburg, Mount
-Pocono, Jim Thorpe, and nearby ZIP codes). These are examples only; members can
+Location placeholders across the site still use Pocono-area towns in Pennsylvania
+(Stroudsburg, East Stroudsburg, Mount Pocono, Jim Thorpe, and nearby ZIP codes),
+but beta membership is not regional. These are examples only; anyone invited can
 enter their own location.
 
 Members can offer legal, safe goods of almost any kind: groceries, household
@@ -588,11 +608,17 @@ These are the local group admin seats, separate from Supabase's rotating
 web-developer admins. Seven local seats rotate each week for workers only, on
 staggered one-to-seven-week cycles. Worker eligibility uses track, profession, skills, or confirmed exchanges;
 Care Circle, Observer, and Apprentice members cannot hold a seat or be added as a
-standing admin. Only admins can add another admin, cancel a group, delete group chat
-posts and replies, require an impartial review, change that group’s community
-guidelines, and run a guideline vote. A member can leave a non-town group when
-another admin exists. The town group cannot be left; only an admin can cancel a
-group. Guideline votes open a group chat post where replies beginning Agree or
+standing admin. When notified of a seat, the member must read the Unbought
+Community Guidelines and that group’s guidelines, then accept by 6pm local time
+the day before the term starts. Until then the seat stays pending and no admin
+tools are available. Declining or missing the deadline chooses a backup admin from
+the other eligible workers. Group admins are responsible for upholding the
+Unbought Community Guidelines and maintaining their group’s guidelines. Active
+admins can add another admin, cancel a group, delete group chat posts and replies,
+require an impartial review, change that group’s community guidelines, and run a
+guideline vote. A member can leave a non-town group when another active admin
+exists. The town group cannot be left; only an active admin can cancel a group.
+Guideline votes open a group chat post where replies beginning Agree or
 Disagree are tallied, and an admin records Agreed, Not agreed, or More discussion
 needed with an optional note.
 
@@ -667,7 +693,7 @@ opt-in. Messages, report text and evidence, donations, photos, and local passwor
 hashes always stay on the device. With opt-in private sync, only the reported
 member ID and an `open`/`settled` flag are sent for report pauses. `SITE_PHASE = 1` hides Phase 2 features such as the Unbought
 Academy and group brands/business settings.
-Every footer carries “Built on Consent.” exactly once. The public fund name is
+Every footer carries “Free Labor. Free Goods. Shared Care.” exactly once. The public fund name is
 “Unbought donation fund”; internal `severanceFund`, `severance_purchase`, and
 `getSeveranceSummary()` keys remain only for older local data compatibility. The
 working name “Unbought Community Trust” appears only in `future.html`, and

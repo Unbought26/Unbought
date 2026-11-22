@@ -32,11 +32,16 @@ After explicit consent, the private bridge can upload:
 
 - `private_members`: member ID, chosen name, legal name fields, email, location,
   mailing and physical addresses, phones and preferences, birthdate, housing
-  status, profession, skills, monthly pledge, pledge status, frozen pledge
-  fields, Observer fields, re-pledge flag, signature time, and consent time.
+  status, profession, skills, monthly pledge, pledge status, first-month and
+  probation fields, Care Circle result, outside-job flag, active-role flag,
+  frozen pledge fields, Observer fields, re-pledge flag, signature time, and
+  consent time. No disability proof, diagnosis, document, or note is stored.
 - `private_waitlist_entries`: one planning-stage waiting-list entry per user.
 - `private_admin_report_flags`: only the reported member's local ID and an
   `open`/`settled` status after a member files or settles a report.
+- `private_web_developers`: only the Auth user ID and local member ID when an
+  opted-in member records the Web development volunteer offer. No note or other
+  role detail is uploaded.
 
 The private bridge never uploads a password, password hash, salt, local demo
 username, message, report text, evidence, reason, reporter identity, donation,
@@ -52,18 +57,26 @@ reported local member ID and the status.
   and rejects secret/service-role keys in the browser.
 - Never put a `service_role` key, database password, or Postgres connection
   string in this repo.
-- Public tables have RLS enabled. Anonymous users can read and insert public rows
-  only. There are no public update or delete policies.
+- Public tables have RLS enabled. Anyone can read public rows, but nobody can
+  write to a public table directly. Shared-content saves go through a checked
+  database function that requires a signed-in, pledged member. Client-supplied
+  member IDs are ignored; the member identity comes from Supabase Auth.
+- Shared-content changes write a short append-only audit note: who acted, which
+  shared row changed, and when. No report text, evidence, reason, or profile
+  detail is added to that note.
 - Private tables have RLS enabled. Anonymous users have no access. An authenticated
-  user can insert only their own member/waitlist row (`auth.uid() = user_id`) and
-  can read, update, or delete only their own row. The seven active web-developer
+  user can insert only their own member/waitlist/pool row (`auth.uid() = user_id`)
+  and can read, update, or delete only their own row. The seven active web-developer
   admins can read, update, and delete private rows. Member inserts require a
   stored `sync_consented_at`; waitlist inserts require the planning-stage agreement.
-- `private_admin_roles` is the editable web-developer pool. Seven seats are active
-  at a time for seven days each, staggered one day apart. `unbought_active_admin_ids()`
+- `private_web_developers` is the automatic web-developer pool. The site adds a
+  row only for an opted-in member who recorded the local Web development offer,
+  and removes it when that sync copy is deleted. Seven seats are active at a time
+  for seven days each, staggered one day apart. `unbought_active_admin_ids()`
   derives the active seven from the current date every time access is checked, so
-  no cron, scheduled job, or manual admin SQL is needed after setup. This pool is
-  separate from the local group admin seats in `app.js`.
+  no cron, scheduled job, or manual admin SQL is needed. If there are seven or
+  fewer web developers, it returns no admins. This pool is separate from the
+  local group admin seats in `app.js`.
 - `unbought_is_private_admin()` is `SECURITY DEFINER` with a locked search path so
   the admin-role policy cannot recurse. It returns false for an active admin while
   an `open` flag joins that admin's local member ID to their Auth user row.
@@ -80,17 +93,16 @@ In the Supabase dashboard:
 1. Open this project.
 2. Go to **SQL Editor**.
 3. Paste and run `supabase/migrations/20261120120000_public_data_only.sql`.
-4. Open `supabase/migrations/20261122000000_private_opt_in_sync.sql` and replace
-   the example rows in the `WEB DEVELOPER ADMIN POOL` block with real Supabase
-   Auth user UUIDs for **more than seven** web developers. Keep the example row
-   commented or remove it.
-5. Paste and run the edited private migration once.
+4. Paste and run `supabase/migrations/20261122000000_private_opt_in_sync.sql`.
+   Do not edit it. There are no UUIDs, names, or positions to fill in.
+5. If you ran an older version of the private migration, rerunning this file is
+   safe. It removes the old manual pool and creates the automatic pool table.
 
 Both files end with `notify pgrst, 'reload schema';` so the browser API sees the
 new tables and grants immediately. Private sync will fail with a permission error
-until the second migration is applied. The second migration also reasserts the
-public insert grants and permissive insert policies, repairing deployments where
-only the public read side had been applied.
+until the second migration is applied. The second migration also closes older
+direct-write public policies, adds the checked shared-write function, creates
+the Care Circle status columns, and adds the append-only audit note table.
 
 The repo already includes `supabase/config.toml`, so do not run `supabase init`
 again. Once the Supabase CLI is installed, you can link this folder with:
@@ -105,22 +117,20 @@ repo or to `supabase-config.js`.
 
 ## Web developer admin pool and rotation
 
-Edit only the `WEB DEVELOPER ADMIN POOL` block in
-`20261122000000_private_opt_in_sync.sql` before applying it. Each row needs a
-real Auth user UUID, a display name, and a unique position:
+Nothing to edit, and no UUIDs to look up.
 
-```sql
-( '00000000-0000-0000-0000-000000000001'::uuid, 'Developer One', 1),
-( '00000000-0000-0000-0000-000000000002'::uuid, 'Developer Two', 2),
--- add more than seven developers total
-```
+1. A member turns on private sync in Dashboard → Settings.
+2. That member opens the volunteer form and records **Web development**.
+3. The site adds their Auth user ID and local member ID to
+   `private_web_developers`. It does not upload the volunteer note.
+4. Once there are **more than seven** web developers in the pool, seven are
+   active at a time. Each seat lasts seven days, and seats are staggered so one
+   developer rotates in and one rotates out each day.
 
-Find UUIDs under **Authentication → Users** after each developer signs up through
-the site's private sync flow. Seven seats are active at a time. Each seat lasts
-seven days, and seats are staggered so one developer rotates in and one rotates
-out each day. The rotation is date-derived on every access check; there is no
-cron job and no later admin SQL. Keep more than seven developers so the active
-set actually changes. The site never writes to `private_admin_roles`.
+The active seven are derived from the current date on every access check. There
+is no cron job and no later admin SQL. With seven or fewer web developers, no
+private admin seats are active. Deleting a member's cloud copy removes their
+pool row too.
 
 This pool is only for Supabase private-data admins. The seven local group admin
 seats in `app.js` rotate separately and never grant database access.
@@ -146,19 +156,24 @@ Pages will then load both bridges.
 - Local saves publish only new public rows. The browser keeps a local list of
   already-pushed IDs in `unbought:supabase-pushed:v1` so saves do not duplicate
   rows.
+- Each page loads only the public rows it displays, so document pages stay fast.
 - Public rows are read on page load and merged into the local prototype.
-- Edits and deletes of public rows remain local for now because anonymous users
-  are not allowed to overwrite or remove shared rows.
+- Anonymous visitors can browse. A new shared row is published only when the
+  browser has a signed-in Supabase Auth session for a pledged member in good
+  standing. Otherwise the change stays on this device and a message explains how
+  to sign in. Edits and deletes of already-shared rows remain local for now.
+- The Supabase SDK is pinned in `vendor/supabase/`; the site does not fetch it
+  from a third-party CDN at runtime.
 
 ### Private data
 
 - Private sync stays off until a member opts in and signs in with Supabase Auth.
 - Once enabled, private saves are debounced and pushed to the private tables.
   The Settings panel also has **Sync now**.
-- **Turn off private sync** signs out and stops future uploads but keeps the
-  Supabase copy.
-- **Delete my cloud copy** removes the member, waitlist, and open report flag rows
-  for that local member ID, then signs out.
+- **Turn off private sync** removes the automatic web-developer pool row, signs
+  out, and stops future uploads but keeps the member and waiting-list copies.
+- **Delete my cloud copy** removes the member, waitlist, web-developer pool, and
+  open report flag rows for that local member ID, then signs out.
 - Local sign-out stops private sync. Withdrawing membership deletes the private
   cloud copy as well.
 - Filing a report sends an `open` flag for the reported member ID. A `not_guilty`

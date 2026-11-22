@@ -41,7 +41,7 @@
   // Basic Necessities are a closed list for limited-access tracks and safety
   // limits. Groups may choose how mutual aid happens, not what counts as a
   // luxury or nice to have.
-  const BASIC_NECESSITIES_COPY = 'Food, Health Care, Dental, Mental Health, Shelter, Clothing, Gas Cards, Uber Gift cards, spot on the waitlist for land, access to the Academy.';
+  const BASIC_NECESSITIES_COPY = 'Food, Health Care, Dental, Mental Health, Shelter, Clothing, Gas Cards, Uber Gift cards.';
   const BASIC_NECESSITIES_NOTE = `${BASIC_NECESSITIES_COPY} No luxury items or nice to haves. Groups can decide how mutual aid will work.`;
 
   // An alliance is a voluntary link between other groups in the Unbought
@@ -50,27 +50,43 @@
 
   // Sample newsboard posts shared by the public site and the member dashboard.
   // A blog service will replace this list in the live site.
+  const VOLUNTEER_MAILTO = 'mailto:unbought26@gmail.com?subject='
+    + encodeURIComponent('Help make Unbought a worldwide website')
+    + '&body=' + encodeURIComponent(
+      'Hello Unbought,\n\nI would like to help make Unbought a worldwide website.\n\n'
+      + 'I can help with: [law / nonprofit setup / web development / outreach / other].\n'
+      + 'A little about me: \n\nThank you.'
+    );
+
   const NEWS_POSTS = Object.freeze([
+    {
+      date: '2026-11-22',
+      label: 'Nov 22, 2026',
+      tag: 'Get involved',
+      title: 'What works now, and how to help',
+      bodyHtml: '<p>The open beta is for anyone, anywhere. You can browse Free Labor and Free Stuff, sign the pledge, post labor and goods offers, use your dashboard, record volunteer roles, and choose whether to sync public directory data or opt into private cloud sync. Future plans stay on <a href="future.html">What’s to Come</a>.</p>'
+        + '<p>Join by signing the pledge, or volunteer from any page. We especially need lawyers, nonprofit organizers, web developers, translators, and patient helpers who want Unbought to become a worldwide website. <a href="' + VOLUNTEER_MAILTO + '">Email the volunteer team</a> and tell us what you can do.</p>'
+    },
     {
       date: '2026-11-19',
       label: 'Nov 19, 2026',
-      tag: 'Rollout update',
-      title: 'Where Unbought stands, and what comes next',
-      body: 'We are finalizing the structure of Unbought and the way the movement will work. Once that is settled, we will set up the Unbought donation fund, server, blog service, and mailing service so we can roll out the beta version starting in the Poconos. If you live in the Poconos, you will be free to use Unbought and will be asked to submit feedback and send pictures for the social media campaign. We will roll out the full site on the vernal equinox, March 20, 2027, at 4:25pm.'
+      tag: 'Soft launch',
+      title: 'What works right now',
+      body: 'The soft launch is an invitation to anyone, anywhere. You can browse Free Labor and Free Stuff, take the local pledge, post offers when signed in, use your dashboard, and choose whether public directory data or private details sync. Beta features are limited while the prototype is built.'
     },
     {
       date: '2026-11-18',
       label: 'Nov 18, 2026',
       tag: 'The beta',
-      title: 'Why we are beginning in the Poconos',
-      body: 'Unbought will begin where neighbors can meet, trade skills, share goods, and tell us plainly what is working. The beta is a chance to learn together before the full rollout, not a finished product. Poconos neighbors will be invited to use it freely, send feedback, and share photos for the social media campaign.'
+      title: 'Start with these five tools',
+      body: 'Take the Pledge, search the two directories, open your dashboard, add a volunteer offer, and use the FAQ button on every page. Every action stays local unless you explicitly turn on a sync option. The Newsboard explains what each tool is for.'
     },
     {
       date: '2026-11-17',
       label: 'Nov 17, 2026',
-      tag: 'The fund',
-      title: 'What the Unbought donation fund is for',
-      body: 'The Unbought donation fund is meant to hold every cent that comes to the initiative: donations, Academy tuition where it applies, and fixed non-member prices for goods or labor. Members always receive the commons free. No money moves in this prototype; the fund is part of the plan for the live beta.'
+      tag: 'Records',
+      title: 'Money records stay local',
+      body: 'Non-member price fields and any recorded amounts stay in this browser. Nothing charges a card or sends a giving intent. Donation plans live on What’s to Come, not in the Newsboard.'
     },
     {
       date: '2026-11-16',
@@ -83,43 +99,43 @@
       date: '2026-11-15',
       label: 'Nov 15, 2026',
       tag: 'Membership',
-      title: 'Seed, Beta Founder, and first-year badges',
-      body: 'The first person of a profession to sign up in a ZIP code gets a profession Seed badge, such as Dancer Seed or Cleaning Seed. Everyone who signs from the database build until the 2027 vernal equinox is a Beta Founder. After rollout, non-seeds in the first official year get a 1st Year badge, and seeds in that year get a First year Founder badge. Beta labels stay pending until rollout so the first official year can be counted honestly.'
+      title: 'Badges are recorded locally',
+      body: 'Seed and Beta Founder labels are calculated from the details you enter and stay pending in this prototype. Volunteer badges appear when you record an offer. The FAQ explains the current labels.'
     },
     {
       date: '2026-11-14',
       label: 'Nov 14, 2026',
-      tag: 'Academy',
-      title: 'Learning now, giving back later',
-      body: `The Academy is free for pledged members. Neighbors 15 and older who are not already working in the commons may learn with basic-necessities-only access. ${BASIC_NECESSITIES_NOTE} They promise part-time work for Unbought for one year after finishing, before their 25th birthday. Non-member tuition and any tuition obligation go to the Unbought donation fund.`
+      tag: 'Volunteering',
+      title: 'Offer a skill from any page',
+      body: 'Use a “Volunteer with us” button to record a role. It stays in this browser. With private sync on, Web development adds only your member ID to the automatic admin pool; your note and other offers stay local.'
     },
     {
       date: '2026-11-13',
       label: 'Nov 13, 2026',
       tag: 'Community',
       title: 'Guidelines keep consent at the center',
-      body: 'The Ten Consent Commandments set the tone: clear agreement, honest scope, and the right to stop. Concerns move through monthly review, care-circle support where it fits, and community decisions that never treat one person as judge and jury. Basic necessities stay protected, and serious or repeated harm can lead to exile and revocation after a member vote.'
+      body: 'The Ten Consent Commandments set the tone: clear agreement, honest scope, and the right to stop. Concerns move through local review, care-circle support where it fits, and community decisions that never treat one person as judge and jury. Basic necessities stay protected.'
     },
     {
       date: '2026-11-12',
       label: 'Nov 12, 2026',
-      tag: 'The equinox',
-      title: 'A gathering we hope to build',
-      body: 'We hope to partner with an organization for a large festival somewhere in the United States on March 20, 2028, at 4:25pm Eastern, celebrating the movement and its Seed, Beta Founder, 1st Year, and First year Founder members. It is an intention, not a booked event. The moment matters because we will have been fully rolled out for a full year, meaning something must be working.'
+      tag: 'Where to look',
+      title: 'One page for plans',
+      body: 'How It Works summarizes what works now. The Newsboard, FAQ, and Community Guidelines explain current behavior. Future plans stay on What’s to Come.'
     },
     {
       date: '2026-11-11',
       label: 'Nov 11, 2026',
       tag: 'Privacy',
       title: 'Personal details stay private',
-      body: 'The pledge asks for the information a real community needs to know its members, but the public resume shows only chosen details. Legal name, addresses, birthdate, housing status, group, and report count are not part of that public picture. Until the live services are connected, this prototype keeps everything on the device.'
+      body: 'The pledge asks for the information a real community needs to know its members, but the public resume shows only chosen details. Legal name, addresses, birthdate, housing status, group, and report count stay out of that public picture. Public listings and community posts are shared through Supabase; private details stay local unless you opt in.'
     },
     {
       date: '2026-11-10',
       label: 'Nov 10, 2026',
-      tag: 'Getting involved',
-      title: 'How neighbors can help before rollout',
-      body: 'Talk to people in your profession, volunteer a skill, help find donated space or supplies, or simply tell neighbors what Unbought is trying to do. The first communities will be shaped by the people who show up early and stay honest with feedback.'
+      tag: 'Feedback',
+      title: 'Send feedback from your dashboard',
+      body: 'Dashboard → Suggestions saves ideas locally, and the FAQ button is on every page. Use them while you try the beta. Nothing is delivered from this prototype.'
     }
   ]);
 
@@ -730,6 +746,7 @@
   const VOTING_DAYS = 3;     // time for all members to review the case file and vote
   const DAY_MS = 24 * 60 * 60 * 1000;
   const PLEDGE_FREEZE_DAYS = 30;       // grace period to make up missed hours
+  const PROBATION_DAYS = 30;           // first month: one week's hours unlock full access
   const PLEDGE_REVIEWER_COUNT = 3;     // impartial active members approve a re-pledge
 
   // Membership years start at the exact moment of the northern vernal
@@ -909,7 +926,7 @@
     { title: 'The Pledge', area: 'Page', href: 'pledge.html', terms: 'join sign up membership commitments' },
     { title: 'Free Labor', area: 'Directory', href: 'freelabor.html', terms: 'services skills work offers jobs posts' },
     { title: 'Free Stuff', area: 'Directory', href: 'freestuff.html', terms: 'goods items offers products posts' },
-    { title: 'Donate', area: 'Page', href: 'donate.html', terms: 'fund donation money contribution' },
+    { title: 'Future funding', area: 'Page', href: 'donate.html', terms: 'future funding plans giving donations' },
     { title: 'What’s to Come', area: 'Page', href: 'future.html', terms: 'roadmap academy festival land waiting list phase' },
     { title: 'Community Guidelines', area: 'Page', href: 'guidelines.html', terms: 'consent rules standing care circle review exile' },
     { title: 'FAQ', area: 'Page', href: 'faq.html', terms: 'help questions answers privacy' },
@@ -1005,6 +1022,7 @@
       pledgeReviews: [],
       anonymousVotes: [],
       notifications: [],
+      groupAdminReads: [],
       friends: [],
       friendRequests: [{
         id: 'sample-friend-request-maya',
@@ -1473,16 +1491,14 @@
         <p><strong>To:</strong> ${e(firstName)} (chosen name; no email is collected)<br><strong>Subject:</strong> ${e(`Thank you for starting Unbought, ${firstName}`)}</p>
         <p>Hi ${e(firstName)},</p>
         <p>Thank you for helping to start the movement. You are the first ${e(profession)} to sign up for Unbought in ZIP ${e(zip || 'your area')} — a seed member. Your badge is <strong>${e(badgeName)}</strong>. ${beta ? 'Because you signed during the beta build period, you are also a Beta Founder.' : ''}${firstYearFounder ? 'Because you signed in the first official year, you are also a First year Founder.' : ''} Seed members are the people who prove a new trade can take root in a place; the whole commons begins with someone willing to go first.</p>
-        <p>Beta testing runs until the exact 2027 vernal equinox, March 20, 2027 at 4:25pm Eastern — the day Unbought rolls out for everyone and the first day of its first official year. Until then, people who sign from the database build are Beta Founders, people can become Seed members, and we log the day each one joins. Your Seed and Beta Founder labels stay pending until rollout. After rollout, non-seeds in the first official year get a 1st Year badge, and seeds in that year get a First year Founder badge. If we are successful, we hope to partner with an organization and throw a huge festival somewhere in the United States on the following equinox, March 20, 2028 — one full year after rollout — to celebrate the movement and its Seed, Beta Founder, 1st Year, and First year Founder members. Nothing is booked or confirmed yet, but as a seed member you will hear about it first.</p>
+        <p>Beta testing runs until the exact 2027 vernal equinox, March 20, 2027 at 4:25pm Eastern — the day Unbought rolls out for everyone and the first day of its first official year. Until then, people who sign from the database build are Beta Founders, people can become Seed members, and we log the day each one joins. Your Seed and Beta Founder labels stay pending until rollout. After rollout, non-seeds in the first official year get a 1st Year badge, and seeds in that year get a First year Founder badge. Future plans are listed only on <a href="future.html">What’s to Come</a>.</p>
         <p>Ways to get the ball rolling:</p>
         <ul>
           <li>Talk to other professionals in your area and invite them to take the pledge.</li>
           <li>Post on social media about why a currency-free commons is worth trying.</li>
-          <li>Scout for cheap or donated housing and bring leads to the land circle.</li>
-          <li>Start an Unbought business whose revenue is donated to the commons.</li>
-          <li>Donate what you can, and point other donors toward the trust.</li>
           <li>Volunteer your services to help develop the community — organizing, outreach, repairs, mentoring, or whatever your trade can offer.</li>
-          <li>Offer your skill on Free Labor, list goods on Free Stuff, or mentor in the Academy.</li>
+          <li>Offer your skill on Free Labor, list goods on Free Stuff, and help people find what they need.</li>
+          <li>Use the FAQ and Community Guidelines to understand how the working build behaves.</li>
         </ul>
         <p>We can only grow if people get involved. None of this is a demand — it is an invitation to help something small become something real. Thank you again for going first.</p>
         <p>With gratitude,<br>The Unbought commons</p>
@@ -1659,6 +1675,7 @@
   }
 
   let profilePreviewPublic = false;
+  let careCircleDialog = null;
 
   function profileMemberParam() {
     try {
@@ -1842,6 +1859,12 @@
           announce('Your reply was saved on this post locally.');
           showToast('Reply saved locally.', false);
         }
+        if (form.matches('[data-group-admin-read-form]')) {
+          event.preventDefault();
+          if (!requireMembership() || !form.reportValidity()) return;
+          acceptGroupAdminRead(form.dataset.groupId, form.dataset.seat);
+          return;
+        }
         if (form.matches('[data-group-guidelines-form]')) {
           event.preventDefault();
           if (!requireMembership() || !form.reportValidity()) return;
@@ -1986,6 +2009,12 @@
       if (review) {
         event.preventDefault();
         requireGroupImpartialReview(review.dataset.groupReview, review.dataset.groupMemberId, review);
+        return;
+      }
+      const decline = event.target.closest('[data-group-admin-decline]');
+      if (decline) {
+        event.preventDefault();
+        declineGroupAdminRead(decline.dataset.groupId, decline.dataset.seat);
       }
     });
   }
@@ -2158,12 +2187,214 @@
     });
   }
 
-  // The signed pledge is the sign-in. Members land on the dashboard; everyone
-  // else is invited to "Take the Pledge" on its dedicated page.
+  function renderPledgeRestrictionBanner() {
+    const block = getPledgeAccessBlockReason();
+    const earning = isPledgeEarning();
+    const probation = isPledgeProbationary();
+    const careBasic = isCareBasic();
+    document.body.classList.toggle('pledge-restricted', Boolean(block));
+    document.body.classList.toggle('pledge-earning', earning);
+    document.body.classList.toggle('pledge-probation', probation);
+    document.body.classList.toggle('pledge-care-basic', careBasic);
+
+    let banner = document.getElementById('pledge-restriction-banner');
+    if (!block) {
+      if (banner) banner.remove();
+      return;
+    }
+    if (!banner) {
+      banner = createEl('aside', 'pledge-restriction-banner');
+      banner.id = 'pledge-restriction-banner';
+      banner.setAttribute('role', 'status');
+      const header = document.querySelector('.site-header');
+      if (header && header.parentNode) header.parentNode.insertBefore(banner, header.nextSibling);
+      else document.body.prepend(banner);
+    }
+
+    const inner = createEl('div', 'container pledge-restriction-inner');
+    const copy = createEl('div', 'pledge-restriction-copy');
+    const title = probation ? 'First month — labor offers only'
+      : earning ? 'Pledge frozen — labor offers only'
+        : careBasic ? getCareAccessLabel(state.pledge)
+          : 'Member tools paused';
+    copy.appendChild(createEl('strong', '', title));
+    copy.appendChild(createEl('span', '', block));
+    inner.appendChild(copy);
+
+    if (earning) {
+      const offer = createEl('a', 'button button--small button--amber', 'Offer your labor');
+      offer.href = 'freelabor.html#post-trigger';
+      inner.appendChild(offer);
+      const care = createEl('button', 'button button--small button--ghost', 'Can’t work right now?');
+      care.type = 'button';
+      care.dataset.openCareCircle = 'true';
+      inner.appendChild(care);
+    }
+    if (careBasic) {
+      const volunteer = createEl('button', 'button button--small button--amber', 'Take an active role');
+      volunteer.type = 'button';
+      volunteer.dataset.volunteerTrigger = 'true';
+      volunteer.addEventListener('click', () => openVolunteerDialog());
+      inner.appendChild(volunteer);
+      const update = createEl('button', 'button button--small button--ghost', 'Update Care Circle');
+      update.type = 'button';
+      update.dataset.openCareCircle = 'true';
+      inner.appendChild(update);
+    }
+    const docs = createEl('a', 'pledge-restriction-docs', 'Read the rule');
+    docs.href = careBasic ? 'guidelines.html#care-circle' : 'guidelines.html#pledge-standing';
+    inner.appendChild(docs);
+    banner.replaceChildren(inner);
+  }
+
+  function buildCareCircleDialog() {
+    if (careCircleDialog) return careCircleDialog;
+
+    const dialog = document.createElement('dialog');
+    dialog.className = 'dialog dialog--care-circle';
+    dialog.id = 'care-circle-dialog';
+    dialog.setAttribute('aria-labelledby', 'care-circle-title');
+    dialog.setAttribute('aria-describedby', 'care-circle-intro');
+    dialog.innerHTML = `
+      <div class="dialog-shell">
+        <div class="dialog-top">
+          <p class="eyebrow">Care Circle</p>
+          <button class="icon-button" type="button" data-dialog-close aria-label="Close the Care Circle application">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-close"></use></svg>
+          </button>
+        </div>
+        <div class="dialog-content">
+          <h2 id="care-circle-title">Apply for the Care Circle</h2>
+          <p id="care-circle-intro">If you cannot keep a labor pledge right now, you can move to the Care Circle. There is no monthly labor obligation. Basic Necessities are the base; full access can be confirmed without telling us a diagnosis or uploading documents.</p>
+          <p class="dialog-note" data-care-senior-note hidden>If you are 65 or older and have no outside paid job or business, you keep retired full access. If you have an outside paid job or business, Basic Necessities remain available and an active role in Unbought is requested. Nothing here says a 65+ member cannot work.</p>
+          <form class="account-form" data-care-circle-form>
+            <label class="checkbox">
+              <input type="checkbox" name="hasOutsideJob" data-care-outside-job>
+              <span>I have an outside paid job or business outside Unbought.</span>
+            </label>
+            <fieldset class="care-access-choice">
+              <legend>Access level</legend>
+              <label class="checkbox">
+                <input type="radio" name="careAccessChoice" value="basic" checked>
+                <span>Basic Necessities only.</span>
+              </label>
+              <label class="checkbox">
+                <input type="radio" name="careAccessChoice" value="proof">
+                <span>I can show proof of disability to a care-circle peer and want full access.</span>
+              </label>
+              <p class="field-hint">No diagnosis, document, medical record, or note is saved or uploaded. Only the resulting access status and the timestamp are kept locally; private sync copies only that status.</p>
+            </fieldset>
+            <label class="checkbox">
+              <input type="checkbox" name="careAck" required>
+              <span>I understand the Care Circle has no monthly labor hours and that access limits follow the Community Guidelines.</span>
+            </label>
+            <div class="dialog-actions">
+              <button class="button button--ghost" type="button" data-dialog-close>Not now</button>
+              <button class="button button--primary" type="submit">Save Care Circle application</button>
+            </div>
+          </form>
+        </div>
+      </div>`;
+    document.body.appendChild(dialog);
+
+    dialog.querySelectorAll('[data-dialog-close]').forEach((button) => {
+      button.addEventListener('click', () => closeDialog(dialog));
+    });
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) closeDialog(dialog);
+    });
+    dialog.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape' || event.isComposing) return;
+      event.preventDefault();
+      closeDialog(dialog);
+    });
+
+    dialog.querySelector('[data-care-circle-form]').addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!requireMembership('Sign the pledge before applying for the Care Circle.', { allowLabor: true })) return;
+      if (!event.currentTarget.reportValidity()) return;
+      const data = new FormData(event.currentTarget);
+      applyCareCircle({
+        hasOutsideJob: Boolean(data.get('hasOutsideJob')),
+        proofProvided: String(data.get('careAccessChoice') || '') === 'proof'
+      });
+      closeDialog(dialog);
+    });
+
+    careCircleDialog = dialog;
+    return dialog;
+  }
+
+  function openCareCircleDialog() {
+    if (!isMember()) {
+      requireMembership('Sign the Unbought Pledge before applying for the Care Circle.');
+      return;
+    }
+    const dialog = buildCareCircleDialog();
+    const form = dialog.querySelector('[data-care-circle-form]');
+    if (form) {
+      form.reset();
+      const outside = form.querySelector('[data-care-outside-job]');
+      if (outside) outside.checked = Boolean(state.pledge.hasOutsideJob);
+      const proof = form.querySelector('input[value="proof"]');
+      if (proof) proof.checked = Boolean(state.pledge.careProofProvidedAt) && !isSeniorMember(state.pledge);
+      const seniorNote = dialog.querySelector('[data-care-senior-note]');
+      if (seniorNote) seniorNote.hidden = !isSeniorMember(state.pledge);
+    }
+    openDialog(dialog);
+  }
+
+  function initCareCircleApplication() {
+    document.addEventListener('click', (event) => {
+      const trigger = event.target.closest('[data-open-care-circle]');
+      if (!trigger) return;
+      event.preventDefault();
+      openCareCircleDialog();
+    });
+  }
+
+  function applyCareCircle(options = {}) {
+    const pledge = state.pledge;
+    if (!pledge) return;
+    pledge.monthlyHours = 'care';
+    pledge.status = 'active';
+    pledge.reviewRequired = false;
+    pledge.firstMonthChecked = true;
+    pledge.probationCompletedAt = '';
+    pledge.careCircleAppliedAt = new Date().toISOString();
+    pledge.hasOutsideJob = Boolean(options.hasOutsideJob);
+    if (options.proofProvided && !isSeniorMember(pledge)) {
+      pledge.careProofProvidedAt = new Date().toISOString();
+    } else {
+      pledge.careProofProvidedAt = '';
+    }
+    applyCareAccessRules(pledge);
+    clearFrozenFields(pledge);
+    pledge.observerAt = '';
+    pledge.trackBeforeFreeze = '';
+    state.track = 'care';
+    updatePledgeRosterStanding();
+    addNotification('pledge', 'Care Circle application saved',
+      `${getCareAccessLabel(pledge)}. No labor obligation is due; only your resulting status was saved here.`,
+      { tab: 'dashboard' });
+    saveState();
+    renderSharedMemberViews();
+    renderAuthUi();
+    renderVolunteerStatus();
+    renderDashboard();
+    renderAccountability();
+    announce('Care Circle application saved locally. No labor obligation is due.');
+    showToast('Care Circle saved locally. No labor obligation now.', false);
+  }
+
+  // The signed pledge is the sign-in. Probation and frozen pledges are pointed
+  // straight to the one action still available; everyone else uses the normal CTA.
   function renderAuthUi() {
     const signedIn = isMember();
-    const href = signedIn ? 'dashboard.html' : 'pledge.html';
-    const label = signedIn ? 'Dashboard' : 'Take the Pledge';
+    const earning = isPledgeEarning();
+    const blocked = signedIn ? Boolean(getPledgeAccessBlockReason()) : false;
+    const href = earning ? 'freelabor.html#post-trigger' : signedIn ? 'dashboard.html' : 'pledge.html';
+    const label = earning ? 'Offer labor' : signedIn ? 'Dashboard' : 'Take the Pledge';
 
     document.querySelectorAll('[data-auth-cta]').forEach((element) => {
       const labelNode = element.querySelector('[data-auth-label]') || element;
@@ -2173,12 +2404,12 @@
     });
 
     const headerNotifications = document.querySelector('[data-notifications-cta]');
-    if (headerNotifications) headerNotifications.hidden = !signedIn;
+    if (headerNotifications) headerNotifications.hidden = !signedIn || blocked;
     updateHeaderNotificationBadge();
 
-    // Profile-only member controls are hidden from signed-out visitors.
+    // Member-only chrome is hidden while standing blocks member tools.
     document.querySelectorAll('[data-member-only]').forEach((item) => {
-      item.hidden = !signedIn;
+      item.hidden = !signedIn || (blocked && !item.hasAttribute('data-frozen-allowed'));
     });
 
     // Members do not need the pledge page, so retire pledge-only nav links.
@@ -2317,6 +2548,20 @@
     return typeof hours === 'number' ? hours : 0;
   }
 
+  // One "week" of the pledge is a quarter of the monthly commitment. A
+  // 4-hour monthly pledge unlocks after 1 confirmed hour; 8 hours unlocks
+  // after 2. Care Circle pledges have no labor obligation and skip probation.
+  function pledgeWeekRequirement(pledge) {
+    const monthly = pledgeHourRequirement(pledge);
+    if (!monthly) return 0;
+    return Math.max(0.25, Math.round((monthly / 4) * 100) / 100);
+  }
+
+  function pledgeProbationOver(pledge) {
+    const signedAt = Date.parse(pledge && pledge.signedAt);
+    return !Number.isNaN(signedAt) && Date.now() - signedAt >= (PROBATION_DAYS * DAY_MS);
+  }
+
   function getPledgeReviews() {
     if (!Array.isArray(state.pledgeReviews)) state.pledgeReviews = [];
     return state.pledgeReviews;
@@ -2336,7 +2581,8 @@
     if (!entry) return;
     entry.standing = (pledge.status === 'frozen' || pledge.status === 'review_pending') ? 'frozen'
       : pledge.status === 'observer' ? 'observer'
-        : 'active';
+        : pledge.status === 'probation' ? 'probation'
+          : 'active';
     if (pledge.status === 'observer') entry.track = 'observer';
     else if (pledge.trackBeforeFreeze) entry.track = cleanString(pledge.trackBeforeFreeze, 30) || entry.track;
     state.memberRoster = roster;
@@ -2350,6 +2596,17 @@
     pledge.pledgeDeficitHours = 0;
   }
 
+  function freezePledgeForShortfall(pledge, month, logged, required, note) {
+    const shortfall = Math.max(0, Math.round((required - logged) * 100) / 100);
+    pledge.status = 'frozen';
+    pledge.frozenAt = new Date().toISOString();
+    pledge.frozenMonth = normalizeMonthKey(month) || monthKeyFromDate(new Date());
+    pledge.frozenHours = logged;
+    pledge.pledgeHoursAtFreeze = required;
+    pledge.pledgeDeficitHours = shortfall;
+    addNotification('pledge', 'Pledge frozen', note, { tab: 'dashboard' });
+  }
+
   function convertPledgeToObserver(pledge) {
     pledge.trackBeforeFreeze = cleanString(state.track, 30) || cleanString(pledge.trackBeforeFreeze, 30);
     pledge.status = 'observer';
@@ -2359,8 +2616,9 @@
     state.track = 'observer';
   }
 
-  // Runs on load, on render, and after hours are logged. The previous calendar
-  // month is checked once; a frozen pledge then gets a 30-day grace period.
+  // The first month is probation: one week of confirmed hours unlocks member
+  // tools, and the full monthly pledge is checked at the 30-day mark. After
+  // that, each previous calendar month is checked once.
   function syncPledgeStanding() {
     const pledge = state.pledge;
     if (!isMember() || !pledge) return false;
@@ -2372,10 +2630,18 @@
       changed = true;
     }
 
+    // Members who signed before this rule existed already passed their first
+    // month, so do not retroactively freeze them.
+    if (!pledge.firstMonthChecked && pledgeProbationOver(pledge)) {
+      pledge.firstMonthChecked = true;
+      changed = true;
+    }
+
     // Care Circle has no labor obligation, so it can never be frozen for hours.
     if (pledge.monthlyHours === 'care' && pledge.status !== 'active') {
       pledge.status = 'active';
       pledge.reviewRequired = false;
+      pledge.firstMonthChecked = true;
       clearFrozenFields(pledge);
       pledge.observerAt = '';
       state.track = cleanString(pledge.trackBeforeFreeze, 30) || state.track || 'care';
@@ -2383,7 +2649,24 @@
       changed = true;
     }
 
-    if (pledge.status === 'frozen') {
+    if (pledge.status === 'probation') {
+      const weekly = pledgeWeekRequirement(pledge);
+      const earned = hoursSince(pledge.memberId, pledge.signedAt);
+      if (weekly > 0 && earned >= weekly) {
+        pledge.status = 'active';
+        pledge.probationCompletedAt = new Date().toISOString();
+        addNotification('pledge', 'First week complete',
+          `You confirmed ${earned} of ${weekly} first-week hours. Full member tools are unlocked; the full ${pledgeHourRequirement(pledge)}-hour month is still checked on day 30.`,
+          { tab: 'dashboard' });
+        changed = true;
+      } else if (pledgeProbationOver(pledge)) {
+        const required = pledgeHourRequirement(pledge);
+        pledge.firstMonthChecked = true;
+        freezePledgeForShortfall(pledge, monthKeyFromDate(pledge.signedAt), earned, required,
+          `Your first month ended with ${earned} of ${required} pledged hours. Only offering labor is available until ${Math.max(0, Math.round((required - earned) * 100) / 100)} more hours are confirmed.`);
+        changed = true;
+      }
+    } else if (pledge.status === 'frozen') {
       const frozenAt = Date.parse(pledge.frozenAt);
       const frozenTooLong = !Number.isNaN(frozenAt)
         && Date.now() - frozenAt > (PLEDGE_FREEZE_DAYS * DAY_MS);
@@ -2393,7 +2676,7 @@
       if (frozenTooLong) {
         convertPledgeToObserver(pledge);
         addNotification('pledge', 'Pledge became Observer',
-          `Your pledge was frozen for more than ${PLEDGE_FREEZE_DAYS} days. You are now an Observer; a re-pledge needs approval from three active members before requests resume.`,
+          `Your pledge was frozen for more than ${PLEDGE_FREEZE_DAYS} days. You are now an Observer; a re-pledge needs approval from three active members before member tools return.`,
           { tab: 'dashboard' });
         changed = true;
       } else {
@@ -2402,7 +2685,7 @@
           pledge.status = 'active';
           clearFrozenFields(pledge);
           addNotification('pledge', 'Pledge active again',
-            `You completed the ${shortfall} missed hour${shortfall === 1 ? '' : 's'}. Service requests are available again.`,
+            `You completed the ${shortfall} missed hour${shortfall === 1 ? '' : 's'}. Full member tools are available again.`,
             { tab: 'dashboard' });
           changed = true;
         } else {
@@ -2414,27 +2697,34 @@
         }
       }
     } else if (pledge.status === 'active') {
-      const lastMonth = previousMonthKey(new Date());
-      const signedMonth = monthKeyFromDate(pledge.signedAt);
-      const required = pledgeHourRequirement(pledge);
-      if (pledge.lastCheckedMonth !== lastMonth) {
-        pledge.lastCheckedMonth = lastMonth;
-        changed = true;
-        // Do not freeze a new member for a month that ended before they signed.
-        if (required > 0 && (!signedMonth || lastMonth >= signedMonth)) {
-          const logged = hoursInMonth(pledge.memberId, lastMonth);
-          if (logged < required) {
-            const shortfall = Math.round((required - logged) * 100) / 100;
-            pledge.status = 'frozen';
-            pledge.frozenAt = new Date().toISOString();
-            pledge.frozenMonth = lastMonth;
-            pledge.frozenHours = logged;
-            pledge.pledgeHoursAtFreeze = required;
-            pledge.pledgeDeficitHours = shortfall;
-            addNotification('pledge', 'Pledge frozen',
-              `You confirmed ${logged} of ${required} pledged hours in ${lastMonth}. Requests are paused until ${shortfall} hour${shortfall === 1 ? '' : 's'} are made up, or until Observer status after ${PLEDGE_FREEZE_DAYS} days.`,
+      if (!pledge.firstMonthChecked) {
+        if (pledgeProbationOver(pledge)) {
+          pledge.firstMonthChecked = true;
+          const required = pledgeHourRequirement(pledge);
+          const total = hoursSince(pledge.memberId, pledge.signedAt);
+          if (required > 0 && total < required) {
+            freezePledgeForShortfall(pledge, monthKeyFromDate(pledge.signedAt), total, required,
+              `Your first month ended with ${total} of ${required} pledged hours. Only offering labor is available until ${Math.max(0, Math.round((required - total) * 100) / 100)} more hours are confirmed.`);
+          } else {
+            addNotification('pledge', 'First month complete',
+              `You confirmed ${total} of ${required} pledged hours in your first month. Full access continues.`,
               { tab: 'dashboard' });
-            changed = true;
+          }
+          changed = true;
+        }
+      } else {
+        const lastMonth = previousMonthKey(new Date());
+        const required = pledgeHourRequirement(pledge);
+        if (pledge.lastCheckedMonth !== lastMonth) {
+          pledge.lastCheckedMonth = lastMonth;
+          changed = true;
+          if (required > 0) {
+            const logged = hoursInMonth(pledge.memberId, lastMonth);
+            if (logged < required) {
+              freezePledgeForShortfall(pledge, lastMonth, logged, required,
+                `You confirmed ${logged} of ${required} pledged hours in ${lastMonth}. Only offering labor is available until ${Math.round((required - logged) * 100) / 100} more hour${Math.round((required - logged) * 100) / 100 === 1 ? '' : 's'} are made up, or until Observer status after ${PLEDGE_FREEZE_DAYS} days.`);
+              changed = true;
+            }
           }
         }
       }
@@ -2447,17 +2737,109 @@
     return changed;
   }
 
+  function isPledgeFrozen() {
+    return Boolean(isMember() && state.pledge && state.pledge.status === 'frozen');
+  }
+
+  function isPledgeProbationary() {
+    return Boolean(isMember() && state.pledge && state.pledge.status === 'probation');
+  }
+
+  function isPledgeEarning() {
+    return isPledgeFrozen() || isPledgeProbationary();
+  }
+
+  function isSeniorMember(pledge) {
+    const age = getAgeFromDob(pledge && pledge.dob);
+    return age !== null && age >= 65;
+  }
+
+  function isCareMember() {
+    return Boolean(isMember() && state.pledge && state.pledge.monthlyHours === 'care');
+  }
+
+  function hasSeniorOutsideJob() {
+    return Boolean(isMember() && state.pledge && isSeniorMember(state.pledge) && state.pledge.hasOutsideJob);
+  }
+
+  function hasCareFullAccess() {
+    const pledge = state.pledge;
+    if (!isMember() || !pledge) return false;
+    if (isSeniorMember(pledge)) return !pledge.hasOutsideJob;
+    return isCareMember() && (pledge.careAccess === 'full' || pledge.careAccess === 'full_age');
+  }
+
+  function isCareBasic() {
+    if (!isMember() || !state.pledge) return false;
+    if (hasSeniorOutsideJob()) return true;
+    return isCareMember() && !hasCareFullAccess();
+  }
+
+  function hasActiveRoleRecorded() {
+    if (!isMember()) return false;
+    if (getMemberVolunteerInterests().length) return true;
+    return (Array.isArray(state.listings) ? state.listings : [])
+      .some((listing) => listing && listing.memberId === state.pledge.memberId);
+  }
+
+  // Care access is a small resulting status, never a place to store proof
+  // details. A 65+ member with no outside paid job keeps retired full access.
+  // A 65+ member with an outside paid job or business has basic access and is
+  // asked to take an active role in Unbought. Age never disables the option to
+  // work. Under-65 members may confirm disability proof locally for full
+  // access; only the timestamp is kept.
+  function applyCareAccessRules(pledge) {
+    if (!pledge) return;
+    const senior = isSeniorMember(pledge);
+    const outsideJob = Boolean(pledge.hasOutsideJob);
+    if (senior) {
+      pledge.careAccess = outsideJob ? 'basic' : 'full_age';
+      pledge.activeRoleRequired = outsideJob;
+      if (outsideJob) pledge.careProofProvidedAt = '';
+      return;
+    }
+    if (pledge.monthlyHours !== 'care') {
+      pledge.careAccess = '';
+      pledge.activeRoleRequired = false;
+      return;
+    }
+    pledge.careAccess = pledge.careProofProvidedAt ? 'full' : 'basic';
+    pledge.activeRoleRequired = false;
+  }
+
+  function getCareAccessLabel(pledge) {
+    if (!pledge) return '';
+    if (isSeniorMember(pledge)) {
+      return pledge.hasOutsideJob
+        ? 'Retired status paused — Basic Necessities with an active role requested'
+        : 'Retired Care Circle — full access';
+    }
+    if (pledge.monthlyHours !== 'care') return '';
+    return hasCareFullAccess() ? 'Care Circle — full access' : 'Care Circle — Basic Necessities';
+  }
+
   function getPledgeAccessBlockReason() {
     const pledge = state.pledge;
     if (!isMember() || !pledge) return '';
+    if (pledge.status === 'probation') {
+      const weekly = pledgeWeekRequirement(pledge);
+      return `You are in your first month. Confirm ${weekly} hour${weekly === 1 ? '' : 's'} of labor to unlock member tools. Until then you can only offer your labor.`;
+    }
     if (pledge.status === 'frozen') {
-      return `Your pledge is frozen. Confirm ${cleanHours(pledge.pledgeDeficitHours)} more hour${cleanHours(pledge.pledgeDeficitHours) === 1 ? '' : 's'} before you can request services.`;
+      const deficit = cleanHours(pledge.pledgeDeficitHours);
+      return `Your pledge is frozen. You can still offer your labor, but other member tools are paused until ${deficit} more hour${deficit === 1 ? '' : 's'} are confirmed.`;
     }
     if (pledge.status === 'observer' || state.track === 'observer' || pledge.reviewRequired) {
-      return 'Observers read and explore without requesting services. Your re-pledge must be approved by three active members first.';
+      return 'Observers read and explore without member tools. Your re-pledge must be approved by three active members first.';
     }
     if (pledge.status === 'review_pending' && pendingPledgeReviewFor(pledge.memberId)) {
-      return 'Your re-pledge is waiting for three active members to review it.';
+      return 'Your re-pledge is waiting for three active members to review it. Member tools stay paused until they decide.';
+    }
+    if (hasSeniorOutsideJob()) {
+      return 'An outside paid job or business pauses retired full access. Basic Necessities remain available, and an active role in Unbought is requested. You can still offer labor and record a volunteer role.';
+    }
+    if (isCareBasic()) {
+      return 'Your Care Circle has Basic Necessities only. You can offer labor or record a volunteer role; full access can be confirmed locally with disability proof.';
     }
     return '';
   }
@@ -2980,14 +3362,35 @@
     return Boolean(report && !isRestrictionComplete(report));
   }
 
-  function requireMembership(message) {
-    if (isMember()) return true;
-    showToast(message || 'Sign the Unbought Pledge to become a member and participate.');
-    const pledgeLink = document.querySelector('a[data-auth-cta], a[href="pledge.html"]');
-    if (pledgeLink) {
-      pledgeLink.focus({ preventScroll: true });
+  // All member actions pass through here. Probation and frozen pledges lose
+  // normal member tools; only callers with allowEarning may use the exceptions.
+  function requireMembership(message, options = {}) {
+    if (!isMember()) {
+      showToast(message || 'Sign the Unbought Pledge to become a member and participate.');
+      const pledgeLink = document.querySelector('a[data-auth-cta], a[href="pledge.html"]');
+      if (pledgeLink) pledgeLink.focus({ preventScroll: true });
+      return false;
     }
-    return false;
+    const block = getPledgeAccessBlockReason();
+    if (block) {
+      const allowed = (options.allowEarning && isPledgeEarning())
+        || ((options.allowLabor || options.allowCareBasic) && isCareBasic());
+      if (!allowed) {
+        showToast(message || block);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function requireLaborOfferAccess(message) {
+    const laborMessage = message || 'You can still offer your labor. Other member tools stay paused while your pledge standing is limited.';
+    if (!requireMembership(laborMessage, { allowEarning: true, allowLabor: true })) return false;
+    if (hasActiveRestriction()) {
+      showToast('Full access is paused during your reflection period. Offering labor is unavailable until you complete the reflection and treatment requirements.');
+      return false;
+    }
+    return true;
   }
 
   function requireFullAccess(message) {
@@ -3032,7 +3435,7 @@
 
   function normalizePledgeStatus(value) {
     const status = cleanString(value, 30).toLowerCase();
-    return ['active', 'frozen', 'observer', 'review_pending'].includes(status) ? status : 'active';
+    return ['active', 'probation', 'frozen', 'observer', 'review_pending'].includes(status) ? status : 'active';
   }
 
   function normalizeMonthKey(value) {
@@ -3467,6 +3870,11 @@
           physicalZip: normalizeZip(raw.pledge.physicalZip || parsedPhysicalAddress.zip),
           housingStatus: normalizeHousingStatus(raw.pledge.housingStatus),
           monthlyHours: normalizeMonthlyHours(raw.pledge.monthlyHours),
+          hasOutsideJob: Boolean(raw.pledge.hasOutsideJob),
+          careAccess: ['basic', 'full', 'full_age'].includes(cleanString(raw.pledge.careAccess, 20))
+            ? cleanString(raw.pledge.careAccess, 20) : 'basic',
+          careProofProvidedAt: cleanString(raw.pledge.careProofProvidedAt, 40),
+          activeRoleRequired: Boolean(raw.pledge.activeRoleRequired),
           phone: cellPhone,
           cellPhone,
           publicPhoneNumber,
@@ -3511,6 +3919,9 @@
           note: cleanString(raw.pledge.note, 240),
           signedAt,
           status: normalizePledgeStatus(raw.pledge.status),
+          firstMonthChecked: Boolean(raw.pledge.firstMonthChecked),
+          probationCompletedAt: cleanString(raw.pledge.probationCompletedAt, 40),
+          careCircleAppliedAt: cleanString(raw.pledge.careCircleAppliedAt, 40),
           frozenAt: cleanString(raw.pledge.frozenAt, 40),
           frozenMonth: normalizeMonthKey(raw.pledge.frozenMonth),
           frozenHours: cleanHours(raw.pledge.frozenHours),
@@ -3522,6 +3933,7 @@
           pledgeReviewId: cleanString(raw.pledge.pledgeReviewId, 100),
           lastCheckedMonth: normalizeMonthKey(raw.pledge.lastCheckedMonth)
         };
+        applyCareAccessRules(fallback.pledge);
       }
     }
 
@@ -3901,6 +4313,26 @@
           createdAt: cleanString(item.createdAt, 40),
           resolvedAt: cleanString(item.resolvedAt, 40)
         }));
+    }
+
+    if (Array.isArray(raw.groupAdminReads)) {
+      fallback.groupAdminReads = raw.groupAdminReads
+        .filter((item) => item && typeof item === 'object')
+        .slice(-400)
+        .map((item) => ({
+          id: cleanString(item.id, 120) || makeId('admin-read'),
+          groupId: cleanString(item.groupId, 100),
+          seat: Number.isInteger(Number(item.seat)) ? Math.max(0, Number(item.seat)) : 0,
+          memberId: cleanString(item.memberId, 100),
+          termStart: cleanString(item.termStart, 40),
+          deadline: cleanString(item.deadline, 40),
+          notifiedAt: cleanString(item.notifiedAt, 40),
+          readAt: cleanString(item.readAt, 40),
+          declinedAt: cleanString(item.declinedAt, 40),
+          backupFor: cleanString(item.backupFor, 100),
+          status: ['pending', 'accepted', 'declined', 'expired'].includes(item.status) ? item.status : 'pending'
+        }))
+        .filter((item) => item.groupId && item.memberId);
     }
 
     if (Array.isArray(raw.anonymousVotes)) {
@@ -4303,6 +4735,28 @@
     }
   }
 
+  // Only pages that render shared directory content load it. Documentation and
+  // future-plan pages stay fast and never open a public-data network request.
+  const PUBLIC_DATA_PAGE_KINDS = Object.freeze({
+    'index.html': ['groups', 'listings'],
+    'freelabor.html': ['listings'],
+    'freestuff.html': ['listings'],
+    'group.html': ['groups', 'channels', 'threads', 'posts'],
+    'dashboard.html': ['groups', 'listings', 'channels', 'threads', 'posts'],
+    'profile.html': ['groups', 'listings']
+  });
+  let publicWriteNoticeShown = false;
+
+  function currentPageName() {
+    if (typeof window === 'undefined' || !window.location) return 'index.html';
+    const path = String(window.location.pathname || '').split('/').pop();
+    return path ? path.toLowerCase() : 'index.html';
+  }
+
+  function publicDataKindsForPage() {
+    return PUBLIC_DATA_PAGE_KINDS[currentPageName()] || [];
+  }
+
   function publicSyncBridge() {
     return typeof window !== 'undefined' ? window.UnboughtSupabase : null;
   }
@@ -4413,7 +4867,7 @@
 
   function queuePublicSync() {
     const bridge = publicSyncBridge();
-    if (!bridge || !bridge.isConfigured()) return;
+    if (!bridge || !bridge.isConfigured() || !publicDataKindsForPage().length) return;
     clearTimeout(publicSyncTimer);
     publicSyncTimer = setTimeout(() => {
       void pushPublicData();
@@ -4422,12 +4876,23 @@
 
   async function pushPublicData() {
     const bridge = publicSyncBridge();
-    if (!bridge || !bridge.isConfigured()) return;
-    const snapshot = publicSyncSnapshot();
-    const hasRows = Object.keys(snapshot).some((key) => snapshot[key].length);
+    const kinds = publicDataKindsForPage();
+    if (!bridge || !bridge.isConfigured() || !kinds.length) return;
+    const fullSnapshot = publicSyncSnapshot();
+    const snapshot = {};
+    kinds.forEach((kind) => { snapshot[kind] = fullSnapshot[kind] || []; });
+    const hasRows = kinds.some((kind) => snapshot[kind].length);
     if (!hasRows) return;
     const result = await bridge.pushPublicData(snapshot);
-    if (result && result.ok && Array.isArray(result.pushed)) markPushedPublicIds(result.pushed);
+    if (result && result.ok) {
+      publicWriteNoticeShown = false;
+      if (Array.isArray(result.pushed)) markPushedPublicIds(result.pushed);
+      return;
+    }
+    if (result && result.error && /Sign in as a pledged member/i.test(result.error) && !publicWriteNoticeShown) {
+      publicWriteNoticeShown = true;
+      showToast('Shared content stayed on this device. Sign in as a pledged member to publish it.', true);
+    }
   }
 
   /* ------------------------------------------------------------------------
@@ -4498,6 +4963,14 @@
       public_phone_opt_in: Boolean(pledge.publicPhone),
       receive_texts: Boolean(pledge.receiveTexts),
       monthly_hours: pledge.monthlyHours === 'care' ? 'care' : Number(pledge.monthlyHours) || null,
+      care_access: ['basic', 'full', 'full_age'].includes(cleanString(pledge.careAccess, 20))
+        ? cleanString(pledge.careAccess, 20) : null,
+      care_proof_provided_at: cleanString(pledge.careProofProvidedAt, 40) || null,
+      has_outside_job: Boolean(pledge.hasOutsideJob),
+      active_role_required: Boolean(pledge.activeRoleRequired),
+      first_month_checked: Boolean(pledge.firstMonthChecked),
+      probation_completed_at: cleanString(pledge.probationCompletedAt, 40) || null,
+      care_circle_applied_at: cleanString(pledge.careCircleAppliedAt, 40) || null,
       pledge_status: cleanString(pledge.status, 40) || 'active',
       pledge_frozen_at: cleanString(pledge.frozenAt, 40) || null,
       pledge_frozen_month: normalizeMonthKey(pledge.frozenMonth) || null,
@@ -4525,8 +4998,21 @@
     };
   }
 
+  function privateWebDeveloperSnapshot() {
+    if (!state.pledge || !state.cloud || !state.cloud.enabled || !state.cloud.consentedAt) return null;
+    const memberId = cleanString(state.pledge.memberId, 100);
+    if (!memberId) return null;
+    const offersWebDevelopment = getMemberVolunteerInterests()
+      .some((item) => item && item.role === 'web');
+    return offersWebDevelopment ? { member_id: memberId } : null;
+  }
+
   function privateSnapshot() {
-    return { member: privateMemberSnapshot(), waitlist: privateWaitlistSnapshot() };
+    return {
+      member: privateMemberSnapshot(),
+      waitlist: privateWaitlistSnapshot(),
+      webDeveloper: privateWebDeveloperSnapshot()
+    };
   }
 
   function renderPrivateSyncStatus(message) {
@@ -4687,6 +5173,13 @@
     if (deleteCopy) {
       const removed = await bridge.deletePrivate(state.pledge && state.pledge.memberId);
       if (!removed.ok) remoteError = removed.error || 'Could not delete your private cloud copy.';
+    } else if (typeof bridge.pushPrivate === 'function') {
+      // A plain sign-out must still remove the automatic web-developer row.
+      // An empty snapshot leaves the member and waitlist copies untouched.
+      const removedFromPool = await bridge.pushPrivate({ webDeveloper: null });
+      if (!removedFromPool.ok) {
+        remoteError = removedFromPool.error || 'Could not remove your web-developer pool row.';
+      }
     }
 
     const signedOut = await bridge.signOut();
@@ -4887,12 +5380,13 @@
 
   async function loadPublicData() {
     const bridge = publicSyncBridge();
-    if (!bridge || !bridge.isConfigured()) return;
-    const snapshot = await bridge.fetchPublicData();
+    const kinds = publicDataKindsForPage();
+    if (!bridge || !bridge.isConfigured() || !kinds.length) return;
+    const snapshot = await bridge.fetchPublicData(kinds);
     if (!snapshot) return;
 
     const remoteKeys = [];
-    ['groups', 'listings', 'channels', 'threads', 'posts'].forEach((kind) => {
+    kinds.forEach((kind) => {
       const table = kind === 'groups' ? 'public_groups'
         : kind === 'listings' ? 'public_listings'
           : kind === 'channels' ? 'public_community_channels'
@@ -6031,12 +6525,14 @@
     const editButton = event.target.closest('[data-edit-listing]');
     if (editButton) {
       event.preventDefault();
+      if (!requireListingManageAccess(findListing(editButton.dataset.editListing))) return;
       openEditListing(editButton.dataset.editListing, editButton);
       return;
     }
 
     const removeButton = event.target.closest('[data-remove-listing]');
     if (removeButton) {
+      if (!requireListingManageAccess(findListing(removeButton.dataset.removeListing))) return;
       confirmRemoveListing(removeButton.dataset.removeListing, removeButton);
       return;
     }
@@ -6548,6 +7044,30 @@
     if (trigger instanceof HTMLElement) trigger.blur();
   }
 
+  function canOfferLaborOnThisPage() {
+    return getDirectoryScope() !== 'goods';
+  }
+
+  function requirePostAccess(message) {
+    if (canOfferLaborOnThisPage() && (isPledgeEarning() || isCareBasic())) {
+      return requireLaborOfferAccess(message);
+    }
+    if (!canOfferLaborOnThisPage() && isCareBasic()) {
+      return requireMembership(message, { allowCareBasic: true });
+    }
+    return requireFullAccess(message);
+  }
+
+  function requireListingManageAccess(listing) {
+    if (isCareBasic()) {
+      return listing && listing.pillar === 'goods'
+        ? requireMembership('Basic Necessities access is limited to Free Goods.', { allowCareBasic: true })
+        : requireLaborOfferAccess('You can still manage your own labor offers while your Care Circle access is limited.');
+    }
+    if (isPledgeEarning() && listing && listing.pillar !== 'goods') return true;
+    return requireFullAccess('Full access is paused. Only your Free Labor offer can be managed while your pledge is frozen.');
+  }
+
   function initPostForm() {
     const form = document.getElementById('post-form');
     if (!form) return;
@@ -6631,8 +7151,7 @@
     $$('[data-post-trigger]').forEach((trigger) => {
       trigger.addEventListener('click', (event) => {
         event.preventDefault();
-        if (!requireMembership('Sign the Unbought Pledge to become a member before posting to the commons.')) return;
-        if (!requireFullAccess('Full access is paused during your reflection period. Posting is unavailable until you complete the reflection and treatment requirements.')) return;
+        if (!requirePostAccess('Full access is paused during your reflection period. Posting is unavailable until you complete the reflection and treatment requirements.')) return;
         resetPostDialogForm();
         openDialog(dialog);
       });
@@ -6641,7 +7160,7 @@
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       if (postPhotoPending.get(form)) return;
-      if (!requireFullAccess('Full access is paused during your reflection period. Posting is unavailable until you complete the reflection and treatment requirements.')) return;
+      if (!requirePostAccess('Full access is paused during your reflection period. Posting is unavailable until you complete the reflection and treatment requirements.')) return;
       if (!form.reportValidity()) return;
 
       const titleInput = document.getElementById('post-title-input');
@@ -6846,8 +7365,7 @@
     });
 
     if (window.location.hash === '#post-trigger' || window.location.hash === '#post-form') {
-      if (requireMembership('Sign the Unbought Pledge to become a member before posting to the commons.') &&
-          requireFullAccess('Full access is paused during your reflection period. Posting is unavailable until you complete the reflection and treatment requirements.')) {
+      if (requirePostAccess('Full access is paused during your reflection period. Posting is unavailable until you complete the reflection and treatment requirements.')) {
         resetPostDialogForm();
         openDialog(dialog);
       }
@@ -6911,15 +7429,15 @@
     const giftPeriods = `Week ${formatMoney(donated.week)} · month ${formatMoney(donated.month)} · year ${formatMoney(donated.year)}`;
     const statDefs = signedIn ? [
       ['Hours worked (all time)', `${hours.all} hr`, hourPeriods],
-      ['Donated (all time)', formatMoney(donated.all), giftPeriods],
-      ['Your share of the fund', formatMoney(fund.entitled), 'Local estimate · not a payout'],
+      ['Locally recorded giving', formatMoney(donated.all), giftPeriods],
+      ['Local share estimate', formatMoney(fund.entitled), 'Local estimate · not a payout'],
       ['Cancellation estimate', formatMoney(fund.cancellation.estimate), `Up to ${formatMoney(fund.cancellation.cap)} · local only`],
-      ['Unbought donation fund', formatMoney(fund.balance), 'Current local balance']
+      ['Local giving record', formatMoney(fund.balance), 'Current local balance']
     ] : [
-      ['Unbought donation fund', formatMoney(fund.balance), 'Current local balance'],
+      ['Local giving record', formatMoney(fund.balance), 'Current local balance'],
       ['Recorded non-member purchase intents', String(fund.count), 'Local records only'],
       ['Member benefit', 'Free mutual-aid access', 'By pledge · no purchase'],
-      ['Fund income', 'Three sources', 'Donations, academy tuition, and non-member purchases']
+      ['Future funding', 'Plans only', 'See What’s to Come']
     ];
     statDefs.forEach(([label, value, detail]) => {
       const s = createEl('div', 'account-stat');
@@ -6935,23 +7453,48 @@
       const standing = createEl('div', 'account-block pledge-standing');
       standing.appendChild(createEl('h4', '', 'Pledge standing'));
       let standingText = '';
-      if (pledge.status === 'frozen') {
+      if (pledge.status === 'probation') {
+        const weekly = pledgeWeekRequirement(pledge);
+        const earned = hoursSince(pledge.memberId, pledge.signedAt);
+        standingText = `First month: ${earned} of ${weekly} first-week hours confirmed. You can offer labor now; other member tools unlock at ${weekly} hour${weekly === 1 ? '' : 's'}. The full ${pledgeHourRequirement(pledge)}-hour month is checked on day 30.`;
+      } else if (pledge.status === 'frozen') {
         const madeUp = hoursSince(pledge.memberId, pledge.frozenAt);
         const deficit = cleanHours(pledge.pledgeDeficitHours);
-        standingText = `Frozen for ${pledge.frozenMonth || 'the last month'}. You confirmed ${madeUp} of ${deficit} missed hour${deficit === 1 ? '' : 's'} since the freeze. Service requests are paused until the hours are made up, or for ${PLEDGE_FREEZE_DAYS} days before Observer status.`;
+        standingText = `Frozen for ${pledge.frozenMonth || 'the last month'}. You confirmed ${madeUp} of ${deficit} missed hour${deficit === 1 ? '' : 's'} since the freeze. Only offering labor is available until the hours are made up, or for ${PLEDGE_FREEZE_DAYS} days before Observer status.`;
       } else if (pledge.status === 'observer') {
-        standingText = 'Observer after 30 days frozen. You can read and explore, but service requests are paused until three active members approve your re-pledge.';
+        standingText = 'Observer after 30 days frozen. You can read and explore, but member tools stay paused until three active members approve your re-pledge.';
       } else if (pledge.status === 'review_pending') {
         const review = pendingPledgeReviewFor(pledge.memberId);
         standingText = review
-          ? `Re-pledge review pending with three active members (${(review.votes || []).length}/${PLEDGE_REVIEWER_COUNT} votes). You remain an Observer until they decide.`
-          : 'Re-pledge review pending. You remain an Observer until three active members decide.';
+          ? `Re-pledge review pending with three active members (${(review.votes || []).length}/${PLEDGE_REVIEWER_COUNT} votes). You remain an Observer with member tools paused until they decide.`
+          : 'Re-pledge review pending. You remain an Observer with member tools paused until three active members decide.';
       } else if (pledge.monthlyHours === 'care') {
-        standingText = 'Care Circle pledge active. There is no monthly labor obligation.';
+        standingText = `${getCareAccessLabel(pledge)}. There is no monthly labor obligation.`;
+        if (isSeniorMember(pledge)) {
+          standingText += pledge.hasOutsideJob
+            ? ' Retired full access returns when the outside job or business ends. You can still work here and take an active role.'
+            : ' Full access stays while you have no outside paid job or business.';
+        } else if (pledge.careProofProvidedAt) {
+          standingText += ' Proof details and documents are not stored or sent; only the resulting status timestamp is kept locally.';
+        } else {
+          standingText += ' Full access can be confirmed locally with disability proof; no diagnosis or document is stored.';
+        }
       } else {
         standingText = `Active. Your ${pledgeHourRequirement(pledge)}-hour monthly pledge is checked when each month ends.`;
       }
       standing.appendChild(createEl('p', 'account-note', standingText));
+      if (pledge.monthlyHours === 'care' && isSeniorMember(pledge) && pledge.hasOutsideJob) {
+        standing.appendChild(createEl('p', 'account-note', hasActiveRoleRecorded()
+          ? 'Active role recorded. Thank you for helping the commons.'
+          : 'No active role recorded yet. Record a volunteer offer or post a labor offer to take an active role in Unbought.'));
+      }
+      if (isPledgeEarning() || isCareBasic()) {
+        const careButton = createEl('button', 'button button--outline button--small', isCareBasic()
+          ? 'Update Care Circle access' : 'Can’t work right now? Apply for Care Circle');
+        careButton.type = 'button';
+        careButton.dataset.openCareCircle = 'true';
+        standing.appendChild(careButton);
+      }
       if (pledge.status === 'observer' && pledge.reviewRequired && !pendingPledgeReviewFor(pledge.memberId)) {
         const requestReview = createEl('button', 'button button--outline button--small', 'Submit re-pledge for review');
         requestReview.type = 'button';
@@ -6962,8 +7505,8 @@
     }
 
     const model = createEl('p', 'account-note', signedIn
-      ? 'Prototype model (local only): your hours are shown only after both you and the receiver confirm the work, or after a three-member review vote resolves a disagreement. No one can add hours unilaterally. Giving is shown by week, month, year, and all time. Your share is a local, proportional estimate based on recorded contributions; it is not a payout, debt, or legal claim. Every cent of donations, academy tuition, and non-member purchases goes to the Unbought donation fund. Nothing is transmitted.'
-      : 'Prototype model (local only): the Unbought donation fund holds locally recorded donations and non-member purchase intents. Academy tuition would join it in a live system. No money moves, no payouts are made, and nothing is transmitted.');
+      ? 'Prototype model (local only): your hours are shown only after both you and the receiver confirm the work, or after a three-member review vote resolves a disagreement. No one can add hours unilaterally. Giving is shown by week, month, year, and all time. Your share is a local, proportional estimate based on recorded contributions; it is not a payout, debt, or legal claim. Nothing is transmitted, and future funding plans are on What’s to Come.'
+      : 'Prototype model (local only): this browser holds locally recorded giving and non-member purchase records. No money moves, no payouts are made, and nothing is transmitted. Future funding plans are on What’s to Come.');
     card.appendChild(model);
 
     if (signedIn) {
@@ -7051,7 +7594,8 @@
         </div>
         <div class="dialog-content">
           <h2 id="volunteer-dialog-title">Join the operating team.</h2>
-          <p id="volunteer-dialog-intro">${escapeHtml(VOLUNTEER_ACCESS_COPY)} Volunteers get a Volunteer badge and access to the member tools on this device. In this prototype the offer is recorded locally only—nothing is sent to a coordinator, and no real website or server access is granted.</p>
+          <p id="volunteer-dialog-intro">${escapeHtml(VOLUNTEER_ACCESS_COPY)} Volunteers get a Volunteer badge and access to the member tools on this device. Offers stay on this device. The one exception: if private sync is on and you choose Web development, your member ID is added to the automatic web-developer admin pool. No real website or server access is granted by this form.</p>
+          <p class="account-note">Prefer email? <a href="${VOLUNTEER_MAILTO}">Email the volunteer team</a> and tell us how you can help make Unbought a worldwide website.</p>
           <div class="volunteer-gate" id="volunteer-dialog-gate" data-volunteer-gate role="status">
             <p data-volunteer-gate-text></p>
           </div>
@@ -7081,10 +7625,10 @@
             </label>
             <div class="volunteer-form-actions">
               <button class="button button--primary" type="submit">Record volunteer offer</button>
-              <p class="form-hint">Members only · no data leaves this device</p>
+              <p class="form-hint">Members only · Web development + private sync adds only your member ID to the admin pool</p>
             </div>
           </form>
-          <p class="account-note">Recording an offer adds the Volunteer badge and local operating-team access in this browser. It is not a job, a background check, or real administrative access.</p>
+          <p class="account-note">Recording an offer adds the Volunteer badge and local operating-team access in this browser. It is not a job, a background check, or real administrative access. With private sync on, Web development also adds your member ID to the rotating admin pool; your note and other offers stay local.</p>
           <p class="volunteer-join-status" id="volunteer-dialog-status" data-volunteer-status role="status">No volunteer offers recorded yet.</p>
         </div>
       </div>`;
@@ -7103,7 +7647,7 @@
     const memberName = signedIn ? (state.pledge.name || '') : '';
 
     const gateText = signedIn
-      ? `Signed in as ${memberName}. Recording a role here adds the Volunteer badge and local member-area access. Stored in this browser only.`
+      ? `Signed in as ${memberName}. Recording a role here adds the Volunteer badge and local member-area access. With private sync on, Web development also adds your member ID to the admin pool.`
       : 'Browsing these roles is open to everyone. Sign the Unbought Pledge to become a member and record a volunteer offer.';
 
     $$('[data-volunteer-gate-text]').forEach((node) => {
@@ -7150,8 +7694,7 @@
 
     form.addEventListener('submit', (event) => {
       event.preventDefault();
-      if (!requireMembership('Sign the Unbought Pledge to become a member before recording a volunteer offer.')) return;
-      if (!requireFullAccess('Full access is paused during your reflection period. Volunteering is unavailable until you complete the reflection and treatment requirements.')) return;
+      if (!requireLaborOfferAccess('Sign the Unbought Pledge to become a member before recording a volunteer offer.')) return;
       if (!form.reportValidity()) return;
 
       const data = new FormData(form);
@@ -7185,7 +7728,9 @@
       renderVolunteerStatus();
       renderSharedMemberViews();
       announce(`Volunteer offer for ${VOLUNTEER_ROLES[role]} recorded. Your Volunteer badge and local member-area access are active in this browser.`);
-      showToast('Volunteer offer, badge, and local access recorded here. No data left this device.', false);
+      showToast(role === 'web' && state.cloud && state.cloud.enabled
+        ? 'Web development offer recorded. Your member ID was added to the private admin pool.'
+        : 'Volunteer offer, badge, and local access recorded here.', false);
     });
 
     renderVolunteerStatus();
@@ -7304,7 +7849,7 @@
         return `<article class="news-item">
           <p class="news-meta"><time datetime="${e(post.date)}">${e(post.label)}</time> · <span class="news-tag">${e(post.tag)}</span></p>
           <h3>${e(post.title)}</h3>
-          <p>${e(post.body)}</p>
+          ${post.bodyHtml ? `<div class="news-body">${post.bodyHtml}</div>` : `<p>${e(post.body)}</p>`}
         </article>`;
       }).join('');
     });
@@ -7505,6 +8050,7 @@
     const form = scope && scope.querySelector('[data-pledge-form]');
     if (!form) return;
     const careToggle = form.querySelector('[data-account-care-circle]');
+    const outsideToggle = form.querySelector('[data-account-outside-job]');
     const hoursInput = form.querySelector('[data-account-monthly-hours]');
     if (!careToggle || !hoursInput) return;
     const updateHoursField = () => {
@@ -7514,6 +8060,10 @@
       if (inCare) hoursInput.value = '';
     };
     careToggle.addEventListener('change', updateHoursField);
+    if (outsideToggle) outsideToggle.addEventListener('change', updateHoursField);
+    scope.querySelectorAll('[data-account-dob-part]').forEach((part) => {
+      part.addEventListener('change', updateHoursField);
+    });
     updateHoursField();
   }
 
@@ -7558,6 +8108,7 @@
       ? ''
       : e(String(m.monthlyHours));
     const careCircleChecked = m.monthlyHours === 'care';
+    const outsideJobChecked = Boolean(m.hasOutsideJob);
     const sameAddress = Boolean(m.mailingAddress && m.physicalAddress === m.mailingAddress);
     panel.innerHTML = `<section class="account-card account-panel">
       <header class="account-panel-head">
@@ -7788,7 +8339,8 @@
             <label for="account-monthly-hours">Monthly work-hours pledge <span class="required-mark" aria-hidden="true">*</span></label>
             <input type="number" id="account-monthly-hours" name="monthlyHours" data-account-monthly-hours min="4" step="1" inputmode="numeric" required placeholder="4" value="${monthlyHoursValue}">
             <label class="checkbox"><input type="checkbox" name="careCircleNoLabor" data-account-care-circle${careCircleChecked ? ' checked' : ''}> <span>I cannot work right now — Care Circle (no labor obligation)</span></label>
-            <p class="field-hint">Type any whole number of hours at or above the 4-hour monthly minimum. Checking Care Circle removes the labor obligation and disables the hours field. Logged hours still require mutual confirmation or review.</p>
+            <label class="checkbox"><input type="checkbox" name="hasOutsideJob" data-account-outside-job${outsideJobChecked ? ' checked' : ''}> <span>I have an outside paid job or business outside Unbought.</span></label>
+            <p class="field-hint">At 65 or older, retired full Care Circle access applies automatically when no outside paid job or business is recorded. You may still work and keep a monthly pledge; recording an outside paid job or business moves access to Basic Necessities and asks for an active role in Unbought. Logged hours still require mutual confirmation or review.</p>
           </div>
           <div class="account-form-actions">
             <button type="submit" class="button button--primary button--small">Save pledge</button>
@@ -7797,7 +8349,7 @@
       </div>
       <div class="settings-block private-sync-settings">
         <h4>Private cloud sync <span class="optional">(optional)</span></h4>
-        <p class="account-note">Off by default. If you turn it on, your member ID, account details, pledge details, and waiting-list entry are sent to Supabase, where only you and the current rotating web-developer admins can read them. With sync on, filing or settling a report also sends only a minimal open/settled flag; report text and evidence never leave this browser. Passwords are handled by Supabase Auth; no password or local hash is uploaded.</p>
+        <p class="account-note">Off by default. If you turn it on, your member ID, account details, pledge details, and waiting-list entry are sent to Supabase, where only you and the current rotating web-developer admins can read them. If you have also offered Web development, your member ID joins the automatic admin pool. No admins are active until more than seven web developers have opted in. With sync on, filing or settling a report also sends only a minimal open/settled flag; report text and evidence never leave this browser. Passwords are handled by Supabase Auth; no password or local hash is uploaded.</p>
         <p class="account-note" id="private-sync-status" role="status">${cloudEnabled ? 'Private sync is on.' : 'Private sync is off. Your private records stay in this browser.'}</p>
         <div id="private-sync-setup"${cloudEnabled ? ' hidden' : ''}>
           <form class="account-form" data-private-signin-form>
@@ -7809,7 +8361,7 @@
               <div class="field">
                 <label for="private-sync-password">Cloud password <span class="required-mark" aria-hidden="true">*</span></label>
                 <input type="password" id="private-sync-password" name="password" autocomplete="new-password" minlength="8" required>
-                <p class="field-hint">Supabase stores this password. Unbought never saves it on this device.</p>
+                <p class="field-hint">Supabase Auth handles this password. Unbought never saves the password or a password hash on this device.</p>
               </div>
             </div>
             <label class="checkbox"><input type="checkbox" name="privateSyncConsent" required> <span>I understand this sends my private details to Supabase, where only I and the current rotating admins can read them, and that a minimal report flag may be sent to pause an admin’s access.</span></label>
@@ -8414,6 +8966,9 @@
     const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
     const canModerate = isGroupAdmin(group, selfId);
     const rotation = groupAdminRotation(group);
+    const pendingRecord = adminSeatNumbers(group)
+      .map((seat) => currentGroupAdminRecord(group, seat))
+      .find((record) => record && record.memberId === selfId && record.status === 'pending') || null;
     const surplus = getGroupSurplusAllowance(group.id);
     const settings = normalizeGroupSettings(group.settings);
     const configuredLocation = cleanString(settings.location, 120);
@@ -8437,28 +8992,49 @@
           <a class="button button--outline button--small" href="dashboard.html#social">Back to groups</a>
         </div>
       </div>
+      ${pendingRecord ? `<div class="review-board-note admin-read-callout" role="note">
+        <h4>${pendingRecord.seat ? `Admin seat ${pendingRecord.seat}` : 'Standing admin seat'} — read to activate</h4>
+        <p>You were notified about an admin seat. Read the Unbought Community Guidelines and this group’s guidelines${pendingRecord.deadline ? `, then accept by <strong>${e(formatAdminDeadline(pendingRecord.deadline))}</strong>` : ' before you use admin tools'}. If you decline or miss the deadline, a backup admin is chosen.</p>
+        <p><a href="guidelines.html" target="_blank" rel="noopener">Read the Unbought Community Guidelines</a></p>
+        <p class="group-guidelines"><strong>This group’s guidelines</strong><span>${group.guidelines ? e(group.guidelines) : 'No group guidelines recorded yet. An active admin should add them.'}</span></p>
+        <form class="account-form" data-group-admin-read-form data-group-id="${e(group.id)}" data-seat="${e(String(pendingRecord.seat))}">
+          <label class="checkbox"><input type="checkbox" name="adminReadConfirm" required> <span>I have read both the Unbought Community Guidelines and this group’s guidelines.</span></label>
+          <div class="account-form-actions"><button class="button button--primary button--small" type="submit">Accept admin role</button></div>
+        </form>
+        <button class="button button--ghost button--small" type="button" data-group-admin-decline data-group-id="${e(group.id)}" data-seat="${e(String(pendingRecord.seat))}">I do not want to be an admin</button>
+      </div>` : ''}
       <div class="resume-section">
         <h3>Members</h3>
         <p class="contribution-meta">${members.length}/${SOCIAL_LIMITS.groupMembers} people · counted from the group’s member list, not typed by hand.</p>
         <ul class="profile-post-list">${members.map((member) => {
           const adminSeat = rotation.seats.find((seat) => seat.member && seat.member.memberId === member.memberId);
+          const seatRecord = adminSeat ? currentGroupAdminRecord(group, adminSeat.seat) : null;
+          const seatLabel = !adminSeat ? ''
+            : seatRecord && seatRecord.status === 'accepted'
+              ? `Admin · active · seat ${adminSeat.seat}`
+              : `Admin · reading pending · seat ${adminSeat.seat}`;
           return `<li>
             ${memberNameLink(member.name, member.memberId)}
             ${member.memberId === selfId ? '<span class="badge badge--soft">You</span>' : ''}
-            ${adminSeat ? `<span class="badge badge--amber">Admin · seat ${adminSeat.seat}</span>` : ''}
+            ${seatLabel ? `<span class="badge badge--amber">${seatLabel}</span>` : ''}
             ${canModerate && member.memberId !== selfId ? `<div class="notification-actions"><button class="button button--ghost button--tiny" type="button" data-group-review="${e(group.id)}" data-group-member-id="${e(member.memberId)}" aria-label="Require an impartial review of ${e(member.name)}">Require impartial review</button></div>` : ''}
           </li>`;
         }).join('')}</ul>
       </div>
       <div class="resume-section">
         <h3>Admins</h3>
-        <p class="contribution-meta">Seven admin seats rotate each week for workers. Seat 1 changes every week, seat 2 every two weeks, and so on, so the group has staggered admin terms. Only workers can hold a seat or be added as a standing admin.</p>
-        ${rotation.seats.length ? `<ul class="profile-post-list admin-seat-list">${rotation.seats.map((seat) => `<li>
-          <span class="badge badge--amber">Seat ${seat.seat}</span>
-          ${memberNameLink(seat.member.name, seat.member.memberId)}
-          ${seat.member.memberId === selfId ? '<span class="badge badge--soft">You</span>' : ''}
-          <span class="contribution-meta">Rotates every ${seat.cycleWeeks} week${seat.cycleWeeks === 1 ? '' : 's'}</span>
-        </li>`).join('')}</ul>` : '<p class="account-note">No admin seats are recorded until members are added to this group.</p>'}
+        <p class="contribution-meta">Seven admin seats rotate each week for workers. Seat 1 changes every week, seat 2 every two weeks, and so on, so the group has staggered admin terms. Only workers can hold a seat or be added as a standing admin. A seat stays pending until its admin reads both guidelines and accepts by 6pm the day before the term; a decline or missed deadline hands the seat to a backup.</p>
+        ${rotation.seats.length ? `<ul class="profile-post-list admin-seat-list">${rotation.seats.map((seat) => {
+          const seatRecord = currentGroupAdminRecord(group, seat.seat);
+          const seatStatus = seatRecord && seatRecord.status === 'accepted' ? 'Active' : 'Reading pending';
+          return `<li>
+            <span class="badge badge--amber">Seat ${seat.seat}</span>
+            ${memberNameLink(seat.member.name, seat.member.memberId)}
+            ${seat.member.memberId === selfId ? '<span class="badge badge--soft">You</span>' : ''}
+            <span class="badge badge--soft">${seatStatus}</span>
+            <span class="contribution-meta">Rotates every ${seat.cycleWeeks} week${seat.cycleWeeks === 1 ? '' : 's'}</span>
+          </li>`;
+        }).join('')}</ul>` : '<p class="account-note">No admin seats are recorded until members are added to this group.</p>'}
         ${(() => {
           const standing = (Array.isArray(group.admins) ? group.admins : [])
             .filter((id) => id && !rotation.memberIds.includes(id));
@@ -8469,12 +9045,12 @@
           }).join(', ')}</p>`;
         })()}
         ${group.guidelines ? `<p class="group-guidelines"><strong>Group community guidelines</strong><span>${e(group.guidelines)}</span></p>` : ''}
-        <p class="account-note">Current admins can cancel a group, delete group chat posts and replies, require an impartial review of a member, change this group’s community guidelines, and run a chat vote on a guideline. You can leave when another member is recorded in the admin rotation. Reports made by a temporary admin still require evidence and an impartial member review.</p>
+        <p class="account-note">Active admins — those who read both guidelines and accepted — can cancel a group, delete group chat posts and replies, require an impartial review of a member, change this group’s community guidelines, and run a chat vote on a guideline. Group admins are responsible for upholding the Unbought Community Guidelines and maintaining this group’s guidelines. You can leave when another active admin is recorded. Reports made by a temporary admin still require evidence and an impartial member review.</p>
         ${canModerate ? `<form class="account-form group-guidelines-form" data-group-guidelines-form data-group-id="${e(group.id)}">
           <div class="field">
             <label for="group-guidelines-${e(domId(group.id))}">Group community guidelines</label>
             <textarea id="group-guidelines-${e(domId(group.id))}" name="guidelines" rows="3" maxlength="1200" placeholder="Consent, scope, how mutual aid handles Basic Necessities, and how this group makes decisions…">${e(group.guidelines || '')}</textarea>
-            <p class="field-hint">Only current admins can change this. Basic Necessities are fixed across Unbought; this group decides how mutual aid works within them. Stored locally in this browser; nothing is published to another device.</p>
+            <p class="field-hint">Only active admins can change this. Basic Necessities are fixed across Unbought; this group decides how mutual aid works within them. Stored locally in this browser; nothing is published to another device.</p>
           </div>
           <button type="submit" class="button button--outline button--small">Save guidelines locally</button>
         </form>
@@ -8496,7 +9072,7 @@
         </form>` : '<p class="account-note">Only a current admin can change group community guidelines or run a guideline vote.</p>'}
         ${(() => {
           if (!canModerate) {
-            return '<p class="account-note">Only a current admin can add another standing admin.</p>';
+            return '<p class="account-note">Only an active admin can add another standing admin.</p>';
           }
           const eligible = members.filter((member) => member.memberId !== selfId
             && isGroupWorker(member)
@@ -8576,8 +9152,8 @@
         </dl>
         <p class="account-note"><strong>Basic Necessities:</strong> ${e(BASIC_NECESSITIES_NOTE)}</p>
         <p class="account-note"><strong>Alliances:</strong> ${e(ALLIANCE_COPY)} Working members vote on alliance terms and guidelines.</p>
-        <p class="account-note"><strong>Surplus spending:</strong> This group has ${e(formatMoney(surplus.groupAmount))} credited locally to Unbought, ${e(String(surplus.percent))}% of the recorded fund. Its uncapped slice of unspoken-for money is ${e(formatMoney(surplus.amount))}. This group surplus slice is separate from any member's capped severance check, so the two amounts can be different. Eventually, admins from all the groups will come together to figure out Unbought spending. This is a planning estimate only; no money moves, is spent, or is transmitted in this prototype.</p>
-        <p class="account-note"><strong>Land search:</strong> Each group is in charge of finding land in their area that they want to collectively buy. The first house will be in the place where the most Unbought members live; as we scale, groups keep scouting locally while the first purchase follows the densest membership. Once a group picks a house, they will get in touch with the Unbought housing team — real estate, lawyers, and others, all volunteer — if it is available to buy a house. The local allowance is a guide for that discussion, not a purchase, offer, or commitment, and nothing is transmitted from this prototype.</p>
+        <p class="account-note"><strong>Surplus spending:</strong> This group has ${e(formatMoney(surplus.groupAmount))} credited locally to Unbought, ${e(String(surplus.percent))}% of the recorded fund. Its uncapped slice of unspoken-for money is ${e(formatMoney(surplus.amount))}. This group surplus slice is separate from any member's capped severance check, so the two amounts can be different. Future spending plans are on What’s to Come. This is a planning estimate only; no money moves, is spent, or is transmitted in this prototype.</p>
+        <p class="account-note"><strong>Land and housing:</strong> Future land and housing plans are listed only on <a href="future.html">What’s to Come</a>. The local allowance is a planning estimate, not a purchase, offer, or commitment, and nothing is transmitted from this prototype.</p>
         ${SITE_PHASE >= 2 && business.enabled ? `<div class="group-business-details">
           <h4>Group business</h4>
           <p class="account-note">${business.brandChoice === 'unbought' ? 'This group records the Unbought Brand' : 'This group records its own brand'} for a collection of related services and goods. It creates industry inside a moneyless society: neighbors trade through mutual consent, not prices. Group brands arrive in Phase 2 on the vernal equinox, ${e(GROUP_BRAND_ROLLOUT_COPY)}.</p>
@@ -8780,6 +9356,7 @@
 
   function renderSharedMemberViews() {
     syncPledgeStanding();
+    renderPledgeRestrictionBanner();
     renderMemberAccount();
     renderProfile();
     renderGroupProfile();
@@ -9081,9 +9658,9 @@
       ${logged.length ? `<div class="donate-nudge donate-nudge--dashboard">
         <span class="donate-nudge-icon" aria-hidden="true"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-heart"></use></svg></span>
         <div>
-          <p><strong>A small way to say thanks.</strong> If you have received goods or services you would have otherwise paid for, consider leaving a small donation. Every bit helps to fund this initiative.</p>
-          <a class="button button--amber button--small" href="donate.html">Read the fund plan <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
-          <p class="account-note">Giving is not open yet. The fund plan explains the bank account and legal steps.</p>
+          <p><strong>Future funding.</strong> Giving is not open yet. Future funding plans are listed only on What’s to Come.</p>
+          <a class="button button--amber button--small" href="donate.html">Read the funding plan <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+          <p class="account-note">Nothing can be given here. No bank or donation service is connected.</p>
         </div>
       </div>` : ''}
     </section>`;
@@ -9226,7 +9803,7 @@
           </a>
           <a class="commons-link" href="donate.html">
             <span class="commons-link-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-heart"></use></svg></span>
-            <span class="commons-link-copy"><strong>Donations</strong><small>Read the fund plan. Giving is not open yet.</small></span>
+            <span class="commons-link-copy"><strong>Future donations</strong><small>Read the funding plan. Giving is not open yet.</small></span>
           </a>
         </nav>
       </section>
@@ -9728,24 +10305,301 @@
     return Boolean(id && groupAdminRotation(group).memberIds.includes(id));
   }
 
-  function isGroupAdmin(group, memberId) {
+  // Admin reading record. A seat is only offered after notification. The role
+  // stays inactive until the person reads both guidelines and accepts, or
+  // until a backup accepts. The deadline is 6pm local time the day before the
+  // Monday term starts.
+  function adminDeadlineForTerm(termStart) {
+    const start = new Date(termStart);
+    if (!Number.isFinite(start.getTime())) return '';
+    const deadline = new Date(start.getFullYear(), start.getMonth(), start.getDate() - 1, 18, 0, 0, 0);
+    return deadline.toISOString();
+  }
+
+  function formatAdminDeadline(deadline) {
+    if (!deadline) return 'before you use admin tools';
+    const date = new Date(deadline);
+    if (!Number.isFinite(date.getTime())) return 'before you use admin tools';
+    return date.toLocaleString(undefined, {
+      weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+    });
+  }
+
+  function groupAdminRecords(group, seat) {
+    const groupId = cleanString(group && group.id, 100);
+    const seatNumber = Number(seat) || 0;
+    return (Array.isArray(state.groupAdminReads) ? state.groupAdminReads : [])
+      .filter((record) => record && record.groupId === groupId && (Number(record.seat) || 0) === seatNumber)
+      .sort((a, b) => String(b.notifiedAt || '').localeCompare(String(a.notifiedAt || '')));
+  }
+
+  function currentGroupAdminRecord(group, seat) {
+    return groupAdminRecords(group, seat)[0] || null;
+  }
+
+  function adminDesiredSeats(group) {
+    const rotation = groupAdminRotation(group);
+    const seats = rotation.seats.map((seat) => ({
+      seat: seat.seat,
+      memberId: cleanString(seat.member && seat.member.memberId, 100),
+      termStart: rotation.weekStart,
+      deadline: adminDeadlineForTerm(rotation.weekStart)
+    })).filter((entry) => entry.memberId);
+    const seated = new Set(seats.map((entry) => entry.memberId));
+    (Array.isArray(group && group.admins) ? group.admins : [])
+      .map((id) => cleanString(id, 100))
+      .filter((id) => id && !seated.has(id) && isGroupWorkerId(id))
+      .forEach((id) => {
+        seated.add(id);
+        seats.push({
+          seat: 0,
+          memberId: id,
+          termStart: rotation.weekStart,
+          deadline: adminDeadlineForTerm(rotation.weekStart)
+        });
+      });
+    return seats;
+  }
+
+  function adminSeatNumbers(group) {
+    const numbers = adminDesiredSeats(group).map((entry) => Number(entry.seat) || 0);
+    (Array.isArray(state.groupAdminReads) ? state.groupAdminReads : []).forEach((record) => {
+      if (record && record.groupId === cleanString(group && group.id, 100)) {
+        numbers.push(Number(record.seat) || 0);
+      }
+    });
+    return [...new Set(numbers)];
+  }
+
+  function createGroupAdminReadRecord(group, seat, memberId, termStart, deadline, backupFor, reason) {
+    state.groupAdminReads = Array.isArray(state.groupAdminReads) ? state.groupAdminReads : [];
+    const record = {
+      id: makeId('admin-read'),
+      groupId: cleanString(group && group.id, 100),
+      seat: Number(seat) || 0,
+      memberId: cleanString(memberId, 100),
+      termStart: cleanString(termStart, 40),
+      deadline: cleanString(deadline, 40),
+      notifiedAt: new Date().toISOString(),
+      readAt: '',
+      declinedAt: '',
+      backupFor: cleanString(backupFor, 100),
+      status: 'pending'
+    };
+    state.groupAdminReads.push(record);
+    state.groupAdminReads = state.groupAdminReads.slice(-400);
+    const label = groupDisplayLabel(group);
+    const role = record.backupFor ? 'backup admin' : 'admin';
+    const detail = reason ? `${reason}. ` : '';
+    const timing = record.deadline
+      ? ` by ${formatAdminDeadline(record.deadline)}`
+      : ' before you use admin tools';
+    addNotification('groupAdmin', `${label}: ${role} seat offered`,
+      `${detail}Read the Unbought Community Guidelines and this group’s guidelines${timing} to activate the role.`,
+      { tab: 'social', sourceId: record.groupId, memberId: record.memberId });
+    return record;
+  }
+
+  function chooseBackupAdmin(group, seat, termStart, excludedIds) {
+    const excluded = new Set((excludedIds || []).map((id) => cleanString(id, 100)).filter(Boolean));
+    const groupId = cleanString(group && group.id, 100);
+    const seed = `${groupId}|${seat}|${termStart}`;
+    const workerMembers = (Array.isArray(group && group.members) ? group.members : [])
+      .filter((entry) => entry && isGroupWorker(entry))
+      .map((entry) => ({
+        id: cleanString(entry.memberId, 100),
+        entry
+      }))
+      .filter((candidate) => candidate.id && !excluded.has(candidate.id));
+    if (!workerMembers.length) return '';
+
+    // Prefer someone who does not already hold another active seat this term.
+    // In small groups there may be no one else, so fall back to any eligible
+    // worker before saying no backup is available.
+    const seatedIds = new Set();
+    (Array.isArray(state.groupAdminReads) ? state.groupAdminReads : []).forEach((record) => {
+      if (!record || record.groupId !== groupId || (Number(record.seat) || 0) === (Number(seat) || 0)) return;
+      if (cleanString(record.termStart, 40) !== cleanString(termStart, 40)) return;
+      if (['pending', 'accepted'].includes(record.status)) seatedIds.add(cleanString(record.memberId, 100));
+    });
+    const preferred = workerMembers.filter((candidate) => !seatedIds.has(candidate.id));
+    const pool = preferred.length ? preferred : workerMembers;
+
+    return pool
+      .map((candidate) => {
+        let hash = 0;
+        const text = `${seed}|${candidate.id}`;
+        for (let index = 0; index < text.length; index += 1) {
+          hash = ((hash * 31) + text.charCodeAt(index)) | 0;
+        }
+        return { id: candidate.id, order: Math.abs(hash) };
+      })
+      .sort((a, b) => a.order - b.order)[0].id;
+  }
+
+  function advanceGroupAdminSeat(group, seat, reason) {
+    const current = currentGroupAdminRecord(group, seat);
+    const desired = adminDesiredSeats(group).find((entry) => (Number(entry.seat) || 0) === (Number(seat) || 0));
+    const excluded = groupAdminRecords(group, seat)
+      .filter((record) => record && ['declined', 'expired'].includes(record.status))
+      .map((record) => record.memberId);
+    if (current) excluded.push(current.memberId);
+    const backup = chooseBackupAdmin(group, seat, desired ? desired.termStart : '', excluded);
+    if (!backup) return null;
+    const keepDeadline = current && current.deadline && new Date(current.deadline).getTime() > Date.now()
+      ? current.deadline
+      : '';
+    return createGroupAdminReadRecord(
+      group,
+      seat,
+      backup,
+      desired ? desired.termStart : '',
+      keepDeadline,
+      desired ? desired.memberId : (current ? current.memberId : ''),
+      reason
+    );
+  }
+
+  function hasAcceptedGroupAdmin(group, memberId) {
+    const id = cleanString(memberId, 100);
+    if (!id || !group) return false;
+    return adminSeatNumbers(group).some((seat) => {
+      const record = currentGroupAdminRecord(group, seat);
+      return Boolean(record && record.memberId === id && record.status === 'accepted');
+    });
+  }
+
+  function isPendingGroupAdmin(group, memberId) {
+    const id = cleanString(memberId, 100);
+    if (!id || !group) return false;
+    return (Array.isArray(state.groupAdminReads) ? state.groupAdminReads : []).some((record) => record
+      && record.groupId === cleanString(group.id, 100)
+      && record.memberId === id
+      && record.status === 'pending');
+  }
+
+  function ensureGroupAdminNotices() {
+    if (!isMember()) return false;
+    let changed = false;
+    getMemberGroups().forEach((group) => {
+      adminDesiredSeats(group).forEach((desired) => {
+        const current = currentGroupAdminRecord(group, desired.seat);
+        if (!current) {
+          createGroupAdminReadRecord(group, desired.seat, desired.memberId, desired.termStart, desired.deadline);
+          changed = true;
+          return;
+        }
+
+        // A new term gets a fresh notice. A backup already offered for this
+        // term stays in place, even though the rotation names someone else.
+        if (cleanString(current.termStart, 40) !== cleanString(desired.termStart, 40)) {
+          if (current.status === 'pending') {
+            current.status = 'expired';
+            changed = true;
+          }
+          createGroupAdminReadRecord(group, desired.seat, desired.memberId, desired.termStart, desired.deadline);
+          changed = true;
+          return;
+        }
+
+        if (current.status === 'pending' && current.deadline && Date.now() > new Date(current.deadline).getTime()) {
+          current.status = 'expired';
+          changed = true;
+          if (advanceGroupAdminSeat(group, desired.seat, 'The 6pm reading deadline passed')) changed = true;
+          return;
+        }
+        if (current.status === 'declined' || current.status === 'expired') {
+          if (advanceGroupAdminSeat(group, desired.seat, current.status === 'declined' ? 'The admin declined' : 'The seat was not accepted')) {
+            changed = true;
+          }
+        }
+      });
+    });
+    if (changed) saveState();
+    return changed;
+  }
+
+  function acceptGroupAdminRead(groupId, seat) {
+    if (!requireMembership()) return;
+    const group = getGroupById(groupId);
+    const selfId = state.pledge.memberId;
+    const record = currentGroupAdminRecord(group, seat);
+    if (!group || !record || record.memberId !== selfId || record.status !== 'pending') {
+      showToast('That admin seat is no longer available to you.', false);
+      return;
+    }
+    if (record.deadline && Date.now() > new Date(record.deadline).getTime()) {
+      record.status = 'expired';
+      const backup = advanceGroupAdminSeat(group, seat, 'The 6pm reading deadline passed');
+      saveState();
+      renderSocial();
+      renderGroupProfile();
+      renderNotifications();
+      showToast(backup
+        ? 'The deadline passed, so a backup admin was chosen.'
+        : 'The deadline passed. No backup admin is available right now.', false);
+      return;
+    }
+    record.status = 'accepted';
+    record.readAt = new Date().toISOString();
+    saveState();
+    renderSocial();
+    renderGroupProfile();
+    renderNotifications();
+    announce('You read both guidelines and your group admin role is active.');
+    showToast('Guidelines confirmed. Your admin role is active.', false);
+  }
+
+  function declineGroupAdminRead(groupId, seat) {
+    if (!requireMembership()) return;
+    const group = getGroupById(groupId);
+    const selfId = state.pledge.memberId;
+    const record = currentGroupAdminRecord(group, seat);
+    if (!group || !record || record.memberId !== selfId || record.status !== 'pending') {
+      showToast('That admin seat is no longer available to you.', false);
+      return;
+    }
+    record.status = 'declined';
+    record.declinedAt = new Date().toISOString();
+    const backup = advanceGroupAdminSeat(group, seat, 'The admin declined the seat');
+    saveState();
+    renderSocial();
+    renderGroupProfile();
+    renderNotifications();
+    announce(backup
+      ? 'You declined the admin seat. A backup was chosen.'
+      : 'You declined the admin seat. No backup is available right now.');
+    showToast(backup
+      ? 'Admin seat declined. A backup was chosen.'
+      : 'Admin seat declined. No backup is available right now.', false);
+  }
+
+  function isRawGroupAdmin(group, memberId) {
     const id = cleanString(memberId, 100);
     if (!id || !group) return false;
     const stored = Array.isArray(group.admins) && group.admins.includes(id) && isGroupWorkerId(id);
-    return Boolean(stored || isRotationAdmin(group, id));
+    const acceptedBackup = adminSeatNumbers(group).some((seat) => {
+      const record = currentGroupAdminRecord(group, seat);
+      return Boolean(record && record.memberId === id && record.status === 'accepted');
+    });
+    return Boolean(stored || isRotationAdmin(group, id) || acceptedBackup);
+  }
+
+  function isGroupAdmin(group, memberId) {
+    return Boolean(isRawGroupAdmin(group, memberId) && hasAcceptedGroupAdmin(group, memberId));
   }
 
   function otherGroupAdmins(group) {
     const selfId = state.pledge && state.pledge.memberId ? state.pledge.memberId : '';
     const ids = new Set();
     (group && Array.isArray(group.admins) ? group.admins : [])
-      .filter((id) => id && id !== selfId && isGroupWorkerId(id))
+      .filter((id) => id && id !== selfId && isGroupAdmin(group, id))
       .forEach((id) => ids.add(id));
-    // Every other worker will hold one of the staggered seats, so they count
-    // as another admin for the rule that blocks a sole admin from leaving.
+    // Only workers who have accepted a rotated seat count as another admin
+    // for the rule that blocks a sole active admin from leaving.
     (group && Array.isArray(group.members) ? group.members : []).forEach((member) => {
       const id = member && cleanString(member.memberId, 100);
-      if (id && id !== selfId && isGroupWorkerId(id)) ids.add(id);
+      if (id && id !== selfId && isGroupAdmin(group, id)) ids.add(id);
     });
     return [...ids];
   }
@@ -9934,7 +10788,7 @@
     }
     const member = (Array.isArray(group.members) ? group.members : [])
       .find((entry) => entry && entry.memberId === memberId);
-    if (!member || isGroupAdmin(group, memberId)) return;
+    if (!member || isRawGroupAdmin(group, memberId)) return;
     if (!isGroupWorkerId(memberId)) {
       showToast('Only workers can be admins.', false);
       return;
@@ -9942,16 +10796,17 @@
     group.admins = Array.isArray(group.admins) ? group.admins : [];
     group.admins.push(memberId);
     if (state.pledge) state.pledge.group = getMemberGroups().map(groupDisplayLabel).filter(Boolean).join(', ');
-    addNotification('social', `Admin added: ${member.name}`,
-      `You can now leave ${groupDisplayLabel(group)} because another admin is recorded in this browser. No invitation was sent.`,
+    ensureGroupAdminNotices();
+    addNotification('social', `Admin offered: ${member.name}`,
+      `${groupDisplayLabel(group)} offered an admin seat. They must read both guidelines and accept before the role activates. No invitation was sent.`,
       { tab: 'social', sourceId: group.id, memberId });
     saveState();
     renderSocial();
     renderProfile();
     renderGroupProfile();
     renderNotifications();
-    announce(`${member.name} is now an admin of ${groupDisplayLabel(group)}.`);
-    showToast('Admin added locally.', false);
+    announce(`${member.name} was offered an admin seat in ${groupDisplayLabel(group)}.`);
+    showToast('Admin seat offered locally.', false);
     if (trigger instanceof HTMLElement) trigger.focus({ preventScroll: true });
   }
 
@@ -10305,7 +11160,7 @@
     panel.innerHTML = `<section class="account-card">
       <p class="eyebrow">Social circles</p>
       <h3>Friends &amp; groups</h3>
-      <p class="account-note">Your town group is added automatically as the main group. When it reaches the local limit, another Stroudsburg group opens with a Roman numeral; neighbors may choose Group I, II, III, XI, and so on. A numbered group has no seed status, and the first member of a new group is not a seed member. Every other group is a social or support circle. Seven admin seats rotate each week for workers only, staggered across one- to seven-week cycles. This prototype has one local account, so friends, groups, and chat audiences are saved only on this device; no invitations or messages are sent, and each group stays capped at ${SOCIAL_LIMITS.groupMembers} people.</p>
+      <p class="account-note">Your town group is added automatically as the main group. When it reaches the local limit, another Stroudsburg group opens with a Roman numeral; neighbors may choose Group I, II, III, XI, and so on. A numbered group has no seed status, and the first member of a new group is not a seed member. Every other group is a social or support circle. Seven admin seats rotate each week for workers only, staggered across one- to seven-week cycles. A notified admin must read both guidelines and accept by 6pm the day before the term, or a backup is chosen. This prototype has one local account, so friends, groups, and chat audiences are saved only on this device; no invitations or messages are sent, and each group stays capped at ${SOCIAL_LIMITS.groupMembers} people.</p>
       <div class="social-grid">
         <div class="account-block">
           <h4>Friends (${friends.length}/${SOCIAL_LIMITS.friends})</h4>
@@ -10549,7 +11404,7 @@
         event.preventDefault();
         showConfirm({
           title: 'Delete your private cloud copy?',
-          message: 'This permanently removes your member record and waiting-list entry from Supabase, then turns off private sync. Your local records stay in this browser. This cannot be undone.',
+          message: 'This permanently removes your member record, waiting-list entry, and web-developer pool row from Supabase, then turns off private sync. Your local records stay in this browser. This cannot be undone.',
           confirmLabel: 'Delete cloud copy',
           tone: 'danger',
           onConfirm: () => {
@@ -10803,7 +11658,9 @@
 
       if (form.matches('[data-pledge-form]')) {
         event.preventDefault();
-        const careCircleNoLabor = Boolean(data.get('careCircleNoLabor'));
+        const senior = isSeniorMember(state.pledge);
+        const hasOutsideJob = Boolean(data.get('hasOutsideJob'));
+        const careCircleNoLabor = senior || Boolean(data.get('careCircleNoLabor'));
         const monthlyHours = careCircleNoLabor ? 'care' : normalizeMonthlyHours(data.get('monthlyHours'));
         if (monthlyHours === null) {
           const message = 'Enter at least 4 hours per month, or check the Care Circle box if you cannot work.';
@@ -10813,12 +11670,33 @@
           if (hoursField) hoursField.focus({ preventScroll: true });
           return;
         }
+        const wasCare = state.pledge.monthlyHours === 'care';
         state.pledge.monthlyHours = monthlyHours;
+        state.pledge.hasOutsideJob = hasOutsideJob;
+        if (monthlyHours === 'care') {
+          state.pledge.status = 'active';
+          state.pledge.firstMonthChecked = true;
+          state.pledge.probationCompletedAt = '';
+          state.pledge.careCircleAppliedAt = state.pledge.careCircleAppliedAt || new Date().toISOString();
+          clearFrozenFields(state.pledge);
+          state.pledge.observerAt = '';
+          state.pledge.reviewRequired = false;
+        } else if (wasCare) {
+          state.pledge.status = 'probation';
+          state.pledge.firstMonthChecked = false;
+          state.pledge.probationCompletedAt = '';
+          state.pledge.signedAt = new Date().toISOString();
+          clearFrozenFields(state.pledge);
+          state.pledge.observerAt = '';
+          state.pledge.reviewRequired = false;
+        }
+        applyCareAccessRules(state.pledge);
+        updatePledgeRosterStanding();
         saveState();
         refreshSettingsPanel('[data-pledge-form] button[type="submit"]');
-        announce(careCircleNoLabor
-          ? 'Your Care Circle pledge was saved in this browser.'
-          : `Your monthly pledge of ${monthlyHours} hours was saved in this browser.`);
+        announce(monthlyHours === 'care'
+          ? `${getCareAccessLabel(state.pledge)} was saved in this browser.`
+          : `Your monthly pledge of ${monthlyHours} hours was saved in this browser. Your first month starts again after leaving the Care Circle.`);
         showToast('Pledge saved locally.', false);
         return;
       }
@@ -10909,6 +11787,8 @@
         state.pledge.physicalAddress = physicalAddress;
         state.pledge.dob = dob;
         state.pledge.housingStatus = normalizeHousingStatus(data.get('housingStatus'));
+        state.pledge.hasOutsideJob = Boolean(data.get('hasOutsideJob'));
+        applyCareAccessRules(state.pledge);
         state.pledge.paidSkills = cleanString(data.get('paidSkills'), 400);
         state.pledge.unpaidSkills = cleanString(data.get('unpaidSkills'), 400);
         state.pledge.bio = cleanString(data.get('bio'), 600);
@@ -11151,6 +12031,7 @@
         };
         state.groups.push(group);
         if (state.pledge) state.pledge.group = getMemberGroups().map(groupDisplayLabel).filter(Boolean).join(', ');
+        ensureGroupAdminNotices();
         addNotification('social', `${kind === 'own' ? 'Your group' : 'Group'} saved: ${name}`,
           `Recorded locally with ${group.memberCount} of ${SOCIAL_LIMITS.groupMembers} people. No invitations or membership changes were sent.`,
           { tab: 'social', sourceId: group.id });
@@ -11980,7 +12861,7 @@
     let html = `<section class="account-card accountability-card" aria-labelledby="accountability-title">
       <p class="eyebrow">Member dashboard · Safety</p>
       <h3 id="accountability-title">Safety &amp; accountability</h3>
-      <p class="account-note">Members file reports tied to their own member record; the person being reported is taken from the interaction, not typed by the reporter. Criminal matters are recorded as police referrals for investigation under local and federal law; they are never decided by a member vote. For non-criminal matters, the reported member gets ${RESPONSE_DAYS} days to gather evidence and plead guilty or not guilty with an explanation and multimedia links. Then all members get ${VOTING_DAYS} days to read the complete case file, comment, and vote on guilt, on the reflection period if guilty, and on a reason for their vote. Everything is visible on this dashboard. The case file, evidence, votes, and comments stay in this browser. With optional private sync on, only a minimal open/settled flag for a reported admin leaves the device; no report text or evidence is sent.</p>`;
+      <p class="account-note">Members file reports tied to their own member record; the person being reported is taken from the interaction, not typed by the reporter. In this prototype, authorities are not contacted and criminal matters are not decided by member vote; the review board is only a local, consent-based model, not a legal process. For non-criminal matters, the reported member gets ${RESPONSE_DAYS} days to gather evidence and plead guilty or not guilty with an explanation and multimedia links. Then all members get ${VOTING_DAYS} days to read the complete case file, comment, and vote on guilt, on the reflection period if guilty, and on a reason for their vote. Everything is visible on this dashboard. The case file, evidence, votes, and comments stay in this browser. With optional private sync on, only a minimal open/settled flag for a reported admin leaves the device; no report text or evidence is sent.</p>`;
 
     if (restriction) {
       const complete = isRestrictionComplete(restriction);
@@ -12417,6 +13298,7 @@
     }
 
     const careToggle = form && form.querySelector('[data-care-circle]');
+    const outsideJobToggle = form && form.querySelector('[data-outside-job]');
     const monthlyHoursInput = document.getElementById('pledge-monthly-hours');
     const updateMonthlyHoursField = () => {
       const inCare = Boolean(careToggle && careToggle.checked);
@@ -12426,10 +13308,13 @@
         if (inCare) monthlyHoursInput.value = '';
       }
     };
-    if (careToggle) {
-      careToggle.addEventListener('change', updateMonthlyHoursField);
+    if (careToggle) careToggle.addEventListener('change', updateMonthlyHoursField);
+    if (outsideJobToggle) outsideJobToggle.addEventListener('change', updateMonthlyHoursField);
+    $$('[data-dob-part]').forEach((part) => part.addEventListener('change', () => {
+      syncDob();
       updateMonthlyHoursField();
-    }
+    }));
+    updateMonthlyHoursField();
 
     const poaToggle = form && form.querySelector('[data-has-poa]');
     const poaFields = form && form.querySelector('[data-poa-fields]');
@@ -12510,7 +13395,10 @@
         const profession = normalizeProfession(data.get('profession'));
         const housingStatus = normalizeHousingStatus(data.get('housingStatus'));
         const careCircleNoLabor = Boolean(data.get('careCircleNoLabor'));
-        const monthlyHours = careCircleNoLabor ? 'care' : normalizeMonthlyHours(data.get('monthlyHours'));
+        const signupHasOutsideJob = Boolean(data.get('hasOutsideJob'));
+        const signupAge = getAgeFromDob(dob);
+        const automaticCare = signupAge !== null && signupAge >= 65;
+        const monthlyHours = (careCircleNoLabor || automaticCare) ? 'care' : normalizeMonthlyHours(data.get('monthlyHours'));
         const paidSkills = cleanString(data.get('paidSkills'), 400);
         const unpaidSkills = cleanString(data.get('unpaidSkills'), 400);
         const note = cleanString(data.get('note'), 240);
@@ -12525,6 +13413,7 @@
         const poaPasswordConfirm = String(data.get('poaPasswordConfirm') || '');
         const agreement = document.getElementById('pledge-agreement');
         const freeAtCost = document.getElementById('pledge-free-atcost');
+        const docsAck = document.getElementById('pledge-docs-ack');
 
         if (!agreement || !agreement.checked) {
           if (errorBox) {
@@ -12541,6 +13430,11 @@
             errorBox.hidden = false;
           }
           if (freeAtCost) freeAtCost.focus();
+          return;
+        }
+
+        if (!docsAck || !docsAck.checked) {
+          showPledgeError('Please confirm you read the Guidelines, FAQ, and What’s to Come before signing.', 'pledge-docs-ack');
           return;
         }
 
@@ -12617,13 +13511,12 @@
           }
         }
 
-        const age = getAgeFromDob(dob);
-        if (age === null) {
+        if (signupAge === null) {
           showPledgeError('Please enter a valid date of birth.');
           focusDob();
           return;
         }
-        if (age < 18) {
+        if (signupAge < 18) {
           showPledgeError('You must be 18 or older to sign the Unbought Pledge. You can keep browsing the commons and sign when you turn 18. Nothing was saved.');
           focusDob();
           announce('Members must be 18 or older. Your pledge was not signed.');
@@ -12654,6 +13547,10 @@
           physicalZip,
           housingStatus,
           monthlyHours,
+          hasOutsideJob: signupHasOutsideJob,
+          careAccess: '',
+          careProofProvidedAt: '',
+          activeRoleRequired: false,
           phone: cellPhone,
           cellPhone,
           publicPhoneNumber,
@@ -12688,7 +13585,10 @@
           },
           note,
           signedAt: new Date().toISOString(),
-          status: 'active',
+          status: monthlyHours === 'care' ? 'active' : 'probation',
+          firstMonthChecked: monthlyHours === 'care',
+          probationCompletedAt: '',
+          careCircleAppliedAt: '',
           frozenAt: '',
           frozenMonth: '',
           frozenHours: 0,
@@ -12700,6 +13600,7 @@
           pledgeReviewId: '',
           lastCheckedMonth: ''
         };
+        applyCareAccessRules(state.pledge);
         addMemberToRoster(state.pledge);
         const salt = makeId('salt');
         const memberCredential = {
@@ -12759,8 +13660,11 @@
           banner.tabIndex = -1;
           banner.focus({ preventScroll: true });
         }
-        announce(`Welcome, ${name}. Your username ${username} is set up and your membership is active in this browser. You can now choose a track, post offers, and request connections.`);
-        showToast('Membership active. You can now participate in the community.', false);
+        const welcomeNote = state.pledge.monthlyHours === 'care'
+          ? `${getCareAccessLabel(state.pledge)}. There is no monthly labor obligation; you can still offer labor or take an active role.`
+          : 'Your first month is probationary. Confirm one week of pledged hours to unlock member tools; you can offer labor now.';
+        announce(`Welcome, ${name}. Your username ${username} is set up. ${welcomeNote}`);
+        showToast('Pledge signed locally. Check your standing on the dashboard.', false);
       });
     }
 
@@ -12798,6 +13702,9 @@
 
             const freeAtCost = document.getElementById('pledge-free-atcost');
             if (freeAtCost) freeAtCost.checked = false;
+
+            const docsAck = document.getElementById('pledge-docs-ack');
+            if (docsAck) docsAck.checked = false;
 
             const firstField = document.getElementById('pledge-agreement') || (form ? form.querySelector('input, textarea, button') : null);
             if (firstField) firstField.focus({ preventScroll: true });
@@ -12991,7 +13898,7 @@
         </div>
         <div class="panel-actions">
           <button class="button button--primary" type="submit">Save apprentice track <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></button>
-          <p class="panel-note">Unbought Academy mentorship is free. No tuition or debt is created.</p>
+          <p class="panel-note">Skill-builder mentorship is free. No tuition or debt is created.</p>
         </div>
       </form>
     `,
@@ -13001,7 +13908,7 @@
         <div class="panel-head-copy">
           <p class="eyebrow">Care Circle Member</p>
           <h3>You do not have to earn care.</h3>
-          <p>This track is for people who cannot work right now due to age, disability, illness, or mental capacity—and for anyone whose capacity changes. No diagnosis is requested. No productivity test. A peer can meet you where you are.</p>
+          <p>This track is for people who cannot work right now due to disability, illness, or mental capacity—and for anyone whose capacity changes. Members 65 or older are automatically in the Care Circle with full access when no outside paid job is recorded, and may still work. No diagnosis is requested. No productivity test. A peer can meet you where you are.</p>
           <p class="panel-note">${BASIC_NECESSITIES_NOTE}</p>
         </div>
         <span class="badge badge--amber">Ubuntu welcome</span>
@@ -13083,11 +13990,11 @@
           <legend>What would you like to explore? <span class="optional">(choose any)</span></legend>
           <div class="support-grid">
             <label class="support-choice"><input type="checkbox" name="interests" value="philosophy"> Ubuntu &amp; Unbought philosophy</label>
-            <label class="support-choice"><input type="checkbox" name="interests" value="land"> Land trust updates</label>
-            <label class="support-choice"><input type="checkbox" name="interests" value="academy"> Academy open talks</label>
+            <label class="support-choice"><input type="checkbox" name="interests" value="land"> Future plans</label>
+            <label class="support-choice"><input type="checkbox" name="interests" value="academy"> Skill-building</label>
             <label class="support-choice"><input type="checkbox" name="interests" value="directory"> Service &amp; goods directory</label>
             <label class="support-choice"><input type="checkbox" name="interests" value="governance"> Care Circle governance</label>
-            <label class="support-choice"><input type="checkbox" name="interests" value="events"> Gatherings &amp; repair days</label>
+            <label class="support-choice"><input type="checkbox" name="interests" value="events"> Local repair days</label>
           </div>
         </fieldset>
         <div class="form-row">
@@ -13248,13 +14155,12 @@
     radios.forEach((radio) => {
       radio.addEventListener('change', () => {
         if (!radio.checked) return;
-        if (!isMember()) {
+        if (!requireMembership('Sign the Unbought Pledge to become a member before choosing or managing a track.')) {
           radio.checked = false;
           if (state.track) {
             const savedRadio = radios.find((item) => item.value === state.track);
             if (savedRadio) savedRadio.checked = true;
           }
-          requireMembership('Sign the Unbought Pledge to become a member before choosing or managing a track.');
           return;
         }
         if (hasActiveRestriction()) {
@@ -13592,6 +14498,7 @@
     }
 
     currentRequestMode = isMember() ? 'mutual' : 'purchase';
+    if (currentRequestMode === 'mutual' && !requireMembership('Your pledge is frozen. Only offering labor is available until the shortfall is made up.')) return;
     if (currentRequestMode === 'purchase' && !canPurchaseAsNonmember(listing)) {
       showToast('Non-member purchase is not enabled for this offer. Pledged members receive it free.');
       return;
@@ -14086,6 +14993,7 @@
     initConsentDialog();
     initInquiryDialog();
     initConfirmDialog();
+    initCareCircleApplication();
     initResetDemo();
   }
 
@@ -14113,6 +15021,7 @@
     initSigninForm();
     initVolunteerForm();
     syncTownGroup();
+    ensureGroupAdminNotices();
     initDashboard();
     initDashboardMenu();
     initSkillPickers();
@@ -14136,6 +15045,7 @@
     renderSharedMemberViews();
     renderAuthUi();
     renderNewsFeeds();
+    if (state.cloud && state.cloud.enabled) queuePrivateSync();
     document.addEventListener('unbought:waitlist-change', (event) => {
       const removed = event && event.detail && event.detail.hasEntry === false;
       if (removed && state.cloud && state.cloud.enabled) {

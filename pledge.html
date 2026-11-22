@@ -9,8 +9,6 @@
   <link rel="icon" type="image/png" href="assets/logo.png">
   <link rel="stylesheet" href="styles.css">
   <script src="supabase-config.js"></script>
-  <script src="supabase-sync.js" defer></script>
-  <script src="private-sync.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body class="pledge-page">
@@ -50,7 +48,7 @@
         <img src="assets/logo.png" alt="Unbought Emblem" width="48" height="48">
         <span class="brand-text">
           <span class="brand-name">Unbought</span>
-          <span class="brand-tagline">Free Labor. Free Goods. Free Education. Free Land.</span>
+          <span class="brand-tagline">Free Labor. Free Goods. Shared Care.</span>
         </span>
       </a>
 
@@ -59,7 +57,7 @@
           <li><a href="index.html">How It Works</a></li>
           <li><a href="freelabor.html">Free Labor</a></li>
           <li><a href="freestuff.html">Free Stuff</a></li>
-          <li><a href="donate.html">Donate</a></li>
+          <li><a href="future.html#donations">Future funding</a></li>
           <li><a href="future.html">What’s to Come</a></li>
         </ul>
       </nav>
@@ -208,7 +206,7 @@
                     <li><strong>If I can work or create:</strong> <span>I offer real, practical skills, labor, or mentorship freely, with no expectation of direct repayment.</span></li>
                     <li><strong>If I provide goods:</strong> <span>I offer them freely, with no price tag, deposit, or swap requirement.</span></li>
                     <li><strong>If a project needs materials:</strong> <span>I ask the person requesting the work to cover their exact receipt price when the materials cannot be found free on Unbought. I add no markup and take no profit, and the worker never has to front the cost.</span></li>
-                    <li><strong>If I cannot work due to age, disability, illness, or capacity:</strong> <span>I accept care without shame, knowing my presence and humanity are enough.</span></li>
+                    <li><strong>If I cannot work due to disability, illness, or capacity:</strong> <span>I accept care without shame, knowing my presence and humanity are enough.</span></li>
                   </ul>
                 </div>
               </li>
@@ -230,7 +228,7 @@
                 <span class="commitment-number" aria-hidden="true">5</span>
                 <div>
                   <h4>I Stand Against Exploitation and Gatekeeping</h4>
-                  <p>I will not use Unbought's commons, labor, goods, or land-trust resources to fuel outside businesses, hoard wealth, or exploit others. Members access the commons through mutual aid; non-member purchases support the Unbought donation fund. I hold myself and fellow members accountable through restorative dialogue, transparency, and shared social responsibility.</p>
+                  <p>I will not use Unbought's commons, labor, or goods to fuel outside businesses, hoard wealth, or exploit others. Members access the commons through mutual aid. If giving ever opens, planned non-member purchases would support the Unbought donation fund. I hold myself and fellow members accountable through restorative dialogue, transparency, and shared social responsibility.</p>
                 </div>
               </li>
             </ol>
@@ -242,7 +240,7 @@
             <p class="eyebrow">What taking the pledge means</p>
             <h3>Take the Pledge to join the commons.</h3>
             <p>Taking the pledge is a commitment to show up as a neighbor, not a customer: offer what you can, ask for what you need without shame, respect every boundary, and help keep this commons free from profit and gatekeeping. You can browse labor and goods without an account; posting offers, requesting help, messaging, and managing a track require membership. Your pledge and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings. Public listings and community posts are shared through Supabase when connected, and you can withdraw at any time. Report text and evidence always stay here; with private sync on, only a minimal open/settled flag for a reported admin is sent.</p>
-            <p class="phase-minimum-note"><strong>Phase 1 minimum:</strong> joining asks for a pledge of at least 4 hours per month (about 1 hour per week). We cannot offer housing yet, so the ask is intentionally small. If a month ends with fewer confirmed hours than pledged, the pledge freezes and service requests pause until the shortfall is completed. More than 30 days frozen makes you an Observer, and a re-pledge needs three active-member approvals. Members who cannot work can check the Care Circle box in the form and have no labor obligation.</p>
+            <p class="phase-minimum-note"><strong>Phase 1 minimum:</strong> joining asks for a pledge of at least 4 hours per month (about 1 hour per week). Your first month is probationary: one week of confirmed hours unlocks member tools, and the full month is checked on day 30. We cannot offer housing yet, so the ask is intentionally small. If a month ends with fewer confirmed hours than pledged, only offering labor stays available until the shortfall is completed. More than 30 days frozen makes you an Observer, and a re-pledge needs three active-member approvals. Members who cannot work can check the Care Circle box in the form and have no labor obligation; the Care Circle button is also offered whenever a pledge is frozen.</p>
             <ul class="signature-notes">
               <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Membership stored locally in this prototype</li>
               <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-people"></use></svg> Manage your track, requests, and neighbor communication</li>
@@ -266,6 +264,9 @@
 
           <form class="pledge-form" id="pledge-form" aria-labelledby="pledge-form-title">
             <h4 class="sr-only" id="pledge-form-title">Sign the Unbought Pledge</h4>
+            <aside class="docs-callout" id="pledge-docs-callout">
+              <p><strong>Read these three plain-language documents first.</strong> The <a href="guidelines.html">Community Guidelines</a> explain current rules, the <a href="faq.html">FAQ</a> answers common questions, and <a href="future.html">What’s to Come</a> keeps future plans separate from what works today.</p>
+            </aside>
             <p class="signature-declaration">“I take the pledge to try a different kind of system: to cut the corporate fuel that drives cortisol spikes in every home, to cooperate and build a sense of social responsibility so we can ALL thrive, and to turn back to the village and get in touch with my human nature.”</p>
             <div class="field field--on-blue field--check">
               <label class="checkbox">
@@ -275,6 +276,10 @@
               <label class="checkbox">
                 <input type="checkbox" id="pledge-free-atcost" name="freeAtCost" required>
                 <span>I agree to uphold the Unbought Pledge: labor and goods are free, and only exact material costs may change hands when supplies cannot be found free.</span>
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" id="pledge-docs-ack" name="docsAck" required>
+                <span>I read the Guidelines, FAQ, and What’s to Come before signing, and I understand that only the current features described there are live now.</span>
               </label>
             </div>
             <p class="guidelines-promise">Signing means you accept the <a href="guidelines.html">Community Guidelines and their consequences</a>, including community review, care-circle limits, majority votes, and a reflection period before reapplying after revocation.</p>
@@ -412,7 +417,11 @@
                 <input type="checkbox" id="pledge-care-circle" name="careCircleNoLabor" data-care-circle>
                 <span>I cannot work right now — Care Circle (no labor obligation)</span>
               </label>
-              <p class="field-hint">Type any whole number of hours at or above the 4-hour monthly minimum. Checking Care Circle removes the labor obligation and disables the hours field. This is a commitment, not hours logged by hand; logged hours still require mutual confirmation or review. Missing the monthly pledge freezes your pledge and pauses service requests until the hours are completed; after more than 30 days frozen you become an Observer and need three active-member approvals to re-pledge.</p>
+              <label class="checkbox" for="pledge-outside-job">
+                <input type="checkbox" id="pledge-outside-job" name="hasOutsideJob" data-outside-job>
+                <span>I have an outside paid job or business outside Unbought.</span>
+              </label>
+              <p class="field-hint">Type any whole number of hours at or above the 4-hour monthly minimum. Your first month is probationary: confirm one week’s worth of hours (1 hour for a 4-hour pledge) before member tools unlock, and the full month is checked on day 30. Checking Care Circle removes the labor obligation and disables the hours field. At 65 or older, Care Circle is automatic; retired full access stays while you have no outside paid job or business. With one, Basic Necessities remain and an active role in Unbought is requested. Missing the monthly pledge freezes your pledge and leaves only labor offers until the hours are completed; after more than 30 days frozen you become an Observer and need three active-member approvals to re-pledge.</p>
             </div>
 
             <div class="form-row">
@@ -583,10 +592,10 @@
           <img src="assets/logo.png" alt="Unbought Emblem" width="56" height="56">
           <span class="brand-text">
             <span class="brand-name">Unbought</span>
-            <span class="brand-tagline">Built on Consent.</span>
+            <span class="brand-tagline">Free Labor. Free Goods. Shared Care.</span>
           </span>
         </a>
-        <p class="footer-tagline">Free Labor. Free Goods. Free Education. Free Land.</p>
+        <p class="footer-tagline">Free Labor. Free Goods. Shared Care.</p>
         <p class="footer-mission">A consent-based, currency-free mutual aid society. Every person has inherent worth, whether or not they can work.</p>
       </div>
 
@@ -600,7 +609,7 @@
             <li><a href="index.html#why-unbought">Why Unbought</a></li>
             <li><a href="freelabor.html">Free Labor</a></li>
             <li><a href="freestuff.html">Free Stuff</a></li>
-            <li><a href="donate.html">Donate</a></li>
+            <li><a href="future.html#donations">Future funding</a></li>
             <li><a href="faq.html">FAQ</a></li>
             <li><a href="guidelines.html">Community Guidelines</a></li>
           </ul>
@@ -622,7 +631,7 @@
             <li><a href="index.html#newsboard">Newsboard</a></li>
             <li><a href="pledge.html">Five commitments</a></li>
             <li><a href="future.html#land">Phase 3 status</a></li>
-            <li><a href="donate.html">Donations &amp; trust</a></li>
+            <li><a href="future.html#donations">Future donations</a></li>
             <li><a href="index.html#accessibility">Accessibility Statement</a></li>
           </ul>
         </div>

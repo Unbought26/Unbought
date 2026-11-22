@@ -1,108 +1,33 @@
--- Unbought private opt-in sync, rotating web-developer admins, and report pause.
+-- Unbought private opt-in sync, care statuses, automatic web-developer admins,
+-- report pause, and public shared-content hardening.
 --
--- This migration is additive. The public tables stay public-data-only.
+-- This migration is additive and safe to rerun. The public tables stay
+-- public-data-only and anon-readable; all shared-content writes go through a
+-- validated function that requires a signed-in, pledged Supabase Auth member.
 -- Private tables are never written unless a member explicitly chooses
 -- "Sync my private data" and signs in through Supabase Auth.
 --
+-- The web-developer admin pool is automatic. No UUIDs, SQL edits, cron jobs,
+-- or later manual admin updates are needed. An opted-in member who records the
+-- local "Web development" volunteer offer is added to the pool; turning sync
+-- off or deleting the cloud copy removes them.
+--
 -- Passwords are handled only by Supabase Auth. No password, password hash, or
 -- salt is stored in these tables.
---
--- ═══════════════════════════════════════════════════════════════════════════════
--- BEFORE YOU RUN THIS FILE: edit the WEB DEVELOPER ADMIN POOL block below.
--- ═══════════════════════════════════════════════════════════════════════════════
 
 grant usage on schema public to anon, authenticated;
 
--- ─────────────────────────────────────────────────────────────────────────────
--- WEB DEVELOPER ADMIN POOL
---
--- This is the only list you need to maintain. Add one row per web developer
--- who may hold a rotating admin seat. Find each UUID in the Supabase dashboard
--- under Authentication → Users after that developer signs up through the site.
---
--- Seven seats are active at a time. Each seat serves seven days, and the seats
--- are staggered one day apart, so one developer rotates in and one rotates out
--- every day. Keep MORE THAN SEVEN developers in the list, otherwise the same
--- seven people hold every seat and nothing actually changes.
---
--- Uncomment the example rows and replace them with real values. The dummy row
--- makes the statement harmless if you leave the list empty for now.
--- ─────────────────────────────────────────────────────────────────────────────
-
-create table if not exists public.private_admin_roles (
-  user_id uuid primary key references auth.users(id) on delete cascade,
-  display_name text not null check (char_length(display_name) between 1 and 80),
-  position integer not null,
-  active boolean not null default true,
-  created_at timestamptz not null default now()
-);
-
-with developers(user_id, display_name, position) as (
-  values
-    -- ( '00000000-0000-0000-0000-000000000001'::uuid, 'Developer One', 1),
-    -- ( '00000000-0000-0000-0000-000000000002'::uuid, 'Developer Two', 2),
-    -- ( '00000000-0000-0000-0000-000000000003'::uuid, 'Developer Three', 3),
-    (null::uuid, '', 0)
-)
-insert into public.private_admin_roles (user_id, display_name, position, active)
-select user_id, display_name, position, true
-from developers
-where user_id is not null
-on conflict (user_id) do update
-  set display_name = excluded.display_name,
-      position = excluded.position,
-      active = true;
+-- Remove the superseded manual UUID pool from earlier deployments.
+do $$
+begin
+  if to_regclass('public.private_admin_roles') is not null then
+    execute 'drop table public.private_admin_roles cascade';
+  end if;
+end $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- Automatic daily rotation. No cron job and no manual updates are needed: the
--- active seven are derived from today's date every time access is checked.
--- ─────────────────────────────────────────────────────────────────────────────
-
-create or replace function public.unbought_active_admin_ids()
-returns table (user_id uuid)
-language sql
-security definer
-set search_path = ''
-stable
-as $$
-  with ranked as (
-    select r.user_id,
-           (row_number() over (order by r.position, r.user_id) - 1)::bigint as idx
-    from public.private_admin_roles r
-    where r.active
-  ),
-  sizes as (
-    select coalesce(count(*), 0)::bigint as n from ranked
-  ),
-  today as (
-    select
-      case when sizes.n > 0
-        then mod(
-               mod((current_date - date '2026-11-22')::bigint, sizes.n) + sizes.n,
-               sizes.n
-             )
-        else 0
-      end as day_offset,
-      sizes.n
-    from sizes
-  )
-  select ranked.user_id
-  from ranked
-  cross join today
-  where today.n > 0
-    and case when today.n > 0
-      then mod(ranked.idx - today.day_offset + today.n, today.n) < 7
-      else false
-    end;
-$$;
-
-alter function public.unbought_active_admin_ids() owner to postgres;
-revoke all on function public.unbought_active_admin_ids() from public;
-grant execute on function public.unbought_active_admin_ids() to anon, authenticated;
-
--- ─────────────────────────────────────────────────────────────────────────────
--- Private member records. Created before the admin helper because that helper
--- joins these rows to resolve a reported member's local ID to an Auth user.
+-- Private member records. Created before the admin helpers because those
+-- helpers join these rows to consent and local member IDs.
 -- ─────────────────────────────────────────────────────────────────────────────
 
 create table if not exists public.private_members (
@@ -161,9 +86,19 @@ alter table public.private_members add column if not exists pledge_observer_at t
 alter table public.private_members add column if not exists pledge_track_before_freeze text check (char_length(pledge_track_before_freeze) <= 30);
 alter table public.private_members add column if not exists pledge_review_required boolean not null default false;
 
+-- Care and first-month status. These are only the resulting states. No
+-- diagnosis, document, medical record, reason, or proof detail is stored here.
+alter table public.private_members add column if not exists care_access text check (care_access in ('basic', 'full', 'full_age'));
+alter table public.private_members add column if not exists care_proof_provided_at timestamptz;
+alter table public.private_members add column if not exists has_outside_job boolean not null default false;
+alter table public.private_members add column if not exists active_role_required boolean not null default false;
+alter table public.private_members add column if not exists first_month_checked boolean not null default false;
+alter table public.private_members add column if not exists probation_completed_at timestamptz;
+alter table public.private_members add column if not exists care_circle_applied_at timestamptz;
+
 -- A signed-in member must have an opted-in private record before this browser
--- may write a report flag. SECURITY DEFINER avoids recursion through the
--- private_members RLS policies.
+-- may write a report flag or join the web-developer pool. SECURITY DEFINER
+-- avoids recursion through the private_members RLS policies.
 create or replace function public.unbought_is_syncing_member()
 returns boolean
 language sql
@@ -183,19 +118,143 @@ alter function public.unbought_is_syncing_member() owner to postgres;
 revoke all on function public.unbought_is_syncing_member() from public;
 grant execute on function public.unbought_is_syncing_member() to anon, authenticated;
 
+-- Shared site content may be changed only by a signed-in, opted-in member whose
+-- pledge is active. Probation, frozen, Observer, review-pending, and basic-care
+-- states can browse and read documents but cannot change shared content.
+create or replace function public.unbought_can_write_shared_data()
+returns boolean
+language sql
+security definer
+set search_path = ''
+stable
+as $$
+  select exists (
+    select 1
+    from public.private_members m
+    where m.user_id = auth.uid()
+      and m.sync_consented_at is not null
+      and m.pledge_status = 'active'
+      and coalesce(m.pledge_review_required, false) = false
+      and m.pledge_frozen_at is null
+      and m.pledge_observer_at is null
+      and coalesce(m.care_access, '') <> 'basic'
+  );
+$$;
+
+alter function public.unbought_can_write_shared_data() owner to postgres;
+revoke all on function public.unbought_can_write_shared_data() from public;
+grant execute on function public.unbought_can_write_shared_data() to anon, authenticated;
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Minimal report pause flag. The ONLY rows here are the reported member's
 -- local ID and an open/settled status. No reporter ID, report text, evidence,
 -- reason, or timestamp is ever written to this table or sent by the browser.
--- A signed-in member who opted into private sync may set or settle a flag;
--- an unknown member ID has no effect because the admin check joins it to a
--- real private_members row.
 -- ─────────────────────────────────────────────────────────────────────────────
 
 create table if not exists public.private_admin_report_flags (
   member_id text primary key check (char_length(member_id) between 1 and 100),
   status text not null check (status in ('open', 'settled'))
 );
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Automatic web-developer pool.
+--
+-- The site adds one row when an opted-in member records the local
+-- "Web development" volunteer offer. It stores only the Auth user ID, the
+-- member's local ID, and a creation time. No volunteer note, role description,
+-- or other personal detail is copied. The member can remove their own row.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create table if not exists public.private_web_developers (
+  user_id uuid primary key default auth.uid() references auth.users(id) on delete cascade,
+  member_id text not null unique check (char_length(member_id) between 1 and 100),
+  created_at timestamptz not null default now()
+);
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'private_web_developers_member_id_fkey'
+      and conrelid = 'public.private_web_developers'::regclass
+  ) then
+    alter table public.private_web_developers
+      add constraint private_web_developers_member_id_fkey
+      foreign key (member_id) references public.private_members(member_id)
+      on delete cascade;
+  end if;
+end $$;
+
+-- SECURITY DEFINER lets the pool policy check the member's private record
+-- without recursively evaluating that record's admin-dependent RLS policies.
+create or replace function public.unbought_can_register_web_developer(p_member_id text)
+returns boolean
+language sql
+security definer
+set search_path = ''
+stable
+as $$
+  select exists (
+    select 1
+    from public.private_members m
+    where m.user_id = auth.uid()
+      and m.member_id = p_member_id
+      and m.sync_consented_at is not null
+  );
+$$;
+
+alter function public.unbought_can_register_web_developer(text) owner to postgres;
+revoke all on function public.unbought_can_register_web_developer(text) from public;
+grant execute on function public.unbought_can_register_web_developer(text) to authenticated;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Automatic daily rotation. No cron job and no manual updates are needed: the
+-- active seven are derived from today's date every time access is checked.
+-- If there are seven or fewer web developers, nobody holds an admin seat.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create or replace function public.unbought_active_admin_ids()
+returns table (user_id uuid)
+language sql
+security definer
+set search_path = ''
+stable
+as $$
+  with ranked as (
+    select w.user_id,
+           (row_number() over (order by w.member_id, w.user_id) - 1)::bigint as idx
+    from public.private_web_developers w
+    join public.private_members m
+      on m.member_id = w.member_id
+     and m.user_id = w.user_id
+    where m.sync_consented_at is not null
+  ),
+  sizes as (
+    select coalesce(count(*), 0)::bigint as n from ranked
+  ),
+  today as (
+    select
+      case when sizes.n > 0
+        then mod(
+               mod((current_date - date '2026-11-22')::bigint, sizes.n) + sizes.n,
+               sizes.n
+             )
+        else 0
+      end as day_offset,
+      sizes.n
+    from sizes
+  )
+  select ranked.user_id
+  from ranked
+  cross join today
+  where today.n > 7
+    and mod(ranked.idx - today.day_offset + today.n, today.n) < 7;
+$$;
+
+alter function public.unbought_active_admin_ids() owner to postgres;
+revoke all on function public.unbought_active_admin_ids() from public;
+grant execute on function public.unbought_active_admin_ids() to anon, authenticated;
 
 -- An admin's access is suspended while any open report flag resolves to their
 -- member record. The security definer functions bypass RLS, so this cannot
@@ -261,30 +320,54 @@ create trigger unbought_private_waitlist_updated_at
   before update on public.private_waitlist_entries
   for each row execute function public.unbought_set_updated_at();
 
-alter table public.private_admin_roles enable row level security;
+alter table public.private_web_developers enable row level security;
 alter table public.private_members enable row level security;
 alter table public.private_waitlist_entries enable row level security;
 alter table public.private_admin_report_flags enable row level security;
 
-revoke all on public.private_admin_roles from anon, authenticated;
+revoke all on public.private_web_developers from anon, authenticated;
 revoke all on public.private_members from anon, authenticated;
 revoke all on public.private_waitlist_entries from anon, authenticated;
 revoke all on public.private_admin_report_flags from anon, authenticated;
 
-grant select on public.private_admin_roles to authenticated;
+grant select, insert, update, delete on public.private_web_developers to authenticated;
 grant select, insert, update, delete on public.private_members to authenticated;
 grant select, insert, update, delete on public.private_waitlist_entries to authenticated;
 grant select, insert, update, delete on public.private_admin_report_flags to authenticated;
 
--- The developer pool is readable by signed-in members so the rotation is
--- transparent. Nobody in the browser can add, remove, or reorder developers.
-drop policy if exists "Private admin pool readable" on public.private_admin_roles;
-create policy "Private admin pool readable"
-  on public.private_admin_roles for select
+-- The automatic pool is visible to its own member and to current admins so the
+-- rotation is transparent. A member can add, change, or remove only their own
+-- row, and only while they have an opted-in private member record.
+drop policy if exists "Web developer pool readable" on public.private_web_developers;
+create policy "Web developer pool readable"
+  on public.private_web_developers for select
   to authenticated
-  using (true);
+  using (auth.uid() = user_id or public.unbought_is_private_admin());
 
-drop policy if exists "Private admin roles readable" on public.private_admin_roles;
+drop policy if exists "Web developer pool insertable" on public.private_web_developers;
+create policy "Web developer pool insertable"
+  on public.private_web_developers for insert
+  to authenticated
+  with check (
+    auth.uid() = user_id
+    and public.unbought_can_register_web_developer(member_id)
+  );
+
+drop policy if exists "Web developer pool updatable" on public.private_web_developers;
+create policy "Web developer pool updatable"
+  on public.private_web_developers for update
+  to authenticated
+  using (auth.uid() = user_id)
+  with check (
+    auth.uid() = user_id
+    and public.unbought_can_register_web_developer(member_id)
+  );
+
+drop policy if exists "Web developer pool deletable" on public.private_web_developers;
+create policy "Web developer pool deletable"
+  on public.private_web_developers for delete
+  to authenticated
+  using (auth.uid() = user_id);
 
 drop policy if exists "Admin report flag readable" on public.private_admin_report_flags;
 create policy "Admin report flag readable"
@@ -371,43 +454,287 @@ create policy "Private waitlist deletable"
   to authenticated
   using (auth.uid() = user_id or public.unbought_is_private_admin());
 
--- Reassert the public bridge grants and permissive insert policies. This is
--- additive and safe to rerun; it repairs deployments where only the read side
--- of the public schema was applied. No private data is affected.
-grant select, insert on public.public_groups to anon, authenticated;
-grant select, insert on public.public_listings to anon, authenticated;
-grant select, insert on public.public_community_channels to anon, authenticated;
-grant select, insert on public.public_community_threads to anon, authenticated;
-grant select, insert on public.public_community_posts to anon, authenticated;
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Public shared-content hardening.
+--
+-- Everyone may browse public data. Nobody may write directly to a public
+-- table. All writes go through unbought_write_public_data below, which uses
+-- auth.uid() to derive the writer and ignores any client-supplied member ID.
+-- An append-only audit note records the resulting action without personal
+-- profile details, report text, evidence, or reasons.
+-- ─────────────────────────────────────────────────────────────────────────────
 
+alter table public.public_groups add column if not exists author_member_id text check (char_length(author_member_id) <= 100);
+alter table public.public_listings add column if not exists author_member_id text check (char_length(author_member_id) <= 100);
+alter table public.public_community_channels add column if not exists author_member_id text check (char_length(author_member_id) <= 100);
+alter table public.public_community_threads add column if not exists author_member_id text check (char_length(author_member_id) <= 100);
+alter table public.public_community_posts add column if not exists author_member_id text check (char_length(author_member_id) <= 100);
+
+alter table public.public_groups enable row level security;
+alter table public.public_listings enable row level security;
+alter table public.public_community_channels enable row level security;
+alter table public.public_community_threads enable row level security;
+alter table public.public_community_posts enable row level security;
+
+revoke all on public.public_groups from public, anon, authenticated;
+revoke all on public.public_listings from public, anon, authenticated;
+revoke all on public.public_community_channels from public, anon, authenticated;
+revoke all on public.public_community_threads from public, anon, authenticated;
+revoke all on public.public_community_posts from public, anon, authenticated;
+
+grant select on public.public_groups to anon, authenticated;
+grant select on public.public_listings to anon, authenticated;
+grant select on public.public_community_channels to anon, authenticated;
+grant select on public.public_community_threads to anon, authenticated;
+grant select on public.public_community_posts to anon, authenticated;
+
+drop policy if exists "Public groups can be read" on public.public_groups;
+create policy "Public groups can be read"
+  on public.public_groups for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "Public listings can be read" on public.public_listings;
+create policy "Public listings can be read"
+  on public.public_listings for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "Public community channels can be read" on public.public_community_channels;
+create policy "Public community channels can be read"
+  on public.public_community_channels for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "Public community threads can be read" on public.public_community_threads;
+create policy "Public community threads can be read"
+  on public.public_community_threads for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "Public community posts can be read" on public.public_community_posts;
+create policy "Public community posts can be read"
+  on public.public_community_posts for select
+  to anon, authenticated
+  using (true);
+
+-- Remove every historical direct-write policy. These names cover both public
+-- migration versions, so rerunning this file closes older deployments too.
+drop policy if exists "Public groups can be added" on public.public_groups;
 drop policy if exists "Public groups insert enabled" on public.public_groups;
-create policy "Public groups insert enabled"
-  on public.public_groups for insert
-  to anon, authenticated
-  with check (true);
-
+drop policy if exists "Public listings can be added" on public.public_listings;
 drop policy if exists "Public listings insert enabled" on public.public_listings;
-create policy "Public listings insert enabled"
-  on public.public_listings for insert
-  to anon, authenticated
-  with check (true);
-
+drop policy if exists "Public community channels can be added" on public.public_community_channels;
 drop policy if exists "Public community channels insert enabled" on public.public_community_channels;
-create policy "Public community channels insert enabled"
-  on public.public_community_channels for insert
-  to anon, authenticated
-  with check (true);
-
+drop policy if exists "Public community threads can be added" on public.public_community_threads;
 drop policy if exists "Public community threads insert enabled" on public.public_community_threads;
-create policy "Public community threads insert enabled"
-  on public.public_community_threads for insert
-  to anon, authenticated
-  with check (true);
-
+drop policy if exists "Public community posts can be added" on public.public_community_posts;
 drop policy if exists "Public community posts insert enabled" on public.public_community_posts;
-create policy "Public community posts insert enabled"
-  on public.public_community_posts for insert
-  to anon, authenticated
-  with check (true);
+
+create table if not exists public.private_shared_content_audit (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default pg_catalog.now(),
+  actor_user_id uuid not null,
+  actor_member_id text not null check (char_length(actor_member_id) between 1 and 100),
+  action text not null check (action in ('upsert')),
+  target_table text not null check (target_table in (
+    'public_groups', 'public_listings', 'public_community_channels',
+    'public_community_threads', 'public_community_posts'
+  )),
+  target_id text not null check (char_length(target_id) between 1 and 100),
+  note text check (char_length(note) <= 200)
+);
+
+create index if not exists private_shared_content_audit_created_idx
+  on public.private_shared_content_audit (created_at desc);
+
+alter table public.private_shared_content_audit enable row level security;
+revoke all on public.private_shared_content_audit from anon, authenticated;
+grant select on public.private_shared_content_audit to authenticated;
+
+drop policy if exists "Shared content audit readable by admins" on public.private_shared_content_audit;
+create policy "Shared content audit readable by admins"
+  on public.private_shared_content_audit for select
+  to authenticated
+  using (public.unbought_is_private_admin());
+
+create or replace function public.unbought_write_public_data(p_kind text, p_row jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user uuid := auth.uid();
+  v_member text;
+  v_chosen_name text;
+  v jsonb := coalesce(p_row, '{}'::jsonb);
+  v_id text := nullif(btrim(v->>'id'), '');
+  v_created timestamptz;
+  v_target text;
+begin
+  if v_user is null or not public.unbought_can_write_shared_data() then
+    raise exception 'Only signed-in pledged members can change shared site content.'
+      using errcode = '42501';
+  end if;
+
+  if p_kind is null or p_kind not in ('groups', 'listings', 'channels', 'threads', 'posts') then
+    raise exception 'Unknown shared content type.' using errcode = '22023';
+  end if;
+
+  if v_id is null or char_length(v_id) > 100 then
+    raise exception 'A valid shared content ID is required.' using errcode = '22023';
+  end if;
+
+  begin
+    v_created := coalesce((v->>'created_at')::timestamptz, pg_catalog.now());
+  exception when others then
+    v_created := pg_catalog.now();
+  end;
+
+  select m.member_id, coalesce(nullif(btrim(m.chosen_name), ''), nullif(btrim(v->>'author_name'), ''),
+           nullif(btrim(v->>'created_by'), ''), 'Neighbor')
+    into v_member, v_chosen_name
+  from public.private_members m
+  where m.user_id = v_user
+    and m.sync_consented_at is not null
+  limit 1;
+
+  if v_member is null then
+    raise exception 'A signed-in pledged member record is required.' using errcode = '42501';
+  end if;
+
+  case p_kind
+    when 'groups' then
+      insert into public.public_groups
+        (id, kind, name, base_name, purpose, location_label, author_member_id, created_at)
+      values (
+        v_id,
+        nullif(btrim(v->>'kind'), ''),
+        nullif(btrim(v->>'name'), ''),
+        nullif(btrim(v->>'base_name'), ''),
+        nullif(btrim(v->>'purpose'), ''),
+        nullif(btrim(v->>'location_label'), ''),
+        v_member,
+        v_created
+      )
+      on conflict (id) do update set
+        kind = excluded.kind,
+        name = excluded.name,
+        base_name = excluded.base_name,
+        purpose = excluded.purpose,
+        location_label = excluded.location_label;
+
+      v_target := 'public_groups';
+
+    when 'listings' then
+      insert into public.public_listings
+        (id, pillar, exchange, title, description, location_label, provider, category,
+         scope, nsfw, nonmember_price, author_member_id, created_at)
+      values (
+        v_id,
+        nullif(btrim(v->>'pillar'), ''),
+        nullif(btrim(v->>'exchange'), ''),
+        nullif(btrim(v->>'title'), ''),
+        nullif(btrim(v->>'description'), ''),
+        nullif(btrim(v->>'location_label'), ''),
+        coalesce(nullif(btrim(v->>'provider'), ''), v_chosen_name),
+        nullif(btrim(v->>'category'), ''),
+        nullif(btrim(v->>'scope'), ''),
+        case when lower(coalesce(v->>'nsfw', '')) in ('true', '1', 'yes') then true else false end,
+        case when nullif(btrim(v->>'nonmember_price'), '') is null
+          then null else (v->>'nonmember_price')::numeric(10, 2) end,
+        v_member,
+        v_created
+      )
+      on conflict (id) do update set
+        pillar = excluded.pillar,
+        exchange = excluded.exchange,
+        title = excluded.title,
+        description = excluded.description,
+        location_label = excluded.location_label,
+        provider = excluded.provider,
+        category = excluded.category,
+        scope = excluded.scope,
+        nsfw = excluded.nsfw,
+        nonmember_price = excluded.nonmember_price;
+
+      v_target := 'public_listings';
+
+    when 'channels' then
+      insert into public.public_community_channels
+        (id, name, purpose, created_by, author_member_id, created_at)
+      values (
+        v_id,
+        nullif(btrim(v->>'name'), ''),
+        nullif(btrim(v->>'purpose'), ''),
+        v_chosen_name,
+        v_member,
+        v_created
+      )
+      on conflict (id) do update set
+        name = excluded.name,
+        purpose = excluded.purpose,
+        created_by = excluded.created_by;
+
+      v_target := 'public_community_channels';
+
+    when 'threads' then
+      insert into public.public_community_threads
+        (id, channel_id, subject, created_by, author_member_id, created_at)
+      values (
+        v_id,
+        coalesce(nullif(btrim(v->>'channel_id'), ''), 'channel-general'),
+        nullif(btrim(v->>'subject'), ''),
+        v_chosen_name,
+        v_member,
+        v_created
+      )
+      on conflict (id) do update set
+        channel_id = excluded.channel_id,
+        subject = excluded.subject,
+        created_by = excluded.created_by;
+
+      v_target := 'public_community_threads';
+
+    when 'posts' then
+      insert into public.public_community_posts
+        (id, channel, channel_id, thread_id, subject, body, author_name, nsfw,
+         author_member_id, created_at)
+      values (
+        v_id,
+        coalesce(nullif(btrim(v->>'channel'), ''), 'general'),
+        coalesce(nullif(btrim(v->>'channel_id'), ''), 'channel-general'),
+        nullif(btrim(v->>'thread_id'), ''),
+        nullif(btrim(v->>'subject'), ''),
+        nullif(btrim(v->>'body'), ''),
+        v_chosen_name,
+        case when lower(coalesce(v->>'nsfw', '')) in ('true', '1', 'yes') then true else false end,
+        v_member,
+        v_created
+      )
+      on conflict (id) do update set
+        channel = excluded.channel,
+        channel_id = excluded.channel_id,
+        thread_id = excluded.thread_id,
+        subject = excluded.subject,
+        body = excluded.body,
+        author_name = excluded.author_name,
+        nsfw = excluded.nsfw;
+
+      v_target := 'public_community_posts';
+  end case;
+
+  insert into public.private_shared_content_audit
+    (actor_user_id, actor_member_id, action, target_table, target_id, note)
+  values (v_user, v_member, 'upsert', v_target, v_id, null);
+
+  return jsonb_build_object('ok', true, 'id', v_id, 'table', v_target);
+end;
+$$;
+
+alter function public.unbought_write_public_data(text, jsonb) owner to postgres;
+revoke all on function public.unbought_write_public_data(text, jsonb) from public;
+grant execute on function public.unbought_write_public_data(text, jsonb) to authenticated;
 
 notify pgrst, 'reload schema';

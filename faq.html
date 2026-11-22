@@ -3,14 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Answers to common questions about Unbought: membership, free goods and labor, privacy, local-only data, member labels, and the Poconos rollout.">
+  <meta name="description" content="Answers to common questions about Unbought: membership, free goods and labor, privacy, local-only data, member labels, the open beta, and the vernal equinox rollout.">
   <meta name="theme-color" content="#1E3A8A">
   <title>FAQ — Unbought</title>
   <link rel="icon" type="image/png" href="assets/logo.png">
   <link rel="stylesheet" href="styles.css">
   <script src="supabase-config.js"></script>
-  <script src="supabase-sync.js" defer></script>
-  <script src="private-sync.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body class="faq-page">
@@ -34,7 +32,7 @@
         <img src="assets/logo.png" alt="Unbought Emblem" width="48" height="48">
         <span class="brand-text">
           <span class="brand-name">Unbought</span>
-          <span class="brand-tagline">Free Labor. Free Goods. Free Education. Free Land.</span>
+          <span class="brand-tagline">Free Labor. Free Goods. Shared Care.</span>
         </span>
       </a>
 
@@ -43,7 +41,7 @@
           <li><a href="index.html">How It Works</a></li>
           <li><a href="freelabor.html">Free Labor</a></li>
           <li><a href="freestuff.html">Free Stuff</a></li>
-          <li><a href="donate.html">Donate</a></li>
+          <li><a href="future.html#donations">Future funding</a></li>
           <li><a href="future.html">What’s to Come</a></li>
         </ul>
       </nav>
@@ -71,10 +69,10 @@
             <h2 id="faq-basics">The basics</h2>
             <details>
               <summary>What is Unbought?</summary>
-              <p>A practice of sharing labor, goods, care, education, and land without money changing hands between neighbors. The site is a local-first prototype: public listings and community posts can be shared through Supabase, while pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, report text and evidence, and donation records stay here; with optional private sync on, only a minimal open/settled admin flag is sent.</p>
+              <p>A practice of sharing labor, goods, and care without money changing hands between neighbors. The site is a local-first prototype: public listings and community posts can be shared through Supabase, while pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, report text and evidence, and donation records stay here; with optional private sync on, only a minimal open/settled admin flag is sent.</p>
             </details>
             <details>
-              <summary>What does “Built on Consent” mean?</summary>
+              <summary>What does consent mean here?</summary>
               <p>Nothing is taken, assigned, or published about you without your agreement. Offers are invitations, requests need a clear yes, and your public profile shows only what you choose to share.</p>
             </details>
             <details>
@@ -82,12 +80,23 @@
               <p>Not yet. There are no local real accounts or payment processing; optional private sync uses a separate Supabase Auth account. A public-data-only Supabase bridge shares listings, group cards, and community posts; pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, report text and evidence, and donation records stay here; with optional private sync on, only a minimal open/settled admin flag is sent.</p>
             </details>
             <details>
+              <summary>Is Unbought a government?</summary>
+              <p>No. Unbought is a voluntary mutual-aid commons with self-governance features. Members help shape the rules, review disputes, and share care. It does not claim territory, taxes, police power, or authority over anyone who does not consent. If it ever became a legally recognized public body, that would be a separate formal process; size alone does not make it a government.</p>
+            </details>
+            <details>
+              <summary>Is this a cult?</summary>
+              <p>There is no single official definition, so the fair way to answer is to look at behavior. The main warning sign of a cult is high control: pressure to join or stay, isolation from family or outside information, one unquestionable leader, strict identity rules, forced labor or money, fear or shame, and penalties for leaving.</p>
+              <p>Unbought is built to work the other way. Membership is voluntary, browsing is open to everyone, and someone can withdraw from the pledge without losing their property or being punished. Members set their own boundaries, keep private details on their own device unless they opt in to sync, and take part through peer review rather than a single ruler. There are no dues, no taxes, no paid leaders, no required donations, no housing tied to obedience, and no claim to control anyone outside the group.</p>
+              <p>Some parts may feel unfamiliar — the pledge, shared access rules, Care Circle decisions, review boards, and language about a commons — and any large group can drift toward control if it stops protecting consent. If Unbought ever pressured people to stay, hid information, punished disagreement, demanded money or labor under threat, or placed one person above review, that would be a serious problem worth naming.</p>
+              <p>As it is built now, the honest label is a voluntary mutual-aid commons, not a cult.</p>
+            </details>
+            <details>
               <summary>How does site search work?</summary>
               <p>The search in the header is on every page. It looks through page copy, Free Labor and Free Stuff listings, current members, and saved groups in this browser. Results are local links; the search itself sends nothing.</p>
             </details>
             <details>
-              <summary>Why the Poconos?</summary>
-              <p>This first rollout is rooted in Pocono-area towns in Pennsylvania. The location examples across the site use places like Stroudsburg, East Stroudsburg, Mount Pocono, and Jim Thorpe. You can still enter your own location.</p>
+              <summary>Is the beta open outside the Poconos?</summary>
+              <p>Yes. The soft launch is open to anyone, anywhere; we are not limiting beta membership to one region. The beta has fewer features while we finish building the prototype. Some location examples still use Pocono-area towns such as Stroudsburg, East Stroudsburg, Mount Pocono, and Jim Thorpe, but they are only examples. You can enter your own location.</p>
             </details>
           </section>
 
@@ -99,7 +108,7 @@
             </details>
             <details>
               <summary>Can I choose whether my private details are stored online?</summary>
-              <p>Yes. Private sync is off by default. Dashboard → Settings has a “Sync my private data” section. Turning it on requires a separate Supabase Auth email and password plus an explicit consent checkbox. Only then are your member ID, account details, pledge details, and waiting-list entry uploaded, where only you and the current rotating web-developer admins can read them. Filing or settling a report also sends only a minimal open/settled flag with the reported member ID; report text, evidence, reasons, and reporter identity never leave this browser. Passwords are handled by Supabase Auth; no local password hash is uploaded. You can sync now, turn sync off, or delete your cloud copy at any time. Public listing and community-post sync is separate and unchanged.</p>
+              <p>Yes. Private sync is off by default. Dashboard → Settings has a “Sync my private data” section. Turning it on requires a separate Supabase Auth email and password plus an explicit consent checkbox. Only then are your member ID, account details, pledge details, and waiting-list entry uploaded, where only you and the current rotating web-developer admins can read them. If you have also recorded the Web development volunteer offer, only your member ID is added to the automatic admin pool; no note or other role detail is uploaded, and no admins are active until more than seven web developers have opted in. Filing or settling a report also sends only a minimal open/settled flag with the reported member ID; report text, evidence, reasons, and reporter identity never leave this browser. Passwords are handled by Supabase Auth; no local password hash is uploaded. You can sync now, turn sync off, or delete your cloud copy at any time. Public listing and community-post sync is separate and unchanged.</p>
             </details>
             <details>
               <summary>What does my public profile show?</summary>
@@ -115,15 +124,15 @@
             </details>
             <details>
               <summary>Can people under 18 join?</summary>
-              <p>Full membership still opens at 18; the sign-up form blocks birthdates that would make someone under 18. Neighbors aged 15 and older can take part through the Academy's young-apprentice path instead: they learn free with Basic-Necessities-only access while enrolled, then complete one year of part-time work for Unbought after finishing. That work must be finished before their 25th birthday.</p>
+              <p>Full membership still opens at 18; the sign-up form blocks birthdates that would make someone under 18. Young-neighbor learning paths are future plans on <a href="future.html">What’s to Come</a>, not part of this working build.</p>
             </details>
             <details>
               <summary>What can each membership track access?</summary>
-              <p>Active Contributors take part in the full commons. Apprentices may use Basic Necessities only while enrolled. Care Circle members may use Basic Necessities with no labor obligation, and any limit is reviewable with evidence. A frozen pledge cannot request services until the missed hours are completed; after more than 30 days frozen the member becomes an Observer and can read or explore only until three active members approve a re-pledge. These boundaries are part of the Community Guidelines and are enforced locally in this prototype.</p>
+              <p>Active Contributors take part in the full commons. Apprentices may use Basic Necessities only while enrolled. Care Circle members start with Basic Necessities and no labor obligation; full access can be confirmed locally without storing proof details. A frozen pledge cannot request services or change shared content until the missed hours are completed, but the member can still offer labor and read the documents. After more than 30 days frozen the member becomes an Observer and can read or explore only until three active members approve a re-pledge. These boundaries are part of the Community Guidelines and are enforced locally in this prototype.</p>
             </details>
             <details>
               <summary>What are Basic Necessities, and who decides how mutual aid works?</summary>
-              <p>Basic Necessities are Food, Health Care, Dental, Mental Health, Shelter, Clothing, Gas Cards, Uber Gift cards, spot on the waitlist for land, access to the Academy. No luxury items or nice to haves. Groups can decide how mutual aid will work within these limits.</p>
+              <p>Basic Necessities are Food, Health Care, Dental, Mental Health, Shelter, Clothing, Gas Cards, and Uber Gift cards. No luxury items or nice to haves. Groups can decide how mutual aid will work within these limits.</p>
             </details>
             <details>
               <summary>What is an alliance?</summary>
@@ -139,11 +148,11 @@
             </details>
             <details>
               <summary>Is there a celebration planned?</summary>
-              <p>We hope to partner with an organization and throw a huge festival somewhere in the United States on March 20, 2028, one full year after the 2027 rollout, celebrating the movement and its Seed, Beta Founder, 1st Year, and First year Founder members. The moment matters because we will have been fully rolled out for a full year, meaning something must be working. It is an intention, not a booked event: no venue, partner, or ticket exists, and the <a href="future.html#festival">festival page</a> is a planning page only.</p>
+              <p>Gatherings and every other future feature are listed only on <a href="future.html">What’s to Come</a>. Nothing is booked or promised in this working build.</p>
             </details>
             <details>
               <summary>Do seed members get a thank-you message?</summary>
-              <p>Yes, in the plan. A live system would email seed members automatically, thanking them for starting the movement and suggesting ways to help — from talking to other professionals and posting on social media to scouting donated housing, starting a donation-revenue Unbought business, volunteering services, and offering skills. In this prototype your dashboard shows the draft locally; no email is sent and nothing is transmitted.</p>
+              <p>No email is sent in this prototype. Future outreach plans are listed only on <a href="future.html">What’s to Come</a>.</p>
             </details>
           </section>
 
@@ -159,11 +168,11 @@
             </details>
             <details>
               <summary>What if my job title is not listed?</summary>
-              <p>Choose “Write my own title” when posting. In a live site that title would go to the site maintainer so the list can grow. In this prototype it is saved locally in Dashboard → Suggestions with the title, pillar, listing, and location; nothing is transmitted.</p>
+              <p>Choose “Write my own title” when posting. It is saved locally in Dashboard → Suggestions with the title, pillar, listing, and location; nothing is transmitted.</p>
             </details>
             <details>
               <summary>Can I add photos?</summary>
-              <p>Yes. Members can attach up to three photos to a goods or labor post. They are resized in your browser and saved locally. Each photo has a storage-reference field for a future database, but nothing is uploaded now.</p>
+              <p>Yes. Members can attach up to three photos to a goods or labor post. They are resized in your browser and saved locally. They are never uploaded.</p>
             </details>
             <details>
               <summary>How do I find something nearby?</summary>
@@ -171,31 +180,11 @@
             </details>
             <details>
               <summary>Can non-members get anything?</summary>
-              <p>Providers can opt in to a fixed suggested donation price on their goods or labor listings. The price is shown on the card and in the listing details, and both directories let you filter and search by it. Guests see that price and cannot change it; every cent is recorded locally for the Unbought donation fund. Members always get the same things free through mutual consent, and no real payment is processed. Only pledged members can post a service or product; guests can browse and donate but cannot open the posting form.</p>
+              <p>Providers can opt in to a fixed suggested non-member price on their goods or labor listings. The price is shown on the card and in the listing details, and both directories let you filter and search by it. Guests see that price and cannot change it; in this prototype the full amount is recorded locally as a planned intent for the Unbought donation fund, with no real payment processed. Members always get the same things free through mutual consent. Only pledged members can post a service or product; guests can browse but cannot open the posting form.</p>
             </details>
             <details>
               <summary>What can members see in the fund?</summary>
-              <p>Only signed-in members see their own hours worked and amounts donated by week, month, year, and all time, plus the current Unbought donation fund balance and their share of it. The ledger also records donations, academy tuition, non-member purchases, and confirmed hours. Your legal name, addresses, ZIP, birthdate, group, and report count stay out of the public resume.</p>
-            </details>
-          </section>
-
-          <section class="faq-group" aria-labelledby="faq-academy">
-            <h2 id="faq-academy">The Academy</h2>
-            <details>
-              <summary>Does the Academy cost anything?</summary>
-              <p>It is free for pledged members: no tuition, fees, or debt. People who have not taken the pledge may enroll at the standard non-member tuition set by the guild. Every cent goes to the Unbought donation fund. That tuition is a future policy only; this prototype does not enroll anyone or process a payment. The Academy is Phase 2, so its Dashboard link is hidden in this Phase 1 build.</p>
-            </details>
-            <details>
-              <summary>Can someone under 18 take Academy courses?</summary>
-              <p>Yes. Neighbors aged 15 and older who are not already working in the commons can learn free by promising to work for Unbought part time — 1–15 hours a week — for one year upon completing the program. The service year must be finished before their 25th birthday. Full membership itself still opens at 18.</p>
-            </details>
-            <details>
-              <summary>What access do students have while enrolled?</summary>
-              <p>Students are in a limited standing: Basic Necessities only while they are in the program. That is a safety boundary, not a punishment, and it is reviewed under the <a href="guidelines.html">Community Guidelines</a>.</p>
-            </details>
-            <details>
-              <summary>What if the program or the service year isn't finished?</summary>
-              <p>Not completing the program creates a tuition obligation to the Unbought donation fund. The promised year of part-time work must be completed before the 25th birthday, or the same tuition offered to non-members applies. It is a community commitment reviewed under the <a href="guidelines.html">Community Guidelines</a>, not a legal contract or a debt collected by this prototype.</p>
+              <p>Only signed-in members see their own hours and locally recorded prototype contribution amounts by week, month, year, and all time, plus the prototype Unbought donation fund balance and their share of it. No real money is held, moved, or paid out. The local ledger records planned non-member purchase intents, planned giving, and confirmed hours. Your legal name, addresses, ZIP, birthdate, group, and report count stay out of the public resume.</p>
             </details>
           </section>
 
@@ -215,22 +204,22 @@
             </details>
             <details>
               <summary>What happens during a reflection period?</summary>
-              <p>Some full-access actions pause while a member works through the reflection and treatment steps recorded in their dashboard. The steps are local records in the prototype, with no outside review or reporting.</p>
+              <p>Some full-access actions pause while a member works through a locally tracked reflection and repair status in their dashboard. No therapy notes, diagnoses, medical records, or treatment details are saved; only the resulting access status and time may be kept. There is no outside review or reporting.</p>
             </details>
             <details>
               <summary>Will friends and groups be part of this?</summary>
               <p>Yes. Dashboard → Friends &amp; Groups automatically places you in the main town group, such as Stroudsburg Group I. When a town group reaches 150 people, another Stroudsburg group opens with a Roman numeral — II, III, … XI — and neighbors can choose which numbered group to join. The first member of a new numbered group is not a seed member. The town group profile shows the city, state, and ZIP below its name. Every other group is a social or support circle you make or join, and group names link to their own group profile.</p>
-              <p>The seven local group admin seats rotate weekly for workers only, staggered across one-to-seven-week cycles; these are separate from the rotating web-developer admins who can read optional Supabase private data. Care Circle, Observer, and Apprentice members cannot hold local group admin seats. Current admins can add another admin, cancel a group, delete group chat posts and replies, require an impartial review, change the group’s community guidelines, and start a guideline vote in chat. You can leave a non-town group when another admin exists; only an admin can cancel a group. Reports made by a temporary admin need evidence, go to an impartial review, and are never decided as criminal matters by member vote. Admin votes on guideline changes are recorded as Agreed, Not agreed, or More discussion needed.</p>
+              <p>The seven local group admin seats rotate weekly for workers only, staggered across one-to-seven-week cycles; these are separate from the rotating web-developer admins who can read optional Supabase private data. Care Circle, Observer, and Apprentice members cannot hold local group admin seats. When notified, an admin must read the Unbought Community Guidelines and the group’s guidelines and accept by 6pm the day before the term starts. If they decline or miss that time, a backup admin is chosen. Active admins can add another admin, cancel a group, delete group chat posts and replies, require an impartial review, change the group’s community guidelines, and start a guideline vote in chat. You can leave a non-town group when another active admin exists; only an active admin can cancel a group. Reports made by a temporary admin need evidence, go to an impartial review, and are never decided as criminal matters by member vote. Admin votes on guideline changes are recorded as Agreed, Not agreed, or More discussion needed.</p>
               <p>Search current members by chosen name, profession, or town and send a local friend request; public profiles have the same Add friend action. You can keep one group of your own and write social chat drafts with exactly Audience, Title, Message, and picture. There is one local account, so no invitations are sent and no one else’s account changes. Friend lists and groups are capped at 150 people.</p>
             </details>
             <details>
               <summary>Can a group create a business or a brand?</summary>
-              <p>In Phase 2, yes. A group can create a Business and gather a collection of related services and products into a Group Brand. That is how groups create industry inside a moneyless society. Pledged members still receive the group’s labor and goods free through mutual consent; there is no price charged to members. This rolls out on the vernal equinox, March 20, 2027 at 4:25pm Eastern, alongside the rest of the full site, and the controls stay hidden in this Phase 1 build.</p>
-              <p>Only a current group admin can open Group settings. There, admins set the group’s physical location or mark it Online if it has no physical location. They can also record optional co-op legal information — forming a co-op is a legal step outside Unbought, and nothing is filed or transmitted here. The Unbought Brand is optional: if a group chooses it, the Unbought legal guild and administrative guild will work with you to ensure safety. Every group setting stays in this browser.</p>
+              <p>Group businesses and brands are future plans listed only on <a href="future.html">What’s to Come</a>. The controls stay hidden in this Phase 1 build, and nothing is transmitted.</p>
+              <p>Current groups can set their physical location or mark themselves Online in Group settings. Any co-op legal information is only a local note; forming a co-op is a legal step outside Unbought, and nothing is filed or transmitted here. Every group setting stays in this browser.</p>
             </details>
             <details>
               <summary>What do dashboard notifications show?</summary>
-              <p>Local drafts — messages, requests, comments, group posts, social chat drafts, and a one-time notice when a review board case opens and you are eligible to vote. If you are involved, a friend of someone involved, an Observer, or in the Care Circle, you will not get a vote notice, but you can still add evidence and join the conversation. Each notice is one whole link: clicking anywhere on the item marks it read and opens the target. Listing comments stay with their post on Free Labor or Free Stuff. In a live system, neighbors would be notified about messages, requests, and comments on their posts. Nothing is delivered to another person or device from this prototype.</p>
+              <p>Local drafts — messages, requests, comments, group posts, social chat drafts, and a one-time notice when a review board case opens and you are eligible to vote. If you are involved, a friend of someone involved, an Observer, or in the Care Circle, you will not get a vote notice, but you can still add evidence and join the conversation. Each notice is one whole link: clicking anywhere on the item marks it read and opens the target. Listing comments stay with their post on Free Labor or Free Stuff. Nothing is delivered to another person or device from this prototype.</p>
             </details>
             <details>
               <summary>Can I talk with neighbors on a listing?</summary>
@@ -254,14 +243,14 @@
             </details>
             <details>
               <summary>How do I report a bug or suggest something?</summary>
-              <p>Use the suggestion form on the dashboard, or the waiting-list form on What’s to Come. Both record locally in this prototype and are ready to be connected to a real system later.</p>
+              <p>Use the suggestion form on the dashboard, or the waiting-list form on What’s to Come. Both record locally in this prototype.</p>
             </details>
           </section>
         </div>
 
         <div class="faq-cta">
           <h2>Still have a question?</h2>
-          <p>Talk to us at the next community gathering, or leave a note in the waiting list.</p>
+          <p>See What’s to Come for planned gatherings, or leave a note in the waiting list.</p>
           <div class="faq-cta-actions">
             <a class="button button--primary" href="future.html#waitlist">Join the waiting list</a>
             <a class="button button--outline" href="index.html#newsboard">Read the Newsboard</a>
@@ -279,10 +268,10 @@
           <img src="assets/logo.png" alt="Unbought Emblem" width="56" height="56">
           <span class="brand-text">
             <span class="brand-name">Unbought</span>
-            <span class="brand-tagline">Built on Consent.</span>
+            <span class="brand-tagline">Free Labor. Free Goods. Shared Care.</span>
           </span>
         </a>
-        <p class="footer-tagline">Free Labor. Free Goods. Free Education. Free Land.</p>
+        <p class="footer-tagline">Free Labor. Free Goods. Shared Care.</p>
         <p class="footer-mission">A consent-based, currency-free mutual aid society. Every person has inherent worth, whether or not they can work.</p>
       </div>
 
@@ -295,7 +284,7 @@
             <li><a href="pledge.html">The Pledge</a></li>
             <li><a href="freelabor.html">Free Labor</a></li>
             <li><a href="freestuff.html">Free Stuff</a></li>
-            <li><a href="donate.html">Donate</a></li>
+            <li><a href="future.html#donations">Future funding</a></li>
             <li><a href="faq.html" aria-current="page">FAQ</a></li>
             <li><a href="guidelines.html">Community Guidelines</a></li>
           </ul>
@@ -317,7 +306,7 @@
             <li><a href="index.html#newsboard">Newsboard</a></li>
             <li><a href="pledge.html">Five commitments</a></li>
             <li><a href="future.html#land">Phase 3 status</a></li>
-            <li><a href="donate.html">Donations &amp; trust</a></li>
+            <li><a href="future.html#donations">Future donations</a></li>
             <li><a href="index.html#accessibility">Accessibility Statement</a></li>
           </ul>
         </div>

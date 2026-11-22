@@ -9,8 +9,6 @@
   <link rel="icon" type="image/png" href="assets/logo.png">
   <link rel="stylesheet" href="styles.css">
   <script src="supabase-config.js"></script>
-  <script src="supabase-sync.js" defer></script>
-  <script src="private-sync.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body class="guidelines-page">
@@ -26,6 +24,7 @@
     <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
     <symbol id="icon-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
     <symbol id="icon-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9a7 7 0 0 1 11.6-2L20 12M4 12l2.3 5a7 7 0 0 0 11.6-2"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 8.8 8 11 4.6-2.2 8-6 8-11V5l-8-3Z"/><path d="m8.5 11.5 2.5 2.5 4.5-5"/></symbol>
   </svg>
 
   <header class="site-header" id="site-header">
@@ -34,7 +33,7 @@
         <img src="assets/logo.png" alt="Unbought Emblem" width="48" height="48">
         <span class="brand-text">
           <span class="brand-name">Unbought</span>
-          <span class="brand-tagline">Free Labor. Free Goods. Free Education. Free Land.</span>
+          <span class="brand-tagline">Free Labor. Free Goods. Shared Care.</span>
         </span>
       </a>
 
@@ -43,7 +42,7 @@
           <li><a href="index.html">How It Works</a></li>
           <li><a href="freelabor.html">Free Labor</a></li>
           <li><a href="freestuff.html">Free Stuff</a></li>
-          <li><a href="donate.html">Donate</a></li>
+          <li><a href="future.html#donations">Future funding</a></li>
           <li><a href="future.html">What’s to Come</a></li>
         </ul>
       </nav>
@@ -121,9 +120,11 @@
 
         <section class="review-board-note" role="note" aria-labelledby="basic-necessities-title">
           <h2 id="basic-necessities-title">Basic Necessities</h2>
-          <p>Basic Necessities are Food, Health Care, Dental, Mental Health, Shelter, Clothing, Gas Cards, Uber Gift cards, spot on the waitlist for land, access to the Academy. No luxury items or nice to haves. Groups can decide how mutual aid will work within these limits.</p>
+          <p>Basic Necessities are Food, Health Care, Dental, Mental Health, Shelter, Clothing, Gas Cards, and Uber Gift cards. No luxury items or nice to haves. Groups can decide how mutual aid will work within these limits.</p>
           <h3>Alliances</h3>
           <p>Alliances are other groups within the Unbought network. Groups decide whether to accept an alliance between them, and working members vote on alliance terms and guidelines.</p>
+          <h3>Group admin reading duty</h3>
+          <p>Group admins are responsible for upholding these Unbought Community Guidelines and for maintaining their own group’s community guidelines. When someone is notified of an admin seat, the role stays pending until they read both sets of guidelines and accept. If they do not accept by 6pm the day before the term starts, or they say they do not want the seat, a backup admin is chosen. No one can act as an active admin without that reading and acceptance.</p>
         </section>
 
         <section class="consequences" aria-labelledby="consequences-title">
@@ -134,7 +135,7 @@
             <article class="consequence-step">
               <div>
                 <h3>Monthly pledge review</h3>
-                <p>Each month is checked after it ends. If you do not complete your pledged hours, your pledge status is frozen and you cannot request services until those hours are completed. Hours confirmed after the freeze count toward the shortfall.</p>
+                <p>Each month is checked after it ends. If you do not complete your pledged hours, your pledge status is frozen. Service requests and shared-content changes pause until those hours are completed; you can still offer labor and read the documents. Hours confirmed after the freeze count toward the shortfall.</p>
                 <p>If the pledge stays frozen for more than 30 days, you become an Observer. To re-pledge, three impartial active members must approve it. Observers, Care Circle members, apprentices, students, frozen members, and the applicant cannot serve on that review, and the local ballots stay anonymous. Care Circle members with no labor obligation are not frozen for missed hours.</p>
               </div>
             </article>
@@ -147,7 +148,7 @@
             <article class="consequence-step">
               <div>
                 <h3>The care circle</h3>
-                <p>In the care circle you can access Basic Necessities only. If you can share evidence that you are unable to meet the pledge, the community may adjust that limit. The evidence stays local in this prototype; nothing is transmitted.</p>
+                <p>In the Care Circle you start with Basic Necessities. If you confirm locally that you cannot meet the pledge, full access can be turned on without saving a diagnosis, document, medical record, or note. Nothing is uploaded; only the resulting access status and time may be kept.</p>
               </div>
             </article>
             <article class="consequence-step">
@@ -178,7 +179,7 @@
 
           <div class="therapy-note" role="note">
             <h3>Repair, therapy, and proof of treatment</h3>
-            <p>Therapy is encouraged for anyone who has violated a guideline. In some cases the community may require a therapeutic evaluation and proof that recommended treatment was completed or sustained before full access returns. This is about repair and safety, not shame. No diagnosis or therapy record is published on a public resume; in this prototype those notes stay in the member's local record only.</p>
+            <p>Therapy is encouraged for anyone who has violated a guideline. In some cases the community may ask for confirmation that recommended reflection or treatment was completed before full access returns. This is about repair and safety, not shame. No diagnosis, document, medical record, therapy note, or treatment detail is saved or uploaded in this prototype. Any change is recorded only as a resulting access status and time.</p>
           </div>
         </section>
 
@@ -191,11 +192,11 @@
             </div>
             <div class="standing-card">
               <h3>Inactive · observe only</h3>
-              <p>No posting or requesting while the pledge is frozen. After more than 30 days frozen you become an Observer, and requesting resumes only after three active members approve your re-pledge.</p>
+              <p>Requesting and shared-content changes pause while the pledge is frozen. You can still offer labor and read the documents. After more than 30 days frozen you become an Observer, and requesting resumes only after three active members approve your re-pledge.</p>
             </div>
             <div class="standing-card">
               <h3>Care circle</h3>
-              <p>Basic necessities only, with a path to adjusted access when evidence shows work is not possible.</p>
+              <p>Basic Necessities only at first. Full access can be confirmed locally without storing proof details.</p>
             </div>
             <div class="standing-card">
               <h3>Limited</h3>
@@ -203,7 +204,7 @@
             </div>
             <div class="standing-card">
               <h3>Student</h3>
-              <p>Basic necessities only while enrolled in the Academy. Finishing the program and the promised part-time year restores full participation; an unfinished program creates a tuition obligation to the Unbought donation fund.</p>
+              <p>Basic Necessities only while in a learning track. Future learning plans are listed only on <a href="future.html">What’s to Come</a>. Nothing here enrolls anyone or charges money.</p>
             </div>
             <div class="standing-card">
               <h3>Exiled</h3>
@@ -233,10 +234,10 @@
           <img src="assets/logo.png" alt="Unbought Emblem" width="56" height="56">
           <span class="brand-text">
             <span class="brand-name">Unbought</span>
-            <span class="brand-tagline">Built on Consent.</span>
+            <span class="brand-tagline">Free Labor. Free Goods. Shared Care.</span>
           </span>
         </a>
-        <p class="footer-tagline">Free Labor. Free Goods. Free Education. Free Land.</p>
+        <p class="footer-tagline">Free Labor. Free Goods. Shared Care.</p>
         <p class="footer-mission">A consent-based, currency-free mutual aid society. Every person has inherent worth, whether or not they can work.</p>
       </div>
 
@@ -249,7 +250,7 @@
             <li><a href="pledge.html">The Pledge</a></li>
             <li><a href="freelabor.html">Free Labor</a></li>
             <li><a href="freestuff.html">Free Stuff</a></li>
-            <li><a href="donate.html">Donate</a></li>
+            <li><a href="future.html#donations">Future funding</a></li>
             <li><a href="faq.html">FAQ</a></li>
             <li><a href="guidelines.html" aria-current="page">Community Guidelines</a></li>
           </ul>
@@ -271,7 +272,7 @@
             <li><a href="index.html#newsboard">Newsboard</a></li>
             <li><a href="pledge.html">Five commitments</a></li>
             <li><a href="future.html#land">Phase 3 status</a></li>
-            <li><a href="donate.html">Donations &amp; trust</a></li>
+            <li><a href="future.html#donations">Future donations</a></li>
             <li><a href="index.html#accessibility">Accessibility Statement</a></li>
           </ul>
         </div>
