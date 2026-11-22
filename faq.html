@@ -63,7 +63,7 @@
         <div class="section-head">
           <p class="eyebrow"><span class="badge badge--soft">Good questions</span> Frequently asked</p>
           <h1 id="faq-page-title">The honest answers, in plain language.</h1>
-          <p>Unbought is a prototype for a consent-based, currency-free mutual aid society. Nothing here processes payments or sends messages to other people. Public listings and community posts are shared through Supabase; pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, reports, and donation records always stay here.</p>
+          <p>Unbought is a prototype for a consent-based, currency-free mutual aid society. Nothing here processes payments or sends messages to other people. Public listings and community posts are shared through Supabase; pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, report text and evidence, and donation records stay here; with optional private sync on, only a minimal open/settled admin flag is sent.</p>
         </div>
 
         <div class="faq-groups">
@@ -71,7 +71,7 @@
             <h2 id="faq-basics">The basics</h2>
             <details>
               <summary>What is Unbought?</summary>
-              <p>A practice of sharing labor, goods, care, education, and land without money changing hands between neighbors. The site is a local-first prototype: public listings and community posts can be shared through Supabase, while pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, reports, and donation records always stay here.</p>
+              <p>A practice of sharing labor, goods, care, education, and land without money changing hands between neighbors. The site is a local-first prototype: public listings and community posts can be shared through Supabase, while pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, report text and evidence, and donation records stay here; with optional private sync on, only a minimal open/settled admin flag is sent.</p>
             </details>
             <details>
               <summary>What does “Built on Consent” mean?</summary>
@@ -79,7 +79,7 @@
             </details>
             <details>
               <summary>Is this a real service right now?</summary>
-              <p>Not yet. There are no local real accounts or payment processing; optional private sync uses a separate Supabase Auth account. A public-data-only Supabase bridge shares listings, group cards, and community posts; pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, reports, and donation records always stay here.</p>
+              <p>Not yet. There are no local real accounts or payment processing; optional private sync uses a separate Supabase Auth account. A public-data-only Supabase bridge shares listings, group cards, and community posts; pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, report text and evidence, and donation records stay here; with optional private sync on, only a minimal open/settled admin flag is sent.</p>
             </details>
             <details>
               <summary>How does site search work?</summary>
@@ -99,7 +99,7 @@
             </details>
             <details>
               <summary>Can I choose whether my private details are stored online?</summary>
-              <p>Yes. Private sync is off by default. Dashboard → Settings has a “Sync my private data” section. Turning it on requires a separate Supabase Auth email and password plus an explicit consent checkbox. Only then are your member ID, account details, pledge details, and waiting-list entry uploaded, where only you and site admins can read them. Passwords are handled by Supabase Auth; no local password hash is uploaded. You can sync now, turn sync off, or delete your cloud copy at any time. Public listing and community-post sync is separate and unchanged.</p>
+              <p>Yes. Private sync is off by default. Dashboard → Settings has a “Sync my private data” section. Turning it on requires a separate Supabase Auth email and password plus an explicit consent checkbox. Only then are your member ID, account details, pledge details, and waiting-list entry uploaded, where only you and the current rotating web-developer admins can read them. Filing or settling a report also sends only a minimal open/settled flag with the reported member ID; report text, evidence, reasons, and reporter identity never leave this browser. Passwords are handled by Supabase Auth; no local password hash is uploaded. You can sync now, turn sync off, or delete your cloud copy at any time. Public listing and community-post sync is separate and unchanged.</p>
             </details>
             <details>
               <summary>What does my public profile show?</summary>
@@ -107,7 +107,7 @@
             </details>
             <details>
               <summary>Who can enter my work hours?</summary>
-              <p>No one can add hours unilaterally. The worker and the receiver each choose the same agreed time from fixed options. Matching confirmations log that time; nothing is typed into an hours counter. If the choices differ, evidence goes to a review board and three randomly drawn active members choose one of the confirmed times; care circle members, students, observers, and either party cannot serve. Only those confirmed hours appear in your week, month, year, and all-time totals.</p>
+              <p>No one can add hours unilaterally. The worker and the receiver each choose the same agreed time from fixed options. Matching confirmations log that time; nothing is typed into an hours counter. If the choices differ, evidence goes to a review board and three randomly drawn active members choose one of the confirmed times; care circle members, students, observers, and either party cannot serve. Only those confirmed hours appear in your week, month, year, and all-time totals. Each month is checked after it ends: missing your pledged hours freezes the pledge and blocks service requests until the shortfall is made up. More than 30 days frozen makes you an Observer, and a re-pledge is accepted only after three impartial active members approve it.</p>
             </details>
             <details>
               <summary>Why ask for a legal name and addresses at all?</summary>
@@ -119,7 +119,7 @@
             </details>
             <details>
               <summary>What can each membership track access?</summary>
-              <p>Active Contributors take part in the full commons. Apprentices may use Basic Necessities only while enrolled. Care Circle members may use Basic Necessities with no labor obligation, and any limit is reviewable with evidence. Observers may read and explore. These boundaries are part of the Community Guidelines and are enforced locally in this prototype.</p>
+              <p>Active Contributors take part in the full commons. Apprentices may use Basic Necessities only while enrolled. Care Circle members may use Basic Necessities with no labor obligation, and any limit is reviewable with evidence. A frozen pledge cannot request services until the missed hours are completed; after more than 30 days frozen the member becomes an Observer and can read or explore only until three active members approve a re-pledge. These boundaries are part of the Community Guidelines and are enforced locally in this prototype.</p>
             </details>
             <details>
               <summary>What are Basic Necessities, and who decides how mutual aid works?</summary>
@@ -203,7 +203,7 @@
             <h2 id="faq-safety">Safety and accountability</h2>
             <details>
               <summary>How do safety reports work?</summary>
-              <p>Reports are tied to the thing you were looking at — a listing, a comment on a listing, a message, community or social chat, a profile, or a dashboard item — so you never have to type someone’s name into a report form. You can attach local messages, pictures, or other files as evidence. Reports and evidence always stay in this browser; they are not part of optional private sync.</p>
+              <p>Reports are tied to the thing you were looking at — a listing, a comment on a listing, a message, community or social chat, a profile, or a dashboard item — so you never have to type someone’s name into a report form. You can attach local messages, pictures, or other files as evidence. Report text, evidence, reasons, and reporter identity always stay in this browser. With optional private sync on, the only report data sent is the reported member's local ID plus an open/settled status so a reported admin's access can pause.</p>
             </details>
             <details>
               <summary>Who is allowed to vote in a review board case?</summary>
@@ -220,7 +220,7 @@
             <details>
               <summary>Will friends and groups be part of this?</summary>
               <p>Yes. Dashboard → Friends &amp; Groups automatically places you in the main town group, such as Stroudsburg Group I. When a town group reaches 150 people, another Stroudsburg group opens with a Roman numeral — II, III, … XI — and neighbors can choose which numbered group to join. The first member of a new numbered group is not a seed member. The town group profile shows the city, state, and ZIP below its name. Every other group is a social or support circle you make or join, and group names link to their own group profile.</p>
-              <p>Seven admin seats rotate weekly for workers only, staggered across one-to-seven-week cycles. Care Circle, Observer, and Apprentice members cannot be admins. Current admins can add another admin, cancel a group, delete group chat posts and replies, require an impartial review, change the group’s community guidelines, and start a guideline vote in chat. You can leave a non-town group when another admin exists; only an admin can cancel a group. Reports made by a temporary admin need evidence, go to an impartial review, and are never decided as criminal matters by member vote. Admin votes on guideline changes are recorded as Agreed, Not agreed, or More discussion needed.</p>
+              <p>The seven local group admin seats rotate weekly for workers only, staggered across one-to-seven-week cycles; these are separate from the rotating web-developer admins who can read optional Supabase private data. Care Circle, Observer, and Apprentice members cannot hold local group admin seats. Current admins can add another admin, cancel a group, delete group chat posts and replies, require an impartial review, change the group’s community guidelines, and start a guideline vote in chat. You can leave a non-town group when another admin exists; only an admin can cancel a group. Reports made by a temporary admin need evidence, go to an impartial review, and are never decided as criminal matters by member vote. Admin votes on guideline changes are recorded as Agreed, Not agreed, or More discussion needed.</p>
               <p>Search current members by chosen name, profession, or town and send a local friend request; public profiles have the same Add friend action. You can keep one group of your own and write social chat drafts with exactly Audience, Title, Message, and picture. There is one local account, so no invitations are sent and no one else’s account changes. Friend lists and groups are capped at 150 people.</p>
             </details>
             <details>
@@ -327,7 +327,7 @@
     <div class="container footer-utility">
       <div class="footer-utility-copy">
         <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
-        <p>Public listing details and community posts are shared through Supabase when connected; pledges and private details can optionally sync with your permission; messages, reports, and donation records stay in this browser.</p>
+        <p>Public listing details and community posts are shared through Supabase when connected; pledges and private details can optionally sync with your permission; messages, report text and evidence, and donation records stay in this browser. With optional private sync on, only a minimal open/settled flag for a reported admin is sent.</p>
       </div>
       <button class="button button--ghost-light button--small" id="reset-demo" type="button">
         <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>

@@ -3,7 +3,7 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
 endobj
 3 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
@@ -55,7 +55,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
 endobj
 8 0 obj
-<< /Length 4156 >>
+<< /Length 4232 >>
 stream
 BT /F2 12 Tf 1 0 0 1 54 744 Tm (4. First house and scaling) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 724 Tm ([ ] The first house goes where the most Unbought members live.) Tj ET
@@ -68,52 +68,84 @@ BT /F1 10 Tf 1 0 0 1 54 634 Tm ([ ] Confirm group surplus allowances and the can
 BT /F2 12 Tf 1 0 0 1 54 609 Tm (5. Phase 2 and governance follow-up) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 589 Tm ([x] Academy, Group Brands, and co-op tools stay hidden until March 20, 2027 at 4:25pm) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 574 Tm (Eastern.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 559 Tm ([ ] Finish group admin rotation: 7 seats, staggered weekly, with impartial review for) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 544 Tm (reports.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 529 Tm ([ ] Test alliance terms, review board county rules, and anonymous voting.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 514 Tm ([x] Public resume stays limited: no member IDs, addresses, donations, or group chat replies.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 489 Tm (6. Supabase public-data bridge) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 469 Tm ([x] Migration run: grants applied, RLS enabled on all five public tables, and PostgREST) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 454 Tm (schema reloaded.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 439 Tm ([x] Direct checks return HTTP 200 for groups, listings, community channels, community) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 424 Tm (threads, and community posts.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 409 Tm ([x] Live-site console is clean; the former 401 errors are gone.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 394 Tm ([x] supabase-config.js is public-only; no service_role key, database password, or connection) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 379 Tm (string.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 364 Tm ([x] Public bridge remains unchanged: only public directory data is shared automatically.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 349 Tm ([x] Member listing edits are local-only; public Supabase rows remain append-only in Phase 1.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 324 Tm (7. Private opt-in sync) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 304 Tm ([ ] Run supabase/migrations/20261122000000_private_opt_in_sync.sql in Supabase SQL Editor;) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 289 Tm (it also reasserts public insert grants.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 274 Tm ([x] Private sync is off by default in Dashboard -> Settings and requires Supabase Auth plus) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 259 Tm (an explicit consent checkbox.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 244 Tm ([x] Only member ID, account details, pledge details, and waitlist entries upload after) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 229 Tm (opt-in; only the member and admins can read them.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 214 Tm ([x] No password, hash, or salt is stored in localStorage or private tables; Supabase Auth) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 199 Tm (handles passwords.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 184 Tm ([x] Settings offers Sync now, Turn off private sync, and Delete my cloud copy; local) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 169 Tm (sign-out stops sync and withdrawal deletes the cloud copy.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 154 Tm ([x] Messages, reports, donations, photos, comments, and chats are never transmitted.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 129 Tm (8. Safety and copy boundaries) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 109 Tm ([x] Local demo sign-in is not real auth; there are no payments, email, wage API, stock) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 94 Tm (issue, payouts, or police reports. Public data is shared; private data uploads only after) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 79 Tm (opt-in.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 64 Tm ([x] NSFW is a content tag only; no porn and no prostitution; voting is anonymous.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 559 Tm ([x] Local group admin rotation is in place: 7 seats, staggered weekly, with impartial review) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 544 Tm (for reports.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 529 Tm ([ ] Edit the web developer pool in the private migration before running it; keep more than 7) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 514 Tm (developers.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 499 Tm ([x] Supabase private admins rotate from that pool: 7 active, 7-day terms, one new seat per) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 484 Tm (day, date-derived with no cron.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 469 Tm ([x] A missed monthly pledge freezes service requests; over 30 days frozen becomes Observer) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 454 Tm (with a 3-active-member re-pledge review.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 439 Tm ([ ] Test alliance terms, review board county rules, and anonymous voting.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 424 Tm ([x] Public resume stays limited: no member IDs, addresses, donations, or group chat replies.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 399 Tm (6. Supabase public-data bridge) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 379 Tm ([x] Migration run: grants applied, RLS enabled on all five public tables, and PostgREST) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 364 Tm (schema reloaded.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 349 Tm ([x] Direct checks return HTTP 200 for groups, listings, community channels, community) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 334 Tm (threads, and community posts.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 319 Tm ([x] Live-site console is clean; the former 401 errors are gone.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 304 Tm ([x] supabase-config.js is public-only; no service_role key, database password, or connection) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 289 Tm (string.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 274 Tm ([x] Public bridge remains unchanged: only public directory data is shared automatically.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 259 Tm ([x] Member listing edits are local-only; public Supabase rows remain append-only in Phase 1.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 234 Tm (7. Private opt-in sync) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 214 Tm ([ ] FIRST: replace the example UUIDs in the WEB DEVELOPER ADMIN POOL block of) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 199 Tm (supabase/migrations/20261122000000_private_opt_in_sync.sql.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 184 Tm ([ ] Keep more than 7 web developers, then run that migration once in Supabase SQL Editor; it) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 169 Tm (also reasserts public insert grants.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 154 Tm ([x] Private sync is off by default in Dashboard -> Settings and requires Supabase Auth plus) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 139 Tm (an explicit consent checkbox.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 124 Tm ([x] Only member ID, account details, pledge details, pledge-standing fields, and waitlist) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 109 Tm (entries upload after opt-in; only the member and current rotating web-developer admins can) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 94 Tm (read them.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 79 Tm ([x] No password, hash, or salt is stored in localStorage or private tables; Supabase Auth) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 64 Tm (handles passwords.) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 2245 >>
+stream
+BT /F1 10 Tf 1 0 0 1 54 744 Tm ([x] Settings offers Sync now, Turn off private sync, and Delete my cloud copy; local) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 729 Tm (sign-out stops sync and withdrawal deletes the cloud copy.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 714 Tm ([x] Report text, evidence, reasons, reporter identity, donations, photos, comments, and) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 699 Tm (chats are never transmitted.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 684 Tm ([x] The only report-related exception after opt-in is the reported member local ID plus) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 669 Tm (open/settled, used to pause a reported admin access.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 644 Tm (8. Safety and copy boundaries) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 624 Tm ([x] Local demo sign-in is not real auth; there are no payments, email, wage API, stock) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 609 Tm (issue, payouts, or police reports. Public data is shared; private data uploads only after) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 594 Tm (opt-in.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 579 Tm ([x] NSFW is a content tag only; no porn and no prostitution; voting is anonymous.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 564 Tm ([x] Exact pledge copy, donation nudge, and March 20, 2027 rollout language are preserved.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 549 Tm ([x] FAQ, dashboard, group, and profile copy now distinguishes public Supabase data from) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 534 Tm (opt-in private data and always-local records.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 519 Tm ([x] Local group admin rotation and Supabase web-developer admin rotation are documented as) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 504 Tm (separate systems.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 489 Tm ([x] Pledge freeze, 30-day Observer conversion, and three-member re-pledge review copy is) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 474 Tm (live on the pledge, home, FAQ, guidelines, and dashboard.) Tj ET
+BT /F1 9 Tf 1 0 0 1 54 449 Tm (Working file for the next planning pass. The public Supabase bridge is live; private sync waits) Tj ET
+BT /F1 9 Tf 1 0 0 1 54 435 Tm (for you to edit the developer pool and run the SQL migration. Everything else remains prototype) Tj ET
+BT /F1 9 Tf 1 0 0 1 54 421 Tm (planning, not a promise of housing, funding, or a payout.) Tj ET
 endstream
 endobj
 xref
-0 8
+0 10
 0000000000 65535 f
 0000000009 00000 n
 0000000058 00000 n
-0000000121 00000 n
-0000000218 00000 n
-0000000320 00000 n
-0000000456 00000 n
-0000003718 00000 n
-0000003854 00000 n
+0000000127 00000 n
+0000000224 00000 n
+0000000326 00000 n
+0000000462 00000 n
+0000003724 00000 n
+0000003860 00000 n
+0000008143 00000 n
+0000008280 00000 n
 trailer
-<< /Size 8 /Root 1 0 R >>
+<< /Size 10 /Root 1 0 R >>
 startxref
-8061
+10577
 %%EOF

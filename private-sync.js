@@ -254,7 +254,7 @@
     }, 'Could not read private data.');
   }
 
-  async function deletePrivate() {
+  async function deletePrivate(memberId) {
     return run(async () => {
       const client = await getClient();
       if (!client) return { ok: false, error: 'Private sync is not configured.' };
@@ -263,6 +263,17 @@
       if (!session || !session.user) return { ok: false, error: 'Sign in before deleting private data.' };
 
       const userId = session.user.id;
+      const localMemberId = String(memberId || '').trim().slice(0, 100);
+      // Delete the flag first: its RLS check looks for the opted-in member row.
+      if (localMemberId) {
+        const flagResult = await client
+          .from('private_admin_report_flags')
+          .delete()
+          .eq('member_id', localMemberId);
+        if (flagResult && flagResult.error) {
+          return { ok: false, error: friendlyError(flagResult.error, 'Could not delete the report flag.') };
+        }
+      }
       const results = await Promise.all([
         client.from('private_members').delete().eq('user_id', userId),
         client.from('private_waitlist_entries').delete().eq('user_id', userId)
@@ -293,6 +304,46 @@
       setStatus('connected');
       return { ok: true };
     }, 'Could not delete the waiting-list entry.');
+  }
+
+  // Sends only the reported member's local ID and an open/settled status.
+  // Report text, evidence, reasons, and reporter details never enter this call.
+  async function setAdminReportFlag(memberId, status) {
+    return run(async () => {
+      const client = await getClient();
+      if (!client) return { ok: false, error: 'Private sync is not configured.' };
+
+      const session = await currentSession();
+      if (!session || !session.user) return { ok: false, error: 'Sign in before sending a report flag.' };
+
+      const reportedMemberId = String(memberId || '').trim().slice(0, 100);
+      const nextStatus = status === 'settled' ? 'settled' : 'open';
+      if (!reportedMemberId) return { ok: false, error: 'The reported member ID is missing.' };
+
+      if (nextStatus === 'settled') {
+        // A settled flag updates the row created when the report was filed. If
+        // no row exists (for example, sync was enabled later), there is nothing
+        // to pause, so a no-op is still success.
+        const { error } = await client
+          .from('private_admin_report_flags')
+          .update({ status: 'settled' })
+          .eq('member_id', reportedMemberId);
+        if (error) return { ok: false, error: friendlyError(error, 'Could not settle the report flag.') };
+        setStatus('connected');
+        return { ok: true, status: nextStatus, updated: true };
+      }
+
+      const { error } = await client
+        .from('private_admin_report_flags')
+        .upsert(
+          { member_id: reportedMemberId, status: 'open' },
+          { onConflict: 'member_id' }
+        );
+      if (error) return { ok: false, error: friendlyError(error, 'Could not save the report flag.') };
+
+      setStatus('connected');
+      return { ok: true, status: nextStatus };
+    }, 'Could not save the report flag.');
   }
 
   function onSessionChange(callback) {
@@ -337,6 +388,7 @@
     fetchPrivate,
     deletePrivate,
     deletePrivateWaitlist,
+    setAdminReportFlag,
     onSessionChange
   };
 })();

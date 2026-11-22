@@ -6,8 +6,9 @@
    supabase-config.js is configured, a small public-data bridge shares listings,
    group cards, and community chat content. Pledge records and private profile
    fields stay local unless a member explicitly turns on optional private sync
-   in Dashboard → Settings; messages, reports, donations, local password hashes,
-   and photos never leave the browser.
+   in Dashboard → Settings; messages, donations, local password hashes, and
+   photos never leave the browser. Report text and evidence stay local, but a
+   minimal open/settled admin flag may be sent after explicit opt-in.
    All user-generated text is inserted with textContent / value assignments
    rather than HTML strings, so a saved listing can never inject markup.
 
@@ -728,6 +729,8 @@
   const RESPONSE_DAYS = 3;   // time for the reported member to gather evidence and plead
   const VOTING_DAYS = 3;     // time for all members to review the case file and vote
   const DAY_MS = 24 * 60 * 60 * 1000;
+  const PLEDGE_FREEZE_DAYS = 30;       // grace period to make up missed hours
+  const PLEDGE_REVIEWER_COUNT = 3;     // impartial active members approve a re-pledge
 
   // Membership years start at the exact moment of the northern vernal
   // equinox, not on January 1. Times are published UTC instants, rounded to
@@ -999,6 +1002,7 @@
       contributions: [],
       volunteerInterests: [],
       reports: [],
+      pledgeReviews: [],
       anonymousVotes: [],
       notifications: [],
       friends: [],
@@ -2258,6 +2262,336 @@
     return getHourTotalsFrom(state.contributions, id);
   }
 
+  /* ------------------------------------------------------------------------
+      Monthly pledge standing.
+
+     A missed monthly pledge freezes the pledge, not the membership. Requests
+     pause until the shortfall is made up. After 30 days frozen, the member
+     becomes an Observer and any re-pledge needs three impartial active members.
+     All of it stays in this browser; only the optional private-sync snapshot
+     carries the resulting status fields.
+     ------------------------------------------------------------------------ */
+  function monthKeyFromDate(value) {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  function previousMonthKey(value) {
+    const date = value instanceof Date ? value : new Date();
+    return monthKeyFromDate(new Date(date.getFullYear(), date.getMonth() - 1, 1));
+  }
+
+  function confirmedLaborEntries(memberId) {
+    const id = cleanString(memberId, 100);
+    if (!id) return [];
+    return (Array.isArray(state.contributions) ? state.contributions : [])
+      .filter((entry) => entry && entry.memberId === id && entry.type === 'labor' && entry.mutualConfirmation === true);
+  }
+
+  function hoursInMonth(memberId, key) {
+    const month = normalizeMonthKey(key);
+    if (!month) return 0;
+    const total = confirmedLaborEntries(memberId)
+      .filter((entry) => monthKeyFromDate(entry.createdAt) === month)
+      .reduce((sum, entry) => sum + cleanHours(entry.hours), 0);
+    return Math.round(total * 100) / 100;
+  }
+
+  function hoursSince(memberId, isoDate) {
+    const start = Date.parse(isoDate);
+    if (Number.isNaN(start)) return 0;
+    const total = confirmedLaborEntries(memberId)
+      .filter((entry) => {
+        const when = Date.parse(entry.createdAt);
+        return !Number.isNaN(when) && when >= start;
+      })
+      .reduce((sum, entry) => sum + cleanHours(entry.hours), 0);
+    return Math.round(total * 100) / 100;
+  }
+
+  function pledgeHourRequirement(pledge) {
+    const source = pledge || state.pledge;
+    if (!source) return 0;
+    const hours = normalizeMonthlyHours(source.monthlyHours);
+    return typeof hours === 'number' ? hours : 0;
+  }
+
+  function getPledgeReviews() {
+    if (!Array.isArray(state.pledgeReviews)) state.pledgeReviews = [];
+    return state.pledgeReviews;
+  }
+
+  function pendingPledgeReviewFor(memberId) {
+    const id = cleanString(memberId, 100);
+    if (!id) return null;
+    return getPledgeReviews().find((review) => review && review.applicantMemberId === id && review.status === 'pending') || null;
+  }
+
+  function updatePledgeRosterStanding() {
+    const pledge = state.pledge;
+    if (!pledge || !pledge.memberId) return;
+    const roster = getMemberRoster();
+    const entry = roster.find((item) => item && item.memberId === pledge.memberId);
+    if (!entry) return;
+    entry.standing = (pledge.status === 'frozen' || pledge.status === 'review_pending') ? 'frozen'
+      : pledge.status === 'observer' ? 'observer'
+        : 'active';
+    if (pledge.status === 'observer') entry.track = 'observer';
+    else if (pledge.trackBeforeFreeze) entry.track = cleanString(pledge.trackBeforeFreeze, 30) || entry.track;
+    state.memberRoster = roster;
+  }
+
+  function clearFrozenFields(pledge) {
+    pledge.frozenAt = '';
+    pledge.frozenMonth = '';
+    pledge.frozenHours = 0;
+    pledge.pledgeHoursAtFreeze = 0;
+    pledge.pledgeDeficitHours = 0;
+  }
+
+  function convertPledgeToObserver(pledge) {
+    pledge.trackBeforeFreeze = cleanString(state.track, 30) || cleanString(pledge.trackBeforeFreeze, 30);
+    pledge.status = 'observer';
+    pledge.observerAt = new Date().toISOString();
+    pledge.reviewRequired = true;
+    pledge.pledgeReviewId = '';
+    state.track = 'observer';
+  }
+
+  // Runs on load, on render, and after hours are logged. The previous calendar
+  // month is checked once; a frozen pledge then gets a 30-day grace period.
+  function syncPledgeStanding() {
+    const pledge = state.pledge;
+    if (!isMember() || !pledge) return false;
+    let changed = false;
+
+    const status = normalizePledgeStatus(pledge.status);
+    if (status !== pledge.status) {
+      pledge.status = status;
+      changed = true;
+    }
+
+    // Care Circle has no labor obligation, so it can never be frozen for hours.
+    if (pledge.monthlyHours === 'care' && pledge.status !== 'active') {
+      pledge.status = 'active';
+      pledge.reviewRequired = false;
+      clearFrozenFields(pledge);
+      pledge.observerAt = '';
+      state.track = cleanString(pledge.trackBeforeFreeze, 30) || state.track || 'care';
+      pledge.trackBeforeFreeze = '';
+      changed = true;
+    }
+
+    if (pledge.status === 'frozen') {
+      const frozenAt = Date.parse(pledge.frozenAt);
+      const frozenTooLong = !Number.isNaN(frozenAt)
+        && Date.now() - frozenAt > (PLEDGE_FREEZE_DAYS * DAY_MS);
+      const shortfall = cleanHours(pledge.pledgeDeficitHours)
+        || Math.max(0, cleanHours(pledge.pledgeHoursAtFreeze) - cleanHours(pledge.frozenHours));
+
+      if (frozenTooLong) {
+        convertPledgeToObserver(pledge);
+        addNotification('pledge', 'Pledge became Observer',
+          `Your pledge was frozen for more than ${PLEDGE_FREEZE_DAYS} days. You are now an Observer; a re-pledge needs approval from three active members before requests resume.`,
+          { tab: 'dashboard' });
+        changed = true;
+      } else {
+        const madeUp = hoursSince(pledge.memberId, pledge.frozenAt);
+        if (madeUp >= shortfall) {
+          pledge.status = 'active';
+          clearFrozenFields(pledge);
+          addNotification('pledge', 'Pledge active again',
+            `You completed the ${shortfall} missed hour${shortfall === 1 ? '' : 's'}. Service requests are available again.`,
+            { tab: 'dashboard' });
+          changed = true;
+        } else {
+          const remaining = Math.round(Math.max(0, shortfall - madeUp) * 100) / 100;
+          if (remaining !== cleanHours(pledge.pledgeDeficitHours)) {
+            pledge.pledgeDeficitHours = remaining;
+            changed = true;
+          }
+        }
+      }
+    } else if (pledge.status === 'active') {
+      const lastMonth = previousMonthKey(new Date());
+      const signedMonth = monthKeyFromDate(pledge.signedAt);
+      const required = pledgeHourRequirement(pledge);
+      if (pledge.lastCheckedMonth !== lastMonth) {
+        pledge.lastCheckedMonth = lastMonth;
+        changed = true;
+        // Do not freeze a new member for a month that ended before they signed.
+        if (required > 0 && (!signedMonth || lastMonth >= signedMonth)) {
+          const logged = hoursInMonth(pledge.memberId, lastMonth);
+          if (logged < required) {
+            const shortfall = Math.round((required - logged) * 100) / 100;
+            pledge.status = 'frozen';
+            pledge.frozenAt = new Date().toISOString();
+            pledge.frozenMonth = lastMonth;
+            pledge.frozenHours = logged;
+            pledge.pledgeHoursAtFreeze = required;
+            pledge.pledgeDeficitHours = shortfall;
+            addNotification('pledge', 'Pledge frozen',
+              `You confirmed ${logged} of ${required} pledged hours in ${lastMonth}. Requests are paused until ${shortfall} hour${shortfall === 1 ? '' : 's'} are made up, or until Observer status after ${PLEDGE_FREEZE_DAYS} days.`,
+              { tab: 'dashboard' });
+            changed = true;
+          }
+        }
+      }
+    }
+
+    if (changed) {
+      updatePledgeRosterStanding();
+      saveState();
+    }
+    return changed;
+  }
+
+  function getPledgeAccessBlockReason() {
+    const pledge = state.pledge;
+    if (!isMember() || !pledge) return '';
+    if (pledge.status === 'frozen') {
+      return `Your pledge is frozen. Confirm ${cleanHours(pledge.pledgeDeficitHours)} more hour${cleanHours(pledge.pledgeDeficitHours) === 1 ? '' : 's'} before you can request services.`;
+    }
+    if (pledge.status === 'observer' || state.track === 'observer' || pledge.reviewRequired) {
+      return 'Observers read and explore without requesting services. Your re-pledge must be approved by three active members first.';
+    }
+    if (pledge.status === 'review_pending' && pendingPledgeReviewFor(pledge.memberId)) {
+      return 'Your re-pledge is waiting for three active members to review it.';
+    }
+    return '';
+  }
+
+  function getEligiblePledgeReviewers(applicantMemberId, seed) {
+    const excluded = new Set([cleanString(applicantMemberId, 100)].filter(Boolean));
+    const blocked = ['student', 'care', 'observer', 'limited', 'exiled', 'inactive', 'observe_only', 'frozen'];
+    const pool = getMemberRoster().filter((entry) => {
+      if (!entry || !entry.memberId || excluded.has(entry.memberId)) return false;
+      const standing = cleanString(entry.standing, 30).toLowerCase();
+      const track = cleanString(entry.track, 30).toLowerCase();
+      return standing === 'active' && !blocked.includes(track) && track !== 'apprentice';
+    });
+    const text = `${cleanString(applicantMemberId, 100)}|${cleanString(seed, 100)}`;
+    const numericSeed = text.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    return pool
+      .map((entry, index) => ({ entry, order: ((numericSeed + 1) * (index + 7) * 2654435761) >>> 0 }))
+      .sort((a, b) => a.order - b.order)
+      .slice(0, PLEDGE_REVIEWER_COUNT)
+      .map((item) => ({
+        memberId: item.entry.memberId,
+        name: cleanString(item.entry.name, 60) || cleanString(item.entry.profession, 60) || 'Neighbor'
+      }));
+  }
+
+  function requestPledgeReview() {
+    if (!isMember()) return;
+    const pledge = state.pledge;
+    if (!pledge || pledge.status !== 'observer' || !pledge.reviewRequired) return;
+    if (pendingPledgeReviewFor(pledge.memberId)) {
+      announce('Your re-pledge is already waiting for review.');
+      showToast('Re-pledge review is already pending.', false);
+      return;
+    }
+
+    const id = makeId('pledge-review');
+    const review = {
+      id,
+      applicantMemberId: pledge.memberId,
+      applicantName: cleanString(pledge.name, 60),
+      proposedPledge: { ...pledge },
+      panel: getEligiblePledgeReviewers(pledge.memberId, id),
+      votes: [],
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      resolvedAt: ''
+    };
+    getPledgeReviews().unshift(review);
+    state.pledgeReviews = getPledgeReviews().slice(0, 50);
+    pledge.pledgeReviewId = id;
+    pledge.status = 'review_pending';
+    updatePledgeRosterStanding();
+    saveState();
+    renderMemberAccount();
+    renderAccountability();
+    announce('Re-pledge submitted. Three active members must approve it before requests resume.');
+    showToast('Re-pledge sent for peer review.', false);
+  }
+
+  function finalizePledgeReview(review) {
+    if (!review || review.status !== 'pending') return '';
+    if (!Array.isArray(review.panel) || review.panel.length < PLEDGE_REVIEWER_COUNT) return '';
+    if (!Array.isArray(review.votes) || review.votes.length < PLEDGE_REVIEWER_COUNT) return '';
+
+    const approvals = review.votes.filter((vote) => vote && vote.approve).length;
+    const decision = approvals > (PLEDGE_REVIEWER_COUNT - approvals) ? 'approved' : 'rejected';
+    review.status = decision;
+    review.resolvedAt = new Date().toISOString();
+
+    const pledge = state.pledge;
+    if (decision === 'approved' && pledge && pledge.memberId === review.applicantMemberId) {
+      const proposed = review.proposedPledge && typeof review.proposedPledge === 'object'
+        ? review.proposedPledge
+        : {};
+      const copyFields = [
+        'name', 'fullName', 'firstName', 'middleInitial', 'lastName', 'suffix', 'location',
+        'address1', 'address2', 'city', 'county', 'state', 'mailingAddress', 'physicalAddress',
+        'physicalAddress1', 'physicalAddress2', 'physicalCity', 'physicalCounty', 'physicalState',
+        'physicalZip', 'housingStatus', 'monthlyHours', 'phone', 'cellPhone', 'publicPhoneNumber',
+        'samePhone', 'receiveTexts', 'dob', 'profession', 'zip', 'paidSkills', 'unpaidSkills',
+        'note', 'publicAddressSource', 'publicPhone', 'available', 'profileTheme', 'powerOfAttorney'
+      ];
+      copyFields.forEach((key) => {
+        if (hasOwn(proposed, key)) pledge[key] = proposed[key];
+      });
+      pledge.status = 'active';
+      pledge.signedAt = new Date().toISOString();
+      pledge.reviewRequired = false;
+      pledge.pledgeReviewId = '';
+      pledge.observerAt = '';
+      clearFrozenFields(pledge);
+      pledge.lastCheckedMonth = previousMonthKey(new Date());
+      state.track = cleanString(pledge.trackBeforeFreeze, 30) || state.track || 'contributor';
+      pledge.trackBeforeFreeze = '';
+      updatePledgeRosterStanding();
+      addNotification('pledge', 'Re-pledge approved',
+        'Three active members approved your re-pledge. Full access and service requests are available again.',
+        { tab: 'dashboard', sourceId: review.id });
+    } else if (pledge && pledge.memberId === review.applicantMemberId) {
+      pledge.reviewRequired = true;
+      pledge.pledgeReviewId = '';
+      pledge.status = 'observer';
+      addNotification('pledge', 'Re-pledge not approved',
+        'The three-member review did not approve your re-pledge. You remain an Observer and may submit another review.',
+        { tab: 'dashboard', sourceId: review.id });
+    }
+    return decision;
+  }
+
+  function castPledgeReviewVote(reviewId, data) {
+    if (!isMember()) return;
+    const review = getPledgeReviews().find((item) => item && item.id === reviewId && item.status === 'pending');
+    if (!review) return;
+    if (!review.panel.some((seat) => seat && seat.memberId === state.pledge.memberId)) return;
+    if (hasAnonymousVote(`pledge-review:${review.id}`)) return;
+    const seatIndex = review.panel.findIndex((seat) => seat && seat.memberId === state.pledge.memberId);
+    const approve = data.approve === 'approve';
+    const reason = cleanString(data.reason, 240);
+    if (!reason) return;
+
+    review.votes = Array.isArray(review.votes) ? review.votes : [];
+    review.votes.push({ seatIndex, approve, reason, votedAt: new Date().toISOString() });
+    recordAnonymousVote(`pledge-review:${review.id}`);
+    const decision = finalizePledgeReview(review);
+    saveState();
+    renderSharedMemberViews();
+    renderMemberAccount();
+    renderAccountability();
+    announce(decision
+      ? `Re-pledge review closed: ${decision}.`
+      : 'Your anonymous re-pledge review vote was saved locally.');
+    showToast(decision ? `Re-pledge ${decision} locally.` : 'Review vote saved locally.', false);
+  }
+
   // Hours used and item totals come from the same confirmed exchanges. The
   // source argument lets loadState recompute legacy counters without reading
   // the global state variable before it is initialized.
@@ -2662,6 +2996,11 @@
       showToast(message || 'Full access is paused during your reflection period. Basic necessities remain available under the Community Guidelines definition.');
       return false;
     }
+    const pledgeBlock = getPledgeAccessBlockReason();
+    if (pledgeBlock) {
+      showToast(message || pledgeBlock);
+      return false;
+    }
     return true;
   }
 
@@ -2689,6 +3028,16 @@
     const hours = Number(value);
     if (!Number.isFinite(hours) || hours < 4) return null;
     return Math.round(hours);
+  }
+
+  function normalizePledgeStatus(value) {
+    const status = cleanString(value, 30).toLowerCase();
+    return ['active', 'frozen', 'observer', 'review_pending'].includes(status) ? status : 'active';
+  }
+
+  function normalizeMonthKey(value) {
+    const key = cleanString(value, 7);
+    return /^\d{4}-(0[1-9]|1[0-2])$/.test(key) ? key : '';
   }
 
   function normalizeHousingStatus(value) {
@@ -3161,7 +3510,17 @@
           },
           note: cleanString(raw.pledge.note, 240),
           signedAt,
-          status: 'active'
+          status: normalizePledgeStatus(raw.pledge.status),
+          frozenAt: cleanString(raw.pledge.frozenAt, 40),
+          frozenMonth: normalizeMonthKey(raw.pledge.frozenMonth),
+          frozenHours: cleanHours(raw.pledge.frozenHours),
+          pledgeHoursAtFreeze: cleanHours(raw.pledge.pledgeHoursAtFreeze),
+          pledgeDeficitHours: cleanHours(raw.pledge.pledgeDeficitHours),
+          observerAt: cleanString(raw.pledge.observerAt, 40),
+          trackBeforeFreeze: cleanString(raw.pledge.trackBeforeFreeze, 30),
+          reviewRequired: Boolean(raw.pledge.reviewRequired),
+          pledgeReviewId: cleanString(raw.pledge.pledgeReviewId, 100),
+          lastCheckedMonth: normalizeMonthKey(raw.pledge.lastCheckedMonth)
         };
       }
     }
@@ -3508,6 +3867,39 @@
             status: cleanString(item.policeReferral.status, 30) || 'referral_recorded',
             note: cleanString(item.policeReferral.note, 280)
           } : null
+        }));
+    }
+
+    if (Array.isArray(raw.pledgeReviews)) {
+      fallback.pledgeReviews = raw.pledgeReviews
+        .filter((item) => item && typeof item === 'object' && cleanString(item.applicantMemberId, 100))
+        .slice(0, 50)
+        .map((item) => ({
+          id: cleanString(item.id, 100) || makeId('pledge-review'),
+          applicantMemberId: cleanString(item.applicantMemberId, 100),
+          applicantName: cleanString(item.applicantName, 60),
+          proposedPledge: item.proposedPledge && typeof item.proposedPledge === 'object' && !Array.isArray(item.proposedPledge)
+            ? { ...item.proposedPledge }
+            : null,
+          panel: (Array.isArray(item.panel) ? item.panel : [])
+            .filter((seat) => seat && typeof seat === 'object')
+            .slice(0, PLEDGE_REVIEWER_COUNT)
+            .map((seat) => ({
+              memberId: cleanString(seat.memberId, 100),
+              name: cleanString(seat.name, 60)
+            })),
+          votes: (Array.isArray(item.votes) ? item.votes : [])
+            .filter((vote) => vote && typeof vote === 'object')
+            .slice(0, PLEDGE_REVIEWER_COUNT)
+            .map((vote) => ({
+              seatIndex: Number.isInteger(Number(vote.seatIndex)) ? Number(vote.seatIndex) : null,
+              approve: Boolean(vote.approve),
+              reason: cleanString(vote.reason, 240),
+              votedAt: cleanString(vote.votedAt, 40)
+            })),
+          status: ['pending', 'approved', 'rejected'].includes(item.status) ? item.status : 'pending',
+          createdAt: cleanString(item.createdAt, 40),
+          resolvedAt: cleanString(item.resolvedAt, 40)
         }));
     }
 
@@ -4107,6 +4499,12 @@
       receive_texts: Boolean(pledge.receiveTexts),
       monthly_hours: pledge.monthlyHours === 'care' ? 'care' : Number(pledge.monthlyHours) || null,
       pledge_status: cleanString(pledge.status, 40) || 'active',
+      pledge_frozen_at: cleanString(pledge.frozenAt, 40) || null,
+      pledge_frozen_month: normalizeMonthKey(pledge.frozenMonth) || null,
+      pledge_deficit_hours: cleanHours(pledge.pledgeDeficitHours),
+      pledge_observer_at: cleanString(pledge.observerAt, 40) || null,
+      pledge_track_before_freeze: cleanString(pledge.trackBeforeFreeze, 30) || null,
+      pledge_review_required: Boolean(pledge.reviewRequired),
       signed_at: cleanString(pledge.signedAt, 40) || null,
       sync_consented_at: cleanString(state.cloud.consentedAt, 40)
     };
@@ -4168,6 +4566,22 @@
     renderPrivateSyncStatus(message);
   }
 
+  // Minimal report pause signal. It is sent only after explicit private-sync
+  // consent, and only the reported member ID plus open/settled ever leaves the
+  // browser. Report text, evidence, reasons, and reporter details stay local.
+  async function sendAdminReportFlag(memberId, status) {
+    const bridge = privateBridge();
+    if (!state.cloud || !state.cloud.enabled || !state.cloud.consentedAt) return { ok: true, skipped: true };
+    if (!bridge || !bridge.isConfigured() || typeof bridge.setAdminReportFlag !== 'function') {
+      return { ok: true, skipped: true };
+    }
+    const result = await bridge.setAdminReportFlag(memberId, status);
+    if (!result || !result.ok) {
+      setPrivateSyncResult(result && result.error ? result.error : 'Could not update the admin report flag.');
+    }
+    return result;
+  }
+
   function queuePrivateSync() {
     if (!state.cloud || !state.cloud.enabled) return;
     const bridge = privateBridge();
@@ -4200,7 +4614,7 @@
 
     if (result && result.ok) {
       state.cloud.lastSyncedAt = new Date().toISOString();
-      setPrivateSyncResult('Private data synced. Only you and site admins can read it.');
+      setPrivateSyncResult('Private data synced. Only you and the current rotating admins can read it.');
       if (options.announce !== false) {
         announce('Private data synced.');
         showToast('Private data synced.', false);
@@ -4271,7 +4685,7 @@
 
     let remoteError = '';
     if (deleteCopy) {
-      const removed = await bridge.deletePrivate();
+      const removed = await bridge.deletePrivate(state.pledge && state.pledge.memberId);
       if (!removed.ok) remoteError = removed.error || 'Could not delete your private cloud copy.';
     }
 
@@ -6516,6 +6930,37 @@
     });
     card.appendChild(stats);
 
+    if (signedIn) {
+      const pledge = state.pledge;
+      const standing = createEl('div', 'account-block pledge-standing');
+      standing.appendChild(createEl('h4', '', 'Pledge standing'));
+      let standingText = '';
+      if (pledge.status === 'frozen') {
+        const madeUp = hoursSince(pledge.memberId, pledge.frozenAt);
+        const deficit = cleanHours(pledge.pledgeDeficitHours);
+        standingText = `Frozen for ${pledge.frozenMonth || 'the last month'}. You confirmed ${madeUp} of ${deficit} missed hour${deficit === 1 ? '' : 's'} since the freeze. Service requests are paused until the hours are made up, or for ${PLEDGE_FREEZE_DAYS} days before Observer status.`;
+      } else if (pledge.status === 'observer') {
+        standingText = 'Observer after 30 days frozen. You can read and explore, but service requests are paused until three active members approve your re-pledge.';
+      } else if (pledge.status === 'review_pending') {
+        const review = pendingPledgeReviewFor(pledge.memberId);
+        standingText = review
+          ? `Re-pledge review pending with three active members (${(review.votes || []).length}/${PLEDGE_REVIEWER_COUNT} votes). You remain an Observer until they decide.`
+          : 'Re-pledge review pending. You remain an Observer until three active members decide.';
+      } else if (pledge.monthlyHours === 'care') {
+        standingText = 'Care Circle pledge active. There is no monthly labor obligation.';
+      } else {
+        standingText = `Active. Your ${pledgeHourRequirement(pledge)}-hour monthly pledge is checked when each month ends.`;
+      }
+      standing.appendChild(createEl('p', 'account-note', standingText));
+      if (pledge.status === 'observer' && pledge.reviewRequired && !pendingPledgeReviewFor(pledge.memberId)) {
+        const requestReview = createEl('button', 'button button--outline button--small', 'Submit re-pledge for review');
+        requestReview.type = 'button';
+        requestReview.dataset.action = 'request-pledge-review';
+        standing.appendChild(requestReview);
+      }
+      card.appendChild(standing);
+    }
+
     const model = createEl('p', 'account-note', signedIn
       ? 'Prototype model (local only): your hours are shown only after both you and the receiver confirm the work, or after a three-member review vote resolves a disagreement. No one can add hours unilaterally. Giving is shown by week, month, year, and all time. Your share is a local, proportional estimate based on recorded contributions; it is not a payout, debt, or legal claim. Every cent of donations, academy tuition, and non-member purchases goes to the Unbought donation fund. Nothing is transmitted.'
       : 'Prototype model (local only): the Unbought donation fund holds locally recorded donations and non-member purchase intents. Academy tuition would join it in a live system. No money moves, no payouts are made, and nothing is transmitted.');
@@ -7352,7 +7797,7 @@
       </div>
       <div class="settings-block private-sync-settings">
         <h4>Private cloud sync <span class="optional">(optional)</span></h4>
-        <p class="account-note">Off by default. If you turn it on, your member ID, account details, pledge details, and waiting-list entry are sent to Supabase, where only you and site admins can read them. Passwords are handled by Supabase Auth; no password or local hash is uploaded.</p>
+        <p class="account-note">Off by default. If you turn it on, your member ID, account details, pledge details, and waiting-list entry are sent to Supabase, where only you and the current rotating web-developer admins can read them. With sync on, filing or settling a report also sends only a minimal open/settled flag; report text and evidence never leave this browser. Passwords are handled by Supabase Auth; no password or local hash is uploaded.</p>
         <p class="account-note" id="private-sync-status" role="status">${cloudEnabled ? 'Private sync is on.' : 'Private sync is off. Your private records stay in this browser.'}</p>
         <div id="private-sync-setup"${cloudEnabled ? ' hidden' : ''}>
           <form class="account-form" data-private-signin-form>
@@ -7367,7 +7812,7 @@
                 <p class="field-hint">Supabase stores this password. Unbought never saves it on this device.</p>
               </div>
             </div>
-            <label class="checkbox"><input type="checkbox" name="privateSyncConsent" required> <span>I understand this sends my private details to Supabase, where only I and site admins can read them.</span></label>
+            <label class="checkbox"><input type="checkbox" name="privateSyncConsent" required> <span>I understand this sends my private details to Supabase, where only I and the current rotating admins can read them, and that a minimal report flag may be sent to pause an admin’s access.</span></label>
             <div class="account-form-actions">
               <button type="submit" class="button button--primary button--small" data-private-sync-mode="signin">Sign in &amp; sync</button>
               <button type="submit" class="button button--outline button--small" data-private-sync-mode="signup">Create account &amp; sync</button>
@@ -7821,7 +8266,7 @@
             <label class="checkbox"><input type="checkbox" name="available"${m.available !== false ? ' checked' : ''}> <span>Available for labor and product requests</span></label>
             <p class="field-hint">When this is off, neighbors can still see your offers but cannot send labor or product requests.</p>
           </fieldset>
-          <p class="field-hint">No texts are sent. Member details are sent only if you turn on optional private sync; reports, donations, listing comments, group chats, and other interactions are never sent. Always private here: legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated.</p>
+          <p class="field-hint">No texts are sent. Member details are sent only if you turn on optional private sync. Report text, evidence, donations, listing comments, group chats, and other interactions stay here; with private sync on, only a minimal open/settled admin report flag is sent. Always private here: legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated.</p>
           <div class="account-form-actions">
             <button type="submit" class="button button--primary button--small">Save privacy choices</button>
           </div>
@@ -8334,6 +8779,7 @@
   }
 
   function renderSharedMemberViews() {
+    syncPledgeStanding();
     renderMemberAccount();
     renderProfile();
     renderGroupProfile();
@@ -10067,6 +10513,12 @@
     initDashboardTabs();
 
     dash.addEventListener('click', (event) => {
+      const pledgeReviewRequest = event.target.closest('[data-action="request-pledge-review"]');
+      if (pledgeReviewRequest) {
+        event.preventDefault();
+        requestPledgeReview();
+        return;
+      }
       const privateSyncNow = event.target.closest('#private-sync-now');
       if (privateSyncNow) {
         event.preventDefault();
@@ -10247,7 +10699,7 @@
           );
           if (result && result.ok) {
             refreshSettingsPanel('[data-private-sync-now]');
-            announce('Private sync is on. Your private records were uploaded for you and site admins only.');
+            announce('Private sync is on. Your private records were uploaded for you and the current rotating admins only.');
             showToast('Private sync enabled.', false);
           } else {
             setPrivateSyncResult(result && result.error ? result.error : 'Could not enable private sync.');
@@ -10278,6 +10730,7 @@
         const outcome = getHourState(request);
         if (outcome === 'agreed') logMutualHours(request, hours, 'mutual');
         if (outcome === 'disputed') ensureHourReview(request);
+        syncPledgeStanding();
         saveState();
         renderSharedMemberViews();
         renderExchanges();
@@ -10339,6 +10792,7 @@
         });
         recordAnonymousVote(`hours:${request.id}`);
         const finalized = finalizeHourReview(request);
+        if (finalized) syncPledgeStanding();
         saveState();
         renderSharedMemberViews();
         renderExchanges();
@@ -10836,6 +11290,7 @@
       announce(`Member found guilty. Reflection period set to ${days} days.`);
     } else {
       report.status = 'not_guilty';
+      if (report.respondentMemberId) void sendAdminReportFlag(report.respondentMemberId, 'settled');
       announce('Member found not guilty. No restriction applied.');
     }
     report.resolutionAt = now.toISOString();
@@ -10947,7 +11402,7 @@
     const skipped = files.length - selected.length;
     const parts = [`Added ${prepared.length} local evidence item${prepared.length === 1 ? '' : 's'}.`];
     if (skipped > 0) parts.push(`Only ${REPORT_EVIDENCE.maxItems} items can be attached.`);
-    parts.push('Nothing was transmitted.');
+    parts.push('Evidence stayed on this device.');
     const message = parts.join(' ');
     if (status) status.textContent = message;
     announce(message);
@@ -11026,16 +11481,20 @@
     state.reports.unshift(report);
     state.reports = state.reports.slice(0, 200);
     saveState();
+    if (report.respondentMemberId) void sendAdminReportFlag(report.respondentMemberId, 'open');
     reportEvidenceDrafts.delete(form);
     form.reset();
     renderEvidenceDraft(form);
     renderAccountability();
     if (reportDialog && reportDialog.open) closeDialog(reportDialog);
+    const flagNote = state.cloud && state.cloud.enabled
+      ? ' Evidence and report details stayed here; only a minimal open/settled flag is sent because private sync is on.'
+      : ' Nothing was transmitted.';
     announce(isCriminal
-      ? 'Criminal matter recorded as a police referral. In a live system it would be referred to police for investigation. Nothing was transmitted in this prototype.'
+      ? `Criminal matter recorded as a police referral. In a live system it would be referred to police for investigation.${flagNote}`
       : adminReview
-        ? `Temporary admin review filed from ${report.contextArea}. Evidence stayed in this browser. An impartial member review follows the response period.`
-        : `Report filed from ${report.contextArea}. Evidence stayed in this browser. The response period is open.`);
+        ? `Temporary admin review filed from ${report.contextArea}.${flagNote} An impartial member review follows the response period.`
+        : `Report filed from ${report.contextArea}.${flagNote} The response period is open.`);
     showToast(isCriminal ? 'Police referral recorded (prototype only).' : adminReview ? 'Admin review filed. Impartial review is required.' : 'Report filed. Response period is open.', false);
   }
 
@@ -11060,7 +11519,7 @@
         </div>
         <div class="dialog-content">
           <h2 id="report-dialog-title">Report a concern</h2>
-          <p id="report-dialog-intro">This report is tied to your member record. The person is carried over from the listing, message, or profile where you opened this form—you do not type their name.</p>
+          <p id="report-dialog-intro">This report is tied to your member record. The person is carried over from the listing, message, or profile where you opened this form—you do not type their name. Report text and evidence stay in this browser; if optional private sync is on, only a minimal open/settled admin flag is sent.</p>
           <p class="dialog-note" data-report-context-summary role="status"></p>
           <p class="dialog-note" data-report-admin-note hidden>Temporary admin review: evidence is required, and an impartial member review follows the response period. Criminal matters are never decided by member vote.</p>
           <form class="account-form report-form" data-report-form>
@@ -11451,6 +11910,48 @@
     </form>`;
   }
 
+  function renderPledgeReviewsSection() {
+    const e = escapeHtml;
+    const reviews = getPledgeReviews().slice(0, 10);
+    if (!reviews.length) return '';
+
+    let html = `<div class="account-block"><h4>Re-pledge reviews</h4>
+      <p class="account-note">After a pledge stays frozen for ${PLEDGE_FREEZE_DAYS} days, the member becomes an Observer. Three impartial active members review the re-pledge; observers, care circle members, apprentices, and the applicant cannot serve. Votes are anonymous on this device.</p>
+      <ul class="case-list">`;
+
+    reviews.forEach((review) => {
+      const panelSeats = Array.isArray(review.panel) ? review.panel : [];
+      const votes = Array.isArray(review.votes) ? review.votes : [];
+      const mySeatIndex = panelSeats.findIndex((seat) => seat && state.pledge && seat.memberId === state.pledge.memberId);
+      const alreadyVoted = hasAnonymousVote(`pledge-review:${review.id}`);
+      const seatMarkup = Array.from({ length: PLEDGE_REVIEWER_COUNT }, (_, index) => {
+        const seat = panelSeats[index];
+        const vote = votes.find((item) => item && (item.seatIndex === index || (!hasOwn(item, 'seatIndex') && votes.indexOf(item) === index)));
+        return `<li class="review-seat"><strong>Review seat ${index + 1}${seat ? ' · filled' : ' · pending'}</strong>
+          <span class="contribution-meta">${vote ? `${vote.approve ? 'approved' : 'not approved'} · ${e(vote.reason || 'No reason given')} · anonymous` : 'Not voted yet'}</span></li>`;
+      }).join('');
+
+      html += `<li class="case-item pledge-review-item">
+        <div class="case-item-head"><strong>Re-pledge by ${e(review.applicantName || 'a member')}</strong><span class="case-status">${e(review.status === 'pending' ? `Pending · ${votes.length}/${PLEDGE_REVIEWER_COUNT}` : review.status)}</span></div>
+        <p class="contribution-meta">Submitted ${e(formatDate(review.createdAt))}${review.resolvedAt ? ` · resolved ${e(formatDate(review.resolvedAt))}` : ''}</p>
+        <ul class="review-seats">${seatMarkup}</ul>
+        ${panelSeats.length < PLEDGE_REVIEWER_COUNT ? `<p class="field-hint">Only ${panelSeats.length} eligible active neighbor${panelSeats.length === 1 ? '' : 's'} are stored in this browser. The remaining ${PLEDGE_REVIEWER_COUNT - panelSeats.length} seat${PLEDGE_REVIEWER_COUNT - panelSeats.length === 1 ? '' : 's'} wait for a live draw.</p>` : ''}
+        ${review.status === 'pending' && mySeatIndex >= 0 && !alreadyVoted ? `<form class="account-form pledge-review-vote-form" data-pledge-review-vote data-id="${e(review.id)}">
+          <fieldset><legend>Should this re-pledge be accepted?</legend>
+            <label class="checkbox"><input type="radio" name="approve" value="approve" required> <span>Approve</span></label>
+            <label class="checkbox"><input type="radio" name="approve" value="reject" required> <span>Do not approve</span></label>
+          </fieldset>
+          <div class="field"><label for="pledge-review-reason-${e(domId(review.id))}">Reason</label>
+            <input type="text" id="pledge-review-reason-${e(domId(review.id))}" name="reason" maxlength="240" required placeholder="Why this decision is fair"></div>
+          <button class="button button--primary button--small" type="submit">Cast anonymous review vote</button>
+        </form>` : ''}
+        ${review.status === 'pending' && mySeatIndex >= 0 && alreadyVoted ? '<p class="field-hint">Your anonymous vote is recorded above.</p>' : ''}
+      </li>`;
+    });
+
+    return `${html}</ul></div>`;
+  }
+
   function renderAccountability() {
     const panel = document.getElementById('accountability-panel');
     if (!panel) return;
@@ -11479,7 +11980,7 @@
     let html = `<section class="account-card accountability-card" aria-labelledby="accountability-title">
       <p class="eyebrow">Member dashboard · Safety</p>
       <h3 id="accountability-title">Safety &amp; accountability</h3>
-      <p class="account-note">Members file reports tied to their own member record; the person being reported is taken from the interaction, not typed by the reporter. Criminal matters are recorded as police referrals for investigation under local and federal law; they are never decided by a member vote. For non-criminal matters, the reported member gets ${RESPONSE_DAYS} days to gather evidence and plead guilty or not guilty with an explanation and multimedia links. Then all members get ${VOTING_DAYS} days to read the complete case file, comment, and vote on guilt, on the reflection period if guilty, and on a reason for their vote. Everything is visible on this dashboard. This prototype records it all locally—nothing is transmitted.</p>`;
+      <p class="account-note">Members file reports tied to their own member record; the person being reported is taken from the interaction, not typed by the reporter. Criminal matters are recorded as police referrals for investigation under local and federal law; they are never decided by a member vote. For non-criminal matters, the reported member gets ${RESPONSE_DAYS} days to gather evidence and plead guilty or not guilty with an explanation and multimedia links. Then all members get ${VOTING_DAYS} days to read the complete case file, comment, and vote on guilt, on the reflection period if guilty, and on a reason for their vote. Everything is visible on this dashboard. The case file, evidence, votes, and comments stay in this browser. With optional private sync on, only a minimal open/settled flag for a reported admin leaves the device; no report text or evidence is sent.</p>`;
 
     if (restriction) {
       const complete = isRestrictionComplete(restriction);
@@ -11532,7 +12033,7 @@
     html += `</div>`;
 
     html += `<div class="account-block"><h4>Member review board · open cases</h4>
-      <p class="account-note">Each case opens with a ${RESPONSE_DAYS}-day response period so the reported member can gather evidence and plead. After that, voting is open for ${VOTING_DAYS} days. To keep review impartial, involved parties, friends of involved parties, Observers, and Care Circle members do not vote; they are still encouraged to provide evidence and join the conversation below. Voting is open to members whose physical address is in the same county as an involved party; in cross-state cases, both parties’ counties are eligible. Vote guilty or not guilty; if guilty, choose a reflection period (30, 90, or 180 days), and always explain why. Voting is completely anonymous: ballots store no name, member ID, or link back to the voter, and results show only the vote, reflection choice, reason, and date. The full case file, anonymous votes, and comments are stored in this browser only for this local prototype.</p>`;
+      <p class="account-note">Each case opens with a ${RESPONSE_DAYS}-day response period so the reported member can gather evidence and plead. After that, voting is open for ${VOTING_DAYS} days. To keep review impartial, involved parties, friends of involved parties, Observers, and Care Circle members do not vote; they are still encouraged to provide evidence and join the conversation below. Voting is open to members whose physical address is in the same county as an involved party; in cross-state cases, both parties’ counties are eligible. Vote guilty or not guilty; if guilty, choose a reflection period (30, 90, or 180 days), and always explain why. Voting is completely anonymous: ballots store no name, member ID, or link back to the voter, and results show only the vote, reflection choice, reason, and date. The full case file, anonymous votes, and comments are stored in this browser only for this local prototype. Optional private sync can send only a minimal open/settled flag so a reported admin's access can pause; no case details leave the device.</p>`;
     if (!openReports.length) {
       html += `<p class="account-note">No cases are open for review right now.</p>`;
     } else {
@@ -11606,6 +12107,7 @@
       });
       html += `</ul>`;
     }
+    html += renderPledgeReviewsSection();
     html += `</div></section>`;
 
     panel.innerHTML = html;
@@ -11643,6 +12145,15 @@
         if (!requireMembership()) return;
         if (!form.reportValidity()) return;
         addAccountabilityComment(form.dataset.id, new FormData(form));
+      } else if (form.matches('[data-pledge-review-vote]')) {
+        event.preventDefault();
+        if (!requireMembership()) return;
+        if (!form.reportValidity()) return;
+        const data = new FormData(form);
+        castPledgeReviewVote(form.dataset.id, {
+          approve: data.get('approve') === 'approve',
+          reason: data.get('reason')
+        });
       }
     });
 
@@ -11674,6 +12185,7 @@
         if (!isMember() || report.status !== 'restriction_active' || !isRestrictionComplete(report)) return;
         report.status = 'access_restored';
         report.resolutionAt = new Date().toISOString();
+        if (report.respondentMemberId) void sendAdminReportFlag(report.respondentMemberId, 'settled');
         saveState();
         renderAccountability();
         announce('Full access restored after reflection and treatment.');
@@ -12176,7 +12688,17 @@
           },
           note,
           signedAt: new Date().toISOString(),
-          status: 'active'
+          status: 'active',
+          frozenAt: '',
+          frozenMonth: '',
+          frozenHours: 0,
+          pledgeHoursAtFreeze: 0,
+          pledgeDeficitHours: 0,
+          observerAt: '',
+          trackBeforeFreeze: '',
+          reviewRequired: false,
+          pledgeReviewId: '',
+          lastCheckedMonth: ''
         };
         addMemberToRoster(state.pledge);
         const salt = makeId('salt');

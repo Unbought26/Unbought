@@ -8,9 +8,12 @@ member record. A public-data-only Supabase bridge shares group cards, Free Labor
 and Free Stuff listings, and community chat content. A separate private sync
 bridge is off by default: after explicit opt-in and Supabase Auth sign-in, it can
 upload the member ID, account details, pledge details, and waiting-list entry.
-Row Level Security limits those private rows to the member and site admins.
-Messages, reports, donations, photos, group chats, social chats, and local
-password hashes are never transmitted.
+Row Level Security limits those private rows to the member and the current
+rotating web-developer admins. Messages, report text and evidence, donations,
+photos, group chats, social chats, and local password hashes are never
+transmitted. The only report-related exception after opt-in is a minimal flag
+containing the reported member's local ID and an `open`/`settled` status, used
+to pause a reported admin's access.
 
 See `supabase/README.md` for the schema, security notes, and setup steps. The site
 remains hosted on GitHub Pages.
@@ -63,15 +66,32 @@ When enabled, the bridge uploads:
 
 - `private_members`: member ID, chosen name, legal name fields, email, location,
   mailing and physical addresses, phones and phone preferences, birthdate,
-  housing status, profession, skills, monthly pledge, pledge status, signature
-  time, and consent time.
+  housing status, profession, skills, monthly pledge, pledge status, frozen
+  pledge fields, Observer fields, re-pledge flag, signature time, and consent
+  time.
 - `private_waitlist_entries`: one planning-stage waiting-list entry per user.
+- `private_admin_report_flags`: the reported member's local ID and an
+  `open`/`settled` status only. No reporter ID, report text, evidence, reason,
+  or timestamp is uploaded.
 
 The RLS policies allow an authenticated user to insert and manage only their own
-row. Site admins listed in `private_admin_roles` may read, update, and delete
-private rows but cannot insert on a member’s behalf. Anonymous users have no
-access. Applying `supabase/migrations/20261122000000_private_opt_in_sync.sql` is
-required before this feature works.
+member and waitlist rows. The seven current web-developer admins derived from
+`private_admin_roles` may read, update, and delete private rows but cannot insert
+on a member’s behalf; that rotation is separate from the local group admin seats.
+Anonymous users have no access. Applying
+`supabase/migrations/20261122000000_private_opt_in_sync.sql` is required before
+this feature works.
+
+Before running that migration, replace the example rows in its
+`WEB DEVELOPER ADMIN POOL` block with real Supabase Auth user UUIDs for more than
+seven web developers. Seven seats are active at a time, each for seven days,
+staggered one day apart. The active seven are recomputed from the current date on
+every access check, so there is no cron job and no manual admin SQL after setup.
+
+When a member files a report after opting in, the app sends an `open` flag for
+the reported member ID. A `not_guilty` finding or restored access sends
+`settled`. The flag pauses a reported web-developer admin's private-data access
+until resolution; it carries no allegation or identity of the reporter.
 
 The Settings panel also offers **Sync now**, **Turn off private sync**, and
 **Delete my cloud copy**. Turning sync off keeps the local records and signs out
@@ -176,8 +196,9 @@ a signed-in member records an offer, the offer is stored in `state.volunteerInte
 the Volunteer badge appears on the public resume and private profile, and a
 volunteer-access card appears in Dashboard → Overview. The private profile's
 Local account access block also notes the local access. This is local prototype
-access only: there is no real authentication, website admin, server, or
-background check, and nothing is transmitted.
+access only: it grants no real website admin, server access, or background
+check, and the volunteer offer is not transmitted. Optional Supabase Auth is a
+separate private-sync account and does not grant website admin rights.
 
 ## Confirmed hours and member-only fund metrics
 
@@ -196,8 +217,20 @@ The Pledge form also records a separate monthly work-hours commitment, stored as
 Phase 1 minimum of 4 per month; the explicit Care Circle checkbox records no labor
 obligation for members who cannot work and disables the hours field. Members can
 change this commitment later in Dashboard → Settings → Pledge commitment, with the
-same 4-hour minimum and Care Circle exception. This pledge is a stated intention
-only and never becomes logged hours.
+same 4-hour minimum and Care Circle exception. The pledge is a stated intention
+and never becomes logged hours by itself; only mutual confirmation or a
+three-member hour review logs hours.
+
+Each month is checked after it ends. If confirmed hours fall short of the pledge,
+the pledge status becomes `frozen` and service requests are blocked until the
+shortfall is made up; hours logged after the freeze count toward that deficit.
+If the pledge stays frozen for more than 30 days, the member becomes an Observer.
+A re-pledge is accepted only after three impartial active members approve it:
+Observers, Care Circle members, apprentices, students, frozen members, and the
+applicant cannot serve on that review. Care Circle members with no labor
+obligation are exempt from freezing. These status changes and local anonymous
+review ballots stay in the browser; optional private sync carries only the
+resulting status fields.
 
 The member account panel is the only place that shows hours worked and amounts
 donated by week, month, year, and all time, the current Unbought donation fund
@@ -340,9 +373,12 @@ Free Labor or the Academy. Nothing is sent from this prototype.
 ## Community guidelines
 
 `guidelines.html` holds the Ten Consent Commandments and the consequence path:
-monthly pledge review with observe-only status, a care circle that allows basic
-necessities, access limits for guideline or law violations, community review of
-every case, and exile (membership revocation) only by a majority vote. A
+a missed monthly pledge freezes the pledge and blocks service requests until the
+hours are made up, more than 30 days frozen converts the member to Observer, and
+a re-pledge needs approval from three impartial active members. It also covers a
+care circle that allows basic necessities, access limits for guideline or law
+violations, community review of every case, and exile (membership revocation)
+only by a majority vote. A
 revoked member serves a community-decided reflection period before reapplying;
 the new application goes straight to review and a vote by members in their
 area. Therapy is encouraged, and some cases require a therapeutic evaluation
@@ -514,8 +550,11 @@ supplies it. Reporters are still identified by their own member record.
 
 A report can include local multimedia evidence: images are resized and previewed,
 text or message files are copied, and other files are recorded by name, type, and
-size only. Evidence is stored in the same browser with the case file. No file,
-message, or report is uploaded or transmitted by this prototype.
+size only. Evidence is stored in the same browser with the case file. No file, message,
+report text, evidence, reason, or reporter identity is uploaded by this
+prototype. With optional private sync on, filing or settling a report sends only
+the reported member's local ID and an `open`/`settled` flag so a reported
+web-developer admin's access can pause.
 
 ## Notifications, social circles, and local conversations
 
@@ -545,8 +584,9 @@ XI, and so on. Joining a numbered
 group moves the member out of the previous town group. Town group profiles show the
 location below the title with city/state and ZIP.
 
-Seven admin seats rotate each week for workers only, on staggered one-to-seven-week
-cycles. Worker eligibility uses track, profession, skills, or confirmed exchanges;
+These are the local group admin seats, separate from Supabase's rotating
+web-developer admins. Seven local seats rotate each week for workers only, on
+staggered one-to-seven-week cycles. Worker eligibility uses track, profession, skills, or confirmed exchanges;
 Care Circle, Observer, and Apprentice members cannot hold a seat or be added as a
 standing admin. Only admins can add another admin, cancel a group, delete group chat
 posts and replies, require an impartial review, change that group’s community
@@ -623,8 +663,9 @@ This build is static and local-first. The local demo sign-in is not real
 authentication, and there is no payment processing, email delivery, wage API,
 stock issuance, payout, or police report. Public directory data is shared through
 the always-on public bridge; private records are transmitted only after explicit
-opt-in. Messages, reports, donations, photos, and local password hashes always
-stay on the device. `SITE_PHASE = 1` hides Phase 2 features such as the Unbought
+opt-in. Messages, report text and evidence, donations, photos, and local password
+hashes always stay on the device. With opt-in private sync, only the reported
+member ID and an `open`/`settled` flag are sent for report pauses. `SITE_PHASE = 1` hides Phase 2 features such as the Unbought
 Academy and group brands/business settings.
 Every footer carries “Built on Consent.” exactly once. The public fund name is
 “Unbought donation fund”; internal `severanceFund`, `severance_purchase`, and

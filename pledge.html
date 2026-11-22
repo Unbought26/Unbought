@@ -85,7 +85,7 @@
           <h1 id="pledge-page-title">The Pledge.</h1>
           <p class="pledge-intro-lede">In a world where we have monetized survival, mass production, and AI, should we be asking why representative currency gets to dictate our morals and work-life balance? When the job market is drastically insufficient to support the cost of living countrywide, shouldn’t we wonder whether there is a better way? A moneyless society won’t fix every problem. But if it makes the world better, or even just solves some of our problems, isn’t it worth giving it a shot?</p>
           <p class="pledge-intro-lede pledge-intro-pledge">I take the pledge to try a different kind of system. To cut the corporate fuel that drives cortisol spikes in every home. To cooperate and build a sense of social responsibility so we can ALL thrive. To turn back to the village and get in touch with my human nature.</p>
-          <p class="pledge-intro-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Prototype: this is a local, browser-only account. Your username and salted password hash stay on this device and are never uploaded. Do not reuse a real password. Optional private sync uses a separate Supabase Auth account.</p>
+          <p class="pledge-intro-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Prototype: this is a local, browser-only account. Your username and salted password hash stay on this device and are never uploaded. Do not reuse a real password. Optional private sync uses a separate Supabase Auth account and can send only your chosen private record plus a minimal open/settled admin flag if a report is filed. Report text and evidence never leave this browser.</p>
         </div>
 
         <div class="pledge-signin-panel">
@@ -241,8 +241,8 @@
           <div class="signature-copy">
             <p class="eyebrow">What taking the pledge means</p>
             <h3>Take the Pledge to join the commons.</h3>
-            <p>Taking the pledge is a commitment to show up as a neighbor, not a customer: offer what you can, ask for what you need without shame, respect every boundary, and help keep this commons free from profit and gatekeeping. You can browse labor and goods without an account; posting offers, requesting help, messaging, and managing a track require membership. Your pledge and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings. Public listings and community posts are shared through Supabase when connected, and you can withdraw at any time.</p>
-            <p class="phase-minimum-note"><strong>Phase 1 minimum:</strong> joining asks for a pledge of at least 4 hours per month (about 1 hour per week). We cannot offer housing yet, so the ask is intentionally small. Members who cannot work can check the Care Circle box in the form and have no labor obligation.</p>
+            <p>Taking the pledge is a commitment to show up as a neighbor, not a customer: offer what you can, ask for what you need without shame, respect every boundary, and help keep this commons free from profit and gatekeeping. You can browse labor and goods without an account; posting offers, requesting help, messaging, and managing a track require membership. Your pledge and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings. Public listings and community posts are shared through Supabase when connected, and you can withdraw at any time. Report text and evidence always stay here; with private sync on, only a minimal open/settled flag for a reported admin is sent.</p>
+            <p class="phase-minimum-note"><strong>Phase 1 minimum:</strong> joining asks for a pledge of at least 4 hours per month (about 1 hour per week). We cannot offer housing yet, so the ask is intentionally small. If a month ends with fewer confirmed hours than pledged, the pledge freezes and service requests pause until the shortfall is completed. More than 30 days frozen makes you an Observer, and a re-pledge needs three active-member approvals. Members who cannot work can check the Care Circle box in the form and have no labor obligation.</p>
             <ul class="signature-notes">
               <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> Membership stored locally in this prototype</li>
               <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-people"></use></svg> Manage your track, requests, and neighbor communication</li>
@@ -412,7 +412,7 @@
                 <input type="checkbox" id="pledge-care-circle" name="careCircleNoLabor" data-care-circle>
                 <span>I cannot work right now — Care Circle (no labor obligation)</span>
               </label>
-              <p class="field-hint">Type any whole number of hours at or above the 4-hour monthly minimum. Checking Care Circle removes the labor obligation and disables the hours field. This is a commitment, not hours logged by hand; logged hours still require mutual confirmation or review.</p>
+              <p class="field-hint">Type any whole number of hours at or above the 4-hour monthly minimum. Checking Care Circle removes the labor obligation and disables the hours field. This is a commitment, not hours logged by hand; logged hours still require mutual confirmation or review. Missing the monthly pledge freezes your pledge and pauses service requests until the hours are completed; after more than 30 days frozen you become an Observer and need three active-member approvals to re-pledge.</p>
             </div>
 
             <div class="form-row">
@@ -632,7 +632,7 @@
     <div class="container footer-utility">
       <div class="footer-utility-copy">
         <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
-        <p>Public listing details and community posts are shared through Supabase when connected; pledges and private details can optionally sync with your permission; messages, reports, and donation records stay in this browser.</p>
+        <p>Public listing details and community posts are shared through Supabase when connected; pledges and private details can optionally sync with your permission; messages, report text and evidence, and donation records stay in this browser. With optional private sync on, only a minimal open/settled flag for a reported admin is sent.</p>
       </div>
       <button class="button button--ghost-light button--small" id="reset-demo" type="button">
         <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>
