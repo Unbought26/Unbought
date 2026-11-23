@@ -108,7 +108,7 @@
             </details>
             <details>
               <summary>Can I choose whether my private details are stored online?</summary>
-              <p>Yes. Private sync is off by default. Dashboard → Settings has a “Sync my private data” section. Turning it on requires a separate Supabase Auth email and password plus an explicit consent checkbox. Only then are your member ID, account details, pledge details, and waiting-list entry uploaded, where only you and the current rotating web-developer admins can read them. If you have also recorded the Web development volunteer offer, only your member ID is added to the automatic admin pool; no note or other role detail is uploaded, and no admins are active until more than seven web developers have opted in. Filing or settling a report also sends only a minimal open/settled flag with the reported member ID; report text, evidence, reasons, and reporter identity never leave this browser. Passwords are handled by Supabase Auth; no local password hash is uploaded. You can sync now, turn sync off, or delete your cloud copy at any time. Public listing and community-post sync is separate and unchanged.</p>
+              <p>Yes. Private sync is off by default. Dashboard → Settings has a “Sync my private data” section. Turning it on requires a separate Supabase Auth email and password plus an explicit consent checkbox. Only then are your member ID, account details, pledge details, and waiting-list entry uploaded, where only you and the current rotating web-developer admins can read them. If you have also recorded the Web development volunteer offer, only your member ID is added to the automatic admin pool; no note or other role detail is uploaded, and no admins are active until more than seven web developers have opted in. Filing or settling a report also sends only a minimal open/settled flag with the reported member ID; report text, evidence, reasons, and reporter identity never leave this browser. Passwords are handled by Supabase Auth; no local password hash is uploaded. After you turn sync on once, uploads happen automatically. You can check sync, turn sync off, or delete your cloud copy at any time. Public listing and community-post sync is separate and unchanged.</p>
             </details>
             <details>
               <summary>What does my public profile show?</summary>
@@ -244,6 +244,10 @@
             <details>
               <summary>Does the site track me or show ads?</summary>
               <p>No. There are no analytics, ads, tracking scripts, or external frameworks. The only third-party embed is the privacy-enhanced Alan Watts video on the pledge page. The single catalog-style layout on Free Stuff is a visual nod only, built with Unbought’s own content and colors.</p>
+            </details>
+            <details>
+              <summary>How do beta emails work?</summary>
+              <p>Automatic email needs a paid service later. For this free beta, Dashboard → Settings has pre-filled welcome, Care Circle, posting, request, review board, and group welcome messages. They open in your own mail app and nothing is sent until you press Send. The site does not store an email log or send messages in the background.</p>
             </details>
             <details>
               <summary>How do I report a bug or suggest something?</summary>

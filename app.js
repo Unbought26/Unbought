@@ -58,7 +58,8 @@
 
   // Sample newsboard posts shared by the public site and the member dashboard.
   // A blog service will replace this list in the live site.
-  const VOLUNTEER_MAILTO = 'mailto:unbought26@gmail.com?subject='
+  const COORDINATOR_EMAIL = 'unbought26@gmail.com';
+  const VOLUNTEER_MAILTO = 'mailto:' + COORDINATOR_EMAIL + '?subject='
     + encodeURIComponent('Help make Unbought a worldwide website')
     + '&body=' + encodeURIComponent(
       'Hello Unbought,\n\nI would like to help make Unbought a worldwide website.\n\n'
@@ -67,6 +68,15 @@
     );
 
   const NEWS_POSTS = Object.freeze([
+    {
+      date: '2026-11-23',
+      label: 'Nov 23, 2026',
+      tag: 'Beta build',
+      title: 'Beta members are building the funding plan',
+      bodyHtml: '<p>The free beta is for people who want the commons to work before it is funded. Beta members can use the tracks, post free labor and free goods, make requests, message other members, and take part in groups, alliances, and community threads. The Academy stays on What’s to Come.</p>'
+        + '<p>We are using free tools while we build the seed-funding plan and the legal and nonprofit groundwork. Donations stay closed until that plan is ready. <a href="' + VOLUNTEER_MAILTO + '">Email the volunteer team</a> if you can help with funding, legal work, organizing, or outreach.</p>'
+        + '<p>Member emails are free beta drafts for now. Dashboard → Settings has pre-filled welcome, Care Circle, posting, request, review board, and group welcome messages that open in your own mail app.</p>'
+    },
     {
       date: '2026-11-22',
       label: 'Nov 22, 2026',
@@ -8627,6 +8637,18 @@
           <button type="button" class="button button--ghost button--small" data-download-safety-ack>Download my acknowledgment record</button>
         </div>
       </div>
+      <div class="settings-block beta-email-settings">
+        <h4>Beta email drafts</h4>
+        <p class="account-note">Automatic email needs a paid service later. For this free beta, these buttons open pre-filled messages in your own mail app. Nothing is sent until you press Send. Member-facing drafts use your cloud sign-in email when private sync is on.</p>
+        <div class="account-form-actions">
+          <button type="button" class="button button--outline button--small" data-email-draft="welcome">New member welcome</button>
+          <button type="button" class="button button--outline button--small" data-email-draft="care">Care Circle update</button>
+          <button type="button" class="button button--outline button--small" data-email-draft="post">Posting notice</button>
+          <button type="button" class="button button--outline button--small" data-email-draft="request">Request notice</button>
+          <button type="button" class="button button--outline button--small" data-email-draft="review">Review board process</button>
+          <button type="button" class="button button--outline button--small" data-email-draft="group">Group welcome &amp; alliances</button>
+        </div>
+      </div>
       <p class="account-note">Changes are saved on this device. They are sent only if you turn on optional private sync above. Your resume hides your legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated, and shows your phone only if you opt in. Logged hours and item counts are never typed here; they appear only after mutual confirmation or review. To withdraw your membership, use the Withdraw membership button on the <a href="pledge.html#withdraw-pledge">Pledge page</a>.</p>
       <div class="settings-block">
         <h4>Local preferences</h4>
@@ -8660,6 +8682,84 @@
     if (focusTarget && typeof focusTarget.focus === 'function') {
       focusTarget.focus({ preventScroll: true });
     }
+  }
+
+  // Free beta email workaround. These open pre-filled drafts in the member's
+  // own mail app. Nothing is sent by the site and no email service is needed.
+  function openBetaEmailDraft(key) {
+    const pledge = state.pledge;
+    const name = pledge ? firstName(pledge.name) : 'neighbor';
+    const memberEmail = state.cloud && state.cloud.email
+      ? cleanString(state.cloud.email, 160) : '';
+    const drafts = {
+      welcome: {
+        to: memberEmail,
+        subject: `Welcome to Unbought, ${name}`,
+        body: `Hello ${name},\n\nWelcome to the Unbought open beta.\n\n`
+          + 'You can join a track, offer free labor or free goods, make requests, '
+          + 'message other members, and take part in groups, alliances, and '
+          + 'community threads. The Academy is not open in this beta.\n\n'
+          + 'Unbought is built on consent and shared care, with no hierarchy and '
+          + 'no payment for labor or goods. Read the Community Guidelines, FAQ, '
+          + 'and Labor & Product Safety Standards before you exchange.\n\n'
+          + 'Beta members are also helping build the seed-funding plan and the '
+          + 'legal and nonprofit groundwork. Donations stay closed until that '
+          + 'plan is ready. Future plans live on What’s to Come.\n\nThank you.'
+      },
+      care: {
+        to: memberEmail,
+        subject: 'Your Unbought Care Circle update',
+        body: `Hello ${name},\n\nThis is an update about your Care Circle access.\n\n`
+          + 'Care Circle access is based on the resulting access level only. '
+          + 'No diagnosis, medical record, or proof detail is stored or sent.\n\n'
+          + 'Basic Necessities stay available: Food, Health Care, Dental, Mental '
+          + 'Health, Shelter, Clothing, Gas Cards, Uber Gift cards.\n\n'
+          + 'Please review your access in Dashboard → Account and tell us if '
+          + 'something needs to be corrected.'
+      },
+      post: {
+        to: COORDINATOR_EMAIL,
+        subject: 'Unbought posting notice',
+        body: `Hello Unbought,\n\nA beta member posted a free labor or free goods offer.\n\n`
+          + 'Listing: [title]\nDirectory: [Free Labor or Free Stuff]\n'
+          + 'Link: [site link]\n\nPlease review that the offer follows the '
+          + 'Community Guidelines and Labor & Product Safety Standards.\n\nThank you.'
+      },
+      request: {
+        to: COORDINATOR_EMAIL,
+        subject: 'Unbought request notice',
+        body: `Hello Unbought,\n\nA beta member made a request in the commons.\n\n`
+          + 'Request: [title]\nOffer: [listing]\nLink: [site link]\n\n'
+          + 'Please review that consent, scope, and materials costs are clear.\n\nThank you.'
+      },
+      review: {
+        to: memberEmail,
+        subject: 'Your Unbought review board process',
+        body: `Hello ${name},\n\nA peer review has been opened or updated.\n\n`
+          + 'Unbought uses impartial active members, not a hierarchy. Observers, '
+          + 'Care Circle members, apprentices, students, frozen members, and the '
+          + 'applicant cannot serve on that review. Local ballots stay anonymous.\n\n'
+          + 'Check Dashboard → Review Board for the current step and what is needed '
+          + 'from you. Basic Necessities are protected during review.\n\nThank you.'
+      },
+      group: {
+        to: memberEmail,
+        subject: 'Welcome to your Unbought group',
+        body: `Hello ${name},\n\nWelcome to your group in the Unbought commons.\n\n`
+          + 'Groups are voluntary. Members decide how mutual aid happens inside a '
+          + 'group, while the Community Guidelines set the shared floor of consent.\n\n'
+          + 'Alliances are links between groups in the Unbought network. Each group '
+          + 'decides whether to accept an alliance; nothing is imposed from above.\n\n'
+          + 'Use the group page to read the group guidelines and see alliance '
+          + 'updates.\n\nThank you.'
+      }
+    };
+    const draft = drafts[key];
+    if (!draft) return;
+    const href = 'mailto:' + draft.to.trim()
+      + '?subject=' + encodeURIComponent(draft.subject)
+      + '&body=' + encodeURIComponent(draft.body);
+    window.location.href = href;
   }
 
   function renderSettings() {
@@ -11631,6 +11731,12 @@
       if (safetyDownload) {
         event.preventDefault();
         downloadSafetyAcknowledgment();
+        return;
+      }
+      const emailDraft = event.target.closest('[data-email-draft]');
+      if (emailDraft) {
+        event.preventDefault();
+        openBetaEmailDraft(emailDraft.dataset.emailDraft);
         return;
       }
       const privateSyncNow = event.target.closest('#private-sync-now');

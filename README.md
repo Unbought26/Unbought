@@ -119,6 +119,16 @@ of Supabase Auth; deleting removes the Supabase rows. Signing out locally or
 withdrawing membership also stops private sync, and withdrawal deletes the cloud
 copy. These actions never affect the separate public directory bridge.
 
+## Free beta email drafts
+
+Automatic email needs a paid provider and a verified sending domain. Until then,
+Dashboard → Settings has a **Beta email drafts** panel with pre-filled messages
+for new-member welcome, Care Circle updates, posting notices, request notices,
+the review board process, and group welcome/alliance information. Member-facing
+drafts use the Supabase Auth email when private sync is on. Coordinator drafts
+open addressed to `unbought26@gmail.com`. Each button opens the visitor's own
+mail app; the site sends nothing and stores no email log.
+
 ## Header and navigation
 
 Every page has the same header order: brand, primary navigation, local search,
