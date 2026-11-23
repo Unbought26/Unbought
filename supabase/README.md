@@ -171,8 +171,8 @@ Pages will then load both bridges.
 ### Private data
 
 - Private sync stays off until a member opts in and signs in with Supabase Auth.
-- Once enabled, private saves are debounced and pushed to the private tables.
-  The Settings panel also has **Sync now**.
+- Once enabled, private saves are debounced and pushed to the private tables
+  automatically. The Settings panel also has **Check sync now** as a manual check.
 - **Turn off private sync** removes the automatic web-developer pool row, signs
   out, and stops future uploads but keeps the member and waiting-list copies.
 - **Delete my cloud copy** removes the member, waitlist, web-developer pool, and

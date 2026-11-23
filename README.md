@@ -112,8 +112,9 @@ the reported member ID. A `not_guilty` finding or restored access sends
 `settled`. The flag pauses a reported web-developer admin's private-data access
 until resolution; it carries no allegation or identity of the reporter.
 
-The Settings panel also offers **Sync now**, **Turn off private sync**, and
-**Delete my cloud copy**. Turning sync off keeps the local records and signs out
+After a member turns private sync on once, uploads happen automatically whenever
+records change. The Settings panel also offers **Check sync now**, **Turn off
+private sync**, and **Delete my cloud copy**. Turning sync off keeps the local records and signs out
 of Supabase Auth; deleting removes the Supabase rows. Signing out locally or
 withdrawing membership also stops private sync, and withdrawal deletes the cloud
 copy. These actions never affect the separate public directory bridge.

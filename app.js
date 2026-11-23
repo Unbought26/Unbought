@@ -8587,7 +8587,7 @@
       </div>
       <div class="settings-block private-sync-settings">
         <h4>Private cloud sync <span class="optional">(optional)</span></h4>
-        <p class="account-note">Off by default. If you turn it on, your member ID, account details, pledge details, and waiting-list entry are sent to Supabase, where only you and the current rotating web-developer admins can read them. If you have also offered Web development, your member ID joins the automatic admin pool. No admins are active until more than seven web developers have opted in. With sync on, filing or settling a report also sends only a minimal open/settled flag; report text and evidence never leave this browser. Passwords are handled by Supabase Auth; no password or local hash is uploaded.</p>
+        <p class="account-note">Off by default. You only need to turn it on once. After that, Unbought sends changes automatically, and the Check sync now button is just a manual check. Your member ID, account details, pledge details, and waiting-list entry are sent to Supabase, where only you and the current rotating web-developer admins can read them. If you have also offered Web development, your member ID joins the automatic admin pool. No admins are active until more than seven web developers have opted in. With sync on, filing or settling a report also sends only a minimal open/settled flag; report text and evidence never leave this browser. Passwords are handled by Supabase Auth; no password or local hash is uploaded.</p>
         <p class="account-note" id="private-sync-status" role="status">${cloudEnabled ? 'Private sync is on.' : 'Private sync is off. Your private records stay in this browser.'}</p>
         <div id="private-sync-setup"${cloudEnabled ? ' hidden' : ''}>
           <form class="account-form" data-private-signin-form>
@@ -8612,7 +8612,7 @@
         <div id="private-sync-active"${cloudEnabled ? '' : ' hidden'}>
           <p class="account-note" id="private-sync-last"></p>
           <div class="account-form-actions">
-            <button type="button" class="button button--primary button--small" id="private-sync-now">Sync now</button>
+            <button type="button" class="button button--primary button--small" id="private-sync-now">Check sync now</button>
             <button type="button" class="button button--outline button--small" id="private-sync-stop">Turn off private sync</button>
             <button type="button" class="button button--ghost button--small" id="private-sync-delete">Delete my cloud copy</button>
           </div>
