@@ -106,7 +106,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 10 0 R >>
 endobj
 10 0 obj
-<< /Length 3467 >>
+<< /Length 3668 >>
 stream
 BT /F2 12 Tf 1 0 0 1 54 744 Tm (6. Group admin reading and backups) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 724 Tm ([x] Group admins uphold the Unbought Community Guidelines and maintain their own group) Tj ET
@@ -115,34 +115,36 @@ BT /F1 10 Tf 1 0 0 1 54 694 Tm ([x] A notified member must read both guidelines 
 BT /F1 10 Tf 1 0 0 1 54 679 Tm (the term; tools stay locked until then.) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 664 Tm ([x] Declining or missing the deadline chooses a backup admin; no backup is claimed when no) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 649 Tm (eligible worker is available.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 624 Tm (7. Pending user action) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 604 Tm ([ ] Rerun the updated Supabase setup once in the SQL Editor. It is additive and safe to) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 589 Tm (rerun; no manual admin list is needed.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 574 Tm ([ ] Confirm anon users can read public rows but cannot write to public tables directly.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 559 Tm ([ ] Confirm a signed-in pledged member can publish a shared row and that an anon write is) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 544 Tm (refused.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 529 Tm ([ ] Publish the current changes to main and Pages, then verify the live site.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 514 Tm ([ ] Keep donations closed until a dedicated Unbought donation fund bank account and donation) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 499 Tm (service are ready before the vernal-equinox rollout.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 484 Tm ([ ] Recruit a volunteer lawyer and accountant before opening any giving channel; keep all) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 469 Tm (donation plans on Whats to Come.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 444 Tm (8. Final user steps, plain language) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 424 Tm (1. Open the site and browse. Nothing private is uploaded.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 409 Tm (2. In Dashboard -> Settings, choose Create account & sync or Sign in & sync, enter a) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 394 Tm (Supabase Auth email and password, and check the consent box.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 379 Tm (3. In volunteer offers, record Web development if you want to join the automatic admin pool.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 364 Tm (4. Rotation begins only after more than seven web developers have opted in. Until then) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 349 Tm (nobody holds a private-admin seat.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 334 Tm (5. Use Turn off private sync to sign out and leave the pool; use Delete my cloud copy to) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 319 Tm (remove the private cloud copy too.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 294 Tm (9. Safety boundary) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 274 Tm ([x] Prototype only: no payments, email sending, wage API, stock issue, payout, police) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 259 Tm (report, or real charity status.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 244 Tm ([x] NSFW is a content tag only; no porn and no prostitution. Voting stays anonymous with no) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 229 Tm (member ID attached.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 214 Tm ([x] Safety acknowledgments prove only that standards were read on this device; they do not) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 199 Tm (make an exchange risk-free.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 184 Tm ([x] This file is a working checklist, not a promise of housing, funding, or payout.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 624 Tm (7. Verified and still pending) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 604 Tm ([x] Reran the updated Supabase setup in the SQL Editor. It was additive and safe to rerun;) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 589 Tm (no manual admin list was needed.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 574 Tm ([x] Confirmed anon users can read all five public tables and cannot write to them directly.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 559 Tm ([x] Confirmed the new write-protection functions, private tables, and audit table are) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 544 Tm (present.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 529 Tm ([x] Published the current changes to main and Pages, then verified the live site.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 514 Tm ([ ] Optional final check: sign in as a pledged member and publish one shared row; anon) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 499 Tm (writes are already refused.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 484 Tm ([ ] Keep donations closed until a dedicated Unbought donation fund bank account and donation) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 469 Tm (service are ready before the vernal-equinox rollout.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 454 Tm ([ ] Recruit a volunteer lawyer and accountant before opening any giving channel; keep all) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 439 Tm (donation plans on Whats to Come.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 414 Tm (8. Final user steps, plain language) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 394 Tm (1. Open the site and browse. Nothing private is uploaded.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 379 Tm (2. In Dashboard -> Settings, choose Create account & sync or Sign in & sync, enter a) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 364 Tm (Supabase Auth email and password, and check the consent box.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 349 Tm (3. In volunteer offers, record Web development if you want to join the automatic admin pool.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 334 Tm (4. Rotation begins only after more than seven web developers have opted in. Until then) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 319 Tm (nobody holds a private-admin seat.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 304 Tm (5. Use Turn off private sync to sign out and leave the pool; use Delete my cloud copy to) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 289 Tm (remove the private cloud copy too.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 264 Tm (9. Safety boundary) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 244 Tm ([x] Prototype only: no payments, email sending, wage API, stock issue, payout, police) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 229 Tm (report, or real charity status.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 214 Tm ([x] NSFW is a content tag only; no porn and no prostitution. Voting stays anonymous with no) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 199 Tm (member ID attached.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 184 Tm ([x] Safety acknowledgments prove only that standards were read on this device; they do not) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 169 Tm (make an exchange risk-free.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 154 Tm ([x] This file is a working checklist, not a promise of housing, funding, or payout.) Tj ET
 endstream
 endobj
 xref
@@ -161,5 +163,5 @@ xref
 trailer
 << /Size 10 /Root 1 0 R >>
 startxref
-11854
+12055
 %%EOF
