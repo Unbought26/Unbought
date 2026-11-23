@@ -5,26 +5,29 @@ consent, free labor, free goods, and shared accountability.
 
 The current site is a front-end prototype. It uses `localStorage` for the full
 member record. A public-data-only Supabase bridge shares group cards, Free Labor
-and Free Stuff listings, and community chat content. A separate private sync
-bridge is off by default: after explicit opt-in and Supabase Auth sign-in, it can
-upload the member ID, account details, pledge details, and waiting-list entry.
-Row Level Security limits those private rows to the member and the current
-rotating web-developer admins. Messages, report text and evidence, donations,
-photos, group chats, social chats, and local password hashes are never
-transmitted. The only report-related exception after opt-in is a minimal flag
-containing the reported member's local ID and an `open`/`settled` status, used
-to pause a reported admin's access. Public rows are anon-readable, but shared
-content can be published only by a signed-in pledged member; the member identity
-comes from Supabase Auth, not from a client-supplied ID.
+and Free Stuff listings, public groups and community threads, and the opt-in
+public contact directory. A separate private sync bridge is off by default:
+after explicit opt-in and Supabase Auth sign-in, it can upload the member ID,
+account details, pledge details, and waiting-list entry. Row Level Security
+limits those private rows to the member and the current rotating web-developer
+admins. Messages, report text and evidence, photos, group chats, social chats,
+and local sign-in details are never transmitted. The only report-related
+exception after opt-in is the reported member's local ID and an `open`/`settled`
+status, used to pause private-data access for the reported web developer.
+Public rows are anon-readable, but shared content can be published only by a
+signed-in pledged member; the member identity comes from Supabase Auth, not from
+a client-supplied ID.
 
 See `supabase/README.md` for the schema, security notes, and setup steps. The site
 remains hosted on GitHub Pages.
 
-The current beta is a soft launch: it is open to anyone, anywhere,
-with no Pocono-only membership limit. Features are intentionally limited while
-the prototype is still being built. A dedicated bank account connected to a
-donation service is planned before the full vernal-equinox rollout on March 20,
-2027 at 4:25pm Eastern; giving stays closed until that is ready.
+The current beta is a soft launch: it is open to anyone, anywhere, with no
+Pocono-only membership limit. Features are intentionally limited while the
+prototype is still being built. Free beta signup is open for every track except
+the Academy, which stays phase-gated to Phase 2. Free Labor, Free Stuff, free
+requests, public groups and community threads, and alliances are active in the
+beta. Donations, sales, non-member purchases, prices, and purchase intents stay
+closed; funding plans live on `future.html`.
 
 The sample Newsboard posts are general updates about the movement and rollout
 process, not a coding changelog. A future blog service will replace them.
@@ -36,12 +39,12 @@ process, not a coding changelog. A future blog service will replace them.
 - `safety-standards.html` — Versioned Labor & Product Safety Standards and the local acknowledgment record
 - `freelabor.html` — Free Labor directory and post form
 - `freestuff.html` — Free Stuff directory and post form
-- `donate.html` — Redirect to the donation plan on `future.html`; giving stays closed until a dedicated bank account and donation service are ready
-- `future.html` — What’s to Come, donation information, and waiting list
+- `donate.html` — Redirect to `future.html`; giving stays closed in the beta
+- `future.html` — What’s to Come, funding plans, and the planning-stage waiting list
 - `dashboard.html` — Member dashboard, full private record, and Exchanges
 - `profile.html` — Public member resume with a private record for the signed-in member
 - `group.html?group=<id>` — Group profile with members, worker admins, chat, and offers
-- `supabase-config.js`, `supabase-sync.js`, `private-sync.js`, `supabase/`, `vendor/supabase/` — Pinned SDK, public bridge, and opt-in private sync
+- `supabase-config.js`, `supabase-sync.js`, `private-sync.js`, `supabase/`, `vendor/supabase/` — Pinned SDK, public bridge, opt-in private sync, and the public contact migration
 
 ## Running locally
 
@@ -60,7 +63,10 @@ form can also create a second local username and password for the authorized
 representative. Either sign-in can manage the member’s local record on their
 behalf. The prototype does not verify legal documents or grant legal authority.
 Private cloud sync uses a separate Supabase Auth account and never uploads the
-local demo hash.
+local demo hash. Members can change the local password in Dashboard → Settings →
+Local sign-in password: the current password is checked on this device, a fresh
+salt is generated, and the new hash stays in `unbought:v1` only. That control
+does not change the Supabase Auth password, which is handled by Supabase.
 
 ## Optional private sync
 
@@ -109,25 +115,56 @@ private admin seats are active.
 
 When a member files a report after opting in, the app sends an `open` flag for
 the reported member ID. A `not_guilty` finding or restored access sends
-`settled`. The flag pauses a reported web-developer admin's private-data access
+`settled`. The flag pauses private-data access for the reported web developer
 until resolution; it carries no allegation or identity of the reporter.
 
 After a member turns private sync on once, uploads happen automatically whenever
-records change. The Settings panel also offers **Check sync now**, **Turn off
-private sync**, and **Delete my cloud copy**. Turning sync off keeps the local records and signs out
-of Supabase Auth; deleting removes the Supabase rows. Signing out locally or
-withdrawing membership also stops private sync, and withdrawal deletes the cloud
-copy. These actions never affect the separate public directory bridge.
+records change. **Check sync status** is only a manual status check; it does not
+start or repeat an upload. The Settings panel also offers **Turn off private
+sync** and **Delete my cloud copy**. Turning sync off keeps the local records and
+signs out of Supabase Auth; deleting removes the Supabase rows. Signing out
+locally or withdrawing membership also stops private sync, and withdrawal
+deletes the cloud copy. These actions never affect the separate public directory
+bridge.
+
+## Direct member messages and contact directory
+
+Messages are pre-filled `mailto` drafts that open in the member's own mail app;
+the site never sends them and stores no email log. Members should create a
+separate email just for Unbought. A member can publish one Unbought-only contact
+email in Dashboard → Settings after signing in with Supabase Auth and opting in.
+That address is public by design and should never be a private, work, or school
+email. Turning publishing off removes the row. The public contact list is read
+by the dashboard and profile pages so the Messages form can open a direct mail
+draft to a published contact address. If a recipient has not published one, the
+coordinator relay draft opens addressed to `unbought26@gmail.com` for a one-time
+introduction, after which the members can email each other directly. There is no
+`@unbought` forwarding yet. Local folders, stars, and records stay on the device.
+
+Publishing writes to `public_member_contacts` through
+`public.unbought_set_public_contact(text, text)`, which requires a signed-in
+pledged member with private sync consent. Apply
+`supabase/migrations/20261123120000_public_contact_opt_in.sql` before using this
+feature; see `supabase/README.md`.
 
 ## Free beta email drafts
 
-Automatic email needs a paid provider and a verified sending domain. Until then,
-Dashboard → Settings has a **Beta email drafts** panel with pre-filled messages
-for new-member welcome, Care Circle updates, posting notices, request notices,
+Email in the beta is pre-filled `mailto` drafts only. There is no paid email
+service, no secrets in browser code, and no `@unbought` forwarding. Dashboard →
+Settings has a **Beta email drafts** panel with pre-filled messages for
+new-member welcome, Care Circle updates, posting notices, request notices,
 the review board process, and group welcome/alliance information. Member-facing
-drafts use the Supabase Auth email when private sync is on. Coordinator drafts
-open addressed to `unbought26@gmail.com`. Each button opens the visitor's own
-mail app; the site sends nothing and stores no email log.
+drafts use the member's published Unbought-only contact email when available;
+coordinator drafts open addressed to `unbought26@gmail.com`. Each button opens
+the visitor's own mail app; the site sends nothing and stores no email log.
+
+## Official contact channels
+
+These are public organization contact channels, not private member data:
+
+- Email: unbought26@gmail.com (an ordinary `mailto` link; the site itself sends nothing)
+- Instagram: @unbought26 — https://www.instagram.com/unbought26/
+- Facebook: Unbought — https://www.facebook.com/share/1cPuizNHLK/
 
 ## Header and navigation
 
@@ -148,7 +185,7 @@ locally. Results are plain local links; the search sends no query to a server.
 The local member record stores full legal name, chosen name, mailing and physical
 addresses with county, housing status, birthdate, cell phone, optional public phone,
 text-message preference, profession, career/paid skills, unpaid skills, bio, locally
-resized picture, chosen tag line, private group/crew, donation count, confirmed hours
+resized picture, chosen tag line, private group/crew, confirmed hours
 worked, hours used, items gifted, items taken, reports made against the member,
 availability, and public-sharing choices. The full record is visible only in the
 Dashboard and in the signed-in member profile.
@@ -167,8 +204,8 @@ showing a read-only duplicate.
 
 Availability is a request gate, not a hidden profile. When a member is marked
 Unavailable, their Free Labor and Free Stuff offers stay visible, but neighbors
-cannot send labor or product requests or record a non-member purchase intent:
-the request button is disabled and both the dialog and submit paths refuse the
+cannot send labor or product requests: the request button is disabled and both
+the dialog and submit paths refuse the
 request. Availability is chosen in Settings or the private profile privacy
 panel and copied into the local member roster so other members' listings follow
 it too. Seeded community offers remain requestable by default.
@@ -186,7 +223,7 @@ picture, tag line, bio, profession, City/State from the member-selected mailing 
 physical address, both skill lists, confirmed hours worked, items gifted, other
 commons totals, availability, and the public phone number only when the member opts
 in. It never includes the cell phone, legal name, street or mailing addresses, county, ZIP, housing
-status, birthdate, group/crew, report count, amounts donated, comments, or
+status, birthdate, group/crew, report count, comments, or
 interactions.
 Member IDs are never displayed; they remain storage and report attributes only.
 Status badges appear on the public resume: a profession-based Seed badge (for
@@ -212,8 +249,9 @@ Dashboard first menu is exactly Overview, The Commons, Profile, and Settings;
 account details and account settings live on the same Settings page. The Commons
 menu appears only inside The Commons, on the left with content on the right, and
 contains Free Labor, Free Stuff, Donate, Exchanges, Messages, Review Board, and
-Friends/Groups. Unbought Academy is phase-gated to Phase 2 and hidden in Phase 1.
-Commons content is grouped into a shortcut strip, a compact “Your corner” activity
+Friends/Groups. Free beta signup is open for every track except Unbought Academy,
+which is phase-gated to Phase 2 and hidden in Phase 1. Commons content is grouped
+into a shortcut strip, a compact “Your corner” activity
 card, and a wider community-chat card so channels and threads are easier to scan.
 
 ## Volunteers and operating-team access
@@ -230,7 +268,14 @@ access only: it grants no real website admin, server access, or background
 check, and the volunteer offer is not transmitted. Optional Supabase Auth is a
 separate private-sync account and does not grant website admin rights.
 
-## Confirmed hours and member-only fund metrics
+One named person displays a permanent local **Launch Coordinator** label. Because
+Unbought launches only once, it stays on that profile with no end date. It is
+derived from the local chosen name, is not stored as a credential, and is never
+synced. It creates no hierarchy, grants no moderation or group-admin power, is
+not a Supabase admin seat, does not enter the web-developer pool, and does not
+change the more-than-seven-developer consent rule.
+
+## Confirmed hours and pledge standing
 
 No one can add work hours unilaterally, and no one types hours into a counter. In
 Dashboard → Exchanges, the worker and the receiver each confirm a completed service
@@ -252,111 +297,39 @@ and never becomes logged hours by itself; only mutual confirmation or a
 three-member hour review logs hours.
 
 The first month is probationary. Confirming one week of the monthly pledge
-unlocks normal member tools; the full month is checked on day 30. If a month ends
-short, the pledge status becomes `frozen` and only offering labor stays available
-until the shortfall is made up; hours logged after the freeze count toward that
-deficit. If the pledge stays frozen for more than 30 days, the member becomes an
-Observer. A re-pledge is accepted only after three impartial active members
-approve it: Observers, Care Circle members, apprentices, students, frozen members,
-and the applicant cannot serve on that review. Care Circle members with no labor
-obligation are exempt from freezing.
+unlocks normal member tools, and a pledge does not freeze during probation. After
+that, a pledge freezes only after a full week with no confirmed work while this
+month's hours are still short; confirmed work resets that week. Once frozen, only offering labor stays
+available until the pledged hours are completed; hours logged after the freeze
+count toward that deficit. If the pledge stays frozen for more than 30 days, the
+member becomes an Observer. A re-pledge is accepted only after three impartial
+active members approve it: Observers, Care Circle members, apprentices, students,
+frozen members, and the applicant cannot serve on that review. Care Circle members
+with no labor obligation are exempt from freezing.
 
 The Care Circle is offered when someone cannot keep a labor pledge. Basic
-Necessities are the base; full access can be confirmed locally with disability
-proof, but no diagnosis, document, or note is stored or uploaded. Members 65 or
+Necessities are the base; full access can be confirmed locally; no proof detail,
+diagnosis, document, or note is stored or uploaded. Members 65 or
 older are automatically in the Care Circle. With no outside paid job or business
 they keep retired full access; with one they move to Basic Necessities and are
 asked to take an active role in Unbought. Nothing in the site says a 65+ member
 cannot work. These status changes and local anonymous review ballots stay in the
 browser; optional private sync carries only the resulting status fields.
 
-The member account panel is the only place that shows hours worked and amounts
-donated by week, month, year, and all time, the current Unbought donation fund
-balance, and the member's share of it. The stored `severanceFund` key and
-`severance_purchase` contribution type are retained only for older local data. No
-payout, stock issuance, or payment occurs, and nothing is transmitted.
-
-`donate.html` is a redirect-only page to `future.html#donations`. All donation
-plans, priorities, and status updates live on `future.html`; no intent form or
-payment channel is advertised in this build. Older local donation ledger keys are
-kept only so existing browser data still loads safely.
-
-The published allocation plan runs in stages. Every dollar starts with pre-rollout
-operations: licensing, web hosting, database set up, and social media awareness.
-The soft-launch beta is open to anyone, anywhere, with fewer
-features while the prototype is still being built. The practical plan is to get
-the database, mailer, and social channels running for free first, then open a
-dedicated Unbought donation fund bank account and connect it to a donation
-service before the vernal-equinox rollout. The account stays unused until a
-lawyer and accountant are on board, and no pledge service or giving link is
-published before that. Once the Land Trust account is formed and initial
-start-up costs are paid, the fund builds in an account while seeking accountants
-until the first plot of land, house, or warehouse can be bought. The first house
-will be where the most Unbought members live; scaling means groups keep scouting
-locally while the first purchase follows the densest membership. After that, a
-separate housing-stability account keeps
-the Land Trust alive, obtains resources, and keeps the lights on. Vacant houses will
-be furnished for members to stay free or for non-members to stay for donations
-decided by surrounding Groups. Any budget that has leftover money sends it to the
-surplus fund; money that is spoken for, including savings for taxes and utilities,
-stays in an active checking fund.
-
-Once the balance sheet is organized and producing a surplus, that surplus goes to a
-local member wishlist. Members search a fixed catalog, may type their own item, add
-an example `http(s)` link, and label each entry High priority, Medium, or Nice to
-have. High priority equals 3 points, Medium equals 2, and Nice to have equals 1;
-the points come from the type, not a typed number. Each item also has a local
-wishlist group: Active working members, Disabled, Over 65, Homeless, Under 25, or
-Confirmed report within the last year, in that order. The group is not chosen by
-hand. It is derived from age, disability status, housing status, and all
-information in the member's profile stored on this device, including the
-care/capacity track, worker information, and confirmed reports. “Active working
-members” is the default; when more than one status applies, the first matching
-status group in the published order is used. The group is re-derived when the
-profile changes and never appears on a public resume. Each priority list is first
-come, first served: the waitlist picks the earliest saved item on each list and
-cycles through the six lists. The category and its points remain visible as local
-priority labels, and matching titles tally with other lists. Whoever listed an item
-first on its priority list sees it first. After seven days, unless the item is
-marked perishable, it appears in the public wishlist. No item is bought, delivered,
-or transmitted, and wishlists never appear on a public resume. The wishlist is
-separate from the closed Basic Necessities list.
-
-When a member withdraws, the prototype shows a cancellation estimate capped at
-$4,000. It multiplies the member's share of contributions credited to their groups
-and alliances by those groups' share of the Unbought donation fund. The calculation
-appears in the member account panel and in the withdrawal confirmation. That capped
-severance check is separate from a group's uncapped slice of unspoken-for money, so
-the two amounts can be different. Both are local estimates only, with no payout,
-debt, legal claim, or transmission.
+`donate.html` redirects to `future.html#donations`. Active beta tracks are free;
+Academy and funding plans are future-only on `future.html`. No buying, selling,
+donations, or purchase intents are part of the active beta, and no payment channel
+or intent form is advertised here. Funding, banking, and legal groundwork are
+still being built.
 
 ## Chosen name in other forms
 
 Signed-in members do not retype their name outside the initial intake. The chosen
-name is filled automatically on listing posts, volunteer offers, donation intents,
-and the waiting list. The non-member purchase form is shown only to guests, who type
-their own name there. Only the chosen name is reused. The pledge intake still asks
+name is filled automatically on listing posts, volunteer offers, and the waiting
+list. Only the chosen name is reused. The pledge intake still asks
 for the full legal name and a chosen name, and the chosen-name setting in the
 Dashboard stays editable. Legal name, address, birthdate, housing status, and phone
 are never auto-filled elsewhere.
-
-## Member-set non-member prices
-
-Members always get goods and labor free through mutual consent. On the goods and
-labor post forms a provider can opt in to a fixed whole-dollar suggested donation
-price for non-members, shown as a badge on the card, as a "Donation price" row in
-the details dialog, and in the locked purchase dialog. Each directory has a
-**Donation price** filter (free to everyone, has a suggested donation, under $25,
-$25–$49, $50 and up), and the text search also matches the dollar amount, so
-neighbors can find and compare prices. Only pledged members can post a service
-or product: the posting button and the `#post-trigger` / `#post-form` links check
-membership before opening the form, and restricted members are blocked too.
-Guests cannot type their own amount: the submit handler reads the provider's
-stored price and records a `nonmember_purchase` request plus a contribution in
-the local Unbought donation fund. Listings without an opt-in are shown as member-only and
-cannot be purchased. Internally the fund still uses the legacy `severanceFund`
-key and `severance_purchase` contribution type so older local data loads, but
-all visible copy calls it the Unbought donation fund, which also holds academy tuition.
 
 ## Member labels and equinox years
 
@@ -398,27 +371,28 @@ year. Seed members who sign in that first official year receive a First year
 Founder badge; other first-year members receive a 1st Year badge.
 
 Seed members see a locally generated thank-you draft in the dashboard
-(`renderSeedThankYou`). A live deployment would email it automatically. The
-copy explains the profession Seed badge, Beta Founder status when applicable,
-the possible festival, and suggests ways to
-get involved: talk to other professionals locally, post on social media, scout
-cheap or donated housing, start an Unbought business for donation revenue,
-donate, volunteer services to develop the community, and offer skills through
-Free Labor or the Academy. Nothing is sent from this prototype.
+(`renderSeedThankYou`). It opens in their own mail app as a pre-filled draft; the
+site sends nothing and stores no email log. The copy explains the profession Seed
+badge, Beta Founder status when applicable, the possible festival, and suggests
+ways to get involved: talk to other professionals locally, post on social media,
+scout donated housing, volunteer services to develop the community, and offer
+skills through Free Labor. The Academy opens in Phase 2, and giving stays closed
+in the beta.
 
 ## Community guidelines
 
 `guidelines.html` holds the Ten Consent Commandments and the consequence path:
-a missed monthly pledge freezes the pledge and blocks service requests until the
-hours are made up, more than 30 days frozen converts the member to Observer, and
+after probation, a full week without confirmed work freezes the pledge while the
+monthly hours are short, and the freeze blocks service requests until the pledged
+hours are made up; more than 30 days frozen converts the member to Observer, and
 a re-pledge needs approval from three impartial active members. It also covers a
 care circle that allows basic necessities, access limits for guideline or law
 violations, community review of every case, and exile (membership revocation)
 only by a majority vote. A
 revoked member serves a community-decided reflection period before reapplying;
 the new application goes straight to review and a vote by members in their
-area. Therapy is encouraged, and some cases require a therapeutic evaluation
-and proof of treatment. Nothing is enforced outside this browser prototype.
+area. Reflection is encouraged, and any access change is recorded only as a
+resulting access status and time. Nothing is enforced outside this browser prototype.
 
 No porn and no prostitution. There are free websites that can serve those needs
 outside of Unbought. Anything else unsuitable for minors must carry an NSFW tag;
@@ -439,15 +413,16 @@ Groups can decide how mutual aid will work within these limits. The same closed
 definition is used in `guidelines.html`, the FAQ, the How It Works track note,
 the Academy roadmap, the track panels, and group profiles.
 
-Alliances are other groups within the Unbought network. Groups decide whether
-to accept an alliance between them, and working members vote on alliance terms
-and guidelines. The group settings field and group profile use this definition;
-alliance records stay local in this prototype.
+Alliances are other groups within the Unbought network and are active in the beta
+through group settings. Groups decide whether to accept an alliance between
+them, and working members vote on alliance terms and guidelines. The group
+settings field and group profile use this definition; alliance records stay local
+in this prototype.
 
 Track access follows the same rules: apprentices may use Basic Necessities only
 while enrolled, Care Circle members may use Basic Necessities with no labor
-obligation and limits are reviewable with evidence, and Observers may read,
-explore, and donate. Consequence steps are unnumbered.
+obligation and limits are reviewable with evidence, and Observers may read and
+explore. Consequence steps are unnumbered.
 
 Review board voting is impartial and local. Involved parties, friends of
 involved parties, Observers, and Care Circle members cannot vote on a case, but
@@ -472,20 +447,13 @@ admin require evidence and a non-criminal, impartial member review; criminal
 matters are never decided by member vote. Admins record the outcome they believe
 the conversation reached: Agreed, Not agreed, or More discussion needed.
 
-## Academy access and tuition
+## Academy access
 
-The Academy is free for pledged members. Non-members may enroll at the
-standard tuition set by a guild; every cent goes to the Unbought donation fund, and this
-prototype processes no payments. Neighbors aged 15 and older who are not
-already working in the commons can learn free by promising to work for Unbought
-part time (the community's 1–15 hours per week rhythm) for one year upon
-completing the program. That year must finish before their 25th birthday, or
-they become liable for the same tuition offered to non-members. Students hold a
-limited standing — Basic Necessities only — while enrolled, and not completing
-the program creates a tuition obligation. This is a community commitment
-reviewed under the guidelines, not a legal contract, and full membership still
-opens at 18. The rules live in the Academy section of `future.html`, in `faq.html`,
-and in the standing levels on `guidelines.html`.
+Unbought Academy is phase-gated to Phase 2 and is not open during the beta; free
+beta signup covers every other track. Its access and tuition rules are planning
+material on `future.html` and in `faq.html`, and the related standing levels are
+on `guidelines.html`. No tuition is charged, no payment is processed, and no
+tuition obligation is created in this prototype.
 
 ## FAQ and help button
 
@@ -664,16 +632,10 @@ block. Offers come only from that group’s members’ Free Stuff and Free Labor
 scraped listing comments are not shown. Group profiles show the member list, admin
 seats, group chat, group offers, and local details only.
 
-Each group profile also shows an uncapped local surplus allowance: the group's slice
-of unspoken-for money. It is the group's share of locally credited contributions to
-Unbought applied to the current local fund balance as a surplus proxy; it is not a
-budget, payment, or promise. It is separate from a member's capped severance check.
-Eventually the admins from all groups will come together to figure out Unbought
-spending. Each group is in charge of finding land in its own area that it wants to
-collectively buy; the allowance only guides that local discussion. Once a group picks
-a house, it would contact the all-volunteer Unbought housing team (real estate,
-lawyers, and others) to check whether the house is available to buy. No contact is
-made or transmitted by the prototype.
+Funding, banking, and legal groundwork are still being built. Land and housing
+plans are future goals described on `future.html`; admins from all groups will
+eventually coordinate Unbought spending, and each group will scout its own area.
+The prototype opens no accounts, makes no contact, and transmits nothing.
 
 ## Group brands and businesses (Phase 2)
 
@@ -706,10 +668,11 @@ channel, then create threads within that channel; every thread and reply has a
 subject. A picture is optional, and anything unsuitable for minors is tagged
 NSFW. Channels live in `state.communityChannels`, threads in
 `state.communityThreads`, and messages in `state.chats` with channel, thread,
-subject, NSFW, and picture fields. All of it stays on this device. Each public
-resume shows that member's Free Stuff and Free Labor offers plus their community
-chat posts; group chat posts and replies stay on the group profile for group
-members only.
+subject, NSFW, and picture fields. Public groups and community threads are shared
+through the public data bridge; photos stay on the device. Each public resume
+shows that member's Free Stuff and Free Labor offers plus their community chat
+posts; group chat posts and replies stay on the group profile for group members
+only.
 
 Free Labor and Free Stuff listings have separate local comment threads with replies
 (a reply simply quotes the earlier chosen name). Comments on the static seed
@@ -721,26 +684,55 @@ transmitted.
 ## Prototype boundaries
 
 This build is static and local-first. The local demo sign-in is not real
-authentication, and there is no payment processing, email delivery, wage API,
-stock issuance, payout, or police report. Public directory data is shared through
-the always-on public bridge; private records are transmitted only after explicit
-opt-in. Messages, report text and evidence, donations, photos, and local password
-hashes always stay on the device. With opt-in private sync, only the reported
-member ID and an `open`/`settled` flag are sent for report pauses. `SITE_PHASE = 1` hides Phase 2 features such as the Unbought
-Academy and group brands/business settings.
-Every footer carries “Free Labor. Free Goods. Shared Care.” exactly once. The public fund name is
-“Unbought donation fund”; internal `severanceFund`, `severance_purchase`, and
-`getSeveranceSummary()` keys remain only for older local data compatibility. The
-working name “Unbought Community Trust” appears only in `future.html`, and
-“Free Goods Fund” is donation priority #4. The donation-fund stages, surplus
-wishlist, and $4,000 cancellation estimate are local planning records; they open no
-accounts, buy no items, and pay no one.
+authentication, and there is no payment processing, email delivery, paid email
+service, wage API, stock issuance, payout, or police report. No secrets are placed
+in browser code. Public directory data is shared through the always-on public
+bridge; private records are transmitted only after explicit opt-in. Messages,
+report text and evidence, photos, and local sign-in details always stay on the
+device. With opt-in private sync, only the reported
+member ID and an `open`/`settled` flag are sent for report pauses. The
+Launch Coordinator label is local-only, stays on the profile with no end date,
+and is never synced. No password, hash, DOB, address, phone, private email, or
+other private detail is added to source for it. `SITE_PHASE = 1` hides Phase 2
+features such as the Unbought Academy and group brands/business settings.
+Every footer carries “Free Labor. Free Goods. Shared Care.” exactly once.
+Active beta tracks are free; Academy and funding plans are future-only on
+`future.html`. No buying, selling, donations, or purchase intents are part of the
+active beta. Nothing here opens an account, buys an item, or pays anyone.
 
 ## Hosting
 
 The project is hosted at <https://github.com/Unbought26/Unbought>. The published
 site is <https://unbought26.github.io/Unbought/> and uses GitHub Pages from the
 `main` branch.
+
+## Reviewer-set project-hours handoff
+
+This is a one-time local handoff entry for the site owner's first logged
+contribution to Unbought. The reviewer reviewed the 58 commits dated November 12
+through November 23, 2026, with about 40,745 lines added and 6,055 lines changed
+or removed, and set a conservative reviewer estimate of **80.00 hours** of
+Unbought project work through November 23, 2026, including the site owner's
+reading, review, decisions, corrections, and editing time, not just prompt text
+or generated commits. This is an estimate, not measured time or a timesheet.
+Because there were no other
+members available for the normal worker/receiver confirmation, the reviewer
+served as the impartial second confirmation for this one entry only. It is stored
+locally as a confirmed labor contribution, counts toward confirmed hours and
+pledge standing, and is never sent to Supabase.
+
+The hourly value is **$47.85**, the U.S. Bureau of Labor Statistics May 2025
+median hourly figure shown for Web Developers and Digital Designers in the
+Occupational Outlook Handbook (SOC 15-1254/15-1255 group). BLS has no official
+remote-only national wage, so this is the closest neutral public benchmark rather
+than a payroll promise. The 80.00 hours are valued at **$3,828.00** in the
+handoff. This valuation is a record of worth, not wages due, an invoice, a
+donation, a payout, or a live wage API.
+
+The local prototype username for the site owner is `unbought.founder`. The
+temporary password is deliberately not written here, in source, in the PDF, or
+in cloud data; it is given only in the final handoff message and should be
+changed after first sign-in.
 
 ## Provenance
 

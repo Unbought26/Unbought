@@ -95,7 +95,7 @@
         <div class="hero-copy">
           <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> A consent-based, currency-free mutual aid society</p>
           <h1 id="hero-title">You Don’t Need <span class="mark">Money</span> to Survive. You Need <span class="mark mark--blue">Community.</span></h1>
-          <p class="hero-lede">The working beta is open to anyone, anywhere. You can browse Free Labor and Free Stuff, sign a local pledge, post offers when signed in, and use your dashboard. Public listings and community posts are shared through Supabase; pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings. Messages, report text, evidence, and donation records stay here. Beta features are limited while we build the prototype; plans live on <a href="future.html">What’s to Come</a>.</p>
+          <p class="hero-lede">The working beta is open to anyone, anywhere. You can browse Free Labor and Free Stuff, sign a local pledge, post offers when signed in, and use your dashboard. Public listings and community posts are shared through Supabase; pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings. Messages, report text, and evidence stay here. Beta features are limited while we build the prototype; plans live on <a href="future.html">What’s to Come</a>.</p>
 
           <div class="hero-actions">
             <a class="button button--primary" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span> <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
@@ -170,7 +170,7 @@
             <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg>
             <div>
               <h3>One minute of reading saves a lot of confusion.</h3>
-              <p><strong>What works now:</strong> directories, pledge, dashboard, and opt-in sync. <strong>What stays local:</strong> private details, messages, report text, and donation records. <strong>Where plans live:</strong> <a href="future.html">What’s to Come</a>. Details: <a href="faq.html">FAQ</a> and <a href="guidelines.html">Community Guidelines</a>.</p>
+              <p><strong>What works now:</strong> directories, pledge, dashboard, and opt-in sync. <strong>What stays local:</strong> private details, messages, report text, and evidence. <strong>Where plans live:</strong> <a href="future.html">What’s to Come</a>. Details: <a href="faq.html">FAQ</a> and <a href="guidelines.html">Community Guidelines</a>.</p>
             </div>
           </aside>
         </div>
@@ -470,7 +470,7 @@
               <a class="button button--primary" data-auth-cta href="pledge.html"><span data-auth-label>Take the Pledge</span> <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
               <a class="button button--outline" href="pledge.html">Read the five commitments</a>
             </div>
-            <p class="form-hint">Prototype: local username and salted password hash only—no real account or payment. The hash is never uploaded; optional private sync uses a separate Supabase Auth account.</p>
+            <p class="form-hint">Prototype: local sign-in only—no real account or payment. Nothing from local sign-in is uploaded; optional private sync uses a separate Supabase Auth account.</p>
           </div>
         </div>
       </div>
@@ -496,7 +496,7 @@
 
         <p class="track-access-note"><strong>Basic Necessities:</strong> Food, Health Care, Dental, Mental Health, Shelter, Clothing, Gas Cards, and Uber Gift cards. No luxury items or nice to haves.</p>
 
-        <p class="track-access-note">Track differences are about access and capacity, not rank. Observers read and explore. Contributors may request labor and goods. Care Circle members start with Basic Necessities, with full access for members 65+ who have no outside paid job. Freezes, care-circle support, and re-pledge reviews are peer-based and consensual—there is no hierarchy. Full rules are in the FAQ and Community Guidelines.</p>
+        <p class="track-access-note">Track differences are about access and capacity, not rank. Observers read and explore. Contributors may request labor and goods. Care Circle members start with Basic Necessities, with full access for members 65+ who have no outside paid job or business; otherwise Basic Necessities and an active role are requested. Freezes, care-circle support, and re-pledge reviews are peer-based and consensual—there is no hierarchy. Full rules are in the FAQ and Community Guidelines.</p>
 
         <fieldset class="track-fieldset">
           <legend class="sr-only">Choose your membership track</legend>
@@ -538,7 +538,7 @@
                 </span>
                 <span class="track-name">Care Circle Member</span>
                 <span class="track-desc">Receive support without proving productivity, and request a peer Welcome &amp; Care Circle chat.</span>
-                <span class="track-access"><strong>Access:</strong> Basic Necessities only, with no labor obligation; full access can be confirmed locally without storing proof details. Members 65+ are automatically in the Care Circle with full access when no outside paid job is recorded, and may still work.</span>
+                <span class="track-access"><strong>Access:</strong> Basic Necessities only, with no labor obligation; full access can be confirmed locally without storing proof details. Members 65+ are automatically in the Care Circle with full access when no outside paid job or business is recorded; otherwise Basic Necessities and an active role are requested. They may still work.</span>
                 <span class="track-best">Best for: people unable to work right now due to disability, illness, or capacity</span>
               </span>
             </label>
@@ -815,13 +815,21 @@
             <li><a href="#accessibility">Accessibility Statement</a></li>
           </ul>
         </div>
+        <div>
+          <h2>Contact</h2>
+          <ul>
+            <li><a href="mailto:unbought26@gmail.com">unbought26@gmail.com</a></li>
+            <li><a href="https://www.instagram.com/unbought26/" target="_blank" rel="noopener">@unbought26 on Instagram</a></li>
+            <li><a href="https://www.facebook.com/share/1cPuizNHLK/" target="_blank" rel="noopener">Unbought on Facebook</a></li>
+          </ul>
+        </div>
       </nav>
     </div>
 
     <div class="container footer-utility">
       <div class="footer-utility-copy">
         <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
-        <p>Public listing details and community posts are shared through Supabase when connected; pledges and private details can optionally sync with your permission; messages, report text and evidence, and donation records stay in this browser. With optional private sync on, only a minimal open/settled flag for a reported admin is sent.</p>
+        <p>Public listing details and community posts are shared through Supabase when connected; pledges and private details can optionally sync with your permission; messages, report text, and evidence stay in this browser. With optional private sync on, only the reported member's local ID and an open/settled status are sent.</p>
       </div>
       <button class="button button--ghost-light button--small" id="reset-demo" type="button">
         <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>

@@ -3,8 +3,9 @@
 This repo has two separate Supabase bridges:
 
 1. **Public data sync** — already enabled, public-data-only, and always on when
-   configured. It shares group cards, Free Labor and Free Stuff listings, and
-   community chat content.
+   configured. It shares group cards, Free Labor and Free Stuff listings,
+   public groups and community threads, and contact addresses members explicitly
+   publish for direct Unbought messages.
 2. **Private opt-in sync** — off by default. It uploads private member details
    only after a member explicitly signs in through Supabase Auth and checks the
    consent box in Dashboard → Settings.
@@ -15,17 +16,20 @@ The site still lives on GitHub Pages.
 
 - Group cards: name, kind, purpose, public location label
 - Free Labor and Free Stuff listings: title, pillar, exchange, category,
-  description, public location label, provider name, NSFW tag, donation price
+  description, public location label, provider name, NSFW tag
 - Community channels and threads
+- Public member contacts: member ID, chosen name, and only the Unbought-only
+  email the member explicitly publishes
 - Community chat posts: channel, thread, subject, body, author display name, NSFW tag
 
 ## Public sync: what does not sync
 
 Pledge records, legal names, usernames, passwords or password hashes, addresses,
-phone numbers, birthdates, private profile fields, messages, reports, donation
-records or amounts, waitlist entries, photos, listing comments, group chats,
-social chats, group settings, and safety standards acknowledgment records are
-never part of the public bridge.
+phone numbers, birthdates, private profile fields, messages, reports, waitlist
+entries, photos, listing comments, group chats, social chats, group settings, and
+safety standards acknowledgment records are never part of the public bridge.
+The only contact address shared is the separate Unbought-only address a member
+explicitly publishes through the opt-in directory below.
 
 ## Private opt-in sync: what can sync
 
@@ -45,7 +49,7 @@ After explicit consent, the private bridge can upload:
   role detail is uploaded.
 
 The private bridge never uploads a password, password hash, salt, local demo
-username, message, report text, evidence, reason, reporter identity, donation,
+username, message, report text, evidence, reason, reporter identity,
 photo, listing comment, group chat, social chat, or safety standards
 acknowledgment record. Acknowledgments stay in `unbought:v1` on the device;
 no database column or migration is needed for them. Supabase Auth handles the
@@ -98,14 +102,18 @@ In the Supabase dashboard:
 3. Paste and run `supabase/migrations/20261120120000_public_data_only.sql`.
 4. Paste and run `supabase/migrations/20261122000000_private_opt_in_sync.sql`.
    Do not edit it. There are no UUIDs, names, or positions to fill in.
-5. If you ran an older version of the private migration, rerunning this file is
-   safe. It removes the old manual pool and creates the automatic pool table.
+5. Paste and run `supabase/migrations/20261123120000_public_contact_opt_in.sql`.
+   This creates the opt-in public contact directory for direct member messages.
+6. If you ran an older version of a migration, rerunning these files is safe.
+   They remove old manual policies and create the checked shared-write function,
+   private status columns, audit table, and public contact table.
 
-Both files end with `notify pgrst, 'reload schema';` so the browser API sees the
+Each file ends with `notify pgrst, 'reload schema';` so the browser API sees the
 new tables and grants immediately. Private sync will fail with a permission error
-until the second migration is applied. The second migration also closes older
+until the second migration is applied. The second migration closes older
 direct-write public policies, adds the checked shared-write function, creates
-the Care Circle status columns, and adds the append-only audit note table.
+the Care Circle status columns, and adds the append-only audit note table. The
+third migration adds the opt-in public contact table and its write function.
 
 The repo already includes `supabase/config.toml`, so do not run `supabase init`
 again. Once the Supabase CLI is installed, you can link this folder with:
@@ -117,6 +125,30 @@ supabase link --project-ref hwobregmctityeqhsvmj
 The CLI may ask for the database password from the Supabase dashboard. That
 password is only for CLI/database administration and must never be added to this
 repo or to `supabase-config.js`.
+
+## Opt-in public contact directory
+
+`supabase/migrations/20261123120000_public_contact_opt_in.sql` creates
+`public.public_member_contacts`, a public-by-design table with one row per member:
+`member_id`, `display_name`, `email`, and timestamps. Anyone can read the table,
+and nobody can write to it directly. Apply this migration in the SQL Editor after
+the first two migrations, before members publish contact addresses.
+
+A member publishes or removes their address through
+`public.unbought_set_public_contact(text, text)`. It is a `SECURITY DEFINER`
+function that requires a signed-in Supabase Auth user with active pledged
+standing and an existing consented `private_members` row. Passing a blank email
+deletes the row; passing a valid email upserts it. The function writes an
+append-only audit entry to `private_shared_content_audit` with no note or profile
+detail. The browser never supplies a member ID for this write: identity comes
+from `auth.uid()`.
+
+The address should be a separate email created just for Unbought, never a
+private, work, or school address. It is used only for pre-filled `mailto` drafts
+to other published contacts. The site sends nothing, stores no email log, has no
+paid email service, keeps no secrets in browser code, and has no `@unbought`
+forwarding. If a member has not published a contact, the coordinator relay draft
+opens to `unbought26@gmail.com` for a one-time introduction.
 
 ## Web developer admin pool and rotation
 
@@ -172,7 +204,8 @@ Pages will then load both bridges.
 
 - Private sync stays off until a member opts in and signs in with Supabase Auth.
 - Once enabled, private saves are debounced and pushed to the private tables
-  automatically. The Settings panel also has **Check sync now** as a manual check.
+  automatically. **Check sync status** is only a manual status check; it does not
+  start or repeat a sync.
 - **Turn off private sync** removes the automatic web-developer pool row, signs
   out, and stops future uploads but keeps the member and waiting-list copies.
 - **Delete my cloud copy** removes the member, waitlist, web-developer pool, and
@@ -183,9 +216,12 @@ Pages will then load both bridges.
   finding or restored access sends `settled`. An open flag pauses private-data
   access for an active web-developer admin whose local member ID matches. Report
   text, evidence, reasons, and reporter identity never enter the flag.
+- The Launch Coordinator label is local-only, stays on the profile with no end
+  date, and is never synced.
 - The app also uploads pledge standing fields: frozen date/month/deficit,
-  Observer date, prior track, and re-pledge-required status. The monthly freeze,
-  30-day Observer conversion, and three-member re-pledge review still happen in
-  the browser; Supabase stores only the resulting local status.
+  Observer date, prior track, and re-pledge-required status. The 7-day
+  inactivity freeze, 30-day Observer conversion, and three-member re-pledge
+  review still happen in the browser; Supabase stores only the resulting local
+  status.
 - If email confirmation is enabled in Supabase Auth, a new private sync account
   must be confirmed before the first upload will succeed.

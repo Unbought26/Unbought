@@ -61,7 +61,7 @@
         <div class="section-head">
           <p class="eyebrow"><span class="badge badge--soft">Good questions</span> Frequently asked</p>
           <h1 id="faq-page-title">The honest answers, in plain language.</h1>
-          <p>Unbought is a prototype for a consent-based, currency-free mutual aid society. Nothing here processes payments or sends messages to other people. Public listings and community posts are shared through Supabase; pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, report text and evidence, and donation records stay here; with optional private sync on, only a minimal open/settled admin flag is sent.</p>
+          <p>Unbought is a prototype for a consent-based, currency-free mutual aid society. Nothing here processes payments or sends messages to other people. Public listings and community posts are shared through Supabase; pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, report text, and evidence stay here; no payment is processed; with optional private sync on, only the reported member's local ID and an open/settled status are sent.</p>
         </div>
 
         <div class="faq-groups">
@@ -69,7 +69,7 @@
             <h2 id="faq-basics">The basics</h2>
             <details>
               <summary>What is Unbought?</summary>
-              <p>A practice of sharing labor, goods, and care without money changing hands between neighbors. The site is a local-first prototype: public listings and community posts can be shared through Supabase, while pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, report text and evidence, and donation records stay here; with optional private sync on, only a minimal open/settled admin flag is sent.</p>
+              <p>A practice of sharing labor, goods, and care without money changing hands between neighbors. The site is a local-first prototype: public listings and community posts can be shared through Supabase, while pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, report text, and evidence stay here; no payment is processed; with optional private sync on, only the reported member's local ID and an open/settled status are sent.</p>
             </details>
             <details>
               <summary>What does consent mean here?</summary>
@@ -77,7 +77,7 @@
             </details>
             <details>
               <summary>Is this a real service right now?</summary>
-              <p>Not yet. There are no local real accounts or payment processing; optional private sync uses a separate Supabase Auth account. A public-data-only Supabase bridge shares listings, group cards, and community posts; pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, report text and evidence, and donation records stay here; with optional private sync on, only a minimal open/settled admin flag is sent.</p>
+              <p>Yes, as an open beta. It is still local-first and there is no payment processing; optional private sync uses a separate Supabase Auth account. A public-data-only Supabase bridge shares listings, group cards, and community posts; pledges and private details stay in this browser unless you turn on optional private sync in Dashboard → Settings; messages, report text, and evidence stay here; no payment is processed; with optional private sync on, only the reported member's local ID and an open/settled status are sent.</p>
             </details>
             <details>
               <summary>Is Unbought a government?</summary>
@@ -86,7 +86,7 @@
             <details>
               <summary>Is this a cult?</summary>
               <p>There is no single official definition, so the fair way to answer is to look at behavior. The main warning sign of a cult is high control: pressure to join or stay, isolation from family or outside information, one unquestionable leader, strict identity rules, forced labor or money, fear or shame, and penalties for leaving.</p>
-              <p>Unbought is built to work the other way. Membership is voluntary, browsing is open to everyone, and someone can withdraw from the pledge without losing their property or being punished. Members set their own boundaries, keep private details on their own device unless they opt in to sync, and take part through peer review rather than a single ruler. There are no dues, no taxes, no paid leaders, no required donations, no housing tied to obedience, and no claim to control anyone outside the group.</p>
+              <p>Unbought is built to work the other way. Membership is voluntary, browsing is open to everyone, and someone can withdraw from the pledge without losing their property or being punished. Members set their own boundaries, keep private details on their own device unless they opt in to sync, and take part through peer review rather than a single ruler. There are no dues, no taxes, no paid leaders, no housing tied to obedience, and no claim to control anyone outside the group.</p>
               <p>Some parts may feel unfamiliar — the pledge, shared access rules, Care Circle decisions, review boards, and language about a commons — and any large group can drift toward control if it stops protecting consent. If Unbought ever pressured people to stay, hid information, punished disagreement, demanded money or labor under threat, or placed one person above review, that would be a serious problem worth naming.</p>
               <p>As it is built now, the honest label is a voluntary mutual-aid commons, not a cult.</p>
             </details>
@@ -108,15 +108,15 @@
             </details>
             <details>
               <summary>Can I choose whether my private details are stored online?</summary>
-              <p>Yes. Private sync is off by default. Dashboard → Settings has a “Sync my private data” section. Turning it on requires a separate Supabase Auth email and password plus an explicit consent checkbox. Only then are your member ID, account details, pledge details, and waiting-list entry uploaded, where only you and the current rotating web-developer admins can read them. If you have also recorded the Web development volunteer offer, only your member ID is added to the automatic admin pool; no note or other role detail is uploaded, and no admins are active until more than seven web developers have opted in. Filing or settling a report also sends only a minimal open/settled flag with the reported member ID; report text, evidence, reasons, and reporter identity never leave this browser. Passwords are handled by Supabase Auth; no local password hash is uploaded. After you turn sync on once, uploads happen automatically. You can check sync, turn sync off, or delete your cloud copy at any time. Public listing and community-post sync is separate and unchanged.</p>
+              <p>Yes. Private sync is off by default. Dashboard → Settings has a “Sync my private data” section. Turning it on requires a separate Supabase Auth email and password plus an explicit consent checkbox. Only then are your member ID, account details, pledge details, and waiting-list entry uploaded, where only you and the current rotating web-developer admins can read them. If you have also recorded the Web development volunteer offer, only your member ID is added to the automatic admin pool; no note or other role detail is uploaded, and no admins are active until more than seven web developers have opted in. Filing or settling a report also sends only the reported member's local ID and an open/settled status; report text, evidence, reasons, and reporter identity never leave this browser. Passwords are handled by Supabase Auth; nothing from local sign-in is uploaded. After you turn sync on once, uploads happen automatically. You can check sync, turn sync off, or delete your cloud copy at any time. Public listing and community-post sync is separate and unchanged.</p>
             </details>
             <details>
               <summary>What does my public profile show?</summary>
-              <p>Your chosen first name, locally stored picture, tag line, bio, profession, the City/State you select, your skills, confirmed hours worked, items gifted, other commons totals, your availability, and a public phone number only if you opt in. It may show a pending or live seed/founder tag. It never shows your cell phone, legal name, street or mailing addresses, ZIP, housing status, birthdate, group, report count, amounts donated, comments, interactions, or member ID. Signed-in members can switch between the public resume and the private profile with View as, choose separate profile colors, and add friends from another member’s public profile.</p>
+              <p>Your chosen first name, locally stored picture, tag line, bio, profession, the City/State you select, your skills, confirmed hours worked, items gifted, other commons totals, your availability, and a public phone number only if you opt in. It may show a pending or live seed/founder tag. It never shows your cell phone, legal name, street or mailing addresses, ZIP, housing status, birthdate, group, report count, comments, interactions, or member ID. Signed-in members can switch between the public resume and the private profile with View as, choose separate profile colors, and add friends from another member’s public profile.</p>
             </details>
             <details>
               <summary>Who can enter my work hours?</summary>
-              <p>No one can add hours unilaterally. The worker and the receiver each choose the same agreed time from fixed options. Matching confirmations log that time; nothing is typed into an hours counter. If the choices differ, evidence goes to a review board and three randomly drawn active members choose one of the confirmed times; care circle members, students, observers, and either party cannot serve. Only those confirmed hours appear in your week, month, year, and all-time totals. Each month is checked after it ends: missing your pledged hours freezes the pledge and blocks service requests until the shortfall is made up. More than 30 days frozen makes you an Observer, and a re-pledge is accepted only after three impartial active members approve it.</p>
+              <p>No one can add hours unilaterally. The worker and the receiver each choose the same agreed time from fixed options. Matching confirmations log that time; nothing is typed into an hours counter. If the choices differ, evidence goes to a review board and three randomly drawn active members choose one of the confirmed times; care circle members, students, observers, and either party cannot serve. Only those confirmed hours appear in your week, month, year, and all-time totals. After probation, a full week with no confirmed work freezes the pledge while the monthly hours are still short; confirmed hours reset that week clock. A frozen pledge blocks service requests until the pledged hours are completed. More than 30 days frozen makes you an Observer, and a re-pledge is accepted only after three impartial active members approve it.</p>
             </details>
             <details>
               <summary>Why ask for a legal name and addresses at all?</summary>
@@ -128,7 +128,7 @@
             </details>
             <details>
               <summary>What can each membership track access?</summary>
-              <p>Active Contributors take part in the full commons. Apprentices may use Basic Necessities only while enrolled. Care Circle members start with Basic Necessities and no labor obligation; full access can be confirmed locally without storing proof details. A frozen pledge cannot request services or change shared content until the missed hours are completed, but the member can still offer labor and read the documents. After more than 30 days frozen the member becomes an Observer and can read or explore only until three active members approve a re-pledge. These boundaries are part of the Community Guidelines and are enforced locally in this prototype.</p>
+              <p>Active Contributors take part in the full commons. Apprentices may use Basic Necessities only while enrolled. Care Circle members start with Basic Necessities and no labor obligation; full access can be confirmed locally without storing proof details. A frozen pledge cannot request services or change shared content until the pledged hours are completed, but the member can still offer labor and read the documents. After more than 30 days frozen the member becomes an Observer and can read or explore only until three active members approve a re-pledge. These boundaries are part of the Community Guidelines and are enforced locally in this prototype.</p>
             </details>
             <details>
               <summary>What are Basic Necessities, and who decides how mutual aid works?</summary>
@@ -176,15 +176,15 @@
             </details>
             <details>
               <summary>How do I find something nearby?</summary>
-              <p>Free Labor can be searched by title, skill, neighbor, or dollar amount, then filtered by pillar, that pillar’s service titles, online or in-person format, donation price band, city, state, and ZIP prefix. Free Stuff filters by category, condition, color, brand, donation price band, city, state, and ZIP prefix. Both directories can be sorted by newest, title, location, or nearest to a ZIP you enter, and active filters can be removed one at a time.</p>
+              <p>Free Labor can be searched by title, skill, or neighbor, then filtered by pillar, that pillar’s service titles, online or in-person format, city, state, and ZIP prefix. Free Stuff filters by category, condition, color, brand, city, state, and ZIP prefix. Both directories can be sorted by newest, title, location, or nearest to a ZIP you enter, and active filters can be removed one at a time.</p>
             </details>
             <details>
               <summary>Can non-members get anything?</summary>
-              <p>Providers can opt in to a fixed suggested non-member price on their goods or labor listings. The price is shown on the card and in the listing details, and both directories let you filter and search by it. Guests see that price and cannot change it; in this prototype the full amount is recorded locally as a planned intent for the Unbought donation fund, with no real payment processed. Members always get the same things free through mutual consent. Only pledged members can post a service or product; guests can browse but cannot open the posting form.</p>
+              <p>Anyone can browse the directories. Mutual-aid requests and posting are for pledged members. Labor and goods shared here are free through mutual consent, never a purchase.</p>
             </details>
             <details>
-              <summary>What can members see in the fund?</summary>
-              <p>Only signed-in members see their own hours and locally recorded prototype contribution amounts by week, month, year, and all time, plus the prototype Unbought donation fund balance and their share of it. No real money is held, moved, or paid out. The local ledger records planned non-member purchase intents, planned giving, and confirmed hours. Your legal name, addresses, ZIP, birthdate, group, and report count stay out of the public resume.</p>
+              <summary>What totals can members see?</summary>
+              <p>Members can see their own confirmed hours and item counts by week, month, year, and all time. No real money is held, moved, or paid out. Hours and item counts appear only after mutual confirmation or review. Your legal name, addresses, ZIP, birthdate, group, and report count stay out of the public resume.</p>
             </details>
           </section>
 
@@ -192,7 +192,7 @@
             <h2 id="faq-safety">Safety and accountability</h2>
             <details>
               <summary>How do safety reports work?</summary>
-              <p>Reports are tied to the thing you were looking at — a listing, a comment on a listing, a message, community or social chat, a profile, or a dashboard item — so you never have to type someone’s name into a report form. You can attach local messages, pictures, or other files as evidence. Report text, evidence, reasons, and reporter identity always stay in this browser. With optional private sync on, the only report data sent is the reported member's local ID plus an open/settled status so a reported admin's access can pause.</p>
+              <p>Reports are tied to the thing you were looking at — a listing, a comment on a listing, a message, community or social chat, a profile, or a dashboard item — so you never have to type someone’s name into a report form. You can attach local messages, pictures, or other files as evidence. Report text, evidence, reasons, and reporter identity always stay in this browser. With optional private sync on, the only report data sent is the reported member's local ID plus an open/settled status so private-data access for the reported web developer can pause.</p>
             </details>
             <details>
               <summary>How do I acknowledge the labor and product safety standards?</summary>
@@ -231,7 +231,7 @@
             </details>
             <details>
               <summary>Where are the community guidelines and consequences?</summary>
-              <p>They are on the <a href="guidelines.html">Community Guidelines</a> page. They include the Ten Consent Commandments, monthly pledge review, the care circle, access limits, therapy and proof of treatment, community review, majority votes, exile, and the reflection period before reapplication.</p>
+              <p>They are on the <a href="guidelines.html">Community Guidelines</a> page. They include the Ten Consent Commandments, monthly pledge review, the care circle, access limits, repair and reflection, community review, majority votes, exile, and the reflection period before reapplication.</p>
             </details>
           </section>
 
@@ -244,6 +244,10 @@
             <details>
               <summary>Does the site track me or show ads?</summary>
               <p>No. There are no analytics, ads, tracking scripts, or external frameworks. The only third-party embed is the privacy-enhanced Alan Watts video on the pledge page. The single catalog-style layout on Free Stuff is a visual nod only, built with Unbought’s own content and colors.</p>
+            </details>
+            <details>
+              <summary>How do direct member messages work?</summary>
+              <p>Direct messages open in your own mail app; the site sends nothing by itself. Create a separate email just for Unbought and publish that address in Dashboard → Settings if you want members to contact you directly. Do not publish your private, work, or school email. Published addresses are public by design. If a member has not published a contact address, your message opens as a draft to unbought26@gmail.com for a one-time introduction. Local folders and stars stay on this device.</p>
             </details>
             <details>
               <summary>How do beta emails work?</summary>
@@ -324,7 +328,8 @@
     <div class="container footer-utility">
       <div class="footer-utility-copy">
         <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
-        <p>Public listing details and community posts are shared through Supabase when connected; pledges and private details can optionally sync with your permission; messages, report text and evidence, and donation records stay in this browser. With optional private sync on, only a minimal open/settled flag for a reported admin is sent.</p>
+        <p><strong>Contact Unbought:</strong> <a href="mailto:unbought26@gmail.com">unbought26@gmail.com</a> · <a href="https://www.instagram.com/unbought26/" target="_blank" rel="noopener">@unbought26</a> · <a href="https://www.facebook.com/share/1cPuizNHLK/" target="_blank" rel="noopener">Unbought</a></p>
+        <p>Public listing details and community posts are shared through Supabase when connected; pledges and private details can optionally sync with your permission; messages, report text, and evidence stay in this browser. With optional private sync on, only the reported member's local ID and an open/settled status are sent.</p>
       </div>
       <button class="button button--ghost-light button--small" id="reset-demo" type="button">
         <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>

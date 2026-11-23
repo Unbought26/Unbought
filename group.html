@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A local Unbought group profile: members, admins, posts, comments, and involvement stored only in this browser.">
+  <meta name="description" content="A local Unbought group profile with rotating peer roles and posts; public group cards are shared through Supabase while private details stay local.">
   <meta name="theme-color" content="#1E3A8A">
   <title>Group Profile — Unbought</title>
   <link rel="icon" type="image/png" href="assets/logo.png">
@@ -65,7 +65,7 @@
         <div class="section-head">
           <p class="eyebrow"><span class="badge badge--soft">Group profile</span> Your local circles</p>
           <h1 id="group-page-title">A group in the commons.</h1>
-          <p>Group profiles show the local member list, admins, group chat, and the Free Stuff and Free Labor posts connected to the group. Everything here is stored in this browser; nothing is sent or published to another device.</p>
+          <p>Group profiles show the member list, rotating peer roles, group chat, and the Free Stuff and Free Labor posts connected to the group. Public group cards and community posts are shared through Supabase; member lists, group chats, votes, invitations, and private details stay on this device.</p>
         </div>
 
         <nav class="dashboard-menu profile-dashboard-nav" aria-label="Dashboard menu" data-member-only hidden>
@@ -89,7 +89,7 @@
 
         <div id="group-profile"></div>
 
-        <p class="account-note">In a live system, group membership and posts would come from the shared commons. This prototype keeps them local, counts people from the group’s member list, and sends no invitations or updates.</p>
+        <p class="account-note">Public group cards and community posts sync through Supabase; membership, group chats, votes, and invitations stay on this device. This prototype counts people from the group’s local member list and sends no invitations or updates.</p>
       </div>
     </section>
   </main>
@@ -150,7 +150,8 @@
     <div class="container footer-utility">
       <div class="footer-utility-copy">
         <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
-        <p>Public listing details and community posts are shared through Supabase when connected; pledges and private details can optionally sync with your permission; messages, report text and evidence, and donation records stay in this browser. With optional private sync on, only a minimal open/settled flag for a reported admin is sent.</p>
+        <p><strong>Contact Unbought:</strong> <a href="mailto:unbought26@gmail.com">unbought26@gmail.com</a> · <a href="https://www.instagram.com/unbought26/" target="_blank" rel="noopener">@unbought26</a> · <a href="https://www.facebook.com/share/1cPuizNHLK/" target="_blank" rel="noopener">Unbought</a></p>
+        <p>Public listing details and community posts are shared through Supabase when connected; pledges and private details can optionally sync with your permission; messages, report text, and evidence stay in this browser. With optional private sync on, only the reported member's local ID and an open/settled status are sent.</p>
       </div>
       <button class="button button--ghost-light button--small" id="reset-demo" type="button">
         <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>

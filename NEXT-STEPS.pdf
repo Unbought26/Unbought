@@ -3,7 +3,7 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R] /Count 4 >>
 endobj
 3 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
@@ -15,158 +15,204 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
 endobj
 6 0 obj
-<< /Length 4017 >>
+<< /Length 4179 >>
 stream
 BT /F2 19 Tf 1 0 0 1 54 744 Tm (Unbought - Next Steps) Tj ET
 BT /F1 11 Tf 1 0 0 1 54 714 Tm (Open beta handoff and publishing checklist) Tj ET
 BT /F2 12 Tf 1 0 0 1 54 686 Tm (1. Currently functional features) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 666 Tm ([x] Open beta: anyone, anywhere may browse; no Pocono-only limit; soft launch keeps features) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 651 Tm (limited.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 666 Tm ([x] Open beta: anyone, anywhere may browse; no Pocono-only limit; free signup for every) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 651 Tm (active beta track.) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 636 Tm ([x] Tagline: Free Labor. Free Goods. Shared Care.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 621 Tm ([x] Home briefly summarizes current tools. Future goals live only on Whats to Come.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 606 Tm ([x] Free Labor and Free Stuff directories, group pages, dashboard, pledge, profile,) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 591 Tm (guidelines, FAQ, and Newsboard work locally.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 576 Tm ([x] Current-behavior details live in Newsboard, FAQ, and Community Guidelines.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 561 Tm ([x] Newsboard explains what works now and how to join by pledging or volunteering.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 621 Tm ([x] Free Labor, Free Stuff, and free requests are active. Public groups and community) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 606 Tm (threads are shared through the public bridge.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 591 Tm ([x] Dashboard, pledge, profile, guidelines, FAQ, and Newsboard work locally. Alliances are) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 576 Tm (active in group settings.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 561 Tm ([x] Current-behavior details live in Newsboard, FAQ, and Community Guidelines.) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 546 Tm ([x] Labor and Product Safety Standards page has a versioned local acknowledgment before) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 531 Tm (pledging or posting.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 516 Tm ([x] Editing and requesting also check the acknowledgment. The record is local, not legal) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 501 Tm (advice or legal protection.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 486 Tm ([x] Beta members are helping develop seed funding and the legal/nonprofit groundwork;) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 471 Tm (donations stay closed until the plan is ready.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 456 Tm ([x] Free beta email drafts in Settings open pre-filled welcome, Care Circle, posting,) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 441 Tm (request, review board, and group welcome messages in their own mail app.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 426 Tm ([x] Volunteer email opens unbought26@gmail.com and asks to help make Unbought a worldwide) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 411 Tm (website.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 396 Tm ([x] FAQ includes the approved answers to Is this a cult? and Is Unbought a government?) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 381 Tm ([x] Donate page redirects to the future funding plan on Whats to Come; giving stays closed.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 356 Tm (2. Pledge standing and Care Circle) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 336 Tm ([x] First month is probationary: one confirmed week unlocks member tools; the full month is) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 321 Tm (checked on day 30.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 306 Tm ([x] A short month freezes the pledge. Frozen members may offer labor but cannot use other) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 291 Tm (member tools; documents stay readable.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 276 Tm ([x] Over 30 days frozen becomes Observer. Re-pledge needs three impartial active members; no) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 261 Tm (hierarchy is implied.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 246 Tm ([x] Care Circle is offered when someone cannot keep a labor pledge. Basic Necessities are) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 231 Tm (the base.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 216 Tm ([x] Full Care Circle access can be confirmed locally with disability proof. No diagnosis,) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 201 Tm (document, medical record, or note is stored or uploaded.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 186 Tm ([x] Members 65+ are automatically in the Care Circle. With no outside paid job or business) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 171 Tm (they keep retired full access.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 156 Tm ([x] Members 65+ with an outside paid job or business move to Basic Necessities and are asked) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 141 Tm (to take an active role. Nothing says they cannot work.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 126 Tm ([x] Reports and re-pledge review are peer-based and consensual; pause and settle steps carry) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 111 Tm (no report text or evidence in sync.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 531 Tm (pledging, posting, or requesting.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 516 Tm ([x] The acknowledgment record is local, not legal advice or legal protection.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 501 Tm ([x] Funding and legal groundwork are still being built. Academy and funding plans are) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 486 Tm (future-only on Whats to Come; no buying, selling, donations, or purchase intents are part of) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 471 Tm (the active beta.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 456 Tm ([x] Beta email drafts are pre-filled mail drafts only. The site sends nothing and stores no) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 441 Tm (email log; no paid email service, no secrets in browser code, no @unbought forwarding.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 426 Tm ([x] Members should create a separate email just for Unbought before publishing a contact) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 411 Tm (address.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 396 Tm ([x] Volunteer email opens unbought26@gmail.com and asks to help make Unbought a worldwide) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 381 Tm (website.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 366 Tm ([x] Members can change the local sign-in password in Dashboard -> Settings; the change is) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 351 Tm (checked and saved on this device, and nothing is uploaded.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 336 Tm ([x] FAQ includes the approved answers to Is this a cult? and Is Unbought a government?) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 321 Tm ([x] Donate page redirects to the future funding plan on Whats to Come; giving stays closed.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 296 Tm (2. Direct contact and opt-in publishing) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 276 Tm ([x] Members may publish one Unbought-only contact email in Settings; turning publishing off) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 261 Tm (deletes the row.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 246 Tm ([x] Messages open as pre-filled mail drafts to published contacts. The site sends nothing.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 231 Tm ([x] With no published contact, the coordinator relay draft opens to unbought26@gmail.com for) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 216 Tm (a one-time introduction.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 201 Tm ([x] Apply supabase/migrations/20261123120000_public_contact_opt_in.sql.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 186 Tm (public_member_contacts is public-read only; public.unbought_set_public_contact\(text, text\)) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 171 Tm (needs a signed-in pledged member.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 146 Tm (Official public contact channels) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 126 Tm ([x] Public organization contacts, not private member data: unbought26@gmail.com.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 111 Tm ([x] Instagram: @unbought26 - https://www.instagram.com/unbought26/) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 96 Tm ([x] Facebook: Unbought - https://www.facebook.com/share/1cPuizNHLK/) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 81 Tm ([x] Email is an ordinary mailto link. The site itself sends nothing and stores no email log.) Tj ET
 endstream
 endobj
 7 0 obj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
 endobj
 8 0 obj
-<< /Length 3983 >>
+<< /Length 4331 >>
 stream
-BT /F2 12 Tf 1 0 0 1 54 744 Tm (3. Supabase sync and hardening) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 724 Tm ([x] Public data sync is separate and always on when configured. It carries only group cards,) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 709 Tm (listings, channels, threads, and community posts.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 694 Tm ([x] Anyone may browse public data. Direct public-table writes are removed; saves go through) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 679 Tm (a checked function.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 664 Tm ([x] Shared-content writes use the signed-in Supabase Auth member, never a browser-supplied) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 649 Tm (member ID.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 634 Tm ([x] Only a pledged member in good standing can publish shared content. Probation, frozen,) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 619 Tm (Observer, review-pending, and basic-care members can read but not publish.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 604 Tm ([x] Shared-content audit is append-only and stores only who acted, which shared row changed,) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 589 Tm (and when. No report text, evidence, reason, or profile detail.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 574 Tm ([x] Supabase SDK is pinned in vendor/supabase; the site does not fetch it from a third-party) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 559 Tm (CDN at runtime.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 544 Tm ([x] Each page loads only the public rows it displays, so documentation pages stay fast.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 529 Tm ([x] Private sync is off by default. It uploads only after explicit consent and Supabase Auth) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 514 Tm (sign-in, then syncs changes automatically; Check sync now is only a manual check.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 499 Tm ([x] No password, password hash, or salt is stored in localStorage or any private table.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 484 Tm (Supabase Auth owns passwords.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 459 Tm (4. Private sync contents) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 439 Tm ([x] After opt-in: member ID, account details, pledge details, resulting standing fields,) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 424 Tm (waitlist entries, and a minimal web-developer pool row.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 409 Tm ([x] Report flag exception: reported member local ID plus open or settled only. No report) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 394 Tm (text, evidence, reason, reporter, or timestamp.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 379 Tm ([x] Care sync carries only the resulting status, proof timestamp, outside-job flag, and) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 364 Tm (active-role flag. No proof detail or note.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 349 Tm ([x] Settings offers Check sync now, Turn off private sync, and Delete my cloud copy. Turning) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 334 Tm (sync off also removes the web-developer pool row.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 319 Tm ([x] Messages, donations, photos, comments, group chats, social chats, and local password) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 304 Tm (hashes are never transmitted.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 289 Tm ([x] Safety acknowledgments stay on the device with version and date; they are not part of) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 274 Tm (private sync.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 249 Tm (5. Automatic web-developer admins) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 229 Tm ([x] No manual UUID list and no final-user SQL. Opt in to private sync and record Web) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 214 Tm (development; the site adds the pool row automatically.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 199 Tm ([x] Rotation is date-derived: seven seats, seven-day terms, one new seat per day, no cron) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 184 Tm (job.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 169 Tm ([x] With seven or fewer opted-in web developers nobody holds a private-admin seat; with more) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 154 Tm (than seven, exactly seven rotate.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 139 Tm ([x] An open report flag pauses that admin until it is settled.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 744 Tm (3. Pledge standing and Care Circle) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 724 Tm ([x] Probation: one confirmed week unlocks tools; a pledge does not freeze during probation.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 709 Tm ([x] After probation, a full week with no confirmed work freezes the pledge while monthly) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 694 Tm (hours are short; confirmed work resets the week.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 679 Tm ([x] Frozen members may offer labor only, until the pledged hours are completed.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 664 Tm ([x] Over 30 days frozen becomes Observer. Re-pledge needs three impartial active members.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 649 Tm ([x] Care Circle offers Basic Necessities when a labor pledge cannot be kept.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 634 Tm ([x] Full access can be confirmed locally; no proof detail, note, or diagnosis is stored or) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 619 Tm (uploaded.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 604 Tm ([x] Members 65+ are in the Care Circle: retired full access with no outside paid job or) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 589 Tm (business; otherwise Basic Necessities and an active role request. Nothing says they cannot) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 574 Tm (work.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 559 Tm ([x] Reports and re-pledge review are peer-based and consensual; pause and settle steps carry) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 544 Tm (no report text or evidence in sync.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 519 Tm (4. Supabase sync and hardening) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 499 Tm ([x] Public data sync is always on when configured: group cards, listings, public groups,) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 484 Tm (community threads, and opt-in contacts.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 469 Tm ([x] Anyone may browse public data. Direct public-table writes are gone; saves use a checked) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 454 Tm (function.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 439 Tm ([x] Shared writes use the signed-in Supabase Auth member, never a browser-supplied member) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 424 Tm (ID.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 409 Tm ([x] Only pledged members in good standing can publish; probation, frozen, Observer, and) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 394 Tm (basic-care members can read only.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 379 Tm ([x] Audit is append-only: who acted, which shared row changed, and when. No report text,) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 364 Tm (evidence, reason, or profile detail.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 349 Tm ([x] Supabase SDK is pinned in vendor/supabase; no third-party CDN at runtime.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 324 Tm (5. Private sync contents and status) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 304 Tm ([x] Private sync is off by default. One-time consent and Supabase Auth sign-in enable) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 289 Tm (automatic sync; Check sync status is only a manual status check.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 274 Tm ([x] After opt-in: member ID, account details, pledge details, standing fields, waitlist) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 259 Tm (entries, and a web-developer pool row.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 244 Tm ([x] Report flag: reported member local ID plus open or settled only. No report text,) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 229 Tm (evidence, reason, reporter, or timestamp.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 214 Tm ([x] Settings offers Turn off private sync and Delete my cloud copy; turning off also removes) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 199 Tm (the pool row.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 184 Tm ([x] Messages, photos, comments, group chats, social chats, and local sign-in details are) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 169 Tm (never transmitted.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 154 Tm ([x] Safety acknowledgments stay on the device; they are not part of private sync.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 129 Tm (6. Automatic web-developer admins) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 109 Tm ([x] No manual UUID list: opt in and record Web development to join the pool automatically.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 94 Tm ([x] Rotation is date-derived: seven seats, seven-day terms, one new seat per day, no cron) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 79 Tm (job.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 64 Tm ([x] An open flag pauses private-data access for the reported web developer until settled.) Tj ET
 endstream
 endobj
 9 0 obj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 10 0 R >>
 endobj
 10 0 obj
-<< /Length 3741 >>
+<< /Length 4140 >>
 stream
-BT /F2 12 Tf 1 0 0 1 54 744 Tm (6. Group admin reading and backups) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 744 Tm (7. Group admin reading and backups) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 724 Tm ([x] Group admins uphold the Unbought Community Guidelines and maintain their own group) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 709 Tm (guidelines.) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 694 Tm ([x] A notified member must read both guidelines and accept by 6pm local time the day before) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 679 Tm (the term; tools stay locked until then.) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 664 Tm ([x] Declining or missing the deadline chooses a backup admin; no backup is claimed when no) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 649 Tm (eligible worker is available.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 624 Tm (7. Verified and still pending) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 604 Tm ([x] Reran the updated Supabase setup in the SQL Editor. It was additive and safe to rerun;) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 589 Tm (no manual admin list was needed.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 574 Tm ([x] Confirmed anon users can read all five public tables and cannot write to them directly.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 559 Tm ([x] Confirmed the new write-protection functions, private tables, and audit table are) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 544 Tm (present.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 624 Tm (8. Verified and still pending) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 604 Tm ([x] Reran the updated Supabase setup in the SQL Editor, including the public contact opt-in) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 589 Tm (migration. Safe to rerun.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 574 Tm ([x] Confirmed anon users can read public tables and cannot write to them directly.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 559 Tm ([x] Confirmed the write-protection functions, private tables, audit table, and public) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 544 Tm (contact table are present.) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 529 Tm ([x] Published the current changes to main and Pages, then verified the live site.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 514 Tm ([ ] Optional final check: sign in as a pledged member and publish one shared row; anon) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 499 Tm (writes are already refused.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 484 Tm ([ ] Keep donations closed until a dedicated Unbought donation fund bank account and donation) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 469 Tm (service are ready before the vernal-equinox rollout.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 454 Tm ([ ] Recruit a volunteer lawyer and accountant before opening any giving channel; keep all) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 439 Tm (donation plans on Whats to Come.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 414 Tm (8. Final user steps, plain language) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 394 Tm (1. Open the site and browse. Nothing private is uploaded.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 379 Tm (2. In Dashboard -> Settings, choose Create account & sync or Sign in & sync, enter a) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 364 Tm (Supabase Auth email and password, and check the consent box. After that, syncing is) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 349 Tm (automatic.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 334 Tm (3. In volunteer offers, record Web development if you want to join the automatic admin pool.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 319 Tm (4. Rotation begins only after more than seven web developers have opted in. Until then) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 304 Tm (nobody holds a private-admin seat.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 289 Tm (5. Use Turn off private sync to sign out and leave the pool; use Delete my cloud copy to) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 274 Tm (remove the private cloud copy too.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 249 Tm (9. Safety boundary) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 229 Tm ([x] Prototype only: no payments, email sending, wage API, stock issue, payout, police) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 214 Tm (report, or real charity status.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 199 Tm ([x] NSFW is a content tag only; no porn and no prostitution. Voting stays anonymous with no) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 184 Tm (member ID attached.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 169 Tm ([x] Safety acknowledgments prove only that standards were read on this device; they do not) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 154 Tm (make an exchange risk-free.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 139 Tm ([x] This file is a working checklist, not a promise of housing, funding, or payout.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 514 Tm ([ ] Optional final check: sign in as a pledged member and publish one shared row and a) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 499 Tm (contact email.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 484 Tm ([ ] Funding and legal groundwork are still being built; keep Academy and funding plans) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 469 Tm (future-only on Whats to Come.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 444 Tm (9. Final user steps, plain language) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 424 Tm (1. Open the site and browse. Nothing private is uploaded.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 409 Tm (2. Create a separate email just for Unbought before you publish a contact address.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 394 Tm (3. In Dashboard -> Settings, choose Create account & sync or Sign in & sync, enter a) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 379 Tm (Supabase Auth email and password, and check the consent box. Syncing is automatic after) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 364 Tm (that.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 349 Tm (4. Publish your Unbought-only contact email in Settings, or leave it off and use the) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 334 Tm (coordinator relay draft for a one-time introduction.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 319 Tm (5. In volunteer offers, record Web development if you want to join the automatic admin pool.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 304 Tm (6. Rotation begins only after more than seven web developers have opted in. Until then) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 289 Tm (nobody holds a private-admin seat.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 274 Tm (7. Use Turn off private sync to sign out and leave the pool; use Delete my cloud copy to) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 259 Tm (remove the private cloud copy too.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 244 Tm (8. In Dashboard -> Settings -> Local sign-in password, replace the temporary password.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 229 Tm (Nothing is uploaded.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 204 Tm (10. Safety boundary) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 184 Tm ([x] Prototype only: no payments, email sending \(pre-filled mail drafts only\), paid email) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 169 Tm (service, secrets in browser code, @unbought forwarding, wage API, stock issue, payout, or) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 154 Tm (police report.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 139 Tm ([x] NSFW is a content tag only; no porn and no prostitution. Voting stays anonymous with no) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 124 Tm (member ID attached.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 109 Tm ([x] Safety acknowledgments prove only that standards were read on this device; they do not) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 94 Tm (make an exchange risk-free.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 79 Tm ([x] This file is a working checklist, not a promise of housing, funding, or payout.) Tj ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 2756 >>
+stream
+BT /F2 12 Tf 1 0 0 1 54 744 Tm (11. Reviewer-set project hours) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 724 Tm ([x] One-time reviewer estimate, not measured time: 58 commits dated Nov 12-Nov 23, 2026 set) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 709 Tm (a conservative starting total of 80.00 hours through Nov 23, 2026.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 694 Tm ([x] Git history shows about 40,745 lines added and 6,055 lines changed or removed; the) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 679 Tm (estimate includes the owner's reading, review, corrections, and editing time, not just) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 664 Tm (prompts.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 649 Tm ([x] This is the first logged contribution to Unbought. The reviewer served as the impartial) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 634 Tm (second confirmation because no other member was available.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 619 Tm ([x] The hours are stored locally as confirmed labor, count toward confirmed hours and pledge) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 604 Tm (standing, and are never sent to Supabase.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 589 Tm ([x] Hourly value: $47.85, the BLS May 2025 median hourly figure for Web Developers and) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 574 Tm (Digital Designers \(OOH, last modified Aug 27, 2026\).) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 559 Tm ([x] No official remote-only national wage exists, so this is a neutral public benchmark, not) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 544 Tm (a payroll promise.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 529 Tm ([x] Total handoff value: 80.00 hours x $47.85 = $3,828.00. This is worth, not wages due, an) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 514 Tm (invoice, a donation, or a payout.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 499 Tm ([x] Local prototype username: unbought.founder. The temporary password is given only in the) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 484 Tm (final handoff message and is not stored in source, docs, PDF, or cloud data.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 459 Tm (12. Permanent local coordinator label) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 439 Tm ([x] One named person shows a local Launch Coordinator label permanently because Unbought) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 424 Tm (launches only once.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 409 Tm ([x] It uses the local chosen name only; no credential, private detail, cloud role, expiry,) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 394 Tm (or web-developer pool row is created.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 379 Tm ([x] It grants no rank, moderation, group-admin, Supabase, or server power and does not) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 364 Tm (change the more-than-seven-developer rule.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 339 Tm (BLS source) Tj ET
+BT /F1 9 Tf 1 0 0 1 54 319 Tm (https://www.bls.gov/ooh/computer-and-information-technology/web-developers.htm) Tj ET
 endstream
 endobj
 xref
-0 10
+0 12
 0000000000 65535 f
 0000000009 00000 n
 0000000058 00000 n
-0000000127 00000 n
-0000000224 00000 n
-0000000326 00000 n
-0000000462 00000 n
-0000004530 00000 n
-0000004666 00000 n
-0000008700 00000 n
-0000008837 00000 n
+0000000134 00000 n
+0000000231 00000 n
+0000000333 00000 n
+0000000469 00000 n
+0000004699 00000 n
+0000004835 00000 n
+0000009217 00000 n
+0000009354 00000 n
+0000013546 00000 n
+0000013684 00000 n
 trailer
-<< /Size 10 /Root 1 0 R >>
+<< /Size 12 /Root 1 0 R >>
 startxref
-12630
+16492
 %%EOF

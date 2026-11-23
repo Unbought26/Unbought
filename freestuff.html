@@ -97,14 +97,14 @@
             <p class="eyebrow">The goods policy</p>
             <h1 id="policy-title">Shared freely in the commons.</h1>
           </div>
-          <p class="section-head-aside">Pledged members receive goods through mutual aid without prices. In this prototype, people who do not take the pledge may record a purchase intent for a good or service; no real payment is processed and no money changes hands.</p>
+          <p class="section-head-aside">Pledged members share goods freely through mutual aid. No payment is processed in the beta.</p>
         </div>
 
         <div class="standard-grid">
           <article class="standard-card">
             <span class="standard-icon standard-icon--amber" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-basket"></use></svg></span>
             <h3>Goods are free</h3>
-            <p>Pledged members share and receive goods through mutual aid in the commons. People who do not take the pledge may record a purchase intent for goods in this prototype; no real payment is processed and the amount is tracked locally as a planned intent for the Unbought donation fund.</p>
+            <p>Pledged members share and receive goods through mutual aid in the commons. Guests can browse, but requests and posting are for pledged members.</p>
           </article>
           <article class="standard-card">
             <span class="standard-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-scale"></use></svg></span>
@@ -123,7 +123,7 @@
           </article>
         </div>
 
-        <p class="standard-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-spark"></use></svg> Pledged members do not pay for goods here. Non-members can record a local purchase intent in this prototype, with the amount tracked as a planned intent for the Unbought donation fund; no real payment is processed.</p>
+        <p class="standard-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-spark"></use></svg> Pledged members do not pay for goods here. Shared goods move through mutual consent.</p>
       </div>
     </section>
 
@@ -137,7 +137,7 @@
             <p class="eyebrow">Free stuff directory</p>
             <h2 id="services-title">The commons, in plain sight.</h2>
           </div>
-          <p>Every listing is an offer. Members request through mutual consent; suggested non-member prices are only local prototype intents for a planned donation fund. Members marked Unavailable keep their listings here, but cannot receive labor or product requests. Search, filter, and sort locally.</p>
+          <p>Every listing is an offer. Members request through mutual consent. Members marked Unavailable keep their listings here, but cannot receive requests. Search, filter, and sort locally.</p>
         </div>
 
         <div class="market-shell">
@@ -151,7 +151,7 @@
                 <summary>Search &amp; filters</summary>
                 <div class="filter-note">
                   <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-basket"></use></svg>
-                  <p>Members request through mutual consent. Non-members may record a purchase intent in this prototype; the amount is tracked locally as a planned intent for the Unbought donation fund and no real payment is processed.</p>
+                  <p>Members request through mutual consent. Guests can browse the commons.</p>
                 </div>
               <div class="facet-groups">
                 <fieldset class="facet-group">
@@ -176,17 +176,6 @@
                   <legend>Brand</legend>
                   <input type="search" id="brand-filter" name="brand" list="brand-options" placeholder="Search a brand" autocomplete="off">
                   <datalist id="brand-options"></datalist>
-                </fieldset>
-                <fieldset class="facet-group">
-                  <legend>Donation price</legend>
-                  <select id="price-filter" name="price">
-                    <option value="all">All offers</option>
-                    <option value="priced">Has a suggested donation</option>
-                    <option value="free">Free to everyone</option>
-                    <option value="under25">Under $25</option>
-                    <option value="25to49">$25 – $49</option>
-                    <option value="50plus">$50 and up</option>
-                  </select>
                 </fieldset>
                 <fieldset class="facet-group">
                   <legend>Location</legend>
@@ -318,18 +307,6 @@
                   <span>Mark this post NSFW if it is unsuitable for minors. NSFW is not for porn or prostitution, which are not allowed on Unbought.</span>
                 </label>
               </div>
-              <fieldset class="field field--wide purchase-optin">
-                <legend>Suggested donation price (optional)</legend>
-                <label class="checkbox">
-                  <input type="checkbox" id="post-nonmember-enabled" name="nonmemberPurchaseEnabled">
-                  <span>Set a donation price so non-members can record a purchase intent (members still get this free).</span>
-                </label>
-                <div class="field" id="post-nonmember-price-field" hidden>
-                  <label for="post-nonmember-price">Donation price for non-members (USD) <span class="required-mark" aria-hidden="true">*</span></label>
-                  <input type="number" id="post-nonmember-price" name="nonmemberPurchasePrice" min="1" step="1" inputmode="decimal" placeholder="25">
-                  <p class="field-hint">Members always get this item free. In this prototype the full amount is only a local intent for a planned donation fund; no payment is processed here.</p>
-                </div>
-              </fieldset>
               <div class="field field--wide post-photo-field">
                 <label for="post-photos">Photos <span class="optional">(optional, up to 3)</span></label>
                 <input type="file" id="post-photos" name="photos" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
@@ -342,7 +319,7 @@
             <div class="field field--check">
               <label class="checkbox">
                 <input type="checkbox" name="postAgreement" required>
-                <span>I confirm this item is free for pledged members, with no price, deposit, or swap requirement for members.</span>
+                <span>I confirm this item is offered freely through mutual aid.</span>
               </label>
               <label class="checkbox">
                 <input type="checkbox" name="postSafetyAgreement" required>
@@ -374,16 +351,11 @@
             <a class="button button--outline" href="future.html#donations">Read the funding plan</a>
           </div>
         </div>
-        <aside class="closing-cta-card" aria-labelledby="cta-fund-title">
-          <span class="badge badge--amber">Trust in formation</span>
-          <h3 id="cta-fund-title">Where donations go</h3>
-          <ol class="cta-fund-list">
-            <li><span class="cta-fund-number" aria-hidden="true">1</span><div><strong>Legal &amp; trust formation</strong><p>Cooperative counsel, fiscal sponsorship, and the agreements that protect the commons.</p></div></li>
-            <li><span class="cta-fund-number" aria-hidden="true">2</span><div><strong>Real estate &amp; land</strong><p>Due diligence, stewardship planning, and land held for community use.</p></div></li>
-            <li><span class="cta-fund-number" aria-hidden="true">3</span><div><strong>Website &amp; operations</strong><p>Hosting, insurance, accounting, and the unglamorous costs of staying alive.</p></div></li>
-            <li><span class="cta-fund-number" aria-hidden="true">4</span><div><strong>Free Goods Fund</strong><p>Any excess buys products neighbors can claim at no cost on this page.</p></div></li>
-          </ol>
-          <a class="text-link" href="future.html#donations">Read the funding plan <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
+        <aside class="closing-cta-card" aria-labelledby="cta-beta-title">
+          <span class="badge badge--amber">Open beta</span>
+          <h3 id="cta-beta-title">Mutual aid, not a marketplace</h3>
+          <p>Labor and goods move through consent, not prices. No payment is processed.</p>
+          <a class="text-link" href="future.html#donations">Future funding <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
         </aside>
       </div>
     </section>
@@ -450,7 +422,8 @@
     <div class="container footer-utility">
       <div class="footer-utility-copy">
         <p>Prototype build · No payment processing, tracking, ads, or external frameworks.</p>
-        <p>Public listing details and community posts are shared through Supabase when connected; pledges and private details can optionally sync with your permission; messages, report text and evidence, and donation records stay in this browser. With optional private sync on, only a minimal open/settled flag for a reported admin is sent.</p>
+        <p><strong>Contact Unbought:</strong> <a href="mailto:unbought26@gmail.com">unbought26@gmail.com</a> · <a href="https://www.instagram.com/unbought26/" target="_blank" rel="noopener">@unbought26</a> · <a href="https://www.facebook.com/share/1cPuizNHLK/" target="_blank" rel="noopener">Unbought</a></p>
+        <p>Public listing details and community posts are shared through Supabase when connected; pledges and private details can optionally sync with your permission; messages, report text, and evidence stay in this browser. With optional private sync on, only the reported member's local ID and an open/settled status are sent.</p>
       </div>
       <button class="button button--ghost-light button--small" id="reset-demo" type="button">
         <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-refresh"></use></svg>
@@ -502,34 +475,9 @@
             </fieldset>
           </div>
 
-          <div id="consent-purchase-fields" hidden>
-            <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-scale"></use></svg> Non-members may record a purchase intent for goods at the price set by the provider. The full amount is tracked locally as a planned intent for the Unbought donation fund. No real payment is collected and nothing is transmitted.</p>
-            <div class="form-grid">
-              <div class="field">
-                <label for="purchase-name">Your name <span class="required-mark" aria-hidden="true">*</span></label>
-                <input type="text" id="purchase-name" name="purchaseName" maxlength="60" placeholder="Name for this purchase intent">
-              </div>
-              <div class="field">
-                <label for="purchase-email">Email <span class="required-mark" aria-hidden="true">*</span></label>
-                <input type="email" id="purchase-email" name="purchaseEmail" maxlength="120" placeholder="you@example.com">
-              </div>
-              <div class="field">
-                <label for="purchase-amount">Suggested donation (USD) <span class="required-mark" aria-hidden="true">*</span></label>
-                <input type="number" id="purchase-amount" name="purchaseAmount" min="1" step="1" inputmode="decimal" placeholder="25" readonly>
-                <p class="field-hint" id="purchase-price-hint">Set by the provider. In this prototype the full amount is only a local intent for a planned donation fund; no payment is processed here. Members get this free.</p>
-              </div>
-            </div>
-            <div class="field field--check">
-              <label class="checkbox">
-                <input type="checkbox" name="purchaseAgreement" value="yes">
-                <span>I understand this records a non-binding purchase intent in the prototype (no payment processed now) and that the full amount is tracked locally as a planned intent for the Unbought donation fund. I am not a pledged member for this transaction.</span>
-              </label>
-            </div>
-          </div>
-
           <div class="field">
             <label for="consent-note">Note / context <span class="optional">(optional)</span></label>
-            <textarea id="consent-note" name="note" rows="3" maxlength="280" placeholder="What do you need, when can you pick up, or details for this purchase intent?"></textarea>
+            <textarea id="consent-note" name="note" rows="3" maxlength="280" placeholder="What do you need, or when can you pick up?"></textarea>
           </div>
 
           <p class="dialog-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"></use></svg> This prototype stores your request in this browser only. Nothing is sent to a provider and no money is collected.</p>

@@ -6,9 +6,9 @@
    supabase-config.js is configured, a small public-data bridge shares listings,
    group cards, and community chat content. Pledge records and private profile
    fields stay local unless a member explicitly turns on optional private sync
-   in Dashboard → Settings; messages, donations, local password hashes, and
-   photos never leave the browser. Report text and evidence stay local, but a
-   minimal open/settled admin flag may be sent after explicit opt-in.
+   in Dashboard → Settings; messages, photos, and local sign-in details never
+   leave the browser. Report text and evidence stay local, but the reported
+   member's local ID plus an open/settled status may be sent after explicit opt-in.
    All user-generated text is inserted with textContent / value assignments
    rather than HTML strings, so a saved listing can never inject markup.
 
@@ -60,9 +60,9 @@
   // A blog service will replace this list in the live site.
   const COORDINATOR_EMAIL = 'unbought26@gmail.com';
   const VOLUNTEER_MAILTO = 'mailto:' + COORDINATOR_EMAIL + '?subject='
-    + encodeURIComponent('Help make Unbought a worldwide website')
+    + encodeURIComponent('Help build the Unbought beta')
     + '&body=' + encodeURIComponent(
-      'Hello Unbought,\n\nI would like to help make Unbought a worldwide website.\n\n'
+      'Hello Unbought,\n\nI would like to help build the free beta and the seed-funding and legal groundwork.\n\n'
       + 'I can help with: [law / nonprofit setup / web development / outreach / other].\n'
       + 'A little about me: \n\nThank you.'
     );
@@ -83,14 +83,14 @@
       tag: 'Get involved',
       title: 'What works now, and how to help',
       bodyHtml: '<p>The open beta is for anyone, anywhere. You can browse Free Labor and Free Stuff, sign the pledge, post labor and goods offers, use your dashboard, record volunteer roles, and choose whether to sync public directory data or opt into private cloud sync. Future plans stay on <a href="future.html">What’s to Come</a>.</p>'
-        + '<p>Join by signing the pledge, or volunteer from any page. We especially need lawyers, nonprofit organizers, web developers, translators, and patient helpers who want Unbought to become a worldwide website. <a href="' + VOLUNTEER_MAILTO + '">Email the volunteer team</a> and tell us what you can do.</p>'
+        + '<p>Join by signing the pledge, or volunteer from any page. We especially need lawyers, nonprofit organizers, web developers, translators, and patient helpers who want to build the free beta and its funding and legal groundwork. <a href="' + VOLUNTEER_MAILTO + '">Email the volunteer team</a> and tell us what you can do.</p>'
     },
     {
       date: '2026-11-19',
       label: 'Nov 19, 2026',
       tag: 'Soft launch',
       title: 'What works right now',
-      body: 'The soft launch is an invitation to anyone, anywhere. You can browse Free Labor and Free Stuff, take the local pledge, post offers when signed in, use your dashboard, and choose whether public directory data or private details sync. Beta features are limited while the prototype is built.'
+      body: 'The soft launch is an invitation to anyone, anywhere. You can browse Free Labor and Free Stuff, take the local pledge, post offers when signed in, use your dashboard, and choose whether public directory data or private details sync. Beta features are limited while the free build continues.'
     },
     {
       date: '2026-11-18',
@@ -626,14 +626,14 @@
       title: 'Solid Wood Bookshelves & Side Tables',
       provider: 'Rosa Jiménez',
       location: 'Maple Street · porch pickup',
-      description: 'Sturdy solid-wood shelves and side tables, cleaned and sanded. Pickup from the porch, or delivery within a few miles if we can arrange it. Free for pledged members—no payment or swap. Non-members may record a $25 purchase intent, which goes entirely to the Unbought donation fund.',
+      description: 'Sturdy solid-wood shelves and side tables, cleaned and sanded. Pickup from the porch, or delivery within a few miles if we can arrange it. Free through mutual consent—no payment, price, or swap.',
       details: [
         { label: 'Pickup', value: 'Porch pickup · local delivery possible' },
-        { label: 'Cost', value: 'Free for members · non-members $25 to the fund' },
+        { label: 'Cost', value: '100% free' },
         { label: 'Condition', value: 'Clean, sturdy, gently used' }
       ],
-      note: 'Furniture is free to members. You arrange transport.',
-      nonmemberPurchase: { enabled: true, price: 25 }
+      note: 'Furniture is free. You arrange transport.',
+      nonmemberPurchase: { enabled: false, price: 0 }
     },
     {
       id: 'seed-laptop',
@@ -764,6 +764,7 @@
   const VOTING_DAYS = 3;     // time for all members to review the case file and vote
   const DAY_MS = 24 * 60 * 60 * 1000;
   const PLEDGE_FREEZE_DAYS = 30;       // grace period to make up missed hours
+  const PLEDGE_INACTIVITY_DAYS = 7;    // a full week with no confirmed work
   const PROBATION_DAYS = 30;           // first month: one week's hours unlock full access
   const PLEDGE_REVIEWER_COUNT = 3;     // impartial active members approve a re-pledge
 
@@ -787,16 +788,20 @@
     betaFounder: 'Beta Founder',
     firstYear: '1st Year',
     firstYearFounder: 'First year Founder',
-    volunteer: 'Volunteer'
+    volunteer: 'Volunteer',
+    launchCoordinator: 'Launch Coordinator'
   });
   const MEMBER_LABEL_ICONS = Object.freeze({
     seed: '🌱',
     'beta-founder': '✨',
     'first-year': '🌟',
     'first-year-founder': '🌿',
-    volunteer: '💙'
+    volunteer: '💙',
+    'launch-coordinator': '📣'
   });
   const VOLUNTEER_ACCESS_COPY = 'Volunteers run Unbought: keeping the website updated, paying the bills, accepting new volunteers, legal work, and the rest of the operating team.';
+  const LAUNCH_COORDINATOR_NAME = 'Rachel';
+  const LAUNCH_COORDINATOR_COPY = 'Launch Coordinator is a local-only coordination label for one named person. Because Unbought launches only once, it stays on this profile with no end date. It is not a rank: it gives no authority over other members, no moderator or group-admin tools, and no website, Supabase, or server access.';
   const SEED_LABEL_WORDS = Object.freeze({
     law: 'Law',
     lawyer: 'Law',
@@ -965,7 +970,7 @@
   function defaultCommunityChannels() {
     const createdAt = new Date().toISOString();
     return [
-      { id: 'channel-general', name: 'general', purpose: 'Open local conversation', createdBy: '', createdAt },
+      { id: 'channel-general', name: 'general', purpose: 'Open community conversation', createdBy: '', createdAt },
       { id: 'channel-mutual-aid', name: 'mutual-aid', purpose: 'Requests and offers of help', createdBy: '', createdAt },
       { id: 'channel-projects', name: 'projects', purpose: 'Working projects and ideas', createdBy: '', createdAt }
     ];
@@ -1066,6 +1071,8 @@
       },
       messages: [],
       chats: [],
+      publicContacts: [],
+      myContact: { email: '', enabled: false },
       suggestions: [],
       severanceFund: {
         balance: 0,
@@ -1415,6 +1422,20 @@
     return isMember() && isVolunteerMember(state.pledge);
   }
 
+  // One named person shows a local coordination label for the one-time launch.
+  // It is derived only from the local chosen name; no credential, private
+  // detail, cloud role, or expiry is created for it.
+  function isLaunchCoordinatorMember(member) {
+    const self = state.pledge;
+    return Boolean(isMember() && self && member && member.memberId
+      && member.memberId === self.memberId
+      && cleanString(member.name, 60).trim().toLowerCase() === LAUNCH_COORDINATOR_NAME.toLowerCase());
+  }
+
+  function isLaunchCoordinator() {
+    return isLaunchCoordinatorMember(state.pledge);
+  }
+
   function getMemberLabels(member) {
     const labels = [];
     const seed = isSeedMember(member);
@@ -1454,6 +1475,14 @@
         key: 'volunteer',
         name: MEMBER_LABELS.volunteer,
         detail: VOLUNTEER_ACCESS_COPY,
+        pending: false
+      });
+    }
+    if (isLaunchCoordinatorMember(member)) {
+      labels.push({
+        key: 'launch-coordinator',
+        name: MEMBER_LABELS.launchCoordinator,
+        detail: LAUNCH_COORDINATOR_COPY,
         pending: false
       });
     }
@@ -2515,11 +2544,12 @@
   /* ------------------------------------------------------------------------
       Monthly pledge standing.
 
-     A missed monthly pledge freezes the pledge, not the membership. Requests
-     pause until the shortfall is made up. After 30 days frozen, the member
-     becomes an Observer and any re-pledge needs three impartial active members.
-     All of it stays in this browser; only the optional private-sync snapshot
-     carries the resulting status fields.
+     A pledge freezes only after a full week with no confirmed work while the
+     monthly pledge is still short. It freezes the pledge, not the membership.
+     Requests pause until the pledged hours are completed. After 30 days frozen,
+     the member becomes an Observer and any re-pledge needs three impartial
+     active members. All of it stays in this browser; only the optional
+     private-sync snapshot carries the resulting status fields.
      ------------------------------------------------------------------------ */
   function monthKeyFromDate(value) {
     const date = value instanceof Date ? value : new Date(value);
@@ -2558,6 +2588,13 @@
       })
       .reduce((sum, entry) => sum + cleanHours(entry.hours), 0);
     return Math.round(total * 100) / 100;
+  }
+
+  function lastConfirmedWorkAt(memberId) {
+    return confirmedLaborEntries(memberId)
+      .map((entry) => Date.parse(entry.createdAt))
+      .filter((when) => !Number.isNaN(when))
+      .reduce((latest, when) => Math.max(latest, when), 0);
   }
 
   function pledgeHourRequirement(pledge) {
@@ -2636,8 +2673,9 @@
   }
 
   // The first month is probation: one week of confirmed hours unlocks member
-  // tools, and the full monthly pledge is checked at the 30-day mark. After
-  // that, each previous calendar month is checked once.
+  // tools. After full access, the pledge is checked for inactivity, not at a
+  // calendar month boundary: a full week with no confirmed work, while the
+  // monthly pledge is still short, freezes the pledge.
   function syncPledgeStanding() {
     const pledge = state.pledge;
     if (!isMember() || !pledge) return false;
@@ -2675,14 +2713,14 @@
         pledge.status = 'active';
         pledge.probationCompletedAt = new Date().toISOString();
         addNotification('pledge', 'First week complete',
-          `You confirmed ${earned} of ${weekly} first-week hours. Full member tools are unlocked; the full ${pledgeHourRequirement(pledge)}-hour month is still checked on day 30.`,
+          `You confirmed ${earned} of ${weekly} first-week hours. Full member tools are unlocked. Your pledge will only freeze if you go a full week without confirmed work while your monthly hours are still short.`,
           { tab: 'dashboard' });
         changed = true;
-      } else if (pledgeProbationOver(pledge)) {
-        const required = pledgeHourRequirement(pledge);
+      } else if (pledgeProbationOver(pledge) && !pledge.firstMonthChecked) {
         pledge.firstMonthChecked = true;
-        freezePledgeForShortfall(pledge, monthKeyFromDate(pledge.signedAt), earned, required,
-          `Your first month ended with ${earned} of ${required} pledged hours. Only offering labor is available until the pledged hours are completed.`);
+        addNotification('pledge', 'First month passed',
+          `Confirm ${weekly} first-week hour${weekly === 1 ? '' : 's'} to unlock full member tools. A pledge does not freeze during probation.`,
+          { tab: 'dashboard' });
         changed = true;
       }
     } else if (pledge.status === 'frozen') {
@@ -2716,34 +2754,21 @@
         }
       }
     } else if (pledge.status === 'active') {
-      if (!pledge.firstMonthChecked) {
-        if (pledgeProbationOver(pledge)) {
-          pledge.firstMonthChecked = true;
-          const required = pledgeHourRequirement(pledge);
-          const total = hoursSince(pledge.memberId, pledge.signedAt);
-          if (required > 0 && total < required) {
-            freezePledgeForShortfall(pledge, monthKeyFromDate(pledge.signedAt), total, required,
-              `Your first month ended with ${total} of ${required} pledged hours. Only offering labor is available until the pledged hours are completed.`);
-          } else {
-            addNotification('pledge', 'First month complete',
-              `You confirmed ${total} of ${required} pledged hours in your first month. Full access continues.`,
-              { tab: 'dashboard' });
-          }
-          changed = true;
-        }
-      } else {
-        const lastMonth = previousMonthKey(new Date());
-        const required = pledgeHourRequirement(pledge);
-        if (pledge.lastCheckedMonth !== lastMonth) {
-          pledge.lastCheckedMonth = lastMonth;
-          changed = true;
-          if (required > 0) {
-            const logged = hoursInMonth(pledge.memberId, lastMonth);
-            if (logged < required) {
-              freezePledgeForShortfall(pledge, lastMonth, logged, required,
-                `You confirmed ${logged} of ${required} pledged hours in ${lastMonth}. Only offering labor is available until the pledged hours are completed. After ${PLEDGE_FREEZE_DAYS} days frozen, you become an Observer.`);
-              changed = true;
-            }
+      if (!pledge.firstMonthChecked && pledgeProbationOver(pledge)) {
+        pledge.firstMonthChecked = true;
+        changed = true;
+      }
+      const required = pledgeHourRequirement(pledge);
+      if (required > 0) {
+        const lastWork = lastConfirmedWorkAt(pledge.memberId);
+        const since = lastWork || Date.parse(pledge.probationCompletedAt || pledge.signedAt);
+        const inactive = Number.isFinite(since) && Date.now() - since >= (PLEDGE_INACTIVITY_DAYS * DAY_MS);
+        if (inactive) {
+          const logged = hoursInMonth(pledge.memberId, monthKeyFromDate(new Date()));
+          if (logged < required) {
+            freezePledgeForShortfall(pledge, monthKeyFromDate(new Date()), logged, required,
+              `No confirmed work for ${PLEDGE_INACTIVITY_DAYS} days. You confirmed ${logged} of ${required} pledged hours this month. Only offering labor is available until the pledged hours are completed.`);
+            changed = true;
           }
         }
       }
@@ -2928,7 +2953,7 @@
               <li>Goods are free for pledged members. No proof of need, income check, or intake form is required.</li>
               <li>Items must be clean, usable, within date, and free of recalls. No weapons, medication, recalled products, or unsafe goods.</li>
               <li>Describe goods honestly. Every exchange starts with a clear description and ongoing mutual consent; either person can decline or stop.</li>
-              <li>No real payment is processed in this prototype. Non-member purchase intents are local records only.</li>
+              <li>No payment, purchase, or donation is processed in the beta. Labor and goods are shared through mutual consent.</li>
             </ul>
             <h3>Accountability boundary</h3>
             <p>Safety reports stay local. Report text, evidence, reasons, and reporter identity are never uploaded. This acknowledgment record is stored on this device and is not part of private sync. It is a record that you read the rules, not legal advice or a promise of legal protection.</p>
@@ -3364,8 +3389,9 @@
     return normalizeNonmemberPurchase(listing && listing.nonmemberPurchase).price;
   }
 
-  function canPurchaseAsNonmember(listing) {
-    return getNonmemberPrice(listing) > 0;
+  function canPurchaseAsNonmember() {
+    // Donations, sales, and non-member purchases stay closed during the beta.
+    return false;
   }
 
   function allReports() {
@@ -4316,6 +4342,26 @@
         }));
     }
 
+    if (raw.myContact && typeof raw.myContact === 'object') {
+      fallback.myContact = {
+        email: cleanString(raw.myContact.email, 254),
+        enabled: Boolean(raw.myContact.enabled)
+      };
+    }
+
+    if (Array.isArray(raw.publicContacts)) {
+      fallback.publicContacts = raw.publicContacts
+        .filter((contact) => contact && typeof contact === 'object' && contact.email)
+        .slice(0, 500)
+        .map((contact) => ({
+          memberId: cleanString(contact.memberId, 100),
+          name: cleanString(contact.displayName || contact.name, 60) || 'Neighbor',
+          email: cleanString(contact.email, 254),
+          updatedAt: cleanString(contact.updatedAt, 40)
+        }))
+        .filter((contact) => contact.memberId && contact.email);
+    }
+
     if (Array.isArray(raw.inquiries)) {
       fallback.inquiries = raw.inquiries
         .filter((inquiry) => inquiry && typeof inquiry === 'object' && typeof inquiry.type === 'string')
@@ -4925,7 +4971,6 @@
   let postDialogDefaults = null;
   let postSubmitDefaultHtml = '';
   let postStatusDefaultText = '';
-  let currentRequestMode = 'mutual';
   let confirmAction = null;
   let currentInquiryType = 'waitlist';
 
@@ -4976,8 +5021,8 @@
     'freelabor.html': ['listings'],
     'freestuff.html': ['listings'],
     'group.html': ['groups', 'channels', 'threads', 'posts'],
-    'dashboard.html': ['groups', 'listings', 'channels', 'threads', 'posts'],
-    'profile.html': ['groups', 'listings']
+    'dashboard.html': ['groups', 'listings', 'channels', 'threads', 'posts', 'contacts'],
+    'profile.html': ['groups', 'listings', 'contacts']
   });
   let publicWriteNoticeShown = false;
 
@@ -5042,7 +5087,7 @@
         category: cleanString(listing.category, 60),
         scope: hasOwn(SCOPE_LABELS, listing.scope) ? listing.scope : '',
         nsfw: Boolean(listing.nsfw),
-        nonmember_price: price,
+        nonmember_price: null,
         created_at: cleanString(listing.createdAt, 40) || new Date().toISOString()
       });
     });
@@ -5609,6 +5654,30 @@
       changed = true;
     });
 
+    const contactMap = new Map(
+      (Array.isArray(state.publicContacts) ? state.publicContacts : [])
+        .filter((contact) => contact && contact.memberId)
+        .map((contact) => [contact.memberId, contact])
+    );
+    (Array.isArray(snapshot.contacts) ? snapshot.contacts : []).forEach((row) => {
+      if (!row || typeof row !== 'object') return;
+      const memberId = cleanString(row.member_id, 100);
+      const email = cleanString(row.email, 254);
+      if (!memberId || !email) return;
+      const name = cleanString(row.display_name, 60) || 'Neighbor';
+      const updatedAt = cleanString(row.updated_at, 40);
+      const existing = contactMap.get(memberId);
+      if (existing) {
+        if (existing.email !== email) { existing.email = email; changed = true; }
+        if (existing.name !== name) { existing.name = name; changed = true; }
+        if (updatedAt && existing.updatedAt !== updatedAt) { existing.updatedAt = updatedAt; changed = true; }
+      } else {
+        state.publicContacts.push({ memberId, name, email, updatedAt });
+        contactMap.set(memberId, state.publicContacts[state.publicContacts.length - 1]);
+        changed = true;
+      }
+    });
+
     return changed;
   }
 
@@ -5625,7 +5694,8 @@
         : kind === 'listings' ? 'public_listings'
           : kind === 'channels' ? 'public_community_channels'
             : kind === 'threads' ? 'public_community_threads'
-              : 'public_community_posts';
+              : kind === 'contacts' ? 'public_member_contacts'
+                : 'public_community_posts';
       (Array.isArray(snapshot[kind]) ? snapshot[kind] : []).forEach((row) => {
         if (row && row.id) remoteKeys.push(`${table}:${cleanString(row.id, 100)}`);
       });
@@ -6000,17 +6070,12 @@
       addBadge(badges, 'badge--soft', GOODS_CATEGORIES[listing.category].label);
     }
     if (isGoods || listing.exchange === 'free') {
-      addBadge(badges, 'badge--free', isGoods
-        ? (listingNonmemberPrice ? 'Free for members' : '100% Free')
-        : '100% Free · no materials');
+      addBadge(badges, 'badge--free', isGoods ? '100% Free' : '100% Free · no materials');
     } else {
       addBadge(badges, 'badge--atcost', 'Labor free · requester covers materials');
     }
     if (listing.isUser) addBadge(badges, 'badge--soft', 'Posted by you');
     if (hasOwn(SCOPE_LABELS, listing.scope)) addBadge(badges, 'badge--soft', SCOPE_LABELS[listing.scope]);
-    if (listingNonmemberPrice) {
-      addBadge(badges, 'badge--fund', `Donation ${formatMoney(listingNonmemberPrice)} → Unbought donation fund`);
-    }
     return badges;
   }
 
@@ -6120,13 +6185,6 @@
       });
     }
 
-    if (listingNonmemberPrice > 0) {
-      details.push({
-        label: 'Donation price',
-        value: `${formatMoney(listingNonmemberPrice)} for non-members → Unbought donation fund · members free`
-      });
-    }
-
     details.forEach((detail) => {
       if (!detail || !detail.label || !detail.value) return;
       const row = document.createElement('div');
@@ -6146,9 +6204,9 @@
         : hasMutualRequest
           ? 'Request saved locally · consent first'
           : hasPurchaseIntent
-            ? 'Purchase intent recorded locally · no payment processed'
-            : !isMember() && !canPurchaseAsNonmember(listing)
-              ? 'Free for pledged members · non-member purchase is not enabled for this offer'
+            ? 'Old local purchase record · no payment was processed'
+            : !isMember()
+              ? 'Free for pledged members through mutual consent · no purchases in the beta'
               : listing.note || 'Peer offer · consent first'
     );
     note.prepend(createIcon(!providerAvailable && document.getElementById('icon-clock') ? 'clock' : 'check'));
@@ -6170,23 +6228,10 @@
       requestButton.append(createIcon('check'), document.createTextNode('Request recorded'));
       requestButton.setAttribute('aria-label', `Request recorded: ${listing.title}`);
     } else if (!isMember()) {
-      if (!canPurchaseAsNonmember(listing)) {
-        requestButton.classList.add('button--ghost');
-        requestButton.disabled = true;
-        requestButton.append(createIcon('check'), document.createTextNode('For pledged members'));
-        requestButton.setAttribute('aria-label', `Pledged members can request ${listing.title} free. Non-member purchase is not enabled for this offer.`);
-      } else if (hasPurchaseIntent) {
-        requestButton.classList.add('button--ghost');
-        requestButton.disabled = true;
-        requestButton.append(createIcon('check'), document.createTextNode('Purchase intent recorded'));
-        requestButton.setAttribute('aria-label', `Purchase intent recorded locally for ${listing.title}`);
-      } else {
-        const buttonPrice = formatMoney(getNonmemberPrice(listing));
-        requestButton.classList.add('button--outline');
-        requestButton.textContent = `Buy for ${buttonPrice} → Unbought donation fund`;
-        requestButton.dataset.requestMode = 'purchase';
-        requestButton.setAttribute('aria-label', `Buy ${listing.title} as a non-member for ${buttonPrice}. The full amount is recorded locally for the Unbought donation fund; no payment is processed.`);
-      }
+      requestButton.classList.add('button--ghost');
+      requestButton.disabled = true;
+      requestButton.append(createIcon('check'), document.createTextNode('For pledged members'));
+      requestButton.setAttribute('aria-label', `Pledged members can request ${listing.title} free through mutual consent. Purchases and donations are closed in the beta.`);
     } else {
       requestButton.dataset.requestMode = 'mutual';
       requestButton.classList.add('button--outline');
@@ -7150,14 +7195,17 @@
   }
 
   function syncPostPurchaseFields() {
+    // Purchases and non-member prices stay closed in beta. If an older saved
+    // page copy still has these fields, keep them hidden and disabled.
     const toggle = document.getElementById('post-nonmember-enabled');
     const priceField = document.getElementById('post-nonmember-price-field');
     const priceInput = document.getElementById('post-nonmember-price');
-    const enabled = Boolean(toggle && toggle.checked);
-    if (priceField) priceField.hidden = !enabled;
+    if (toggle) toggle.checked = false;
+    if (priceField) priceField.hidden = true;
     if (priceInput) {
-      priceInput.disabled = !enabled;
-      priceInput.required = enabled;
+      priceInput.disabled = true;
+      priceInput.required = false;
+      priceInput.value = '';
     }
   }
 
@@ -7207,7 +7255,6 @@
     editingListingId = listing.id;
 
     const form = document.getElementById('post-form');
-    const purchase = normalizeNonmemberPurchase(listing.nonmemberPurchase);
     const setChecked = (id, checked) => {
       const control = document.getElementById(id);
       if (control) control.checked = Boolean(checked);
@@ -7255,8 +7302,6 @@
       setPostFieldValue('post-scope', listing.scope);
     }
 
-    setChecked('post-nonmember-enabled', purchase.enabled);
-    setPostFieldValue('post-nonmember-price', purchase.enabled ? purchase.price : '');
     syncPostPurchaseFields();
 
     if (form) {
@@ -7326,21 +7371,7 @@
     const postLocationMode = document.getElementById('post-location-mode');
     if (postLocationMode) postLocationMode.addEventListener('change', syncPostLocationMode);
 
-    // A provider decides whether non-members may buy, and sets the price.
-    // Members always receive the same listing free through mutual consent.
-    const purchaseToggle = document.getElementById('post-nonmember-enabled');
-    const purchasePriceField = document.getElementById('post-nonmember-price-field');
-    const purchasePriceInput = document.getElementById('post-nonmember-price');
-    const syncPurchaseFields = () => {
-      const enabled = Boolean(purchaseToggle && purchaseToggle.checked);
-      if (purchasePriceField) purchasePriceField.hidden = !enabled;
-      if (purchasePriceInput) {
-        purchasePriceInput.disabled = !enabled;
-        purchasePriceInput.required = enabled;
-      }
-    };
-    if (purchaseToggle) purchaseToggle.addEventListener('change', syncPurchaseFields);
-    syncPurchaseFields();
+    syncPostPurchaseFields();
 
     const postCategory = document.getElementById('post-category');
     if (postCategory) postCategory.addEventListener('change', () => buildGoodsPostFields(false));
@@ -7471,13 +7502,6 @@
         return;
       }
 
-      const purchaseEnabled = Boolean(data.get('nonmemberPurchaseEnabled'));
-      const purchasePrice = Math.max(0, Math.round(Number(data.get('nonmemberPurchasePrice') || 0)));
-      if (purchaseEnabled && !(purchasePrice > 0)) {
-        flagInvalidField(document.getElementById('post-nonmember-price'), 'Set a whole-dollar price for non-members, or turn the option off.');
-        return;
-      }
-
       const location = locationMode === 'online'
         ? 'Online'
         : locationMode === 'zip'
@@ -7512,15 +7536,12 @@
         ...(pillar === 'goods' ? { condition, color, brand, attributes } : { jobTitle, format, locationMode }),
         photos,
         comments: [],
-        nonmemberPurchase: { enabled: purchaseEnabled, price: purchaseEnabled ? purchasePrice : 0 },
         details: [
           { label: 'Where', value: location },
           ...(pillar === 'goods' ? [{ label: 'Category', value: GOODS_CATEGORIES[category].label }] : []),
           {
             label: pillar === 'goods' ? 'Cost' : 'Materials',
-            value: purchaseEnabled
-              ? `Free for members · non-members ${formatMoney(purchasePrice)} to the Unbought donation fund`
-              : EXCHANGES[exchange].label
+            value: EXCHANGES[exchange].label
           },
           { label: 'Contact', value: 'Through a consent request' }
         ],
@@ -7641,27 +7662,26 @@
   }
 
   /* ------------------------------------------------------------------------
-     05. Member account, contributions, stock & Unbought donation fund (prototype)
+     05. Member account, hours, confirmed exchanges & future funding plans
      ------------------------------------------------------------------------ */
   function renderMemberAccount() {
     const container = document.getElementById('member-account');
     if (!container) return;
 
     const signedIn = isMember();
-    const fund = getSeveranceSummary();
     const hours = getHourTotals();
-    const donated = getDonationTotals();
+    const exchangeTotals = signedIn ? getConfirmedExchangeTotals(state.pledge.memberId) : null;
 
     container.replaceChildren();
 
     const card = createEl('section', 'account-card');
     const head = createEl('div', 'account-head');
-    head.appendChild(createEl('p', 'eyebrow', signedIn ? 'Your account' : 'Participation & Unbought donation fund'));
-    head.appendChild(createEl('h3', '', signedIn ? 'Your hours, giving, and fund share' : 'Members join by pledge; non-members may record purchase intents'));
+    head.appendChild(createEl('p', 'eyebrow', signedIn ? 'Your account' : 'Participation in the commons'));
+    head.appendChild(createEl('h3', '', signedIn ? 'Your hours and confirmed exchanges' : 'Members join by pledge'));
     card.appendChild(head);
 
     if (!signedIn) {
-      const intro = createEl('p', '', 'Anyone can browse. To participate in the commons (post offers/needs, request mutual-aid connections, and manage your track), sign the Unbought Pledge to become a member. Where a provider has opted in, people who do not take the pledge can record a purchase intent at the provider’s price; every cent is tracked locally for the Unbought donation fund and no real payment is processed. Members receive those same offers free.');
+      const intro = createEl('p', '', 'Anyone can browse. To participate in the commons (post offers and needs, request mutual-aid connections, and manage your track), sign the Unbought Pledge to become a member. Labor and goods are free through mutual consent. Donations, sales, and purchases are closed during the beta while the funding and legal groundwork is built.');
       card.appendChild(intro);
     } else {
       const meta = createEl('p', 'account-meta', `${state.pledge.name} · ${state.pledge.location || 'Location not shared'}`);
@@ -7670,17 +7690,14 @@
 
     const stats = createEl('div', 'account-stats');
     const hourPeriods = `Week ${hours.week} hr · month ${hours.month} hr · year ${hours.year} hr`;
-    const giftPeriods = `Week ${formatMoney(donated.week)} · month ${formatMoney(donated.month)} · year ${formatMoney(donated.year)}`;
     const statDefs = signedIn ? [
       ['Hours worked (all time)', `${hours.all} hr`, hourPeriods],
-      ['Locally recorded giving', formatMoney(donated.all), giftPeriods],
-      ['Local share estimate', formatMoney(fund.entitled), 'Local estimate · not a payout'],
-      ['Cancellation estimate', formatMoney(fund.cancellation.estimate), `Up to ${formatMoney(fund.cancellation.cap)} · local only`],
-      ['Local giving record', formatMoney(fund.balance), 'Current local balance']
+      ['Items gifted', String(exchangeTotals.itemsGifted), 'Confirmed by both sides'],
+      ['Items received', String(exchangeTotals.itemsTaken), 'Confirmed by both sides'],
+      ['Future funding', 'Plans only', 'See What’s to Come']
     ] : [
-      ['Local giving record', formatMoney(fund.balance), 'Current local balance'],
-      ['Recorded non-member purchase intents', String(fund.count), 'Local records only'],
-      ['Member benefit', 'Free mutual-aid access', 'By pledge · no purchase'],
+      ['Access', 'Free to browse', 'No account needed'],
+      ['Participation', 'By pledge', 'Free mutual aid'],
       ['Future funding', 'Plans only', 'See What’s to Come']
     ];
     statDefs.forEach(([label, value, detail]) => {
@@ -7700,11 +7717,11 @@
       if (pledge.status === 'probation') {
         const weekly = pledgeWeekRequirement(pledge);
         const earned = hoursSince(pledge.memberId, pledge.signedAt);
-        standingText = `First month: ${earned} of ${weekly} first-week hours confirmed. You can offer labor now; other member tools unlock at ${weekly} hour${weekly === 1 ? '' : 's'}. The full ${pledgeHourRequirement(pledge)}-hour month is checked on day 30.`;
+        standingText = `First month: ${earned} of ${weekly} first-week hours confirmed. You can offer labor now; other member tools unlock at ${weekly} hour${weekly === 1 ? '' : 's'}. A pledge does not freeze during probation.`;
       } else if (pledge.status === 'frozen') {
         const madeUp = hoursSince(pledge.memberId, pledge.frozenAt);
         const deficit = cleanHours(pledge.pledgeDeficitHours);
-        standingText = `Frozen for ${pledge.frozenMonth || 'the last month'}. You confirmed ${madeUp} of ${deficit} missed hour${deficit === 1 ? '' : 's'} since the freeze. Only offering labor is available until the hours are made up, or for ${PLEDGE_FREEZE_DAYS} days before Observer status.`;
+        standingText = `Frozen after ${PLEDGE_INACTIVITY_DAYS} days without confirmed work. You confirmed ${madeUp} of ${deficit} missed hour${deficit === 1 ? '' : 's'} since the freeze. Only offering labor is available until the pledged hours are completed, or for ${PLEDGE_FREEZE_DAYS} days before Observer status.`;
       } else if (pledge.status === 'observer') {
         standingText = 'Observer after 30 days frozen. You can read and explore, but member tools stay paused until three active members approve your re-pledge.';
       } else if (pledge.status === 'review_pending') {
@@ -7724,7 +7741,7 @@
           standingText += ' Full access can be confirmed locally with disability proof; no diagnosis or document is stored.';
         }
       } else {
-        standingText = `Active. Your ${pledgeHourRequirement(pledge)}-hour monthly pledge is checked when each month ends.`;
+        standingText = `Active. Your ${pledgeHourRequirement(pledge)}-hour monthly pledge freezes only after ${PLEDGE_INACTIVITY_DAYS} full days without confirmed work while this month’s hours are still short.`;
       }
       standing.appendChild(createEl('p', 'account-note', standingText));
       if (pledge.monthlyHours === 'care' && isSeniorMember(pledge) && pledge.hasOutsideJob) {
@@ -7749,25 +7766,10 @@
     }
 
     const model = createEl('p', 'account-note', signedIn
-      ? 'Prototype model (local only): your hours are shown only after both you and the receiver confirm the work, or after a three-member review vote resolves a disagreement. No one can add hours unilaterally. Giving is shown by week, month, year, and all time. Your share is a local, proportional estimate based on recorded contributions; it is not a payout, debt, or legal claim. Nothing is transmitted, and future funding plans are on What’s to Come.'
-      : 'Prototype model (local only): this browser holds locally recorded giving and non-member purchase records. No money moves, no payouts are made, and nothing is transmitted. Future funding plans are on What’s to Come.');
+      ? 'Prototype model (local only): your hours are shown only after both you and the receiver confirm the work, or after a three-member review vote resolves a disagreement. No one can add hours unilaterally. Confirmed hours and item counts stay on this device. Donations, sales, purchases, and payouts are closed during the beta; funding plans are only on What’s to Come.'
+      : 'Prototype model (local only): guests can browse. Donations, sales, purchases, and payouts are closed during the beta. Labor and goods move through mutual consent; funding plans are only on What’s to Come.');
     card.appendChild(model);
 
-    if (signedIn) {
-      const cancel = fund.cancellation;
-      const cancelBlock = createEl('div', 'account-block');
-      cancelBlock.appendChild(createEl('h4', '', 'If you cancel'));
-      cancelBlock.appendChild(createEl('p', 'account-note',
-        `Local estimate: ${formatMoney(cancel.estimate)}. Unbought will cap any cancellation severance at ${formatMoney(cancel.cap)}. The estimate multiplies your share of contributions credited to your groups and alliances (${cancel.memberPercent}%, ${formatMoney(cancel.memberGroupAmount)} of ${formatMoney(cancel.groupFundAmount)}) by those groups' share of the donation fund (${cancel.groupFundPercent}%). This severance check is separate from your group's uncapped slice of unspoken-for money shown on the group profile, so the two numbers can be different. It is a calculation on this device only: no payout, debt, legal claim, or transmission.`));
-      if (!cancel.groupFundAmount) {
-        cancelBlock.appendChild(createEl('p', 'account-note',
-          `No group- or alliance-credited contributions are recorded yet across your ${cancel.groupCount} group${cancel.groupCount === 1 ? '' : 's'} and ${cancel.allianceCount} alliance${cancel.allianceCount === 1 ? '' : 's'}, so the local estimate is ${formatMoney(0)}. Credit a donation to a group or alliance on the Donate page to test the calculation.`));
-      }
-      if (cancel.capped) {
-        cancelBlock.appendChild(createEl('p', 'account-note', 'This estimate reached the local $4,000 cap.'));
-      }
-      card.appendChild(cancelBlock);
-    }
 
     if (signedIn) {
       const hoursNote = createEl('div', 'account-block');
@@ -7839,7 +7841,7 @@
         <div class="dialog-content">
           <h2 id="volunteer-dialog-title">Join the operating team.</h2>
           <p id="volunteer-dialog-intro">${escapeHtml(VOLUNTEER_ACCESS_COPY)} Volunteers get a Volunteer badge and access to the member tools on this device. Offers stay on this device. The one exception: if private sync is on and you choose Web development, your member ID is added to the automatic web-developer admin pool. No real website or server access is granted by this form.</p>
-          <p class="account-note">Prefer email? <a href="${VOLUNTEER_MAILTO}">Email the volunteer team</a> and tell us how you can help make Unbought a worldwide website.</p>
+          <p class="account-note">Prefer email? <a href="${VOLUNTEER_MAILTO}">Email the volunteer team</a> and tell us how you can help with the beta, seed funding, legal groundwork, or outreach.</p>
           <div class="volunteer-gate" id="volunteer-dialog-gate" data-volunteer-gate role="status">
             <p data-volunteer-gate-text></p>
           </div>
@@ -7985,7 +7987,8 @@
   function renderVolunteerAccess() {
     const panel = document.getElementById('volunteer-access-panel');
     if (!panel) return;
-    if (!isCurrentVolunteer()) {
+    const coordinator = isLaunchCoordinator();
+    if (!isCurrentVolunteer() && !coordinator) {
       panel.hidden = true;
       panel.innerHTML = '';
       return;
@@ -7995,23 +7998,36 @@
       .map((item) => (hasOwn(VOLUNTEER_ROLES, item.role) ? VOLUNTEER_ROLES[item.role] : item.role))
       .filter(Boolean)
       .join(', ') || 'Operating team';
-    const duties = [
-      'Keeping the website updated',
-      'Paying the bills',
-      'Accepting new volunteers',
-      'Legal and compliance work',
-      'Records, communications, and accessibility'
-    ];
+    const duties = coordinator
+      ? [
+        'Sharing launch updates in plain language',
+        'Helping neighbors find the right page',
+        'Keeping the beta friendly and consent-based'
+      ]
+      : [
+        'Keeping the website updated',
+        'Paying the bills',
+        'Accepting new volunteers',
+        'Legal and compliance work',
+        'Records, communications, and accessibility'
+      ];
+    const heading = coordinator
+      ? '<span class="member-label member-label--launch-coordinator"><span class="member-label-icon" aria-hidden="true">📣</span>Launch Coordinator</span> label is active'
+      : '<span class="member-label member-label--volunteer"><span class="member-label-icon" aria-hidden="true">💙</span>Volunteer</span> access is active';
+    const subtitle = coordinator ? LAUNCH_COORDINATOR_COPY : VOLUNTEER_ACCESS_COPY;
+    const note = coordinator
+      ? 'This local label stays on your member profile and dashboard with no end date because the launch happens once. It does not enter the web-developer pool, count toward the more-than-seven-developer rule, or change report-pause consent.'
+      : `Your recorded role${roles ? `: <strong>${e(roles)}</strong>` : ''} gives you local access to the member-area tools on this device. It grants no Supabase admin access; optional private sync uses a separate Supabase Auth account only after you opt in.`;
     panel.hidden = false;
     panel.innerHTML = `<section class="account-card volunteer-access-card">
       <header class="account-panel-head">
         <div>
           <p class="eyebrow">Operating team</p>
-          <h3><span class="member-label member-label--volunteer"><span class="member-label-icon" aria-hidden="true">💙</span>Volunteer</span> access is active</h3>
-          <p class="account-subtitle">${e(VOLUNTEER_ACCESS_COPY)}</p>
+          <h3>${heading}</h3>
+          <p class="account-subtitle">${e(subtitle)}</p>
         </div>
       </header>
-      <p class="account-note">Your recorded role${roles ? `: <strong>${e(roles)}</strong>` : ''} gives you local access to the member-area tools on this device. It grants no Supabase admin access; optional private sync uses a separate Supabase Auth account only after you opt in.</p>
+      <p class="account-note">${note}</p>
       <ul class="volunteer-duty-list">${duties.map((duty) => `<li>${e(duty)}</li>`).join('')}</ul>
     </section>`;
   }
@@ -8186,7 +8202,6 @@
       section('Commons activity', `<div class="resume-metric-groups">
         <dl class="resume-metrics">
           <div><dt>Pledged on</dt><dd>${e(formatDate(m.signedAt) || 'Not recorded')}</dd></div>
-          <div><dt>Amount Donated</dt><dd>${e(formatMoney(getDonationTotals().all))}</dd></div>
           <div><dt>Volunteer Offers</dt><dd>${getMemberVolunteerInterests().length}</dd></div>
           <div><dt>Reports (Guilty)</dt><dd>${guiltyReportsAgainst}</dd></div>
         </dl>
@@ -8207,7 +8222,7 @@
             accountDetail('Representative user', e(m.powerOfAttorney.username || 'Not set'))
           ] : [])
         ])}
-        <p class="account-note">These are local demo sign-ins, not real logins. Salted password hashes are stored only on this device and are never uploaded. Optional private sync uses a separate Supabase Auth account. A representative sign-in can manage this member’s record locally on their behalf.</p>`)
+        <p class="account-note">These are local demo sign-ins, not real logins. Local sign-in details are stored only on this device and are never uploaded. Optional private sync uses a separate Supabase Auth account. A representative sign-in can manage this member’s record locally on their behalf.</p>`)
     ].join('');
   }
 
@@ -8319,12 +8334,14 @@
     const e = escapeHtml;
     const cloudEnabled = Boolean(state.cloud && state.cloud.enabled);
     const cloudEmail = state.cloud ? cleanString(state.cloud.email, 160) : '';
+    const activeCredential = getActiveCredential();
+    const localUsername = cleanString(activeCredential && activeCredential.username, 40) || 'this device';
     const safetyAck = currentMemberSafetyAcknowledgment();
     const safetyAckText = safetyAck
       ? `Recorded ${formatDate(safetyAck.acceptedAt)} · ${safetyAck.label}`
       : 'No acknowledgment recorded yet.';
     const notice = state.settings && state.settings.showPrototypeNotices
-      ? `<p class="prototype-note">Prototype: account details, local usernames, and salted password hashes are stored only on this device and are never uploaded. Local sign-ins are not real accounts; optional private sync uses Supabase Auth after you explicitly opt in.</p>`
+      ? `<p class="prototype-note">Prototype: account details and local sign-in are stored only on this device and are never uploaded. Local sign-ins are not real accounts; optional private sync uses Supabase Auth after you explicitly opt in.</p>`
       : '';
     const dobMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(m.dob || ''));
     const dobYearValue = dobMatch ? dobMatch[1] : '';
@@ -8363,7 +8380,7 @@
         <div>
           <p class="eyebrow">Settings</p>
           <h3>Account &amp; preferences</h3>
-          <p class="account-subtitle">Edit what neighbors see, choose what stays private, and set how this prototype behaves on this device.</p>
+          <p class="account-subtitle">Edit what neighbors see, choose what stays private, and set how this beta behaves on this device.</p>
         </div>
         <a class="button button--outline button--small" href="profile.html">View member profile</a>
       </header>
@@ -8579,6 +8596,31 @@
           </div>
         </form>
       </details>
+      <div class="settings-block local-password-settings">
+        <h4>Local sign-in password</h4>
+        <p class="account-note">Change the password for <strong>${e(localUsername)}</strong>. This is only the prototype sign-in stored in this browser; it is not the cloud password. No password, hash, or salt leaves this device.</p>
+        <form class="account-form" data-local-password-form>
+          <div class="form-row">
+            <div class="field">
+              <label for="local-current-password">Current local password <span class="required-mark" aria-hidden="true">*</span></label>
+              <input type="password" id="local-current-password" name="currentPassword" autocomplete="current-password" maxlength="200" required>
+            </div>
+            <div class="field">
+              <label for="local-new-password">New local password <span class="required-mark" aria-hidden="true">*</span></label>
+              <input type="password" id="local-new-password" name="newPassword" autocomplete="new-password" minlength="8" maxlength="200" required>
+              <p class="field-hint">At least 8 characters.</p>
+            </div>
+          </div>
+          <div class="field">
+            <label for="local-confirm-password">Confirm new local password <span class="required-mark" aria-hidden="true">*</span></label>
+            <input type="password" id="local-confirm-password" name="confirmPassword" autocomplete="new-password" maxlength="200" required>
+          </div>
+          <p class="form-error" data-local-password-error role="alert" hidden></p>
+          <div class="account-form-actions">
+            <button type="submit" class="button button--outline button--small">Change local password</button>
+          </div>
+        </form>
+      </div>
       <div class="settings-block pledge-settings">
         <h4>Pledge commitment</h4>
         <p class="account-note">Change the monthly work hours you pledged. This is a commitment, not hours logged by hand.</p>
@@ -8597,7 +8639,7 @@
       </div>
       <div class="settings-block private-sync-settings">
         <h4>Private cloud sync <span class="optional">(optional)</span></h4>
-        <p class="account-note">Off by default. You only need to turn it on once. After that, Unbought sends changes automatically, and the Check sync now button is just a manual check. Your member ID, account details, pledge details, and waiting-list entry are sent to Supabase, where only you and the current rotating web-developer admins can read them. If you have also offered Web development, your member ID joins the automatic admin pool. No admins are active until more than seven web developers have opted in. With sync on, filing or settling a report also sends only a minimal open/settled flag; report text and evidence never leave this browser. Passwords are handled by Supabase Auth; no password or local hash is uploaded.</p>
+        <p class="account-note">Off by default. You only need to turn it on once. After that, Unbought sends changes automatically, and the Check sync status button is just a manual check. Your member ID, account details, pledge details, and waiting-list entry are sent to Supabase, where only you and the current rotating web-developer admins can read them. If you have also offered Web development, your member ID joins the automatic admin pool. No admins are active until more than seven web developers have opted in. The local Launch Coordinator label is not an admin seat, does not enter the web-developer pool, and does not change that consent rule. With sync on, filing or settling a report also sends only the reported member's local ID and an open/settled status; report text and evidence never leave this browser. Passwords are handled by Supabase Auth; nothing from local sign-in is uploaded.</p>
         <p class="account-note" id="private-sync-status" role="status">${cloudEnabled ? 'Private sync is on.' : 'Private sync is off. Your private records stay in this browser.'}</p>
         <div id="private-sync-setup"${cloudEnabled ? ' hidden' : ''}>
           <form class="account-form" data-private-signin-form>
@@ -8622,7 +8664,7 @@
         <div id="private-sync-active"${cloudEnabled ? '' : ' hidden'}>
           <p class="account-note" id="private-sync-last"></p>
           <div class="account-form-actions">
-            <button type="button" class="button button--primary button--small" id="private-sync-now">Check sync now</button>
+            <button type="button" class="button button--primary button--small" id="private-sync-now">Check sync status</button>
             <button type="button" class="button button--outline button--small" id="private-sync-stop">Turn off private sync</button>
             <button type="button" class="button button--ghost button--small" id="private-sync-delete">Delete my cloud copy</button>
           </div>
@@ -8636,6 +8678,21 @@
           <button type="button" class="button button--outline button--small" data-open-safety-standards>Review standards</button>
           <button type="button" class="button button--ghost button--small" data-download-safety-ack>Download my acknowledgment record</button>
         </div>
+      </div>
+      <div class="settings-block public-contact-settings">
+        <h4>Direct contact email</h4>
+        <p class="account-note">For direct member messages, create a separate email just for Unbought and publish that address here. Do not publish your private, work, or school email. Published addresses are public and can be seen by anyone who reads shared site data.</p>
+        <p class="account-note">${cloudEnabled ? 'You are signed in, so saving changes publishes or removes your contact row.' : 'Turn on private sync above first. Publishing a contact address requires a signed-in pledged member.'}</p>
+        <form class="account-form" data-public-contact-form>
+          <div class="field">
+            <label for="public-contact-email">Unbought-only contact email</label>
+            <input type="email" id="public-contact-email" name="contactEmail" maxlength="254" autocomplete="email" value="${e(state.myContact.email)}" placeholder="unbought-name@example.com">
+          </div>
+          <label class="checkbox"><input type="checkbox" name="publishContact"${state.myContact.enabled ? ' checked' : ''}> <span>Publish this address so members can email me directly</span></label>
+          <div class="account-form-actions">
+            <button type="submit" class="button button--outline button--small">Save contact privacy</button>
+          </div>
+        </form>
       </div>
       <div class="settings-block beta-email-settings">
         <h4>Beta email drafts</h4>
@@ -8652,10 +8709,10 @@
       <p class="account-note">Changes are saved on this device. They are sent only if you turn on optional private sync above. Your resume hides your legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated, and shows your phone only if you opt in. Logged hours and item counts are never typed here; they appear only after mutual confirmation or review. To withdraw your membership, use the Withdraw membership button on the <a href="pledge.html#withdraw-pledge">Pledge page</a>.</p>
       <div class="settings-block">
         <h4>Local preferences</h4>
-        <p class="account-note">These settings only change how this prototype behaves on this device. Nothing is sent anywhere.</p>
+        <p class="account-note">These display settings change only this device. Public content and published contact details follow the separate sync settings above.</p>
         <form class="account-form" data-settings-form>
           <label class="checkbox"><input type="checkbox" name="compactDashboard" ${s.compactDashboard ? 'checked' : ''}> <span>Use compact spacing on the dashboard</span></label>
-          <label class="checkbox"><input type="checkbox" name="showPrototypeNotices" ${s.showPrototypeNotices ? 'checked' : ''}> <span>Show prototype notices</span></label>
+          <label class="checkbox"><input type="checkbox" name="showPrototypeNotices" ${s.showPrototypeNotices ? 'checked' : ''}> <span>Show beta notices</span></label>
           <div class="account-form-actions">
             <button type="submit" class="button button--primary button--small">Save settings</button>
           </div>
@@ -8760,6 +8817,23 @@
       + '?subject=' + encodeURIComponent(draft.subject)
       + '&body=' + encodeURIComponent(draft.body);
     window.location.href = href;
+  }
+
+  // Direct message drafts. A published Unbought-only address is used when
+  // available. Otherwise the coordinator makes a one-time introduction.
+  function openMessageEmailDraft(contact, recipientName, body) {
+    const name = cleanString(recipientName, 80) || (contact ? contact.name : 'Neighbor') || 'Neighbor';
+    const message = cleanString(body, 1200);
+    const to = contact && contact.email ? cleanString(contact.email, 254) : COORDINATOR_EMAIL;
+    const subject = contact
+      ? `Unbought message for ${name}`
+      : `Unbought introduction request: ${name}`;
+    const mailBody = contact
+      ? `Hello ${firstName(name)},\n\n${message}\n\nSent through Unbought. Please keep the exchange consent-based and follow the Community Guidelines.`
+      : `Hello Unbought,\n\nPlease introduce me to ${name} for an Unbought exchange. I am sending this from the email address they can reply to.\n\nMessage:\n\n${message}\n\nThank you.`;
+    window.location.href = 'mailto:' + to.trim()
+      + '?subject=' + encodeURIComponent(subject)
+      + '&body=' + encodeURIComponent(mailBody);
   }
 
   function renderSettings() {
@@ -9165,7 +9239,7 @@
             <label class="checkbox"><input type="checkbox" name="available"${m.available !== false ? ' checked' : ''}> <span>Available for labor and product requests</span></label>
             <p class="field-hint">When this is off, neighbors can still see your offers but cannot send labor or product requests.</p>
           </fieldset>
-          <p class="field-hint">No texts are sent. Member details are sent only if you turn on optional private sync. Report text, evidence, donations, listing comments, group chats, and other interactions stay here; with private sync on, only a minimal open/settled admin report flag is sent. Always private here: legal name, street and mailing addresses, ZIP, housing status, birthdate, group, report count, and amounts donated.</p>
+          <p class="field-hint">No texts are sent. Member details are sent only if you turn on optional private sync. Report text, evidence, listing comments, group chats, and other interactions stay here; with private sync on, only the reported member's local ID and an open/settled status are sent. Always private here: legal name, street and mailing addresses, ZIP, housing status, birthdate, group, and report count.</p>
           <div class="account-form-actions">
             <button type="submit" class="button button--primary button--small">Save privacy choices</button>
           </div>
@@ -9316,7 +9390,6 @@
     const pendingRecord = adminSeatNumbers(group)
       .map((seat) => currentGroupAdminRecord(group, seat))
       .find((record) => record && record.memberId === selfId && record.status === 'pending') || null;
-    const surplus = getGroupSurplusAllowance(group.id);
     const settings = normalizeGroupSettings(group.settings);
     const configuredLocation = cleanString(settings.location, 120);
     const location = settings.online
@@ -9335,7 +9408,7 @@
           ${group.purpose ? `<p class="resume-bio">${e(group.purpose)}</p>` : '<p class="resume-empty">No purpose added yet.</p>'}
         </div>
         <div class="group-profile-actions">
-          ${canModerate && SITE_PHASE >= 2 ? `<button class="button button--outline button--small" type="button" data-group-settings="${e(group.id)}">Group settings</button>` : ''}
+          ${canModerate ? `<button class="button button--outline button--small" type="button" data-group-settings="${e(group.id)}">Group settings</button>` : ''}
           <a class="button button--outline button--small" href="dashboard.html#social">Back to groups</a>
         </div>
       </div>
@@ -9492,15 +9565,13 @@
           <div><dt>Type</dt><dd>${e(groupKindLabel(group))}</dd></div>
           <div><dt>People</dt><dd>${members.length}/${SOCIAL_LIMITS.groupMembers}</dd></div>
           <div><dt>Admin seats</dt><dd>${rotation.seats.length}/${GROUP_ADMIN_SEATS} · staggered weekly</dd></div>
-          <div><dt>Surplus allowance</dt><dd>${e(formatMoney(surplus.amount))} · uncapped local estimate</dd></div>
           ${location ? `<div><dt>Location</dt><dd>${e(location)}</dd></div>` : ''}
           ${SITE_PHASE >= 2 && business.enabled ? `<div><dt>Business</dt><dd>${e(business.brandName || groupDisplayLabel(group))} · ${e(groupBrandLabel(settings))}</dd></div>` : ''}
           <div><dt>Added</dt><dd>${e(formatDate(group.createdAt) || 'Not recorded')}</dd></div>
         </dl>
         <p class="account-note"><strong>Basic Necessities:</strong> ${e(BASIC_NECESSITIES_NOTE)}</p>
         <p class="account-note"><strong>Alliances:</strong> ${e(ALLIANCE_COPY)} Working members vote on alliance terms and guidelines.</p>
-        <p class="account-note"><strong>Surplus spending:</strong> This group has ${e(formatMoney(surplus.groupAmount))} credited locally to Unbought, ${e(String(surplus.percent))}% of the recorded fund. Its uncapped slice of unspoken-for money is ${e(formatMoney(surplus.amount))}. This group surplus slice is separate from any member's capped severance check, so the two amounts can be different. Future spending plans are on What’s to Come. This is a planning estimate only; no money moves, is spent, or is transmitted in this prototype.</p>
-        <p class="account-note"><strong>Land and housing:</strong> Future land and housing plans are listed only on <a href="future.html">What’s to Come</a>. The local allowance is a planning estimate, not a purchase, offer, or commitment, and nothing is transmitted from this prototype.</p>
+        <p class="account-note"><strong>Land and housing:</strong> Future land and housing plans are listed only on <a href="future.html">What’s to Come</a>. Nothing here is a purchase, offer, or commitment, and nothing is transmitted from this prototype.</p>
         ${SITE_PHASE >= 2 && business.enabled ? `<div class="group-business-details">
           <h4>Group business</h4>
           <p class="account-note">${business.brandChoice === 'unbought' ? 'This group records the Unbought Brand' : 'This group records its own brand'} for a collection of related services and goods. It creates industry inside a moneyless society: neighbors trade through mutual consent, not prices. Group brands arrive in Phase 2 on the vernal equinox, ${e(GROUP_BRAND_ROLLOUT_COPY)}.</p>
@@ -9546,7 +9617,7 @@
         </div>
         <div class="dialog-content">
           <h2 id="group-settings-title">${e(groupDisplayLabel(group))}</h2>
-          <p class="dialog-note">Only current admins can change these details. Group brands arrive in Phase 2 on the vernal equinox, ${e(GROUP_BRAND_ROLLOUT_COPY)}. Everything stays in this browser; nothing is transmitted.</p>
+          <p class="dialog-note">Only current admins can change these details. Public group cards sync through Supabase; member lists, alliance records, and review settings stay on this device.</p>
           <form class="account-form" data-group-settings-form data-group-id="${e(group.id)}">
             <fieldset class="field">
               <legend>Where this group meets</legend>
@@ -9561,7 +9632,7 @@
               <p class="field-hint">When Online is checked, the group profile shows “Online” instead of an address.</p>
             </fieldset>
             <fieldset class="field">
-              <legend>Alliances &amp; review board <span class="badge badge--amber">Phase 2</span></legend>
+              <legend>Alliances &amp; review board</legend>
               <div class="field">
                 <label for="group-alliances">Allied group IDs</label>
                 <input type="text" id="group-alliances" name="alliances" maxlength="500" value="${e(settings.alliances.join(', '))}" placeholder="group-id-one, group-id-two">
@@ -9573,8 +9644,8 @@
               </label>
               <p class="field-hint">Closing this requires a group vote by working members and only applies to alliances outside this group’s ZIP code. Allied groups within the ZIP code are always included. ${e(settings.reviewBoard.optOutOutcome ? `Recorded outcome: ${settings.reviewBoard.optOutOutcome}.` : '')}</p>
             </fieldset>
-            <fieldset class="field">
-              <legend>Group business <span class="badge badge--amber">Phase 2</span></legend>
+            <fieldset class="field" hidden>
+              <legend>Group business <span class="badge badge--amber">Future plan</span></legend>
               <label class="checkbox">
                 <input type="checkbox" id="group-business-enabled" name="businessEnabled" ${business.enabled ? 'checked' : ''}>
                 <span>Offer this group as a business with its own brand</span>
@@ -9649,14 +9720,13 @@
       const button = event.target.closest('[data-group-settings]');
       if (!button) return;
       event.preventDefault();
-      if (SITE_PHASE < 2) return;
       openGroupSettingsDialog(button.dataset.groupSettings);
     });
     document.addEventListener('submit', (event) => {
       const form = event.target;
       if (!(form instanceof HTMLFormElement) || !form.matches('[data-group-settings-form]')) return;
       event.preventDefault();
-      if (SITE_PHASE < 2 || !requireMembership() || !form.reportValidity()) return;
+      if (!requireMembership() || !form.reportValidity()) return;
       const group = getGroupById(form.dataset.groupId);
       if (!group || !isGroupAdmin(group, state.pledge.memberId)) {
         showToast('Only a current admin can change group settings.', false);
@@ -9674,20 +9744,7 @@
           optOutOutcome: current.reviewBoard.optOutOutcome,
           optOutAt: current.reviewBoard.optOutAt
         },
-        business: {
-          enabled,
-          brandName: cleanString(data.get('brandName'), 80),
-          brandChoice: data.get('brandChoice') === 'unbought' ? 'unbought' : 'group',
-          description: cleanString(data.get('description'), 500),
-          offerings: cleanString(data.get('offerings'), 500),
-          coop: {
-            legalName: cleanString(data.get('coopLegalName'), 120),
-            entityType: cleanString(data.get('coopEntityType'), 80),
-            registration: cleanString(data.get('coopRegistration'), 80),
-            notes: cleanString(data.get('coopNotes'), 500)
-          },
-          createdAt: current.business.enabled ? current.business.createdAt : new Date().toISOString()
-        }
+        business: current.business
       };
       saveState();
       const dialog = form.closest('dialog');
@@ -10223,7 +10280,7 @@
       ? messages.filter((message) => message.starred && messageFolder(message) !== 'trash')
       : messages.filter((message) => messageFolder(message) === activeMessageFolder);
     const emptyCopy = {
-      inbox: 'No incoming messages in this local prototype. Messages you record appear in Sent.',
+      inbox: 'No incoming messages recorded here. Messages you record appear in Sent.',
       sent: 'No messages recorded yet.',
       archive: 'No archived messages.',
       trash: 'Trash is empty.',
@@ -10232,12 +10289,16 @@
     const folderButtons = Object.entries(MESSAGE_FOLDERS).map(([key, label]) => `<button
       class="mailbox-tab" type="button" role="tab" data-message-folder="${key}"
       aria-selected="${key === activeMessageFolder}">${label} <span class="mailbox-count">${counts[key]}</span></button>`).join('');
+    const contacts = (Array.isArray(state.publicContacts) ? state.publicContacts : [])
+      .filter((contact) => contact && contact.email && contact.memberId !== state.pledge.memberId)
+      .slice(0, 200);
+    const contactOptions = contacts.map((contact) => `<option value="${e(contact.memberId)}">${e(contact.name)} — ${e(contact.email)}</option>`).join('');
 
     panel.innerHTML = `<section class="account-card">
       <nav class="mailbox-tabs" role="tablist" aria-label="Message folders">${folderButtons}</nav>
       <p class="eyebrow">Messaging</p>
       <h3>Your messages</h3>
-      <p class="account-note">Consent-based requests and replies would gather here in a live system. In this prototype, folders, stars, and messages stay on this device; nothing is sent.</p>
+      <p class="account-note">Direct messages open in your own mail app. If the recipient published an Unbought-only contact email, the draft goes straight to them. If not, the draft goes to the coordinator for a one-time introduction. Folders, stars, and local records stay on this device.</p>
       ${visible.length ? `<ul class="contribution-list">${visible.map((message) => {
         const folder = messageFolder(message);
         const actions = [
@@ -10255,14 +10316,26 @@
       }).join('')}</ul>` : `<p class="account-note">${e(emptyCopy[activeMessageFolder])}</p>`}
       <form class="account-form" data-message-form>
         <div class="field">
-          <label for="message-to">To (chosen name)</label>
-          <input type="text" id="message-to" name="toName" maxlength="80" required placeholder="Neighbor's chosen name">
+          <label for="message-recipient">Recipient</label>
+          <select id="message-recipient" name="recipient" required>
+            <option value="">Choose a recipient</option>
+            ${contactOptions}
+            <option value="relay">No published contact — ask for an introduction</option>
+          </select>
+          <p class="field-hint">Published contacts use a separate email just for Unbought. Their private email stays hidden.</p>
+        </div>
+        <div class="field">
+          <label for="message-to">Chosen name (only if not listed)</label>
+          <input type="text" id="message-to" name="toName" maxlength="80" placeholder="Neighbor's chosen name">
         </div>
         <div class="field">
           <label for="message-body">Message</label>
           <textarea id="message-body" name="body" rows="3" maxlength="1200" required placeholder="Write a consent-based message…"></textarea>
         </div>
-        <button type="submit" class="button button--primary button--small">Record message</button>
+        <div class="account-form-actions">
+          <button type="submit" name="messageSendMode" value="email" class="button button--primary button--small">Open email draft</button>
+          <button type="submit" name="messageSendMode" value="record" class="button button--outline button--small">Record locally only</button>
+        </div>
       </form>
     </section>`;
   }
@@ -12066,6 +12139,62 @@
         return;
       }
 
+      if (form.matches('[data-local-password-form]')) {
+        event.preventDefault();
+        const errorEl = form.querySelector('[data-local-password-error]');
+        const failPasswordChange = (message) => {
+          if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.hidden = false;
+          }
+          announce(message);
+          showToast(message, true);
+          return;
+        };
+        if (errorEl) {
+          errorEl.textContent = '';
+          errorEl.hidden = true;
+        }
+        const credential = getActiveCredential();
+        if (!credential) {
+          failPasswordChange('No local sign-in is active on this device.');
+          return;
+        }
+        const currentPassword = String(data.get('currentPassword') || '');
+        const newPassword = String(data.get('newPassword') || '');
+        const confirmPassword = String(data.get('confirmPassword') || '');
+        if (hashPassword(currentPassword, credential.salt) !== credential.passwordHash) {
+          failPasswordChange('That is not the current local password.');
+          return;
+        }
+        if (newPassword.length < 8) {
+          failPasswordChange('Choose a new local password of at least 8 characters.');
+          return;
+        }
+        if (newPassword !== confirmPassword) {
+          failPasswordChange('The new local passwords do not match.');
+          return;
+        }
+        if (newPassword === currentPassword) {
+          failPasswordChange('Choose a local password different from the current one.');
+          return;
+        }
+        const salt = makeId('salt');
+        credential.salt = salt;
+        credential.passwordHash = hashPassword(newPassword, salt);
+        const primary = state.auth && state.auth.credential ? state.auth.credential : null;
+        if (primary && (primary.id === credential.id || primary.username === credential.username)) {
+          primary.salt = salt;
+          primary.passwordHash = credential.passwordHash;
+        }
+        saveState();
+        form.reset();
+        refreshSettingsPanel('[data-local-password-form] button[type="submit"]');
+        announce('Your local sign-in password was changed on this device.');
+        showToast('Local password changed. It was never uploaded.', false);
+        return;
+      }
+
       if (form.matches('[data-account-form]')) {
         event.preventDefault();
         const data = new FormData(form);
@@ -12328,11 +12457,63 @@
         if (nsfwField) nsfwField.checked = false;
         announce(`Your reply in ${subject} was saved locally.`);
         showToast('Reply saved locally. Nothing was transmitted.', false);
+      } else if (form.matches('[data-public-contact-form]')) {
+        event.preventDefault();
+        if (!state.cloud || !state.cloud.enabled) {
+          showToast('Turn on private sync and sign in before publishing a contact address.', false);
+          return;
+        }
+        const bridge = publicSyncBridge();
+        if (!bridge || typeof bridge.setPublicContact !== 'function') {
+          showToast('Public contact publishing is not available in this build yet.', false);
+          return;
+        }
+        const email = cleanString(data.get('contactEmail'), 254);
+        const publish = Boolean(data.get('publishContact'));
+        if (publish && !email) {
+          showToast('Add an Unbought-only email before publishing it.', false);
+          return;
+        }
+        const result = await bridge.setPublicContact(publish ? email : '');
+        if (!result || !result.ok) {
+          showToast((result && result.error) || 'The contact address could not be saved.', false);
+          return;
+        }
+        state.myContact = { email, enabled: publish };
+        state.publicContacts = Array.isArray(state.publicContacts) ? state.publicContacts : [];
+        state.publicContacts = state.publicContacts.filter((contact) => contact && contact.memberId !== state.pledge.memberId);
+        if (publish) {
+          state.publicContacts.push({
+            memberId: state.pledge.memberId,
+            name: state.pledge.name,
+            email,
+            updatedAt: now
+          });
+        }
+        saveState();
+        refreshSettingsPanel('[data-public-contact-email]');
+        showToast(publish ? 'Unbought-only contact email published.' : 'Contact email removed from the directory.', false);
+        announce(publish
+          ? 'Your Unbought-only contact email is now available for direct member messages.'
+          : 'Your contact email is no longer published.');
+        return;
       } else if (form.matches('[data-message-form]')) {
         event.preventDefault();
         const body = cleanString(data.get('body'), 1200);
-        const toName = cleanString(data.get('toName'), 80);
-        if (!body || !toName) return;
+        const typedName = cleanString(data.get('toName'), 80);
+        const recipientValue = cleanString(data.get('recipient'), 100);
+        const contacts = (Array.isArray(state.publicContacts) ? state.publicContacts : [])
+          .filter((contact) => contact && contact.email && contact.memberId !== state.pledge.memberId);
+        const contact = recipientValue && recipientValue !== 'relay'
+          ? contacts.find((item) => item.memberId === recipientValue)
+          : null;
+        const toName = contact ? contact.name : typedName;
+        const mode = event.submitter && event.submitter.value === 'email' ? 'email' : 'record';
+        if (!body || !toName) {
+          showToast('Choose a recipient or type their chosen name.', false);
+          return;
+        }
+        if (mode === 'email') openMessageEmailDraft(contact, toName, body);
         state.messages = Array.isArray(state.messages) ? state.messages : [];
         const message = {
           id: makeId('message'),
@@ -12341,14 +12522,17 @@
           toName,
           body,
           createdAt: now,
-          status: 'recorded',
+          status: mode === 'email' ? 'email draft opened' : 'recorded',
           folder: 'sent',
           starred: false
         };
         state.messages.push(message);
-        const recipient = memberDirectory().find((member) => member.name === toName);
-        addNotification('message', `Message recorded to ${toName}`,
-          'Saved locally as a draft. In a live system the recipient would be notified; no message was delivered.',
+        const recipient = contact
+          || memberDirectory().find((member) => member.name === toName);
+        addNotification('message', `${mode === 'email' ? 'Email draft opened for' : 'Message recorded to'} ${toName}`,
+          mode === 'email'
+            ? 'Your mail app should open with the message. Nothing is sent until you press Send.'
+            : 'Saved locally as a private draft. Nothing was transmitted.',
           { tab: 'messages', sourceId: message.id, memberId: recipient && recipient.memberId });
         state.messages = state.messages.slice(-300);
         activeMessageFolder = 'sent';
@@ -12356,8 +12540,10 @@
         renderMessages();
         renderNotifications();
         form.reset();
-        announce('Your message was recorded in this browser.');
-        showToast('Message recorded locally.', false);
+        announce(mode === 'email'
+          ? 'Your email draft opened. Review it in your mail app before sending.'
+          : 'Your message was recorded in this browser.');
+        showToast(mode === 'email' ? 'Email draft opened.' : 'Message recorded locally.', false);
       } else if (form.matches('[data-group-form]')) {
         event.preventDefault();
         const name = cleanString(data.get('name'), 80);
@@ -12734,7 +12920,7 @@
     renderAccountability();
     if (reportDialog && reportDialog.open) closeDialog(reportDialog);
     const flagNote = state.cloud && state.cloud.enabled
-      ? ' Evidence and report details stayed here; only a minimal open/settled flag is sent because private sync is on.'
+      ? ' Evidence and report details stayed here; only the local ID of the reported member and an open/settled status are sent because private sync is on.'
       : ' Nothing was transmitted.';
     announce(isCriminal
       ? `Criminal matter recorded as a police referral. In a live system it would be referred to police for investigation.${flagNote}`
@@ -12765,7 +12951,7 @@
         </div>
         <div class="dialog-content">
           <h2 id="report-dialog-title">Report a concern</h2>
-          <p id="report-dialog-intro">This report is tied to your member record. The person is carried over from the listing, message, or profile where you opened this form—you do not type their name. Report text and evidence stay in this browser; if optional private sync is on, only a minimal open/settled admin flag is sent.</p>
+          <p id="report-dialog-intro">This report is tied to your member record. The person is carried over from the listing, message, or profile where you opened this form—you do not type their name. Report text and evidence stay in this browser; if optional private sync is on, only the reported member's local ID and an open/settled status are sent.</p>
           <p class="dialog-note" data-report-context-summary role="status"></p>
           <p class="dialog-note" data-report-admin-note hidden>Temporary admin review: evidence is required, and an impartial member review follows the response period. Criminal matters are never decided by member vote.</p>
           <form class="account-form report-form" data-report-form>
@@ -13226,7 +13412,7 @@
     let html = `<section class="account-card accountability-card" aria-labelledby="accountability-title">
       <p class="eyebrow">Member dashboard · Safety</p>
       <h3 id="accountability-title">Safety &amp; accountability</h3>
-      <p class="account-note">Members file reports tied to their own member record; the person being reported is taken from the interaction, not typed by the reporter. In this prototype, authorities are not contacted and criminal matters are not decided by member vote; the review board is only a local, consent-based model, not a legal process. For non-criminal matters, the reported member gets ${RESPONSE_DAYS} days to gather evidence and plead guilty or not guilty with an explanation and multimedia links. Then all members get ${VOTING_DAYS} days to read the complete case file, comment, and vote on guilt, on the reflection period if guilty, and on a reason for their vote. Everything is visible on this dashboard. The case file, evidence, votes, and comments stay in this browser. With optional private sync on, only a minimal open/settled flag for a reported admin leaves the device; no report text or evidence is sent.</p>`;
+      <p class="account-note">Members file reports tied to their own member record; the person being reported is taken from the interaction, not typed by the reporter. In this prototype, authorities are not contacted and criminal matters are not decided by member vote; the review board is only a local, consent-based model, not a legal process. For non-criminal matters, the reported member gets ${RESPONSE_DAYS} days to gather evidence and plead guilty or not guilty with an explanation and multimedia links. Then all members get ${VOTING_DAYS} days to read the complete case file, comment, and vote on guilt, on the reflection period if guilty, and on a reason for their vote. Everything is visible on this dashboard. The case file, evidence, votes, and comments stay in this browser. With optional private sync on, only the reported member's local ID and an open/settled status leave the device; no report text or evidence is sent.</p>`;
 
     if (restriction) {
       const complete = isRestrictionComplete(restriction);
@@ -13279,7 +13465,7 @@
     html += `</div>`;
 
     html += `<div class="account-block"><h4>Member review board · open cases</h4>
-      <p class="account-note">Each case opens with a ${RESPONSE_DAYS}-day response period so the reported member can gather evidence and plead. After that, voting is open for ${VOTING_DAYS} days. To keep review impartial, involved parties, friends of involved parties, Observers, and Care Circle members do not vote; they are still encouraged to provide evidence and join the conversation below. Voting is open to members whose physical address is in the same county as an involved party; in cross-state cases, both parties’ counties are eligible. Vote guilty or not guilty; if guilty, choose a reflection period (30, 90, or 180 days), and always explain why. Voting is completely anonymous: ballots store no name, member ID, or link back to the voter, and results show only the vote, reflection choice, reason, and date. The full case file, anonymous votes, and comments are stored in this browser only for this local prototype. Optional private sync can send only a minimal open/settled flag so a reported admin's access can pause; no case details leave the device.</p>`;
+      <p class="account-note">Each case opens with a ${RESPONSE_DAYS}-day response period so the reported member can gather evidence and plead. After that, voting is open for ${VOTING_DAYS} days. To keep review impartial, involved parties, friends of involved parties, Observers, and Care Circle members do not vote; they are still encouraged to provide evidence and join the conversation below. Voting is open to members whose physical address is in the same county as an involved party; in cross-state cases, both parties’ counties are eligible. Vote guilty or not guilty; if guilty, choose a reflection period (30, 90, or 180 days), and always explain why. Voting is completely anonymous: ballots store no name, member ID, or link back to the voter, and results show only the vote, reflection choice, reason, and date. The full case file, anonymous votes, and comments are stored in this browser only for this local prototype. Optional private sync can send only the reported member's local ID and an open/settled status so private-data access for the reported web developer can pause; no case details leave the device.</p>`;
     if (!openReports.length) {
       html += `<p class="account-note">No cases are open for review right now.</p>`;
     } else {
@@ -14042,10 +14228,9 @@
 
     if (withdraw) {
       withdraw.addEventListener('click', () => {
-        const cancellation = getSeveranceSummary().cancellation;
         showConfirm({
           title: 'Withdraw your membership?',
-          message: `Your membership, local usernames, and salted password hashes will be removed from this browser, including any power-of-attorney representative sign-in. If private sync is on, your private cloud copy is deleted too. You can still browse offers, but you will need to sign the pledge again to post, request, or manage your track. Your saved track details may remain on this device. A local cancellation estimate of ${formatMoney(cancellation.estimate)} is recorded for the prototype, capped at ${formatMoney(cancellation.cap)}. It is based on your group/alliance share (${cancellation.memberPercent}%) and those groups' share of the donation fund (${cancellation.groupFundPercent}%). It is separate from your group's uncapped slice of unspoken-for money, so the two amounts can be different. No payout occurs and no donation data is transmitted.`,
+          message: 'Your membership, local usernames, and local sign-in details will be removed from this browser, including any power-of-attorney representative sign-in. If private sync is on, your private cloud copy is deleted too. You can still browse offers, but you will need to sign the pledge again to post, request, or manage your track. Your saved track details may remain on this device. No payout occurs.',
           confirmLabel: 'Withdraw membership',
           tone: 'danger',
           onConfirm: async () => {
@@ -14872,66 +15057,43 @@
       return;
     }
 
-    currentRequestMode = isMember() ? 'mutual' : 'purchase';
-    if (currentRequestMode === 'mutual' && !requireMembership('Your pledge is frozen. Only offering labor is available until the shortfall is made up.')) return;
-    if (currentRequestMode === 'purchase' && !canPurchaseAsNonmember(listing)) {
-      showToast('Non-member purchase is not enabled for this offer. Pledged members receive it free.');
-      return;
-    }
+    if (!requireMembership('Your pledge is frozen. Only offering labor is available until the pledged hours are completed.')) return;
     currentListingId = listing.id;
     form.reset();
 
-    // The price belongs to the provider, not the non-member. Lock the field so
-    // the intent records the member-set amount for the Unbought donation fund.
-    const nonmemberPrice = getNonmemberPrice(listing);
-    const amountInput = document.getElementById('purchase-amount');
-    if (amountInput) {
-      amountInput.value = nonmemberPrice || '';
-      amountInput.readOnly = true;
-    }
-    const amountLabel = document.querySelector('label[for="purchase-amount"]');
-    if (amountLabel) {
-      amountLabel.innerHTML = 'Price for non-members (USD) <span class="required-mark" aria-hidden="true">*</span>';
-    }
-    const priceHint = document.getElementById('purchase-price-hint');
-    if (priceHint) {
-      priceHint.textContent = `Set by the provider. Every cent goes to the Unbought donation fund; no payment is processed here. Members get this free.`;
-    }
-
-    // Members use mutual-aid mode so the purchase fields are hidden for them,
-    // but fill the name field too: no non-intake form asks a member to retype it.
+    // Fill the name field too: no non-intake form asks a member to retype it.
     fillOwnNameField(document.getElementById('purchase-name'));
 
-    // Toggle purchase/member fields if present
+    // Only mutual-aid requests exist in the beta. Hide and disable any legacy
+    // purchase fields that may still be present in an older saved page copy.
     const mutualFields = document.getElementById('consent-mutual-fields');
-    const purchaseFields = document.getElementById('consent-purchase-fields');
-    if (mutualFields) mutualFields.hidden = currentRequestMode !== 'mutual';
-    if (purchaseFields) purchaseFields.hidden = currentRequestMode !== 'purchase';
+    if (mutualFields) mutualFields.hidden = false;
     $$('input, textarea, select', mutualFields || document).forEach((el) => {
       if (!mutualFields || !mutualFields.contains(el)) return;
-      if (el.type === 'checkbox') el.required = currentRequestMode === 'mutual';
+      if (el.type === 'checkbox') el.required = true;
     });
-    $$('input, textarea, select', purchaseFields || document).forEach((el) => {
-      if (!purchaseFields || !purchaseFields.contains(el)) return;
-      const requiredPurchase = ['purchaseName', 'purchaseEmail', 'purchaseAmount', 'purchaseAgreement'];
-      if (requiredPurchase.includes(el.name)) el.required = currentRequestMode === 'purchase';
-    });
+    const purchaseFields = document.getElementById('consent-purchase-fields');
+    if (purchaseFields) {
+      purchaseFields.hidden = true;
+      $$('input, textarea, select', purchaseFields).forEach((el) => {
+        el.disabled = true;
+        el.required = false;
+      });
+    }
 
     if (summaryTitle) summaryTitle.textContent = listing.title;
     if (summaryMeta) {
       summaryMeta.textContent = `${PILLARS[listing.pillar].label} · ${EXCHANGES[listing.exchange].label} · Offered by ${listing.provider}`;
     }
-    if (summaryLabel) summaryLabel.textContent = currentRequestMode === 'purchase' ? 'Your purchase request' : 'Your request';
+    if (summaryLabel) summaryLabel.textContent = 'Your request';
 
-    if (title) title.textContent = currentRequestMode === 'purchase' ? 'Buy as a non-member' : 'Request with mutual consent';
+    if (title) title.textContent = 'Request with mutual consent';
     if (description) {
-      description.textContent = currentRequestMode === 'purchase'
-        ? `In this prototype, non-members can record a purchase intent at the provider's set price of ${formatMoney(nonmemberPrice)}. Every cent is recorded locally for the Unbought donation fund; no real payment is processed and nothing is transmitted. Members receive the same offer free through mutual aid.`
-        : 'A request starts a conversation. It does not create a sale, a deposit, or a guarantee that an item is still available.';
+      description.textContent = 'A request starts a conversation. It does not create a sale, a deposit, or a guarantee that an item is still available.';
     }
 
     const submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn) submitBtn.textContent = currentRequestMode === 'purchase' ? 'Record purchase intent' : 'Confirm request';
+    if (submitBtn) submitBtn.textContent = 'Confirm request';
 
     dialog._trigger = trigger || null;
     openDialog(dialog);
@@ -14959,81 +15121,6 @@
       }
 
       const data = new FormData(form);
-
-      if (currentRequestMode === 'purchase') {
-        if (!canPurchaseAsNonmember(listing)) {
-          closeDialog(dialog);
-          showToast('Non-member purchase is not enabled for this offer.');
-          return;
-        }
-        // Always use the provider's stored price, never a value typed in the
-        // dialog, so the recorded fund amount cannot be changed by a buyer.
-        const amount = getNonmemberPrice(listing);
-        const purchaserName = cleanString(data.get('purchaseName'), 60);
-        const purchaserEmail = cleanString(data.get('purchaseEmail'), 120);
-        if (!purchaserName || !purchaserEmail) return;
-
-        const now = new Date().toISOString();
-        const request = {
-          id: makeId('purchase'),
-          type: 'nonmember_purchase',
-          memberId: '',
-          listingId: listing.id,
-          listingTitle: listing.title,
-          provider: listing.provider,
-          pillar: listing.pillar,
-          note: cleanString(data.get('note'), 280),
-          purchaserName,
-          purchaserEmail,
-          amount,
-          requestedAt: now,
-          status: 'purchase_intent',
-          fund: 'unbought',
-          unitPrice: amount
-        };
-        state.requests.unshift(request);
-        state.requests = state.requests.slice(0, 100);
-
-        const contribution = {
-          id: makeId('contribution'),
-          memberId: '',
-          type: 'severance_purchase',
-          fund: 'unbought',
-          amount,
-          hours: 0,
-          profession: '',
-          stateRegion: '',
-          hourlyRate: 0,
-          stockValue: 0,
-          sourceId: request.id,
-          note: `Non-member purchase intent: ${listing.title}`,
-          createdAt: now,
-          status: 'recorded',
-          purchaserEmail,
-          purchaserName
-        };
-        state.contributions = Array.isArray(state.contributions) ? state.contributions : [];
-        state.contributions.unshift(contribution);
-        state.contributions = state.contributions.slice(0, 200);
-
-        state.severanceFund = state.severanceFund || { balance: 0, contributions: [] };
-        state.severanceFund.balance = (Number(state.severanceFund.balance) || 0) + amount;
-        state.severanceFund.contributions = Array.isArray(state.severanceFund.contributions) ? state.severanceFund.contributions : [];
-        state.severanceFund.contributions.unshift(contribution.id);
-        state.severanceFund.contributions = state.severanceFund.contributions.slice(0, 500);
-
-        addNotification('request', `Purchase intent: ${listing.title}`,
-          `Recorded locally at ${formatMoney(amount)} for the Unbought donation fund. In a live system the provider would be notified; nothing was transmitted.`,
-          { tab: 'exchanges', sourceId: request.id });
-        saveState();
-        closeDialog(dialog, { restoreFocus: false });
-        currentListingId = null;
-        applyFilters();
-        focusListingTitle(listing.id);
-        announce(`Purchase intent recorded for ${listing.title}. ${formatMoney(amount)} is recorded locally for the Unbought donation fund in this prototype.`);
-        showToast('Purchase intent recorded locally for the Unbought donation fund. No payment was processed and nothing was transmitted.', false);
-        return;
-      }
 
       if (!isMember()) {
         closeDialog(dialog);
@@ -15276,7 +15363,7 @@
     resetButton.addEventListener('click', () => {
       showConfirm({
         title: 'Clear this browser\'s demo data',
-        message: 'This removes your pledge and membership, account credentials, track, listings and listing comments, requests, inquiries, donation intents, contributions, Unbought donation fund records, volunteer offers, reports and votes, notifications, friends, groups, social chat drafts, messages, suggestions, waiting-list entry, and settings from this browser. It cannot be undone. If private sync was on, this signs you out and clears its session here, but it does not delete your private cloud copy; use “Delete my cloud copy” in Settings first. Public listings and community posts already shared through Supabase are not affected; this prototype has no public-post delete tool.',
+        message: 'This removes your pledge and membership, account credentials, track, listings and listing comments, requests, inquiries, local contributions, volunteer offers, reports and votes, notifications, friends, groups, social chat drafts, messages, suggestions, waiting-list entry, and settings from this browser. It cannot be undone. If private sync was on, this signs you out and clears its session here, but it does not delete your private cloud copy; use “Delete my cloud copy” in Settings first. Public listings and community posts already shared through Supabase are not affected; this prototype has no public-post delete tool.',
         confirmLabel: 'Clear browser data',
         tone: 'danger',
         onConfirm: async () => {
