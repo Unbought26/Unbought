@@ -4687,7 +4687,10 @@
           toName: cleanString(item.toName, 80),
           body: cleanString(item.body, 1200),
           createdAt: cleanString(item.createdAt, 40),
-          status: cleanString(item.status, 30) || 'recorded'
+          status: cleanString(item.status, 30) || 'recorded',
+          folder: ['inbox', 'sent', 'archive', 'trash'].includes(cleanString(item.folder, 20))
+            ? cleanString(item.folder, 20) : '',
+          starred: Boolean(item.starred)
         }));
     }
 
@@ -10283,7 +10286,7 @@
       inbox: 'No incoming messages recorded here. Messages you record appear in Sent.',
       sent: 'No messages recorded yet.',
       archive: 'No archived messages.',
-      trash: 'Trash is empty.',
+      trash: 'Trash is empty. Trashed messages stay here until you restore or delete them.',
       starred: 'No starred messages.'
     };
     const folderButtons = Object.entries(MESSAGE_FOLDERS).map(([key, label]) => `<button
@@ -10298,13 +10301,15 @@
       <nav class="mailbox-tabs" role="tablist" aria-label="Message folders">${folderButtons}</nav>
       <p class="eyebrow">Messaging</p>
       <h3>Your messages</h3>
-      <p class="account-note">Direct messages open in your own mail app. If the recipient published an Unbought-only contact email, the draft goes straight to them. If not, the draft goes to the coordinator for a one-time introduction. Folders, stars, and local records stay on this device.</p>
+      <p class="account-note">Direct messages open in your own mail app. If the recipient published an Unbought-only contact email, the draft goes straight to them. If not, the draft goes to the coordinator for a one-time introduction. Folders, stars, and local records stay on this device; Empty Trash permanently removes trashed message records here.</p>
+      ${activeMessageFolder === 'trash' && counts.trash ? `<div class="mailbox-toolbar"><button class="button button--ghost button--small" type="button" id="empty-message-trash">Empty Trash</button></div>` : ''}
       ${visible.length ? `<ul class="contribution-list">${visible.map((message) => {
         const folder = messageFolder(message);
         const actions = [
           `<button class="button button--ghost button--tiny" type="button" data-message-action="star" data-message-id="${e(message.id)}" aria-label="${message.starred ? 'Remove star from' : 'Star'} this message">${message.starred ? 'Unstar' : 'Star'}</button>`,
           folder === 'archive' || folder === 'trash' ? '' : `<button class="button button--ghost button--tiny" type="button" data-message-action="archive" data-message-id="${e(message.id)}" aria-label="Archive this message">Archive</button>`,
           folder === 'trash' ? `<button class="button button--ghost button--tiny" type="button" data-message-action="restore" data-message-id="${e(message.id)}" aria-label="Restore this message">Restore</button>` : `<button class="button button--ghost button--tiny" type="button" data-message-action="trash" data-message-id="${e(message.id)}" aria-label="Move this message to trash">Trash</button>`,
+          folder === 'trash' ? `<button class="button button--ghost button--tiny" type="button" data-message-action="delete" data-message-id="${e(message.id)}" aria-label="Delete this message forever">Delete forever</button>` : '',
           message.toName ? `<button class="button button--ghost button--small button--report" type="button" data-report-context data-report-area="Dashboard messages" data-report-detail="Message to ${e(message.toName)}" data-report-name="${e(message.toName)}" data-report-source-id="${e(message.id)}" aria-label="Report a concern about the message to ${e(message.toName)}">Report</button>` : ''
         ].filter(Boolean).join('');
         return `<li class="contribution-item">
@@ -11886,6 +11891,30 @@
         openGroupForm(groupFormOpen.dataset.openGroupForm, groupFormOpen);
         return;
       }
+      const emptyMessageTrash = event.target.closest('#empty-message-trash');
+      if (emptyMessageTrash) {
+        event.preventDefault();
+        const trashed = (Array.isArray(state.messages) ? state.messages : [])
+          .filter((item) => item && messageFolder(item) === 'trash');
+        if (!trashed.length) return;
+        const count = trashed.length;
+        showConfirm({
+          title: 'Empty Trash?',
+          message: `This permanently removes ${count} trashed message${count === 1 ? '' : 's'} from this browser. This cannot be undone. Nothing is sent, and drafts already opened in your mail app are unaffected.`,
+          confirmLabel: 'Empty Trash',
+          tone: 'danger',
+          onConfirm: () => {
+            const ids = new Set(trashed.map((item) => item.id));
+            state.messages = (Array.isArray(state.messages) ? state.messages : [])
+              .filter((item) => !ids.has(item.id));
+            saveState();
+            renderMessages();
+            announce(`${count} trashed message${count === 1 ? '' : 's'} permanently removed locally.`);
+            showToast('Trash emptied locally.', false);
+          }
+        });
+        return;
+      }
       const folderTab = event.target.closest('[data-message-folder]');
       if (folderTab) {
         activeMessageFolder = folderTab.dataset.messageFolder;
@@ -11898,6 +11927,7 @@
           .find((item) => item && item.id === messageAction.dataset.messageId);
         if (!message) return;
         const action = messageAction.dataset.messageAction;
+        const folder = messageFolder(message);
         if (action === 'star') {
           message.starred = !message.starred;
         } else if (action === 'archive') {
@@ -11909,6 +11939,23 @@
         } else if (action === 'restore') {
           message.folder = message.toName ? 'sent' : 'inbox';
           activeMessageFolder = message.folder;
+        } else if (action === 'delete') {
+          if (folder !== 'trash') return;
+          showConfirm({
+            title: 'Delete this message forever?',
+            message: 'This removes the message from this browser. This cannot be undone. Nothing is sent, and drafts already opened in your mail app are unaffected.',
+            confirmLabel: 'Delete forever',
+            tone: 'danger',
+            onConfirm: () => {
+              state.messages = (Array.isArray(state.messages) ? state.messages : [])
+                .filter((item) => item.id !== message.id);
+              saveState();
+              renderMessages();
+              announce('Message permanently removed locally.');
+              showToast('Message deleted permanently.', false);
+            }
+          });
+          return;
         } else {
           return;
         }

@@ -157,6 +157,8 @@ the review board process, and group welcome/alliance information. Member-facing
 drafts use the member's published Unbought-only contact email when available;
 coordinator drafts open addressed to `unbought26@gmail.com`. Each button opens
 the visitor's own mail app; the site sends nothing and stores no email log.
+Local message records use Inbox, Sent, Archive, and Trash; **Empty Trash**
+permanently removes trashed message records from that browser.
 
 ## Official contact channels
 

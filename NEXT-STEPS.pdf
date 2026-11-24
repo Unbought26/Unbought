@@ -15,7 +15,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
 endobj
 6 0 obj
-<< /Length 4179 >>
+<< /Length 4251 >>
 stream
 BT /F2 19 Tf 1 0 0 1 54 744 Tm (Unbought - Next Steps) Tj ET
 BT /F1 11 Tf 1 0 0 1 54 714 Tm (Open beta handoff and publishing checklist) Tj ET
@@ -50,14 +50,15 @@ BT /F1 10 Tf 1 0 0 1 54 261 Tm (deletes the row.) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 246 Tm ([x] Messages open as pre-filled mail drafts to published contacts. The site sends nothing.) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 231 Tm ([x] With no published contact, the coordinator relay draft opens to unbought26@gmail.com for) Tj ET
 BT /F1 10 Tf 1 0 0 1 54 216 Tm (a one-time introduction.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 201 Tm ([x] Apply supabase/migrations/20261123120000_public_contact_opt_in.sql.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 186 Tm (public_member_contacts is public-read only; public.unbought_set_public_contact\(text, text\)) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 171 Tm (needs a signed-in pledged member.) Tj ET
-BT /F2 12 Tf 1 0 0 1 54 146 Tm (Official public contact channels) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 126 Tm ([x] Public organization contacts, not private member data: unbought26@gmail.com.) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 111 Tm ([x] Instagram: @unbought26 - https://www.instagram.com/unbought26/) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 96 Tm ([x] Facebook: Unbought - https://www.facebook.com/share/1cPuizNHLK/) Tj ET
-BT /F1 10 Tf 1 0 0 1 54 81 Tm ([x] Email is an ordinary mailto link. The site itself sends nothing and stores no email log.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 201 Tm ([x] Local message records use Inbox, Sent, Archive, and Trash; Empty Trash permanently) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 186 Tm (removes trashed records on this device.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 171 Tm ([x] Apply supabase/migrations/20261123120000_public_contact_opt_in.sql.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 156 Tm (public_member_contacts is public-read only; public.unbought_set_public_contact\(text, text\)) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 141 Tm (needs a signed-in pledged member.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 116 Tm (Official public contact channels) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 96 Tm ([x] Public organization contacts, not private member data: unbought26@gmail.com.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 81 Tm ([x] Instagram: @unbought26 - https://www.instagram.com/unbought26/) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 66 Tm ([x] Facebook: Unbought - https://www.facebook.com/share/1cPuizNHLK/) Tj ET
 endstream
 endobj
 7 0 obj
@@ -205,14 +206,14 @@ xref
 0000000231 00000 n
 0000000333 00000 n
 0000000469 00000 n
-0000004699 00000 n
-0000004835 00000 n
-0000009217 00000 n
-0000009354 00000 n
-0000013546 00000 n
-0000013684 00000 n
+0000004771 00000 n
+0000004907 00000 n
+0000009289 00000 n
+0000009426 00000 n
+0000013618 00000 n
+0000013756 00000 n
 trailer
 << /Size 12 /Root 1 0 R >>
 startxref
-16492
+16564
 %%EOF
