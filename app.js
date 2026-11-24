@@ -62,7 +62,7 @@
   const VOLUNTEER_MAILTO = 'mailto:' + COORDINATOR_EMAIL + '?subject='
     + encodeURIComponent('Help build the Unbought beta')
     + '&body=' + encodeURIComponent(
-      'Hello Unbought,\n\nI would like to help build the free beta and the seed-funding and legal groundwork.\n\n'
+      'Hello Unbought,\n\nI would like to help build the free beta and its legal and nonprofit groundwork.\n\n'
       + 'I can help with: [law / nonprofit setup / web development / outreach / other].\n'
       + 'A little about me: \n\nThank you.'
     );
@@ -72,9 +72,9 @@
       date: '2026-11-23',
       label: 'Nov 23, 2026',
       tag: 'Beta build',
-      title: 'Beta members are building the funding plan',
-      bodyHtml: '<p>The free beta is for people who want the commons to work before it is funded. Beta members can use the tracks, post free labor and free goods, make requests, message other members, and take part in groups, alliances, and community threads. The Academy stays on What’s to Come.</p>'
-        + '<p>We are using free tools while we build the seed-funding plan and the legal and nonprofit groundwork. Donations stay closed until that plan is ready. <a href="' + VOLUNTEER_MAILTO + '">Email the volunteer team</a> if you can help with funding, legal work, organizing, or outreach.</p>'
+      title: 'What the free beta includes',
+      bodyHtml: '<p>The free beta is for people who want the commons to work before funding is ready. Beta members can use the tracks, post free labor and free goods, make requests, message other members, and take part in groups, alliances, and community threads.</p>'
+        + '<p>Future plans are listed only on <a href="future.html">What’s to Come</a>. <a href="' + VOLUNTEER_MAILTO + '">Email the volunteer team</a> if you can help with legal work, nonprofit setup, organizing, or outreach.</p>'
         + '<p>Member emails are free beta drafts for now. Dashboard → Settings has pre-filled welcome, Care Circle, posting, request, review board, and group welcome messages that open in your own mail app.</p>'
     },
     {
@@ -103,8 +103,8 @@
       date: '2026-11-17',
       label: 'Nov 17, 2026',
       tag: 'Records',
-      title: 'Money records stay local',
-      body: 'Non-member price fields and any recorded amounts stay in this browser. Nothing charges a card or sends a giving intent. Donation plans live on What’s to Come, not in the Newsboard.'
+      title: 'Local records stay local',
+      body: 'Your pledge, hours, and private details stay in this browser unless you choose optional sync. Public listings and community posts are shared through Supabase when connected. Future plans are listed on What’s to Come.'
     },
     {
       date: '2026-11-16',
@@ -2953,7 +2953,7 @@
               <li>Goods are free for pledged members. No proof of need, income check, or intake form is required.</li>
               <li>Items must be clean, usable, within date, and free of recalls. No weapons, medication, recalled products, or unsafe goods.</li>
               <li>Describe goods honestly. Every exchange starts with a clear description and ongoing mutual consent; either person can decline or stop.</li>
-              <li>No payment, purchase, or donation is processed in the beta. Labor and goods are shared through mutual consent.</li>
+              <li>No payment is processed in the beta. Labor and goods are shared through mutual consent.</li>
             </ul>
             <h3>Accountability boundary</h3>
             <p>Safety reports stay local. Report text, evidence, reasons, and reporter identity are never uploaded. This acknowledgment record is stored on this device and is not part of private sync. It is a record that you read the rules, not legal advice or a promise of legal protection.</p>
@@ -6207,9 +6207,9 @@
         : hasMutualRequest
           ? 'Request saved locally · consent first'
           : hasPurchaseIntent
-            ? 'Old local purchase record · no payment was processed'
+            ? 'Old local record · no payment was processed'
             : !isMember()
-              ? 'Free for pledged members through mutual consent · no purchases in the beta'
+              ? 'Free for pledged members through mutual consent'
               : listing.note || 'Peer offer · consent first'
     );
     note.prepend(createIcon(!providerAvailable && document.getElementById('icon-clock') ? 'clock' : 'check'));
@@ -6234,7 +6234,7 @@
       requestButton.classList.add('button--ghost');
       requestButton.disabled = true;
       requestButton.append(createIcon('check'), document.createTextNode('For pledged members'));
-      requestButton.setAttribute('aria-label', `Pledged members can request ${listing.title} free through mutual consent. Purchases and donations are closed in the beta.`);
+      requestButton.setAttribute('aria-label', `Pledged members can request ${listing.title} free through mutual consent.`);
     } else {
       requestButton.dataset.requestMode = 'mutual';
       requestButton.classList.add('button--outline');
@@ -7684,7 +7684,7 @@
     card.appendChild(head);
 
     if (!signedIn) {
-      const intro = createEl('p', '', 'Anyone can browse. To participate in the commons (post offers and needs, request mutual-aid connections, and manage your track), sign the Unbought Pledge to become a member. Labor and goods are free through mutual consent. Donations, sales, and purchases are closed during the beta while the funding and legal groundwork is built.');
+      const intro = createEl('p', '', 'Anyone can browse. To participate in the commons (post offers and needs, request mutual-aid connections, and manage your track), sign the Unbought Pledge to become a member. Labor and goods are free through mutual consent. Future plans are listed on What’s to Come.');
       card.appendChild(intro);
     } else {
       const meta = createEl('p', 'account-meta', `${state.pledge.name} · ${state.pledge.location || 'Location not shared'}`);
@@ -7769,8 +7769,8 @@
     }
 
     const model = createEl('p', 'account-note', signedIn
-      ? 'Prototype model (local only): your hours are shown only after both you and the receiver confirm the work, or after a three-member review vote resolves a disagreement. No one can add hours unilaterally. Confirmed hours and item counts stay on this device. Donations, sales, purchases, and payouts are closed during the beta; funding plans are only on What’s to Come.'
-      : 'Prototype model (local only): guests can browse. Donations, sales, purchases, and payouts are closed during the beta. Labor and goods move through mutual consent; funding plans are only on What’s to Come.');
+      ? 'Prototype model (local only): your hours are shown only after both you and the receiver confirm the work, or after a three-member review vote resolves a disagreement. No one can add hours unilaterally. Confirmed hours and item counts stay on this device. Future plans are listed on What’s to Come.'
+      : 'Prototype model (local only): guests can browse. Labor and goods move through mutual consent. Future plans are listed on What’s to Come.');
     card.appendChild(model);
 
 
@@ -7785,7 +7785,7 @@
       const ledger = createEl('div', 'account-block');
       ledger.appendChild(createEl('h4', '', 'Contribution ledger'));
       if (!memberContribs.length) {
-        ledger.appendChild(createEl('p', 'account-note', 'No contributions recorded yet. Donations you make while signed in and hours confirmed by both sides will appear here.'));
+        ledger.appendChild(createEl('p', 'account-note', 'No contributions recorded yet. Confirmed hours and other local records will appear here.'));
       } else {
         const list = createEl('ul', 'contribution-list');
         memberContribs.slice(0, 10).forEach((c) => {
@@ -7793,7 +7793,7 @@
           const title = c.type === 'labor'
             ? `${c.hours} hr ${c.profession} (${c.stateRegion} @ ${formatMoney(c.hourlyRate)}/hr)`
             : c.type === 'donation'
-              ? `Donation ${formatMoney(c.amount || c.stockValue)}`
+              ? `Local record ${formatMoney(c.amount || c.stockValue)}`
               : `${c.type} ${formatMoney(c.amount || c.stockValue)}`;
           item.appendChild(createEl('strong', '', title));
           const sub = `${formatMoney(c.stockValue)} stock value · ${formatDate(c.createdAt) || 'recorded'}${c.note ? ' · ' + c.note : ''}`;
@@ -8758,13 +8758,11 @@
         body: `Hello ${name},\n\nWelcome to the Unbought open beta.\n\n`
           + 'You can join a track, offer free labor or free goods, make requests, '
           + 'message other members, and take part in groups, alliances, and '
-          + 'community threads. The Academy is not open in this beta.\n\n'
+          + 'community threads.\n\n'
           + 'Unbought is built on consent and shared care, with no hierarchy and '
           + 'no payment for labor or goods. Read the Community Guidelines, FAQ, '
           + 'and Labor & Product Safety Standards before you exchange.\n\n'
-          + 'Beta members are also helping build the seed-funding plan and the '
-          + 'legal and nonprofit groundwork. Donations stay closed until that '
-          + 'plan is ready. Future plans live on What’s to Come.\n\nThank you.'
+          + 'Future plans are listed on What’s to Come.\n\nThank you.'
       },
       care: {
         to: memberEmail,
@@ -9574,7 +9572,7 @@
         </dl>
         <p class="account-note"><strong>Basic Necessities:</strong> ${e(BASIC_NECESSITIES_NOTE)}</p>
         <p class="account-note"><strong>Alliances:</strong> ${e(ALLIANCE_COPY)} Working members vote on alliance terms and guidelines.</p>
-        <p class="account-note"><strong>Land and housing:</strong> Future land and housing plans are listed only on <a href="future.html">What’s to Come</a>. Nothing here is a purchase, offer, or commitment, and nothing is transmitted from this prototype.</p>
+        <p class="account-note"><strong>Land and housing:</strong> Future land and housing plans are listed only on <a href="future.html">What’s to Come</a>. Nothing here is an offer or commitment, and nothing is transmitted from this prototype.</p>
         ${SITE_PHASE >= 2 && business.enabled ? `<div class="group-business-details">
           <h4>Group business</h4>
           <p class="account-note">${business.brandChoice === 'unbought' ? 'This group records the Unbought Brand' : 'This group records its own brand'} for a collection of related services and goods. It creates industry inside a moneyless society: neighbors trade through mutual consent, not prices. Group brands arrive in Phase 2 on the vernal equinox, ${e(GROUP_BRAND_ROLLOUT_COPY)}.</p>
@@ -10065,9 +10063,8 @@
       ${logged.length ? `<div class="donate-nudge donate-nudge--dashboard">
         <span class="donate-nudge-icon" aria-hidden="true"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-heart"></use></svg></span>
         <div>
-          <p><strong>Future funding.</strong> Giving is not open yet. Future funding plans are listed only on What’s to Come.</p>
+          <p><strong>Future funding.</strong> Plans are listed on What’s to Come.</p>
           <a class="button button--amber button--small" href="donate.html">Read the funding plan <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"></use></svg></a>
-          <p class="account-note">Nothing can be given here. No bank or donation service is connected.</p>
         </div>
       </div>` : ''}
     </section>`;
@@ -10210,7 +10207,7 @@
           </a>
           <a class="commons-link" href="donate.html">
             <span class="commons-link-icon" aria-hidden="true"><svg class="icon" focusable="false"><use href="#icon-heart"></use></svg></span>
-            <span class="commons-link-copy"><strong>Future donations</strong><small>Read the funding plan. Giving is not open yet.</small></span>
+            <span class="commons-link-copy"><strong>Future funding</strong><small>Read the funding plan on What’s to Come.</small></span>
           </a>
         </nav>
       </section>
@@ -14277,7 +14274,7 @@
       withdraw.addEventListener('click', () => {
         showConfirm({
           title: 'Withdraw your membership?',
-          message: 'Your membership, local usernames, and local sign-in details will be removed from this browser, including any power-of-attorney representative sign-in. If private sync is on, your private cloud copy is deleted too. You can still browse offers, but you will need to sign the pledge again to post, request, or manage your track. Your saved track details may remain on this device. No payout occurs.',
+          message: 'Your membership, local usernames, and local sign-in details will be removed from this browser, including any power-of-attorney representative sign-in. If private sync is on, your private cloud copy is deleted too. You can still browse offers, but you will need to sign the pledge again to post, request, or manage your track. Your saved track details may remain on this device.',
           confirmLabel: 'Withdraw membership',
           tone: 'danger',
           onConfirm: async () => {
